@@ -23,27 +23,27 @@ At the moment, the app starts on a basic home screen and the controller layer wo
 - Entity models for store-related data
 - Validation classes for controller input
 - CRUD-style controllers for:
-	- companies
-	- company products
-	- categories
-	- products
-	- tags
-	- roles
-	- users
-	- user roles
-	- product tags
+  - companies
+  - company products
+  - categories
+  - products
+  - tags
+  - roles
+  - users
+  - user roles
+  - product tags
 
 ## Project Structure
 
 ```text
 lib/
-	main.dart
-	index.dart
-	controllers/
-	models/
-	services/
-	validations/
-	views/
+  main.dart
+  index.dart
+  controllers/
+  models/
+  services/
+  validations/
+  views/
 test/
 ```
 
