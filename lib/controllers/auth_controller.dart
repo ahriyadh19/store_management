@@ -23,11 +23,12 @@ final class AuthScreenChanged extends AuthEvent {
 }
 
 final class AuthSubmitted extends AuthEvent {
-  const AuthSubmitted({required this.email, required this.password, this.name = ''});
+  const AuthSubmitted({required this.email, required this.password, this.name = '', this.username = ''});
 
 	final String email;
 	final String password;
   final String name;
+  final String username;
 }
 
 final class AuthPasswordResetSubmitted extends AuthEvent {
@@ -128,11 +129,22 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 
 	Future<void> _onSubmitted(AuthSubmitted event, Emitter<AuthState> emit) async {
     final name = event.name.trim();
+    final username = event.username.trim();
 		final email = event.email.trim();
 		final password = event.password.trim();
 
     if (state.screen == AuthScreen.signUp && name.isEmpty) {
       emit(state.copyWith(status: AuthStatus.failure, message: 'Name is required.'));
+      return;
+    }
+
+    if (state.screen == AuthScreen.signUp && username.isEmpty) {
+      emit(state.copyWith(status: AuthStatus.failure, message: 'Username is required.'));
+      return;
+    }
+
+    if (state.screen == AuthScreen.signUp && !_isValidUsername(username)) {
+      emit(state.copyWith(status: AuthStatus.failure, message: 'Username can use letters, numbers, and underscores only.'));
       return;
     }
 
@@ -171,7 +183,7 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 		try {
       final result = state.screen == AuthScreen.signIn
 					? await _authRepository.signIn(email: email, password: password)
-					: await _authRepository.signUp(name: name, email: email, password: password);
+					: await _authRepository.signUp(name: name, email: email, password: password, username: username);
 
       if (result.status == AuthActionStatus.confirmEmail) {
         emit(state.copyWith(screen: AuthScreen.confirmEmail, status: AuthStatus.confirmEmailRequired, message: result.message, userEmail: result.email ?? email, user: result.user));
@@ -249,4 +261,9 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 
 		return message;
 	}
+
+  bool _isValidUsername(String value) {
+    final usernamePattern = RegExp(r'^[a-zA-Z0-9_]{3,30}$');
+    return usernamePattern.hasMatch(value);
+  }
 }

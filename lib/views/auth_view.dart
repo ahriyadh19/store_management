@@ -11,14 +11,21 @@ class AuthView extends StatefulWidget {
 
 class _AuthViewState extends State<AuthView> {
   final _nameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
     _nameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -175,6 +182,11 @@ class _AuthViewState extends State<AuthView> {
                               decoration: const InputDecoration(labelText: 'Name', hintText: 'Store owner name', border: OutlineInputBorder()),
                             ),
                             const SizedBox(height: 16),
+                            TextField(
+                              controller: _usernameController,
+                              decoration: const InputDecoration(labelText: 'Username', hintText: 'store_owner', border: OutlineInputBorder()),
+                            ),
+                            const SizedBox(height: 16),
                           ],
                           TextField(
                             controller: _emailController,
@@ -188,21 +200,57 @@ class _AuthViewState extends State<AuthView> {
                           const SizedBox(height: 16),
                           TextField(
                             controller: _passwordController,
-                            obscureText: true,
-                            decoration: const InputDecoration(
+                            obscureText: _obscurePassword,
+                            decoration: InputDecoration(
                               labelText: 'Password',
                               hintText: 'At least 6 characters',
-                              border: OutlineInputBorder(),
+                              border: const OutlineInputBorder(),
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                                icon: Icon(_obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded),
+                              ),
                             ),
                           ),
+                          if (isSignUp) ...[
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: _confirmPasswordController,
+                              obscureText: _obscureConfirmPassword,
+                              decoration: InputDecoration(
+                                labelText: 'Confirm password',
+                                hintText: 'Re-enter your password',
+                                border: const OutlineInputBorder(),
+                                suffixIcon: IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscureConfirmPassword = !_obscureConfirmPassword;
+                                    });
+                                  },
+                                  icon: Icon(_obscureConfirmPassword ? Icons.visibility_off_rounded : Icons.visibility_rounded),
+                                ),
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 24),
                           FilledButton(
                             onPressed: state.isLoading
                                 ? null
                                 : () {
+                                    if (isSignUp && _passwordController.text != _confirmPasswordController.text) {
+                                      ScaffoldMessenger.of(context)
+                                        ..hideCurrentSnackBar()
+                                        ..showSnackBar(SnackBar(content: const Text('Passwords do not match.'), backgroundColor: Theme.of(context).colorScheme.error));
+                                      return;
+                                    }
+
                                     context.read<AuthController>().add(
                                           AuthSubmitted(
                                             name: _nameController.text,
+                                            username: _usernameController.text,
                                             email: _emailController.text,
                                             password: _passwordController.text,
                                           ),
@@ -235,7 +283,7 @@ class _AuthViewState extends State<AuthView> {
                           Text(
                             isSignIn
                                 ? 'Use your Supabase email and password to continue.'
-                                : 'A confirmation email may be required after sign up.',
+                                : 'Name, username, email, password, and confirm password are used to create your profile.',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   color: const Color(0xFF5C6672),
                                 ),

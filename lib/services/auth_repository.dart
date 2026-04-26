@@ -22,7 +22,7 @@ abstract class AuthRepository {
 
   Future<AuthActionResult> signIn({required String email, required String password});
 
-  Future<AuthActionResult> signUp({required String name, required String email, required String password});
+  Future<AuthActionResult> signUp({required String name, required String email, required String password, required String username});
 
   Future<AuthActionResult> sendPasswordReset({required String email});
 
@@ -67,13 +67,18 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthActionResult> signUp({required String name, required String email, required String password}) async {
+  Future<AuthActionResult> signUp({required String name, required String email, required String password, required String username}) async {
+    final normalizedUsername = _normalizeUsername(username);
     final response = await _authClient.signUp(
       email: email,
       password: password,
-      data: {'name': name.trim()});
+      data: {'name': name.trim(), 'username': normalizedUsername});
 
-    final user = await _loadUserProfile(authUserId: response.user?.id, fallbackEmail: response.user?.email ?? email, fallbackName: name);
+    if (response.session != null && response.user != null) {
+      await _upsertProfile(authUserId: response.user!.id, email: response.user?.email ?? email, name: name, username: normalizedUsername);
+    }
+
+    final user = await _loadUserProfile(authUserId: response.user?.id, fallbackEmail: response.user?.email ?? email, fallbackName: name, fallbackUsername: normalizedUsername);
 
     final hasSession = response.session != null;
 
@@ -103,9 +108,9 @@ class SupabaseAuthRepository implements AuthRepository {
     return _authClient.signOut();
   }
 
-  Future<User?> _loadUserProfile({required String? authUserId, required String? fallbackEmail, String? fallbackName}) async {
+  Future<User?> _loadUserProfile({required String? authUserId, required String? fallbackEmail, String? fallbackName, String? fallbackUsername}) async {
     if (authUserId == null) {
-      return _buildFallbackUser(email: fallbackEmail, name: fallbackName);
+      return _buildFallbackUser(email: fallbackEmail, name: fallbackName, username: fallbackUsername);
     }
 
     for (var attempt = 0; attempt < 3; attempt++) {
@@ -119,7 +124,7 @@ class SupabaseAuthRepository implements AuthRepository {
       }
     }
 
-    return _buildFallbackUser(email: fallbackEmail, name: fallbackName);
+    return _buildFallbackUser(email: fallbackEmail, name: fallbackName, username: fallbackUsername);
   }
 
   Future<User?> _fetchProfile(String authUserId) async {
@@ -132,15 +137,24 @@ class SupabaseAuthRepository implements AuthRepository {
     return User.fromMap(Map<String, dynamic>.from(row));
   }
 
-  User? _buildFallbackUser({required String? email, String? name}) {
+  Future<void> _upsertProfile({required String authUserId, required String email, required String name, required String username}) {
+    return _client.from('users').upsert({'auth_user_id': authUserId, 'email': email, 'name': name.trim(), 'username': _normalizeUsername(username), 'status': 1}, onConflict: 'auth_user_id');
+  }
+
+  User? _buildFallbackUser({required String? email, String? name, String? username}) {
     if (email == null || email.isEmpty) {
       return null;
     }
 
     final now = DateTime.now();
-    final usernameBase = email.split('@').first.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '');
+    final usernameBase = _normalizeUsername(username ?? email.split('@').first);
 
     return User(name: name?.trim().isNotEmpty == true ? name!.trim() : usernameBase, email: email, username: usernameBase.isEmpty ? 'user' : usernameBase, status: 1, createdAt: now, updatedAt: now);
+  }
+
+  String _normalizeUsername(String value) {
+    final normalized = value.trim().replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+    return normalized.isEmpty ? 'user' : normalized;
   }
 }
 
@@ -164,14 +178,14 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<AuthActionResult> signIn({required String email, required String password}) async {
-    _currentUser = _buildUser(email: email, name: seedName);
+    _currentUser = _buildUser(email: email, name: seedName, username: email.split('@').first);
 
     return AuthActionResult(status: AuthActionStatus.authenticated, user: _currentUser, email: email, message: 'Signed in successfully.');
   }
 
   @override
-  Future<AuthActionResult> signUp({required String name, required String email, required String password}) async {
-    _currentUser = _buildUser(email: email, name: name);
+  Future<AuthActionResult> signUp({required String name, required String email, required String password, required String username}) async {
+    _currentUser = _buildUser(email: email, name: name, username: username);
 
     return AuthActionResult(status: AuthActionStatus.confirmEmail, user: _currentUser, email: email, message: 'Account created. Confirm your email before signing in.');
   }
@@ -189,8 +203,8 @@ class FakeAuthRepository implements AuthRepository {
     _currentUser = null;
   }
 
-  User _buildUser({required String email, required String name}) {
+  User _buildUser({required String email, required String name, required String username}) {
     final now = DateTime.now();
-    return User(id: 1, name: name, email: email, username: email.split('@').first, status: 1, createdAt: now, updatedAt: now);
+    return User(id: 1, name: name, email: email, username: username, status: 1, createdAt: now, updatedAt: now);
   }
 }
