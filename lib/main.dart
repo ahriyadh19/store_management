@@ -1,9 +1,14 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
+import 'package:supabase_flutter/supabase_flutter.dart' show FlutterAuthClientOptions, Supabase;
 import 'package:store_management/controllers/auth_controller.dart';
 import 'package:store_management/index.dart';
 import 'package:store_management/services/auth_repository.dart';
+import 'package:store_management/services/supabase_auth_storage.dart';
 import 'package:store_management/views/auth_view.dart';
 
 const _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
@@ -12,13 +17,56 @@ const _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (_supabaseUrl.isEmpty || _supabaseAnonKey.isEmpty) {
-    throw StateError('Missing Supabase config. Run Flutter with --dart-define-from-file=.env.local.json.');
-  }
+  final config = await _loadSupabaseConfig();
 
-  await Supabase.initialize(url: _supabaseUrl, anonKey: _supabaseAnonKey);
+  await Supabase.initialize(url: config.url, anonKey: config.anonKey, authOptions: _buildAuthOptions());
 
   runApp(const MyApp());
+}
+
+FlutterAuthClientOptions _buildAuthOptions() {
+  if (!kIsWeb && Platform.isLinux) {
+    return FlutterAuthClientOptions(
+      localStorage: FileLocalStorage(storageKey: 'supabase.auth.token', appDirectoryName: 'store_management'),
+      pkceAsyncStorage: FileGotrueAsyncStorage(appDirectoryName: 'store_management'),
+    );
+  }
+
+  return const FlutterAuthClientOptions();
+}
+
+Future<_SupabaseConfig> _loadSupabaseConfig() async {
+  if (_supabaseUrl.isNotEmpty && _supabaseAnonKey.isNotEmpty) {
+    return const _SupabaseConfig(url: _supabaseUrl, anonKey: _supabaseAnonKey);
+  }
+
+  const envUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: '');
+  const envAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: '');
+  if (envUrl.isNotEmpty && envAnonKey.isNotEmpty) {
+    return const _SupabaseConfig(url: envUrl, anonKey: envAnonKey);
+  }
+
+  if (!kIsWeb) {
+    final file = File('.env.local.json');
+    if (await file.exists()) {
+      final jsonMap = json.decode(await file.readAsString()) as Map<String, dynamic>;
+      final fileUrl = (jsonMap['SUPABASE_URL'] as String?)?.trim() ?? '';
+      final fileAnonKey = (jsonMap['SUPABASE_ANON_KEY'] as String?)?.trim() ?? '';
+
+      if (fileUrl.isNotEmpty && fileAnonKey.isNotEmpty) {
+        return _SupabaseConfig(url: fileUrl, anonKey: fileAnonKey);
+      }
+    }
+  }
+
+  throw StateError('Missing Supabase config. Use --dart-define-from-file=.env.local.json or create .env.local.json in the project root.');
+}
+
+class _SupabaseConfig {
+  const _SupabaseConfig({required this.url, required this.anonKey});
+
+  final String url;
+  final String anonKey;
 }
 
 class MyApp extends StatelessWidget {

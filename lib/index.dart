@@ -8,6 +8,7 @@ class Index extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthController>().state;
+    final user = authState.user;
 
     return Scaffold(
       appBar: AppBar(
@@ -48,10 +49,20 @@ class Index extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                authState.userEmail ?? 'You are signed in.',
+                user?.name.isNotEmpty == true ? user!.name : (authState.userEmail ?? 'You are signed in.'),
                 style: Theme.of(context).textTheme.bodyLarge,
                 textAlign: TextAlign.center,
               ),
+              if (user != null) ...[
+                const SizedBox(height: 12),
+                Text(user.email, style: Theme.of(context).textTheme.bodyMedium, textAlign: TextAlign.center),
+                const SizedBox(height: 4),
+                Text(
+                  '@${user.username}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: const Color(0xFF5C6672)),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ],
           ),
         ),

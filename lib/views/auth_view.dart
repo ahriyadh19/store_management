@@ -10,11 +10,13 @@ class AuthView extends StatefulWidget {
 }
 
 class _AuthViewState extends State<AuthView> {
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -25,6 +27,10 @@ class _AuthViewState extends State<AuthView> {
     return BlocListener<AuthController, AuthState>(
       listenWhen: (previous, current) => previous.message != current.message,
       listener: (context, state) {
+        if (state.userEmail != null && state.userEmail!.isNotEmpty) {
+          _emailController.text = state.userEmail!;
+        }
+
         final message = state.message;
         if (message == null || message.isEmpty) {
           return;
@@ -52,7 +58,57 @@ class _AuthViewState extends State<AuthView> {
                 constraints: const BoxConstraints(maxWidth: 420),
                 child: BlocBuilder<AuthController, AuthState>(
                   builder: (context, state) {
-                    final isSignIn = state.mode == AuthMode.signIn;
+                    final isSignIn = state.screen == AuthScreen.signIn;
+                    final isSignUp = state.screen == AuthScreen.signUp;
+
+                    if (state.screen == AuthScreen.confirmEmail) {
+                      return _AuthStatusCard(
+                        icon: Icons.mark_email_read_rounded,
+                        title: 'Confirm your email',
+                        description: 'We sent a confirmation link to ${state.userEmail ?? _emailController.text}. Open it, then come back and sign in.',
+                        primaryLabel: 'Resend email',
+                        primaryPressed: state.isLoading
+                            ? null
+                            : () {
+                                context.read<AuthController>().add(AuthConfirmationResent(email: state.userEmail ?? _emailController.text));
+                              },
+                        secondaryLabel: 'Back to sign in',
+                        secondaryPressed: () {
+                          context.read<AuthController>().add(const AuthScreenChanged(AuthScreen.signIn));
+                        },
+                        isLoading: state.isLoading,
+                      );
+                    }
+
+                    if (state.screen == AuthScreen.forgotPassword || state.screen == AuthScreen.resetPassword) {
+                      final isResetSent = state.screen == AuthScreen.resetPassword;
+
+                      return _AuthStatusCard(
+                        icon: isResetSent ? Icons.password_rounded : Icons.lock_reset_rounded,
+                        title: isResetSent ? 'Reset password' : 'Forgot password?',
+                        description: isResetSent
+                            ? 'A reset link was sent to ${state.userEmail ?? _emailController.text}. Use the link in your email to choose a new password.'
+                            : 'Enter your email and we will send you a reset password link.',
+                        input: isResetSent
+                            ? null
+                            : TextField(
+                                controller: _emailController,
+                                keyboardType: TextInputType.emailAddress,
+                                decoration: const InputDecoration(labelText: 'Email', hintText: 'name@store.com', border: OutlineInputBorder()),
+                              ),
+                        primaryLabel: isResetSent ? 'Send again' : 'Send reset link',
+                        primaryPressed: state.isLoading
+                            ? null
+                            : () {
+                                context.read<AuthController>().add(AuthPasswordResetSubmitted(email: _emailController.text));
+                              },
+                        secondaryLabel: 'Back to sign in',
+                        secondaryPressed: () {
+                          context.read<AuthController>().add(const AuthScreenChanged(AuthScreen.signIn));
+                        },
+                        isLoading: state.isLoading,
+                      );
+                    }
 
                     return Container(
                       padding: const EdgeInsets.all(28),
@@ -94,25 +150,32 @@ class _AuthViewState extends State<AuthView> {
                           Text(
                             isSignIn
                                 ? 'Use your email and password to continue.'
-                                : 'Start with a simple account for your store.',
+                                : 'Create your account and profile for the store app.',
                             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                   color: const Color(0xFF5C6672),
                                 ),
                           ),
                           const SizedBox(height: 24),
-                          SegmentedButton<AuthMode>(
+                          SegmentedButton<AuthScreen>(
                             segments: const [
-                              ButtonSegment(value: AuthMode.signIn, label: Text('Sign in')),
-                              ButtonSegment(value: AuthMode.signUp, label: Text('Sign up')),
+                              ButtonSegment(value: AuthScreen.signIn, label: Text('Sign in')),
+                              ButtonSegment(value: AuthScreen.signUp, label: Text('Sign up')),
                             ],
-                            selected: {state.mode},
+                            selected: {state.screen},
                             onSelectionChanged: (selection) {
                               context.read<AuthController>().add(
-                                    AuthModeChanged(selection.first),
+                                    AuthScreenChanged(selection.first),
                                   );
                             },
                           ),
                           const SizedBox(height: 24),
+                          if (isSignUp) ...[
+                            TextField(
+                              controller: _nameController,
+                              decoration: const InputDecoration(labelText: 'Name', hintText: 'Store owner name', border: OutlineInputBorder()),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
                           TextField(
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
@@ -139,6 +202,7 @@ class _AuthViewState extends State<AuthView> {
                                 : () {
                                     context.read<AuthController>().add(
                                           AuthSubmitted(
+                                            name: _nameController.text,
                                             email: _emailController.text,
                                             password: _passwordController.text,
                                           ),
@@ -155,6 +219,18 @@ class _AuthViewState extends State<AuthView> {
                                   )
                                 : Text(isSignIn ? 'Continue' : 'Create account'),
                           ),
+                          if (isSignIn) ...[
+                            const SizedBox(height: 12),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: () {
+                                  context.read<AuthController>().add(const AuthScreenChanged(AuthScreen.forgotPassword));
+                                },
+                                child: const Text('Forgot password?'),
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 14),
                           Text(
                             isSignIn
@@ -174,6 +250,70 @@ class _AuthViewState extends State<AuthView> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _AuthStatusCard extends StatelessWidget {
+  const _AuthStatusCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.primaryLabel,
+    required this.primaryPressed,
+    required this.secondaryLabel,
+    required this.secondaryPressed,
+    required this.isLoading,
+    this.input,
+  });
+
+  final IconData icon;
+  final String title;
+  final String description;
+  final String primaryLabel;
+  final VoidCallback? primaryPressed;
+  final String secondaryLabel;
+  final VoidCallback secondaryPressed;
+  final bool isLoading;
+  final Widget? input;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 28, offset: Offset(0, 16))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            height: 64,
+            width: 64,
+            decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(20)),
+            child: Icon(icon, size: 34, color: Theme.of(context).colorScheme.primary),
+          ),
+          const SizedBox(height: 20),
+          Text(title, style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          Text(description, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: const Color(0xFF5C6672))),
+          if (input != null) ...[const SizedBox(height: 24), input!],
+          const SizedBox(height: 24),
+          FilledButton(
+            onPressed: primaryPressed,
+            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(54)),
+            child: isLoading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2.4)) : Text(primaryLabel),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: secondaryPressed,
+            style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(54)),
+            child: Text(secondaryLabel),
+          ),
+        ],
       ),
     );
   }

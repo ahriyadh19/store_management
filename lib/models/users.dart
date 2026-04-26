@@ -14,7 +14,7 @@ class User {
   DateTime createdAt;
   DateTime updatedAt;
 
-  User({this.id, required this.name, required this.email, required this.password, required this.username, String? uuid, required this.status, required this.createdAt, required this.updatedAt})
+  User({this.id, required this.name, required this.email, this.password = '', required this.username, String? uuid, required this.status, required this.createdAt, required this.updatedAt})
     : uuid = uuid ?? UUIDGenerator.generate();
 
   User copyWith({int? id, String? name, String? email, String? password, String? username, String? uuid, int? status, DateTime? createdAt, DateTime? updatedAt}) {

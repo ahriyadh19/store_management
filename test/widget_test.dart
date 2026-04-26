@@ -18,4 +18,14 @@ void main() {
     expect(find.text('Email'), findsOneWidget);
     expect(find.text('Password'), findsOneWidget);
   });
+
+  testWidgets('opens forgot password screen', (WidgetTester tester) async {
+    await tester.pumpWidget(MyApp(authRepository: FakeAuthRepository()));
+
+    await tester.tap(find.text('Forgot password?'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Forgot password?'), findsOneWidget);
+    expect(find.text('Send reset link'), findsOneWidget);
+  });
 }
