@@ -7,7 +7,11 @@ import 'package:store_management/models/product.dart';
 import 'package:store_management/models/products_tags.dart';
 import 'package:store_management/models/roles.dart';
 import 'package:store_management/models/store_company.dart';
+import 'package:store_management/models/store_financial_transaction.dart';
 import 'package:store_management/models/user_roles.dart';
+import 'package:store_management/models/store_invoice.dart';
+import 'package:store_management/models/store_payment_voucher.dart';
+import 'package:store_management/models/store_return.dart';
 import 'package:store_management/models/users.dart';
 
 void main() {
@@ -127,6 +131,95 @@ void main() {
       );
 
       expect(productTag.uuid, isNotEmpty);
+    });
+
+    test('StoreInvoice generates uuid automatically', () {
+      final invoice = StoreInvoice(
+        id: 1,
+        storeId: 1,
+        storeUuid: '11111111-1111-4111-8111-111111111111',
+        clientId: 2,
+        clientUuid: '22222222-2222-4222-8222-222222222222',
+        invoiceNumber: 'INV-001',
+        totalAmount: 200,
+        paidAmount: 50,
+        balanceAmount: 150,
+        notes: 'Monthly invoice',
+        issuedAt: createdAt,
+        dueAt: updatedAt,
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+      expect(invoice.uuid, isNotEmpty);
+    });
+
+    test('StorePaymentVoucher generates uuid automatically', () {
+      final voucher = StorePaymentVoucher(
+        id: 1,
+        storeId: 1,
+        storeUuid: '11111111-1111-4111-8111-111111111111',
+        clientId: 2,
+        clientUuid: '22222222-2222-4222-8222-222222222222',
+        voucherNumber: 'PV-001',
+        payeeName: 'Vendor',
+        amount: 100,
+        paymentMethod: 'cash',
+        referenceNumber: 'REF-001',
+        description: 'Supplier payment',
+        transactionDate: createdAt,
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+      expect(voucher.uuid, isNotEmpty);
+    });
+
+    test('StoreReturn generates uuid automatically', () {
+      final storeReturn = StoreReturn(
+        id: 1,
+        storeId: 1,
+        storeUuid: '11111111-1111-4111-8111-111111111111',
+        clientId: 2,
+        clientUuid: '22222222-2222-4222-8222-222222222222',
+        returnNumber: 'RET-001',
+        returnType: 'sales_return',
+        itemCount: 3,
+        totalAmount: 60,
+        reason: 'Damaged items',
+        transactionDate: createdAt,
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+      expect(storeReturn.uuid, isNotEmpty);
+    });
+
+    test('StoreFinancialTransaction generates uuid automatically', () {
+      final transaction = StoreFinancialTransaction(
+        id: 1,
+        storeId: 1,
+        storeUuid: '11111111-1111-4111-8111-111111111111',
+        clientId: 2,
+        clientUuid: '22222222-2222-4222-8222-222222222222',
+        transactionNumber: 'FT-001',
+        transactionType: 'invoice_posting',
+        sourceType: 'invoice',
+        sourceId: 1,
+        sourceUuid: '44444444-4444-4444-8444-444444444444',
+        amount: 200,
+        entryType: 'debit',
+        description: 'Invoice posting',
+        transactionDate: createdAt,
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+      expect(transaction.uuid, isNotEmpty);
     });
   });
 
@@ -315,6 +408,103 @@ void main() {
 
       expect(ProductsTags.fromMap(productTag.toMap()), equals(productTag));
       expect(ProductsTags.fromJson(productTag.toJson()), equals(productTag));
+    });
+
+    test('StoreInvoice round-trips through map and json', () {
+      final invoice = StoreInvoice(
+        id: 1,
+        uuid: 'invoice-uuid',
+        storeId: 1,
+        storeUuid: '11111111-1111-4111-8111-111111111111',
+        clientId: 2,
+        clientUuid: '22222222-2222-4222-8222-222222222222',
+        invoiceNumber: 'INV-001',
+        totalAmount: 200,
+        paidAmount: 50,
+        balanceAmount: 150,
+        notes: 'Monthly invoice',
+        issuedAt: createdAt,
+        dueAt: updatedAt,
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+      expect(StoreInvoice.fromMap(invoice.toMap()), equals(invoice));
+      expect(StoreInvoice.fromJson(invoice.toJson()), equals(invoice));
+    });
+
+    test('StorePaymentVoucher round-trips through map and json', () {
+      final voucher = StorePaymentVoucher(
+        id: 1,
+        uuid: 'voucher-uuid',
+        storeId: 1,
+        storeUuid: '11111111-1111-4111-8111-111111111111',
+        clientId: 2,
+        clientUuid: '22222222-2222-4222-8222-222222222222',
+        voucherNumber: 'PV-001',
+        payeeName: 'Vendor',
+        amount: 100,
+        paymentMethod: 'cash',
+        referenceNumber: 'REF-001',
+        description: 'Supplier payment',
+        transactionDate: createdAt,
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+      expect(StorePaymentVoucher.fromMap(voucher.toMap()), equals(voucher));
+      expect(StorePaymentVoucher.fromJson(voucher.toJson()), equals(voucher));
+    });
+
+    test('StoreReturn round-trips through map and json', () {
+      final storeReturn = StoreReturn(
+        id: 1,
+        uuid: 'return-uuid',
+        storeId: 1,
+        storeUuid: '11111111-1111-4111-8111-111111111111',
+        clientId: 2,
+        clientUuid: '22222222-2222-4222-8222-222222222222',
+        returnNumber: 'RET-001',
+        returnType: 'sales_return',
+        itemCount: 3,
+        totalAmount: 60,
+        reason: 'Damaged items',
+        transactionDate: createdAt,
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+      expect(StoreReturn.fromMap(storeReturn.toMap()), equals(storeReturn));
+      expect(StoreReturn.fromJson(storeReturn.toJson()), equals(storeReturn));
+    });
+
+    test('StoreFinancialTransaction round-trips through map and json', () {
+      final transaction = StoreFinancialTransaction(
+        id: 1,
+        uuid: 'financial-transaction-uuid',
+        storeId: 1,
+        storeUuid: '11111111-1111-4111-8111-111111111111',
+        clientId: 2,
+        clientUuid: '22222222-2222-4222-8222-222222222222',
+        transactionNumber: 'FT-001',
+        transactionType: 'invoice_posting',
+        sourceType: 'invoice',
+        sourceId: 1,
+        sourceUuid: '44444444-4444-4444-8444-444444444444',
+        amount: 200,
+        entryType: 'debit',
+        description: 'Invoice posting',
+        transactionDate: createdAt,
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+      expect(StoreFinancialTransaction.fromMap(transaction.toMap()), equals(transaction));
+      expect(StoreFinancialTransaction.fromJson(transaction.toJson()), equals(transaction));
     });
 
     test('Categories supports root nodes with null parentId', () {
