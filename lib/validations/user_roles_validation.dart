@@ -46,12 +46,12 @@ class UserRolesValidation {
       }
     }
 
-    final userIdError = ValidationUtils.validateRequiredString(request, 'userId', 'User id reference is required');
+    final userIdError = ValidationUtils.validateRequiredUuid(request, 'userId', 'User id reference must be a valid UUID');
     if (userIdError != null) {
       return userIdError;
     }
 
-    final roleIdError = ValidationUtils.validateRequiredString(request, 'roleId', 'Role id reference is required');
+    final roleIdError = ValidationUtils.validateRequiredUuid(request, 'roleId', 'Role id reference must be a valid UUID');
     if (roleIdError != null) {
       return roleIdError;
     }

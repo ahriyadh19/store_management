@@ -2,6 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:store_management/controllers/auth_controller.dart';
 
+Widget _buildIndexDrawer() {
+  return Drawer(
+    child: ListView(
+      padding: EdgeInsets.zero,
+      children: const [
+        DrawerHeader(
+          decoration: BoxDecoration(color: Color(0xFF1F7A8C)),
+          child: Text('Menu', style: TextStyle(color: Colors.white, fontSize: 24)),
+        ),
+        ListTile(leading: Icon(Icons.dashboard_rounded), title: Text('Dashboard')),
+        ListTile(leading: Icon(Icons.inventory_2_rounded), title: Text('Products')),
+        ListTile(leading: Icon(Icons.people_rounded), title: Text('Customers')),
+        ListTile(leading: Icon(Icons.bar_chart_rounded), title: Text('Reports')),
+        Spacer(flex: 1), // add some space before the logout button
+        Divider(), // add a divider before the logout button
+        // should have a line the logout button at the bottom of the drawer
+        ListTile(leading: Icon(Icons.logout_rounded), title: Text('Logout')),
+      ],
+    ),
+  );
+}
+
 class Index extends StatelessWidget {
   const Index({super.key});
 
@@ -11,6 +33,7 @@ class Index extends StatelessWidget {
     final user = authState.user;
 
     return Scaffold(
+      drawer: _buildIndexDrawer(),
       appBar: AppBar(
         title: const Text('Store Management'),
         centerTitle: true,

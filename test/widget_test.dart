@@ -12,6 +12,17 @@ import 'package:store_management/main.dart';
 import 'package:store_management/services/auth_repository.dart';
 
 void main() {
+  testWidgets('opens drawer on authenticated home screen', (WidgetTester tester) async {
+    await tester.pumpWidget(MyApp(authRepository: FakeAuthRepository(seedEmail: 'owner@store.com')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Open navigation menu'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Menu'), findsOneWidget);
+    expect(find.text('Products'), findsOneWidget);
+  });
+
   testWidgets('shows auth screen by default', (WidgetTester tester) async {
     await tester.pumpWidget(MyApp(authRepository: FakeAuthRepository()));
 

@@ -101,6 +101,21 @@ class CompanyProductsValidation {
 		return null;
 	}
 
+  static Response? _validateRequiredUuid(Request request, String key, String message) {
+    final stringError = _validateRequiredString(request, key, message);
+    if (stringError != null) {
+      return stringError;
+    }
+
+    final value = (request.data![key] as String).trim();
+    final uuidPattern = RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$');
+    if (!uuidPattern.hasMatch(value)) {
+      return _badRequest(message);
+    }
+
+    return null;
+  }
+
 	static Response? _validateRequiredInt(Request request, String key, String message) {
 		final value = request.data?[key];
 		if (value is! int || value <= 0) {
@@ -118,12 +133,12 @@ class CompanyProductsValidation {
 			}
 		}
 
-		final companyIdError = _validateRequiredString(request, 'companyId', 'Company id is required');
+    final companyIdError = _validateRequiredUuid(request, 'companyId', 'Company id reference must be a valid UUID');
 		if (companyIdError != null) {
 			return companyIdError;
 		}
 
-		final productIdError = _validateRequiredString(request, 'productId', 'Product id reference is required');
+    final productIdError = _validateRequiredUuid(request, 'productId', 'Product id reference must be a valid UUID');
 		if (productIdError != null) {
 			return productIdError;
 		}

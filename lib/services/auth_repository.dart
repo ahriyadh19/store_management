@@ -26,6 +26,8 @@ abstract class AuthRepository {
 
   Future<AuthActionResult> sendPasswordReset({required String email});
 
+  Future<AuthActionResult> completeEmailConfirmation({required String email, required String confirmationLink});
+
   Future<void> resendSignUpConfirmation({required String email});
 
   Future<void> signOut();
@@ -99,6 +101,44 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<AuthActionResult> completeEmailConfirmation({required String email, required String confirmationLink}) async {
+    final trimmedEmail = email.trim();
+    final trimmedLink = confirmationLink.trim();
+
+    if (trimmedLink.isEmpty) {
+      throw AuthException('Paste the confirmation link from your email.');
+    }
+
+    final uri = Uri.tryParse(trimmedLink);
+    if (uri == null || !uri.hasScheme) {
+      throw AuthException('Paste the full confirmation link from your email.');
+    }
+
+    if (_containsSessionParams(uri)) {
+      await _authClient.getSessionFromUrl(uri);
+    } else {
+      final params = _extractLinkParameters(uri);
+      final tokenHash = params['token_hash'];
+      final otpType = _parseOtpType(params['type']);
+
+      if (tokenHash == null || otpType == null) {
+        throw AuthException('The confirmation link is missing the required verification details.');
+      }
+
+      await _authClient.verifyOTP(email: trimmedEmail.isEmpty ? null : trimmedEmail, tokenHash: tokenHash, type: otpType);
+    }
+
+    final currentUser = _authClient.currentUser;
+    final user = await _loadUserProfile(authUserId: currentUser?.id, fallbackEmail: currentUser?.email ?? trimmedEmail);
+
+    if (_authClient.currentSession == null) {
+      return AuthActionResult(status: AuthActionStatus.confirmEmail, email: user?.email ?? currentUser?.email ?? trimmedEmail, user: user, message: 'Email confirmed. Sign in to continue.');
+    }
+
+    return AuthActionResult(status: AuthActionStatus.authenticated, email: user?.email ?? currentUser?.email ?? trimmedEmail, user: user, message: 'Email confirmed successfully.');
+  }
+
+  @override
   Future<void> resendSignUpConfirmation({required String email}) {
     return _authClient.resend(type: OtpType.signup, email: email);
   }
@@ -156,6 +196,54 @@ class SupabaseAuthRepository implements AuthRepository {
     final normalized = value.trim().replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
     return normalized.isEmpty ? 'user' : normalized;
   }
+
+  bool _containsSessionParams(Uri uri) {
+    final params = _extractLinkParameters(uri);
+    return params.containsKey('code') || params.containsKey('access_token');
+  }
+
+  Map<String, String> _extractLinkParameters(Uri uri) {
+    final params = <String, String>{...uri.queryParameters};
+    final fragment = uri.fragment;
+
+    if (fragment.isEmpty) {
+      return params;
+    }
+
+    final fragmentQuery = fragment.contains('?') ? fragment.substring(fragment.indexOf('?') + 1) : fragment;
+    if (fragmentQuery.isEmpty || !fragmentQuery.contains('=')) {
+      return params;
+    }
+
+    params.addAll(Uri.splitQueryString(fragmentQuery));
+    return params;
+  }
+
+  OtpType? _parseOtpType(String? value) {
+    switch (value?.trim().toLowerCase()) {
+      case 'sms':
+        return OtpType.sms;
+      case 'phonechange':
+      case 'phone_change':
+        return OtpType.phoneChange;
+      case 'signup':
+        return OtpType.signup;
+      case 'invite':
+        return OtpType.invite;
+      case 'magiclink':
+      case 'magic_link':
+        return OtpType.magiclink;
+      case 'recovery':
+        return OtpType.recovery;
+      case 'emailchange':
+      case 'email_change':
+        return OtpType.emailChange;
+      case 'email':
+        return OtpType.email;
+      default:
+        return null;
+    }
+  }
 }
 
 class FakeAuthRepository implements AuthRepository {
@@ -193,6 +281,11 @@ class FakeAuthRepository implements AuthRepository {
   @override
   Future<AuthActionResult> sendPasswordReset({required String email}) async {
     return AuthActionResult(status: AuthActionStatus.passwordResetSent, email: email, message: 'Password reset instructions sent to $email.');
+  }
+
+  @override
+  Future<AuthActionResult> completeEmailConfirmation({required String email, required String confirmationLink}) async {
+    return AuthActionResult(status: AuthActionStatus.authenticated, user: _currentUser, email: email, message: 'Email confirmed successfully.');
   }
 
   @override

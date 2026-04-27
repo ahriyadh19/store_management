@@ -13,6 +13,7 @@ class _AuthViewState extends State<AuthView> {
   final _nameController = TextEditingController();
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _confirmationLinkController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
@@ -24,6 +25,7 @@ class _AuthViewState extends State<AuthView> {
     _nameController.dispose();
     _usernameController.dispose();
     _emailController.dispose();
+    _confirmationLinkController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -72,12 +74,40 @@ class _AuthViewState extends State<AuthView> {
                       return _AuthStatusCard(
                         icon: Icons.mark_email_read_rounded,
                         title: 'Confirm your email',
-                        description: 'We sent a confirmation link to ${state.userEmail ?? _emailController.text}. Open it, then come back and sign in.',
-                        primaryLabel: 'Resend email',
+                        description: 'We sent a confirmation link to ${state.userEmail ?? _emailController.text}. On Linux desktop the link usually opens in your browser instead of returning to the app.',
+                        input: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              'If the app does not open after you confirm, copy the final browser address and paste it here to finish confirmation.',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: const Color(0xFF5C6672)),
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: _confirmationLinkController,
+                              minLines: 2,
+                              maxLines: 4,
+                              decoration: const InputDecoration(labelText: 'Confirmation link', hintText: 'https://...token_hash=... or https://...code=...', border: OutlineInputBorder()),
+                            ),
+                            const SizedBox(height: 12),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: TextButton(
+                                onPressed: state.isLoading
+                                    ? null
+                                    : () {
+                                        context.read<AuthController>().add(AuthConfirmationResent(email: state.userEmail ?? _emailController.text));
+                                      },
+                                child: const Text('Resend email'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        primaryLabel: 'Complete confirmation',
                         primaryPressed: state.isLoading
                             ? null
                             : () {
-                                context.read<AuthController>().add(AuthConfirmationResent(email: state.userEmail ?? _emailController.text));
+                                context.read<AuthController>().add(AuthConfirmationLinkSubmitted(email: state.userEmail ?? _emailController.text, confirmationLink: _confirmationLinkController.text));
                               },
                         secondaryLabel: 'Back to sign in',
                         secondaryPressed: () {

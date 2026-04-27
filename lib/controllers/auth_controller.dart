@@ -43,6 +43,13 @@ final class AuthConfirmationResent extends AuthEvent {
   final String email;
 }
 
+final class AuthConfirmationLinkSubmitted extends AuthEvent {
+  const AuthConfirmationLinkSubmitted({required this.email, required this.confirmationLink});
+
+  final String email;
+  final String confirmationLink;
+}
+
 final class AuthSignedOut extends AuthEvent {
 	const AuthSignedOut();
 }
@@ -98,6 +105,7 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 		on<AuthSubmitted>(_onSubmitted);
     on<AuthPasswordResetSubmitted>(_onPasswordResetSubmitted);
     on<AuthConfirmationResent>(_onConfirmationResent);
+    on<AuthConfirmationLinkSubmitted>(_onConfirmationLinkSubmitted);
 		on<AuthSignedOut>(_onSignedOut);
 
     if (_authRepository.hasCurrentSession) {
@@ -238,6 +246,36 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 			);
 		}
 	}
+
+  Future<void> _onConfirmationLinkSubmitted(AuthConfirmationLinkSubmitted event, Emitter<AuthState> emit) async {
+    final email = event.email.trim();
+    final confirmationLink = event.confirmationLink.trim();
+
+    if (email.isEmpty || !email.contains('@')) {
+      emit(state.copyWith(status: AuthStatus.failure, message: 'Enter a valid email address.'));
+      return;
+    }
+
+    if (confirmationLink.isEmpty) {
+      emit(state.copyWith(status: AuthStatus.failure, message: 'Paste the confirmation link from your email.'));
+      return;
+    }
+
+    emit(state.copyWith(status: AuthStatus.submitting, clearMessage: true));
+
+    try {
+      final result = await _authRepository.completeEmailConfirmation(email: email, confirmationLink: confirmationLink);
+
+      if (result.status == AuthActionStatus.authenticated) {
+        emit(state.copyWith(status: AuthStatus.authenticated, message: result.message, userEmail: result.email ?? email, user: result.user));
+        return;
+      }
+
+      emit(state.copyWith(screen: AuthScreen.signIn, status: AuthStatus.initial, message: result.message, userEmail: result.email ?? email, clearUser: true));
+    } catch (error) {
+      emit(state.copyWith(status: AuthStatus.failure, message: _buildAuthErrorMessage(error)));
+    }
+  }
 
 	Future<void> _onSignedOut(AuthSignedOut event, Emitter<AuthState> emit) async {
 		await _authRepository.signOut();

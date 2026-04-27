@@ -37,6 +37,7 @@ void main() {
     String description = 'Retail price',
     num price = 15.5,
     int stock = 20,
+    int status = 1,
     int? quantity,
     int? availableStock,
   }) {
@@ -46,6 +47,7 @@ void main() {
       'description': description,
       'price': price,
       'stock': stock,
+      'status': status,
     };
 
     if (id != null) {
@@ -67,7 +69,7 @@ void main() {
     test('create returns created response with product data', () {
       final controller = CompanyProductsController(companyProduct: buildProduct());
 
-      final response = controller.create(request: buildRequest(data: buildProductData()));
+      final response = controller.create(request: buildRequest(data: buildProductData(id: 1)));
 
       expect(response.statusCode, 201);
       expect(response.data, isA<CompanyProducts>());
@@ -181,7 +183,8 @@ void main() {
 
       expect(response.statusCode, 200);
       expect(response.data, isA<List<CompanyProducts>>());
-      expect(response.data, isEmpty);
+      expect(response.data, hasLength(1));
+      expect((response.data as List<CompanyProducts>).single.id, 1);
     });
   });
 }

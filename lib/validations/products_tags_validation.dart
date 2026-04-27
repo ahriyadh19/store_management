@@ -46,12 +46,12 @@ class ProductsTagsValidation {
       }
     }
 
-    final productIdError = ValidationUtils.validateRequiredString(request, 'productId', 'Product id reference is required');
+    final productIdError = ValidationUtils.validateRequiredUuid(request, 'productId', 'Product id reference must be a valid UUID');
     if (productIdError != null) {
       return productIdError;
     }
 
-    final tagIdError = ValidationUtils.validateRequiredString(request, 'tagId', 'Tag id reference is required');
+    final tagIdError = ValidationUtils.validateRequiredUuid(request, 'tagId', 'Tag id reference must be a valid UUID');
     if (tagIdError != null) {
       return tagIdError;
     }

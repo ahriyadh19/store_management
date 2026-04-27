@@ -27,6 +27,21 @@ class ValidationUtils {
     return null;
   }
 
+  static Response? validateRequiredUuid(Request request, String key, String message) {
+    final stringError = validateRequiredString(request, key, message);
+    if (stringError != null) {
+      return stringError;
+    }
+
+    final value = (request.data![key] as String).trim();
+    final uuidPattern = RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$');
+    if (!uuidPattern.hasMatch(value)) {
+      return badRequest(message);
+    }
+
+    return null;
+  }
+
   static Response? validateRequiredInt(
     Request request,
     String key,
