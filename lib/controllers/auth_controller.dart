@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/models/users.dart';
 import 'package:store_management/services/auth_repository.dart';
 
@@ -58,14 +59,14 @@ final class AuthState {
 	const AuthState({
 		this.screen = AuthScreen.signIn,
 		this.status = AuthStatus.initial,
-		this.message,
+		this.messageKey,
 		this.userEmail,
 		this.user,
 	});
 
   final AuthScreen screen;
 	final AuthStatus status;
-	final String? message;
+  final AppMessageKey? messageKey;
 	final String? userEmail;
   final User? user;
 
@@ -75,7 +76,7 @@ final class AuthState {
 	AuthState copyWith({
 		AuthScreen? screen,
 		AuthStatus? status,
-		String? message,
+		AppMessageKey? messageKey,
 		bool clearMessage = false,
 		String? userEmail,
 		bool clearUserEmail = false,
@@ -84,7 +85,7 @@ final class AuthState {
 		return AuthState(
       screen: screen ?? this.screen,
 			status: status ?? this.status,
-			message: clearMessage ? null : (message ?? this.message),
+      messageKey: clearMessage ? null : (messageKey ?? this.messageKey),
 			userEmail: clearUserEmail ? null : (userEmail ?? this.userEmail),
       user: clearUser ? null : (user ?? this.user),
 		);
@@ -142,17 +143,17 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 		final password = event.password.trim();
 
     if (state.screen == AuthScreen.signUp && name.isEmpty) {
-      emit(state.copyWith(status: AuthStatus.failure, message: 'Name is required.'));
+      emit(state.copyWith(status: AuthStatus.failure, messageKey: AppMessageKey.nameRequired));
       return;
     }
 
     if (state.screen == AuthScreen.signUp && username.isEmpty) {
-      emit(state.copyWith(status: AuthStatus.failure, message: 'Username is required.'));
+      emit(state.copyWith(status: AuthStatus.failure, messageKey: AppMessageKey.usernameRequired));
       return;
     }
 
     if (state.screen == AuthScreen.signUp && !_isValidUsername(username)) {
-      emit(state.copyWith(status: AuthStatus.failure, message: 'Username can use letters, numbers, and underscores only.'));
+      emit(state.copyWith(status: AuthStatus.failure, messageKey: AppMessageKey.usernameInvalid));
       return;
     }
 
@@ -160,7 +161,7 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 			emit(
 				state.copyWith(
 					status: AuthStatus.failure,
-					message: 'Email and password are required.',
+					messageKey: AppMessageKey.emailAndPasswordRequired,
 				),
 			);
 			return;
@@ -170,7 +171,7 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 			emit(
 				state.copyWith(
 					status: AuthStatus.failure,
-					message: 'Enter a valid email address.',
+					messageKey: AppMessageKey.validEmailRequired,
 				),
 			);
 			return;
@@ -180,7 +181,7 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 			emit(
 				state.copyWith(
 					status: AuthStatus.failure,
-					message: 'Password must be at least 6 characters.',
+					messageKey: AppMessageKey.passwordTooShort,
 				),
 			);
 			return;
@@ -194,23 +195,23 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 					: await _authRepository.signUp(name: name, email: email, password: password, username: username);
 
       if (result.status == AuthActionStatus.confirmEmail) {
-        emit(state.copyWith(screen: AuthScreen.confirmEmail, status: AuthStatus.confirmEmailRequired, message: result.message, userEmail: result.email ?? email, user: result.user));
+        emit(state.copyWith(screen: AuthScreen.confirmEmail, status: AuthStatus.confirmEmailRequired, messageKey: result.messageKey, userEmail: result.email ?? email, user: result.user));
         return;
       }
 
 			emit(
 				state.copyWith(
 					status: AuthStatus.authenticated,
-					message: result.message, userEmail: result.email ?? email, user: result.user));
+					messageKey: result.messageKey, userEmail: result.email ?? email, user: result.user));
     } catch (error) {
-      emit(state.copyWith(status: AuthStatus.failure, message: _buildAuthErrorMessage(error)));
+      emit(state.copyWith(status: AuthStatus.failure, messageKey: _buildAuthErrorMessage(error)));
     }
   }
 
   Future<void> _onPasswordResetSubmitted(AuthPasswordResetSubmitted event, Emitter<AuthState> emit) async {
     final email = event.email.trim();
     if (email.isEmpty || !email.contains('@')) {
-      emit(state.copyWith(status: AuthStatus.failure, message: 'Enter a valid email address.'));
+      emit(state.copyWith(status: AuthStatus.failure, messageKey: AppMessageKey.validEmailRequired));
       return;
     }
 
@@ -218,9 +219,9 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 
     try {
       final result = await _authRepository.sendPasswordReset(email: email);
-      emit(state.copyWith(screen: AuthScreen.resetPassword, status: AuthStatus.passwordResetSent, message: result.message, userEmail: result.email ?? email));
+      emit(state.copyWith(screen: AuthScreen.resetPassword, status: AuthStatus.passwordResetSent, messageKey: result.messageKey, userEmail: result.email ?? email));
     } catch (error) {
-      emit(state.copyWith(status: AuthStatus.failure, message: _buildAuthErrorMessage(error)));
+      emit(state.copyWith(status: AuthStatus.failure, messageKey: _buildAuthErrorMessage(error)));
     }
   }
 
@@ -234,14 +235,14 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 
     try {
       await _authRepository.resendSignUpConfirmation(email: email);
-      emit(state.copyWith(screen: AuthScreen.confirmEmail, status: AuthStatus.confirmEmailRequired, message: 'Confirmation email sent again to $email.', userEmail: email,
+      emit(state.copyWith(screen: AuthScreen.confirmEmail, status: AuthStatus.confirmEmailRequired, messageKey: AppMessageKey.confirmationEmailResent, userEmail: email,
 				),
 			);
 		} catch (error) {
 			emit(
 				state.copyWith(
 					status: AuthStatus.failure,
-					message: _buildAuthErrorMessage(error),
+					messageKey: _buildAuthErrorMessage(error),
 				),
 			);
 		}
@@ -252,12 +253,12 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
     final confirmationLink = event.confirmationLink.trim();
 
     if (email.isEmpty || !email.contains('@')) {
-      emit(state.copyWith(status: AuthStatus.failure, message: 'Enter a valid email address.'));
+      emit(state.copyWith(status: AuthStatus.failure, messageKey: AppMessageKey.validEmailRequired));
       return;
     }
 
     if (confirmationLink.isEmpty) {
-      emit(state.copyWith(status: AuthStatus.failure, message: 'Paste the confirmation link from your email.'));
+      emit(state.copyWith(status: AuthStatus.failure, messageKey: AppMessageKey.confirmationLinkRequired));
       return;
     }
 
@@ -267,13 +268,13 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
       final result = await _authRepository.completeEmailConfirmation(email: email, confirmationLink: confirmationLink);
 
       if (result.status == AuthActionStatus.authenticated) {
-        emit(state.copyWith(status: AuthStatus.authenticated, message: result.message, userEmail: result.email ?? email, user: result.user));
+        emit(state.copyWith(status: AuthStatus.authenticated, messageKey: result.messageKey, userEmail: result.email ?? email, user: result.user));
         return;
       }
 
-      emit(state.copyWith(screen: AuthScreen.signIn, status: AuthStatus.initial, message: result.message, userEmail: result.email ?? email, clearUser: true));
+      emit(state.copyWith(screen: AuthScreen.signIn, status: AuthStatus.initial, messageKey: result.messageKey, userEmail: result.email ?? email, clearUser: true));
     } catch (error) {
-      emit(state.copyWith(status: AuthStatus.failure, message: _buildAuthErrorMessage(error)));
+      emit(state.copyWith(status: AuthStatus.failure, messageKey: _buildAuthErrorMessage(error)));
     }
   }
 
@@ -290,15 +291,25 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 		);
 	}
 
-	String _buildAuthErrorMessage(Object error) {
+  AppMessageKey? _buildAuthErrorMessage(Object error) {
 		final message = error.toString();
 
 		if (message.startsWith('AuthException(')) {
-			return message.substring('AuthException('.length, message.length - 1);
+      return _parseMessageKey(message.substring('AuthException('.length, message.length - 1));
 		}
 
-		return message;
-	}
+    return _parseMessageKey(message);
+  }
+
+  AppMessageKey? _parseMessageKey(String raw) {
+    for (final item in AppMessageKey.values) {
+      if (item.name == raw) {
+        return item;
+      }
+    }
+
+    return null;
+  }
 
   bool _isValidUsername(String value) {
     final usernamePattern = RegExp(r'^[a-zA-Z0-9_]{3,30}$');

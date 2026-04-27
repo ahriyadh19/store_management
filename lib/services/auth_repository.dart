@@ -1,17 +1,18 @@
 import 'dart:async';
 
+import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/models/users.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 
 enum AuthActionStatus { authenticated, confirmEmail, passwordResetSent }
 
 class AuthActionResult {
-  const AuthActionResult({required this.status, this.user, this.email, this.message});
+  const AuthActionResult({required this.status, this.user, this.email, this.messageKey});
 
   final AuthActionStatus status;
   final User? user;
   final String? email;
-  final String? message;
+  final AppMessageKey? messageKey;
 }
 
 abstract class AuthRepository {
@@ -65,7 +66,7 @@ class SupabaseAuthRepository implements AuthRepository {
 
     final user = await _loadUserProfile(authUserId: response.user?.id, fallbackEmail: response.user?.email ?? email, fallbackName: response.user?.userMetadata?['name'] as String?);
 
-    return AuthActionResult(status: AuthActionStatus.authenticated, user: user, email: user?.email ?? response.user?.email ?? email, message: 'Signed in successfully.');
+    return AuthActionResult(status: AuthActionStatus.authenticated, user: user, email: user?.email ?? response.user?.email ?? email, messageKey: AppMessageKey.signedInSuccessfully);
   }
 
   @override
@@ -88,7 +89,7 @@ class SupabaseAuthRepository implements AuthRepository {
       status: hasSession ? AuthActionStatus.authenticated : AuthActionStatus.confirmEmail,
       user: user,
       email: user?.email ?? response.user?.email ?? email,
-      message: hasSession ? 'Account created successfully.' : 'Account created. Confirm your email before signing in.',
+      messageKey: hasSession ? AppMessageKey.accountCreatedSuccessfully : AppMessageKey.accountCreatedConfirmEmail,
     );
   }
 
@@ -96,7 +97,7 @@ class SupabaseAuthRepository implements AuthRepository {
   Future<AuthActionResult> sendPasswordReset({required String email}) async {
     await _authClient.resetPasswordForEmail(email);
 
-    return AuthActionResult(status: AuthActionStatus.passwordResetSent, email: email, message: 'Password reset instructions sent to $email.',
+    return AuthActionResult(status: AuthActionStatus.passwordResetSent, email: email, messageKey: AppMessageKey.passwordResetInstructionsSent,
     );
   }
 
@@ -106,12 +107,12 @@ class SupabaseAuthRepository implements AuthRepository {
     final trimmedLink = confirmationLink.trim();
 
     if (trimmedLink.isEmpty) {
-      throw AuthException('Paste the confirmation link from your email.');
+      throw AuthException(AppMessageKey.confirmationLinkRequired.name);
     }
 
     final uri = Uri.tryParse(trimmedLink);
     if (uri == null || !uri.hasScheme) {
-      throw AuthException('Paste the full confirmation link from your email.');
+      throw AuthException(AppMessageKey.confirmationLinkFullRequired.name);
     }
 
     if (_containsSessionParams(uri)) {
@@ -122,7 +123,7 @@ class SupabaseAuthRepository implements AuthRepository {
       final otpType = _parseOtpType(params['type']);
 
       if (tokenHash == null || otpType == null) {
-        throw AuthException('The confirmation link is missing the required verification details.');
+        throw AuthException(AppMessageKey.confirmationLinkMissingDetails.name);
       }
 
       await _authClient.verifyOTP(email: trimmedEmail.isEmpty ? null : trimmedEmail, tokenHash: tokenHash, type: otpType);
@@ -132,10 +133,10 @@ class SupabaseAuthRepository implements AuthRepository {
     final user = await _loadUserProfile(authUserId: currentUser?.id, fallbackEmail: currentUser?.email ?? trimmedEmail);
 
     if (_authClient.currentSession == null) {
-      return AuthActionResult(status: AuthActionStatus.confirmEmail, email: user?.email ?? currentUser?.email ?? trimmedEmail, user: user, message: 'Email confirmed. Sign in to continue.');
+      return AuthActionResult(status: AuthActionStatus.confirmEmail, email: user?.email ?? currentUser?.email ?? trimmedEmail, user: user, messageKey: AppMessageKey.emailConfirmedSignIn);
     }
 
-    return AuthActionResult(status: AuthActionStatus.authenticated, email: user?.email ?? currentUser?.email ?? trimmedEmail, user: user, message: 'Email confirmed successfully.');
+    return AuthActionResult(status: AuthActionStatus.authenticated, email: user?.email ?? currentUser?.email ?? trimmedEmail, user: user, messageKey: AppMessageKey.emailConfirmedSuccessfully);
   }
 
   @override
@@ -268,24 +269,24 @@ class FakeAuthRepository implements AuthRepository {
   Future<AuthActionResult> signIn({required String email, required String password}) async {
     _currentUser = _buildUser(email: email, name: seedName, username: email.split('@').first);
 
-    return AuthActionResult(status: AuthActionStatus.authenticated, user: _currentUser, email: email, message: 'Signed in successfully.');
+    return AuthActionResult(status: AuthActionStatus.authenticated, user: _currentUser, email: email, messageKey: AppMessageKey.signedInSuccessfully);
   }
 
   @override
   Future<AuthActionResult> signUp({required String name, required String email, required String password, required String username}) async {
     _currentUser = _buildUser(email: email, name: name, username: username);
 
-    return AuthActionResult(status: AuthActionStatus.confirmEmail, user: _currentUser, email: email, message: 'Account created. Confirm your email before signing in.');
+    return AuthActionResult(status: AuthActionStatus.confirmEmail, user: _currentUser, email: email, messageKey: AppMessageKey.accountCreatedConfirmEmail);
   }
 
   @override
   Future<AuthActionResult> sendPasswordReset({required String email}) async {
-    return AuthActionResult(status: AuthActionStatus.passwordResetSent, email: email, message: 'Password reset instructions sent to $email.');
+    return AuthActionResult(status: AuthActionStatus.passwordResetSent, email: email, messageKey: AppMessageKey.passwordResetInstructionsSent);
   }
 
   @override
   Future<AuthActionResult> completeEmailConfirmation({required String email, required String confirmationLink}) async {
-    return AuthActionResult(status: AuthActionStatus.authenticated, user: _currentUser, email: email, message: 'Email confirmed successfully.');
+    return AuthActionResult(status: AuthActionStatus.authenticated, user: _currentUser, email: email, messageKey: AppMessageKey.emailConfirmedSuccessfully);
   }
 
   @override

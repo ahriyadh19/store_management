@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:store_management/controllers/auth_controller.dart';
+import 'package:store_management/localization/app_localizations.dart';
+import 'package:store_management/localization/locale_controller.dart';
+import 'package:store_management/views/components/language_switcher.dart';
 
 class AuthView extends StatefulWidget {
-  const AuthView({super.key});
+  const AuthView({super.key, required this.localeController});
+
+  final LocaleController localeController;
 
   @override
   State<AuthView> createState() => _AuthViewState();
@@ -33,17 +38,21 @@ class _AuthViewState extends State<AuthView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return BlocListener<AuthController, AuthState>(
-      listenWhen: (previous, current) => previous.message != current.message,
+      listenWhen: (previous, current) => previous.messageKey != current.messageKey || previous.userEmail != current.userEmail,
       listener: (context, state) {
         if (state.userEmail != null && state.userEmail!.isNotEmpty) {
           _emailController.text = state.userEmail!;
         }
 
-        final message = state.message;
-        if (message == null || message.isEmpty) {
+        final messageKey = state.messageKey;
+        if (messageKey == null) {
           return;
         }
+
+        final message = l10n.message(messageKey, email: state.userEmail ?? _emailController.text);
 
         final color = state.status == AuthStatus.failure
             ? Theme.of(context).colorScheme.error
@@ -73,13 +82,13 @@ class _AuthViewState extends State<AuthView> {
                     if (state.screen == AuthScreen.confirmEmail) {
                       return _AuthStatusCard(
                         icon: Icons.mark_email_read_rounded,
-                        title: 'Confirm your email',
-                        description: 'We sent a confirmation link to ${state.userEmail ?? _emailController.text}. On Linux desktop the link usually opens in your browser instead of returning to the app.',
+                        title: l10n.confirmYourEmail,
+                        description: l10n.confirmEmailDescription(state.userEmail ?? _emailController.text),
                         input: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Text(
-                              'If the app does not open after you confirm, copy the final browser address and paste it here to finish confirmation.',
+                              l10n.confirmEmailPasteHint,
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: const Color(0xFF5C6672)),
                             ),
                             const SizedBox(height: 16),
@@ -87,7 +96,7 @@ class _AuthViewState extends State<AuthView> {
                               controller: _confirmationLinkController,
                               minLines: 2,
                               maxLines: 4,
-                              decoration: const InputDecoration(labelText: 'Confirmation link', hintText: 'https://...token_hash=... or https://...code=...', border: OutlineInputBorder()),
+                              decoration: InputDecoration(labelText: l10n.confirmationLink, hintText: l10n.confirmationLinkHint, border: const OutlineInputBorder()),
                             ),
                             const SizedBox(height: 12),
                             Align(
@@ -98,18 +107,18 @@ class _AuthViewState extends State<AuthView> {
                                     : () {
                                         context.read<AuthController>().add(AuthConfirmationResent(email: state.userEmail ?? _emailController.text));
                                       },
-                                child: const Text('Resend email'),
+                                child: Text(l10n.resendEmail),
                               ),
                             ),
                           ],
                         ),
-                        primaryLabel: 'Complete confirmation',
+                        primaryLabel: l10n.completeConfirmation,
                         primaryPressed: state.isLoading
                             ? null
                             : () {
                                 context.read<AuthController>().add(AuthConfirmationLinkSubmitted(email: state.userEmail ?? _emailController.text, confirmationLink: _confirmationLinkController.text));
                               },
-                        secondaryLabel: 'Back to sign in',
+                        secondaryLabel: l10n.backToSignIn,
                         secondaryPressed: () {
                           context.read<AuthController>().add(const AuthScreenChanged(AuthScreen.signIn));
                         },
@@ -122,24 +131,23 @@ class _AuthViewState extends State<AuthView> {
 
                       return _AuthStatusCard(
                         icon: isResetSent ? Icons.password_rounded : Icons.lock_reset_rounded,
-                        title: isResetSent ? 'Reset password' : 'Forgot password?',
+                        title: isResetSent ? l10n.resetPassword : l10n.forgotPasswordTitle,
                         description: isResetSent
-                            ? 'A reset link was sent to ${state.userEmail ?? _emailController.text}. Use the link in your email to choose a new password.'
-                            : 'Enter your email and we will send you a reset password link.',
+                            ? l10n.resetPasswordSentDescription(state.userEmail ?? _emailController.text) : l10n.forgotPasswordDescription,
                         input: isResetSent
                             ? null
                             : TextField(
                                 controller: _emailController,
                                 keyboardType: TextInputType.emailAddress,
-                                decoration: const InputDecoration(labelText: 'Email', hintText: 'name@store.com', border: OutlineInputBorder()),
+                                decoration: InputDecoration(labelText: l10n.email, hintText: l10n.emailHint, border: const OutlineInputBorder()),
                               ),
-                        primaryLabel: isResetSent ? 'Send again' : 'Send reset link',
+                        primaryLabel: isResetSent ? l10n.sendAgain : l10n.sendResetLink,
                         primaryPressed: state.isLoading
                             ? null
                             : () {
                                 context.read<AuthController>().add(AuthPasswordResetSubmitted(email: _emailController.text));
                               },
-                        secondaryLabel: 'Back to sign in',
+                        secondaryLabel: l10n.backToSignIn,
                         secondaryPressed: () {
                           context.read<AuthController>().add(const AuthScreenChanged(AuthScreen.signIn));
                         },
@@ -163,6 +171,10 @@ class _AuthViewState extends State<AuthView> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          Align(
+                            alignment: AlignmentDirectional.topEnd,
+                            child: LanguageSwitcher(localeController: widget.localeController),
+                          ),
                           Container(
                             height: 64,
                             width: 64,
@@ -178,7 +190,7 @@ class _AuthViewState extends State<AuthView> {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            isSignIn ? 'Sign in' : 'Create account',
+                            isSignIn ? l10n.signIn : l10n.createAccount,
                             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -186,17 +198,16 @@ class _AuthViewState extends State<AuthView> {
                           const SizedBox(height: 8),
                           Text(
                             isSignIn
-                                ? 'Use your email and password to continue.'
-                                : 'Create your account and profile for the store app.',
+                                ? l10n.signInSubtitle : l10n.signUpSubtitle,
                             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                   color: const Color(0xFF5C6672),
                                 ),
                           ),
                           const SizedBox(height: 24),
                           SegmentedButton<AuthScreen>(
-                            segments: const [
-                              ButtonSegment(value: AuthScreen.signIn, label: Text('Sign in')),
-                              ButtonSegment(value: AuthScreen.signUp, label: Text('Sign up')),
+                            segments: [
+                              ButtonSegment(value: AuthScreen.signIn, label: Text(l10n.signIn)),
+                              ButtonSegment(value: AuthScreen.signUp, label: Text(l10n.signUp)),
                             ],
                             selected: {state.screen},
                             onSelectionChanged: (selection) {
@@ -209,22 +220,19 @@ class _AuthViewState extends State<AuthView> {
                           if (isSignUp) ...[
                             TextField(
                               controller: _nameController,
-                              decoration: const InputDecoration(labelText: 'Name', hintText: 'Store owner name', border: OutlineInputBorder()),
+                              decoration: InputDecoration(labelText: l10n.name, hintText: l10n.nameHint, border: const OutlineInputBorder()),
                             ),
                             const SizedBox(height: 16),
                             TextField(
                               controller: _usernameController,
-                              decoration: const InputDecoration(labelText: 'Username', hintText: 'store_owner', border: OutlineInputBorder()),
+                              decoration: InputDecoration(labelText: l10n.username, hintText: l10n.usernameHint, border: const OutlineInputBorder()),
                             ),
                             const SizedBox(height: 16),
                           ],
                           TextField(
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
-                            decoration: const InputDecoration(
-                              labelText: 'Email',
-                              hintText: 'name@store.com',
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(labelText: l10n.email, hintText: l10n.emailHint, border: const OutlineInputBorder(),
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -232,8 +240,8 @@ class _AuthViewState extends State<AuthView> {
                             controller: _passwordController,
                             obscureText: _obscurePassword,
                             decoration: InputDecoration(
-                              labelText: 'Password',
-                              hintText: 'At least 6 characters',
+                              labelText: l10n.password,
+                              hintText: l10n.passwordHint,
                               border: const OutlineInputBorder(),
                               suffixIcon: IconButton(
                                 onPressed: () {
@@ -251,8 +259,8 @@ class _AuthViewState extends State<AuthView> {
                               controller: _confirmPasswordController,
                               obscureText: _obscureConfirmPassword,
                               decoration: InputDecoration(
-                                labelText: 'Confirm password',
-                                hintText: 'Re-enter your password',
+                                labelText: l10n.confirmPassword,
+                                hintText: l10n.confirmPasswordHint,
                                 border: const OutlineInputBorder(),
                                 suffixIcon: IconButton(
                                   onPressed: () {
@@ -273,7 +281,7 @@ class _AuthViewState extends State<AuthView> {
                                     if (isSignUp && _passwordController.text != _confirmPasswordController.text) {
                                       ScaffoldMessenger.of(context)
                                         ..hideCurrentSnackBar()
-                                        ..showSnackBar(SnackBar(content: const Text('Passwords do not match.'), backgroundColor: Theme.of(context).colorScheme.error));
+                                        ..showSnackBar(SnackBar(content: Text(l10n.message(AppMessageKey.passwordsDoNotMatch)), backgroundColor: Theme.of(context).colorScheme.error));
                                       return;
                                     }
 
@@ -295,7 +303,7 @@ class _AuthViewState extends State<AuthView> {
                                     width: 20,
                                     child: CircularProgressIndicator(strokeWidth: 2.4),
                                   )
-                                : Text(isSignIn ? 'Continue' : 'Create account'),
+                                : Text(isSignIn ? l10n.continueLabel : l10n.createAccount),
                           ),
                           if (isSignIn) ...[
                             const SizedBox(height: 12),
@@ -305,15 +313,14 @@ class _AuthViewState extends State<AuthView> {
                                 onPressed: () {
                                   context.read<AuthController>().add(const AuthScreenChanged(AuthScreen.forgotPassword));
                                 },
-                                child: const Text('Forgot password?'),
+                                child: Text(l10n.forgotPasswordAction),
                               ),
                             ),
                           ],
                           const SizedBox(height: 14),
                           Text(
                             isSignIn
-                                ? 'Use your Supabase email and password to continue.'
-                                : 'Name, username, email, password, and confirm password are used to create your profile.',
+                                ? l10n.signInFooter : l10n.signUpFooter,
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   color: const Color(0xFF5C6672),
                                 ),

@@ -5,15 +5,22 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/material.dart';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:store_management/localization/locale_controller.dart';
 import 'package:store_management/main.dart';
 import 'package:store_management/services/auth_repository.dart';
 
 void main() {
   testWidgets('opens drawer on authenticated home screen', (WidgetTester tester) async {
-    await tester.pumpWidget(MyApp(authRepository: FakeAuthRepository(seedEmail: 'owner@store.com')));
+    await tester.pumpWidget(
+      MyApp(
+        authRepository: FakeAuthRepository(seedEmail: 'owner@store.com'),
+        localeController: LocaleController(initialLocale: const Locale('en')),
+      ),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.byTooltip('Open navigation menu'));
@@ -24,7 +31,13 @@ void main() {
   });
 
   testWidgets('shows auth screen by default', (WidgetTester tester) async {
-    await tester.pumpWidget(MyApp(authRepository: FakeAuthRepository()));
+    await tester.pumpWidget(
+      MyApp(
+        authRepository: FakeAuthRepository(),
+        localeController: LocaleController(initialLocale: const Locale('en')),
+      ),
+    );
+    await tester.pumpAndSettle();
 
     expect(find.text('Sign in'), findsWidgets);
     expect(find.text('Email'), findsOneWidget);
@@ -32,9 +45,17 @@ void main() {
   });
 
   testWidgets('opens forgot password screen', (WidgetTester tester) async {
-    await tester.pumpWidget(MyApp(authRepository: FakeAuthRepository()));
+    await tester.pumpWidget(
+      MyApp(
+        authRepository: FakeAuthRepository(),
+        localeController: LocaleController(initialLocale: const Locale('en')),
+      ),
+    );
+    await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Forgot password?'));
+    final forgotPasswordButton = find.text('Forgot password?');
+    await tester.ensureVisible(forgotPasswordButton);
+    await tester.tap(forgotPasswordButton);
     await tester.pumpAndSettle();
 
     expect(find.text('Forgot password?'), findsOneWidget);
@@ -42,7 +63,13 @@ void main() {
   });
 
   testWidgets('shows username field on sign up', (WidgetTester tester) async {
-    await tester.pumpWidget(MyApp(authRepository: FakeAuthRepository()));
+    await tester.pumpWidget(
+      MyApp(
+        authRepository: FakeAuthRepository(),
+        localeController: LocaleController(initialLocale: const Locale('en')),
+      ),
+    );
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Sign up'));
     await tester.pumpAndSettle();
@@ -55,7 +82,13 @@ void main() {
   });
 
   testWidgets('toggles password visibility on sign up', (WidgetTester tester) async {
-    await tester.pumpWidget(MyApp(authRepository: FakeAuthRepository()));
+    await tester.pumpWidget(
+      MyApp(
+        authRepository: FakeAuthRepository(),
+        localeController: LocaleController(initialLocale: const Locale('en')),
+      ),
+    );
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Sign up'));
     await tester.pumpAndSettle();
@@ -75,7 +108,13 @@ void main() {
   });
 
   testWidgets('shows error when sign up passwords do not match', (WidgetTester tester) async {
-    await tester.pumpWidget(MyApp(authRepository: FakeAuthRepository()));
+    await tester.pumpWidget(
+      MyApp(
+        authRepository: FakeAuthRepository(),
+        localeController: LocaleController(initialLocale: const Locale('en')),
+      ),
+    );
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Sign up'));
     await tester.pumpAndSettle();
@@ -92,5 +131,20 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Passwords do not match.'), findsOneWidget);
+  });
+
+  testWidgets('renders auth screen in Arabic', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MyApp(
+        authRepository: FakeAuthRepository(),
+        localeController: LocaleController(initialLocale: const Locale('ar')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('تسجيل الدخول'), findsWidgets);
+    expect(find.text('البريد الإلكتروني'), findsOneWidget);
+    expect(find.text('كلمة المرور'), findsOneWidget);
+    expect(Directionality.of(tester.element(find.text('تسجيل الدخول').first)), TextDirection.rtl);
   });
 }
