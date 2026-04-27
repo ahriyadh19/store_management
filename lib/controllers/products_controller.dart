@@ -1,11 +1,11 @@
 import 'package:store_management/controllers/controller_utils.dart';
-import 'package:store_management/models/products.dart';
+import 'package:store_management/models/product.dart';
 import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
 import 'package:store_management/validations/products_validation.dart';
 
 class ProductsController {
-  Products? product;
+  Product? product;
   Request? request;
   Response? response;
 
@@ -40,7 +40,7 @@ class ProductsController {
       }
 
       final now = DateTime.now();
-      product = Products(
+      product = Product(
         id: request.data?['id'] as int?,
         name: request.data!['name'] as String,
         description: request.data!['description'] as String,
@@ -106,7 +106,7 @@ class ProductsController {
         return validationError;
       }
 
-      final products = product == null ? <Products>[] : <Products>[product!];
+      final products = product == null ? <Product>[] : <Product>[product!];
       return Response(statusCode: 200, title: 'Products Fetched', message: 'The products have been fetched successfully', data: products);
     } catch (error) {
       return _errorResponse(error);

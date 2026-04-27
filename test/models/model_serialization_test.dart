@@ -1,8 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:store_management/models/company.dart';
 import 'package:store_management/models/company_products.dart';
-import 'package:store_management/models/products.dart';
+import 'package:store_management/models/product.dart';
 import 'package:store_management/models/roles.dart';
+import 'package:store_management/models/store_company.dart';
 import 'package:store_management/models/user_roles.dart';
 import 'package:store_management/models/users.dart';
 
@@ -25,7 +26,7 @@ void main() {
     });
 
     test('Products generates uuid automatically', () {
-      final product = Products(
+      final product = Product(
         id: 1,
         name: 'Rice',
         description: '1kg pack',
@@ -93,6 +94,12 @@ void main() {
 
       expect(companyProduct.uuid, isNotEmpty);
     });
+
+    test('StoreCompany generates uuid automatically', () {
+      final storeCompany = StoreCompany(id: 1, storeUuid: 'store-uuid', companyId: 'company-1', status: 1, createdAt: createdAt, updatedAt: updatedAt);
+
+      expect(storeCompany.uuid, isNotEmpty);
+    });
   });
 
   group('model serialization', () {
@@ -112,7 +119,7 @@ void main() {
     });
 
     test('Products round-trips through map and json', () {
-      final product = Products(
+      final product = Product(
         id: 1,
         uuid: 'product-uuid',
         name: 'Rice',
@@ -122,8 +129,8 @@ void main() {
         updatedAt: updatedAt,
       );
 
-      expect(Products.fromMap(product.toMap()), equals(product));
-      expect(Products.fromJson(product.toJson()), equals(product));
+      expect(Product.fromMap(product.toMap()), equals(product));
+      expect(Product.fromJson(product.toJson()), equals(product));
     });
 
     test('Roles round-trips through map and json', () {
@@ -240,6 +247,13 @@ void main() {
       });
 
       expect(companyProduct.price, 15.0);
+    });
+
+    test('StoreCompany round-trips through map and json', () {
+      final storeCompany = StoreCompany(id: 1, uuid: 'store-company-uuid', storeUuid: 'store-uuid', companyId: 'company-1', status: 1, createdAt: createdAt, updatedAt: updatedAt);
+
+      expect(StoreCompany.fromMap(storeCompany.toMap()), equals(storeCompany));
+      expect(StoreCompany.fromJson(storeCompany.toJson()), equals(storeCompany));
     });
   });
 }

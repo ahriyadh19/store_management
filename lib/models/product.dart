@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:store_management/services/uuid.dart';
 
-class Products {
+class Product {
   int? id;
   String uuid;
   String name;
@@ -12,10 +12,10 @@ class Products {
   DateTime createdAt;
   DateTime updatedAt;
 
-  Products({this.id, String? uuid, required this.name, required this.description, required this.status, required this.createdAt, required this.updatedAt}) : uuid = uuid ?? UUIDGenerator.generate();
+  Product({this.id, String? uuid, required this.name, required this.description, required this.status, required this.createdAt, required this.updatedAt}) : uuid = uuid ?? UUIDGenerator.generate();
 
-  Products copyWith({int? id, String? uuid, String? name, String? description, int? status, DateTime? createdAt, DateTime? updatedAt}) {
-    return Products(
+  Product copyWith({int? id, String? uuid, String? name, String? description, int? status, DateTime? createdAt, DateTime? updatedAt}) {
+    return Product(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
       name: name ?? this.name,
@@ -30,8 +30,8 @@ class Products {
     return <String, dynamic>{'id': id, 'uuid': uuid, 'name': name, 'description': description, 'status': status, 'createdAt': createdAt.millisecondsSinceEpoch, 'updatedAt': updatedAt.millisecondsSinceEpoch};
   }
 
-  factory Products.fromMap(Map<String, dynamic> map) {
-    return Products(
+  factory Product.fromMap(Map<String, dynamic> map) {
+    return Product(
       id: map['id'] != null ? map['id'] as int : null,
       uuid: map['uuid'] as String,
       name: map['name'] as String,
@@ -44,7 +44,7 @@ class Products {
 
   String toJson() => json.encode(toMap());
 
-  factory Products.fromJson(String source) => Products.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory Product.fromJson(String source) => Product.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
@@ -52,7 +52,7 @@ class Products {
   }
 
   @override
-  bool operator ==(covariant Products other) {
+  bool operator ==(covariant Product other) {
     if (identical(this, other)) return true;
 
     return other.id == id && other.uuid == uuid && other.name == name && other.description == description && other.status == status && other.createdAt == createdAt && other.updatedAt == updatedAt;
