@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/services/uuid.dart';
 
 class User {
@@ -47,15 +48,15 @@ class User {
 
   factory User.fromMap(Map<String, dynamic> map) {
     return User(
-      id: map['id'] != null ? map['id'] as int : null,
+      id: ModelParsing.intOrNull(map['id']),
       name: map['name'] as String,
       email: map['email'] as String,
       password: (map['password'] as String?) ?? '',
       username: map['username'] as String,
       uuid: map['uuid'] as String,
-      status: map['status'] as int,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
+      status: ModelParsing.intOrThrow(map['status'], 'status'),
+      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
+      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
     );
   }
 

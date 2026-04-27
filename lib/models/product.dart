@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/services/uuid.dart';
 
 class Product {
@@ -32,13 +33,13 @@ class Product {
 
   factory Product.fromMap(Map<String, dynamic> map) {
     return Product(
-      id: map['id'] != null ? map['id'] as int : null,
+      id: ModelParsing.intOrNull(map['id']),
       uuid: map['uuid'] as String,
       name: map['name'] as String,
       description: map['description'] as String,
-      status: map['status'] as int,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
+      status: ModelParsing.intOrThrow(map['status'], 'status'),
+      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
+      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
     );
   }
 
@@ -48,7 +49,7 @@ class Product {
 
   @override
   String toString() {
-    return 'Products(id: $id, uuid: $uuid, name: $name, description: $description, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Product(id: $id, uuid: $uuid, name: $name, description: $description, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override

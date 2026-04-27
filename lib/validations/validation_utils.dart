@@ -56,6 +56,19 @@ class ValidationUtils {
     return null;
   }
 
+  static Response? validateOptionalInt(Request request, String key, String message, {int min = 0}) {
+    final value = request.data?[key];
+    if (value == null) {
+      return null;
+    }
+
+    if (value is! int || value < min) {
+      return badRequest(message);
+    }
+
+    return null;
+  }
+
   static Response? validateRequiredNum(
     Request request,
     String key,

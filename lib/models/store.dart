@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/services/uuid.dart';
 
 class Store {
@@ -31,7 +32,7 @@ class Store {
 
   factory Store.fromMap(Map<String, dynamic> map) {
     return Store(
-      id: map['id'] != null ? map['id'] as int : null,
+      id: ModelParsing.intOrNull(map['id']),
       uuid: map['uuid'] as String,
       name: map['name'] as String,
       description: map['description'] as String,

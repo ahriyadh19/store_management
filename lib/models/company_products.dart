@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/services/uuid.dart';
 
 class CompanyProducts {
@@ -59,19 +60,17 @@ class CompanyProducts {
   }
 
   factory CompanyProducts.fromMap(Map<String, dynamic> map) {
-    final price = map['price'];
-
     return CompanyProducts(
-      id: map['id'] != null ? map['id'] as int : null,
+      id: ModelParsing.intOrNull(map['id']),
       uuid: map['uuid'] as String,
       companyId: map['companyId'] as String,
       productId: map['productId'] as String,
-      price: (price as num).toDouble(),
+      price: ModelParsing.doubleOrThrow(map['price'], 'price'),
       description: map['description'] as String,
-      stock: map['stock'] as int,
-      status: map['status'] as int,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
+      stock: ModelParsing.intOrThrow(map['stock'], 'stock'),
+      status: ModelParsing.intOrThrow(map['status'], 'status'),
+      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
+      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
     );
   }
 

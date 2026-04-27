@@ -61,6 +61,6 @@ class CategoriesValidation {
       return statusError;
     }
 
-    return ValidationUtils.validateRequiredInt(request, 'parentId', 'Parent id must be provided as a non-negative integer', min: 0);
+    return ValidationUtils.validateOptionalInt(request, 'parentId', 'Parent id must be provided as a non-negative integer', min: 0);
   }
 }

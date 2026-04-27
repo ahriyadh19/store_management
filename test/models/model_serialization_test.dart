@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:store_management/models/categories.dart';
+import 'package:store_management/models/client.dart';
 import 'package:store_management/models/company.dart';
 import 'package:store_management/models/company_products.dart';
 import 'package:store_management/models/product.dart';
@@ -254,6 +256,36 @@ void main() {
 
       expect(StoreCompany.fromMap(storeCompany.toMap()), equals(storeCompany));
       expect(StoreCompany.fromJson(storeCompany.toJson()), equals(storeCompany));
+    });
+
+    test('Categories supports root nodes with null parentId', () {
+      final category = Categories(id: 1, uuid: 'category-uuid', name: 'Root', description: 'Top level category', status: 1, parentId: null, createdAt: createdAt, updatedAt: updatedAt);
+
+      expect(Categories.fromMap(category.toMap()), equals(category));
+      expect(Categories.fromJson(category.toJson()), equals(category));
+      expect(Categories.fromMap({...category.toMap(), 'parentId': null}).parentId, isNull);
+    });
+
+    test('Client accepts integer credit values from raw maps', () {
+      final client = Client.fromMap({
+        'id': 1,
+        'uuid': 'client-uuid',
+        'name': 'Retail buyer',
+        'description': 'Preferred customer',
+        'email': 'buyer@example.com',
+        'phone': '123456789',
+        'address': 'Main street',
+        'status': 1,
+        'creditLimit': 100,
+        'currentCredit': 25,
+        'availableCredit': 75,
+        'createdAt': createdAt.millisecondsSinceEpoch,
+        'updatedAt': updatedAt.millisecondsSinceEpoch,
+      });
+
+      expect(client.creditLimit, 100.0);
+      expect(client.currentCredit, 25.0);
+      expect(client.availableCredit, 75.0);
     });
   });
 }

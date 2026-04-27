@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/services/uuid.dart';
 
 class Client {
@@ -85,19 +86,19 @@ class Client {
 
   factory Client.fromMap(Map<String, dynamic> map) {
     return Client(
-      id: map['id'] != null ? map['id'] as int : null,
+      id: ModelParsing.intOrNull(map['id']),
       uuid: map['uuid'] as String,
       name: map['name'] as String,
       description: map['description'] as String,
       email: map['email'] as String,
       phone: map['phone'] as String,
       address: map['address'] as String,
-      status: map['status'] as int,
-      creditLimit: map['creditLimit'] as double,
-      currentCredit: map['currentCredit'] as double,
-      availableCredit: map['availableCredit'] as double,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
+      status: ModelParsing.intOrThrow(map['status'], 'status'),
+      creditLimit: ModelParsing.doubleOrThrow(map['creditLimit'], 'creditLimit'),
+      currentCredit: ModelParsing.doubleOrThrow(map['currentCredit'], 'currentCredit'),
+      availableCredit: ModelParsing.doubleOrThrow(map['availableCredit'], 'availableCredit'),
+      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
+      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
     );
   }
 
@@ -107,7 +108,7 @@ class Client {
 
   @override
   String toString() {
-    return 'Clients(id: $id, uuid: $uuid, name: $name, description: $description, email: $email, phone: $phone, address: $address, status: $status, creditLimit: $creditLimit, currentCredit: $currentCredit, availableCredit: $availableCredit, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Client(id: $id, uuid: $uuid, name: $name, description: $description, email: $email, phone: $phone, address: $address, status: $status, creditLimit: $creditLimit, currentCredit: $currentCredit, availableCredit: $availableCredit, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override

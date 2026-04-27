@@ -1,30 +1,32 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/services/uuid.dart';
 
 class Categories {
+  static const Object _unset = Object();
+
   int? id;
   String uuid;
   String name;
   String description;
   int status;
-  int parentId;
+  int? parentId;
   DateTime createdAt;
   DateTime updatedAt;
 
-  
-  Categories({this.id, String? uuid, required this.name, required this.description, required this.status, required this.parentId, required this.createdAt, required this.updatedAt})
+  Categories({this.id, String? uuid, required this.name, required this.description, required this.status, this.parentId, required this.createdAt, required this.updatedAt})
     : uuid = uuid ?? UUIDGenerator.generate();
 
-  Categories copyWith({int? id, String? uuid, String? name, String? description, int? status, int? parentId, DateTime? createdAt, DateTime? updatedAt}) {
+  Categories copyWith({int? id, String? uuid, String? name, String? description, int? status, Object? parentId = _unset, DateTime? createdAt, DateTime? updatedAt}) {
     return Categories(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
       name: name ?? this.name,
       description: description ?? this.description,
       status: status ?? this.status,
-      parentId: parentId ?? this.parentId,
+      parentId: identical(parentId, _unset) ? this.parentId : parentId as int?,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -45,14 +47,14 @@ class Categories {
 
   factory Categories.fromMap(Map<String, dynamic> map) {
     return Categories(
-      id: map['id'] != null ? map['id'] as int : null,
+      id: ModelParsing.intOrNull(map['id']),
       uuid: map['uuid'] as String,
       name: map['name'] as String,
       description: map['description'] as String,
-      status: map['status'] as int,
-      parentId: map['parentId'] as int,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
+      status: ModelParsing.intOrThrow(map['status'], 'status'),
+      parentId: ModelParsing.intOrNull(map['parentId']),
+      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
+      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
     );
   }
 
