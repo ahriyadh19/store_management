@@ -1,37 +1,80 @@
 # Store Management
 
-Store Management is a Flutter application for organizing core store data such as companies, products, categories, tags, users, roles, and related mappings.
+Store Management is a Flutter application for handling store operations with a Supabase-backed authentication flow and a structured domain layer for inventory, relationships, and store financial records.
 
-The project currently includes a foundational app shell plus domain models, request and response services, input validations, and CRUD-style controllers for the main entities.
+The codebase already includes authentication, a dashboard shell, domain models, request/response services, validation classes, CRUD-style controllers, unit tests, and a consolidated Supabase migration for the current schema.
 
-## Overview
+## What The App Covers
 
-This codebase is structured around a simple layered approach:
+The project is built around store operations and related business entities:
 
-- `models`: domain entities and serialization helpers
-- `controllers`: CRUD-oriented application logic
-- `validations`: request validation for each entity
-- `services`: shared request, response, and UUID utilities
-- `views`: UI components and pages
+- companies and company-product pricing
+- products, categories, and tags
+- users, roles, and role assignments
+- store relations such as store-company and store-client
+- client-linked financial records for each store:
+  - invoices
+  - payment vouchers
+  - returns
+  - financial transaction ledger entries
 
-At the moment, the app starts on a basic home screen and the controller layer works as an in-memory logic layer. It is ready for the next step of connecting forms, pages, and persistence.
+## Current Application Flow
 
-## Features
+- The app starts in [lib/main.dart](lib/main.dart).
+- Supabase is initialized before the UI is rendered.
+- Authentication state is managed with `flutter_bloc`.
+- Authenticated users are routed to the main index screen.
+- Unauthenticated users are routed to the auth screen.
 
-- Flutter application scaffold with Material UI
-- Centralized request and response models
-- Entity models for store-related data
-- Validation classes for controller input
-- CRUD-style controllers for:
-  - companies
-  - company products
-  - categories
-  - products
-  - tags
-  - roles
-  - users
-  - user roles
-  - product tags
+At the moment, the UI shell is in place and the domain/controller layer is more complete than the feature screens. This makes the project a good base for continuing with forms, pages, and persistence-driven workflows.
+
+## Architecture
+
+The project follows a simple layered structure:
+
+- `lib/models`: entity models, serialization, parsing helpers
+- `lib/controllers`: CRUD-style business logic and auth state management
+- `lib/validations`: request validation per entity
+- `lib/services`: shared request, response, auth, storage, and UUID utilities
+- `lib/views`: UI screens such as authentication
+- `supabase/migrations`: database schema and policy definitions
+- `test`: model and controller tests
+
+## Key Modules
+
+Implemented controller coverage currently includes:
+
+- authentication
+- companies
+- company products
+- categories
+- products
+- product tags
+- tags
+- roles
+- users
+- user roles
+- store invoices
+- store payment vouchers
+- store returns
+- store financial transactions
+
+Implemented model coverage currently includes:
+
+- core entities such as `Company`, `Product`, `Categories`, `Tags`, `Client`, `User`, `Roles`
+- relationship entities such as `CompanyProducts`, `ProductsTags`, `StoreCompany`, `StoreClient`, `StoreUser`, `UserRoles`
+- financial entities such as `StoreInvoice`, `StorePaymentVoucher`, `StoreReturn`, `StoreFinancialTransaction`
+
+## Financial Module
+
+The financial module is scoped to both the store and the client.
+
+Each financial record carries:
+
+- `storeId` and `storeUuid`
+- `clientId` and `clientUuid`
+
+This keeps invoices, vouchers, returns, and ledger transactions attached to a specific client inside a specific store rather than being store-level records only.
 
 ## Project Structure
 
@@ -44,40 +87,90 @@ lib/
   services/
   validations/
   views/
+supabase/
+  migrations/
 test/
+  controllers/
+  models/
 ```
 
 ## Requirements
 
 - Flutter SDK
 - Dart SDK
+- Supabase project with URL and anon key
 - Android Studio, VS Code, or another Flutter-compatible IDE
 
-To verify your environment:
+Verify your environment:
 
 ```bash
 flutter doctor
 ```
 
-## Getting Started
+## Setup
 
-Clone the repository and install dependencies:
+Install dependencies:
 
 ```bash
-git clone https://github.com/ahriyadh19/store_management.git
-cd store_management
 flutter pub get
 ```
 
-Run the application:
+Provide Supabase configuration in one of these ways:
+
+1. Use `--dart-define` values.
+2. Use `--dart-define-from-file=.env.local.json`.
+3. Create a local `.env.local.json` file in the project root.
+
+Example `.env.local.json`:
+
+```json
+{
+  "SUPABASE_URL": "https://your-project.supabase.co",
+  "SUPABASE_ANON_KEY": "your-anon-key"
+}
+```
+
+If no valid configuration is found, the app throws a startup error during Supabase initialization.
+
+## Running The App
+
+Run with local config file:
 
 ```bash
-flutter run
+flutter run --dart-define-from-file=.env.local.json
 ```
+
+Run with inline defines:
+
+```bash
+flutter run \
+  --dart-define=SUPABASE_URL=https://your-project.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=your-anon-key
+```
+
+## Database
+
+The database schema lives in `supabase/migrations` and is currently consolidated into a single main migration file for the project domain.
+
+That migration defines:
+
+- base entity tables
+- relationship tables
+- financial tables
+- indexes
+- update triggers
+- row-level security
+- authenticated access policies
 
 ## Useful Commands
 
-Run static analysis:
+Install dependencies:
+
+```bash
+flutter pub get
+```
+
+Analyze the project:
 
 ```bash
 flutter analyze
@@ -89,37 +182,54 @@ Run tests:
 flutter test
 ```
 
-Build release artifacts:
+Run a focused test file:
+
+```bash
+flutter test test/models/model_serialization_test.dart
+flutter test test/controllers/store_invoices_controller_test.dart
+```
+
+Build common targets:
 
 ```bash
 flutter build apk
 flutter build web
+flutter build linux
 ```
 
 ## Current Status
 
-This project is in an early implementation phase.
+Implemented today:
 
-Implemented:
+- Supabase authentication bootstrap
+- auth state handling with BLoC
+- base dashboard shell
+- domain model layer with safer parsing helpers
+- request validation layer
+- CRUD-style controller layer
+- consolidated Supabase schema migration
+- store-client-linked financial module
+- focused model and controller tests
 
-- base Flutter app entry point
-- domain models
-- validation layer
-- controller layer
+Still worth improving:
 
-Planned or recommended next steps:
-
-- connect controllers to UI forms and pages
-- add local or remote data persistence
-- add unit tests for controllers and validations
-- expand the user interface for real store workflows
+- dedicated UI screens for domain modules
+- persistence wiring between controllers and Supabase tables
+- reporting and analytics flows
+- automatic ledger posting from invoice and return workflows
+- broader controller and validation test coverage
 
 ## Development Notes
 
-- The current controllers operate on in-memory model instances.
-- The project is suitable for extending into a local database or API-backed architecture.
-- Input validation is separated from controller logic to keep behavior easier to maintain and test.
+- Models serialize timestamps as epoch milliseconds.
+- Relation-heavy models use numeric `...Id` fields and string `...Uuid` fields.
+- Financial records follow the same convention and must include both store and client linkage.
+- The current codebase is structured to keep models, validations, and controllers easy to test independently.
 
 ## License
 
 This repository does not currently define a license.
+
+## Developer
+
+@ahriyadh19
