@@ -4,6 +4,7 @@ import 'package:store_management/models/client.dart';
 import 'package:store_management/models/company.dart';
 import 'package:store_management/models/company_products.dart';
 import 'package:store_management/models/product.dart';
+import 'package:store_management/models/products_tags.dart';
 import 'package:store_management/models/roles.dart';
 import 'package:store_management/models/store_company.dart';
 import 'package:store_management/models/user_roles.dart';
@@ -56,8 +57,7 @@ void main() {
     test('UserRoles generates uuid automatically', () {
       final userRole = UserRoles(
         id: 1,
-        userId: 'user-1',
-        roleId: 'role-1',
+        userId: 1, userUuid: '11111111-1111-4111-8111-111111111111', roleId: 2, roleUuid: '22222222-2222-4222-8222-222222222222',
         status: 1,
         createdAt: createdAt,
         updatedAt: updatedAt,
@@ -84,8 +84,10 @@ void main() {
     test('CompanyProducts generates uuid automatically', () {
       final companyProduct = CompanyProducts(
         id: 1,
-        companyId: 'company-1',
-        productId: 'product-1',
+        companyId: 1,
+        companyUuid: '11111111-1111-4111-8111-111111111111',
+        productId: 2,
+        productUuid: '22222222-2222-4222-8222-222222222222',
         price: 15.5,
         description: 'Retail price',
         stock: 20,
@@ -98,9 +100,33 @@ void main() {
     });
 
     test('StoreCompany generates uuid automatically', () {
-      final storeCompany = StoreCompany(id: 1, storeUuid: 'store-uuid', companyId: 'company-1', status: 1, createdAt: createdAt, updatedAt: updatedAt);
+      final storeCompany = StoreCompany(
+        id: 1,
+        storeId: 1,
+        storeUuid: '11111111-1111-4111-8111-111111111111',
+        companyId: 2,
+        companyUuid: '22222222-2222-4222-8222-222222222222',
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
 
       expect(storeCompany.uuid, isNotEmpty);
+    });
+
+    test('ProductsTags generates uuid automatically', () {
+      final productTag = ProductsTags(
+        id: 1,
+        productId: 2,
+        productUuid: '22222222-2222-4222-8222-222222222222',
+        tagId: 3,
+        tagUuid: '33333333-3333-4333-8333-333333333333',
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+      expect(productTag.uuid, isNotEmpty);
     });
   });
 
@@ -154,8 +180,10 @@ void main() {
       final userRole = UserRoles(
         id: 1,
         uuid: 'user-role-uuid',
-        userId: 'user-1',
-        roleId: 'role-1',
+        userId: 1,
+        userUuid: '11111111-1111-4111-8111-111111111111',
+        roleId: 2,
+        roleUuid: '22222222-2222-4222-8222-222222222222',
         status: 1,
         createdAt: createdAt,
         updatedAt: updatedAt,
@@ -220,8 +248,10 @@ void main() {
       final companyProduct = CompanyProducts(
         id: 1,
         uuid: 'company-product-uuid',
-        companyId: 'company-1',
-        productId: 'product-1',
+        companyId: 1,
+        companyUuid: '11111111-1111-4111-8111-111111111111',
+        productId: 2,
+        productUuid: '22222222-2222-4222-8222-222222222222',
         price: 15.5,
         description: 'Retail price',
         stock: 20,
@@ -238,8 +268,10 @@ void main() {
       final companyProduct = CompanyProducts.fromMap({
         'id': 1,
         'uuid': 'company-product-uuid',
-        'companyId': 'company-1',
-        'productId': 'product-1',
+        'companyId': 1,
+        'companyUuid': '11111111-1111-4111-8111-111111111111',
+        'productId': 2,
+        'productUuid': '22222222-2222-4222-8222-222222222222',
         'price': 15,
         'description': 'Retail price',
         'stock': 20,
@@ -252,10 +284,37 @@ void main() {
     });
 
     test('StoreCompany round-trips through map and json', () {
-      final storeCompany = StoreCompany(id: 1, uuid: 'store-company-uuid', storeUuid: 'store-uuid', companyId: 'company-1', status: 1, createdAt: createdAt, updatedAt: updatedAt);
+      final storeCompany = StoreCompany(
+        id: 1,
+        uuid: 'store-company-uuid',
+        storeId: 1,
+        storeUuid: '11111111-1111-4111-8111-111111111111',
+        companyId: 2,
+        companyUuid: '22222222-2222-4222-8222-222222222222',
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
 
       expect(StoreCompany.fromMap(storeCompany.toMap()), equals(storeCompany));
       expect(StoreCompany.fromJson(storeCompany.toJson()), equals(storeCompany));
+    });
+
+    test('ProductsTags round-trips through map and json', () {
+      final productTag = ProductsTags(
+        id: 1,
+        uuid: 'product-tag-uuid',
+        productId: 2,
+        productUuid: '22222222-2222-4222-8222-222222222222',
+        tagId: 3,
+        tagUuid: '33333333-3333-4333-8333-333333333333',
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+      expect(ProductsTags.fromMap(productTag.toMap()), equals(productTag));
+      expect(ProductsTags.fromJson(productTag.toJson()), equals(productTag));
     });
 
     test('Categories supports root nodes with null parentId', () {

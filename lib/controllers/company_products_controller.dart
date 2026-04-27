@@ -49,8 +49,10 @@ class CompanyProductsController {
       final now = DateTime.now();
       companyProduct = CompanyProducts(
         id: request.data?['id'] as int?,
-        companyId: request.data!['companyId'] as String,
-        productId: request.data!['productId'] as String,
+        companyId: request.data!['companyId'] as int,
+        companyUuid: request.data!['companyUuid'] as String,
+        productId: request.data!['productId'] as int,
+        productUuid: request.data!['productUuid'] as String,
         price: (request.data!['price'] as num).toDouble(),
         description: request.data!['description'] as String,
         stock: request.data!['stock'] as int,
@@ -79,8 +81,10 @@ class CompanyProductsController {
 
       companyProduct = companyProduct?.copyWith(
         id: request.data!['id'] as int,
-        companyId: request.data!['companyId'] as String,
-        productId: request.data!['productId'] as String,
+        companyId: request.data!['companyId'] as int,
+        companyUuid: request.data!['companyUuid'] as String,
+        productId: request.data!['productId'] as int,
+        productUuid: request.data!['productUuid'] as String,
         price: (request.data!['price'] as num).toDouble(),
         description: request.data!['description'] as String,
         stock: request.data!['stock'] as int,

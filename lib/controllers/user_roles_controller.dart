@@ -42,8 +42,10 @@ class UserRolesController {
       final now = DateTime.now();
       userRole = UserRoles(
         id: request.data?['id'] as int?,
-        userId: request.data!['userId'] as String,
-        roleId: request.data!['roleId'] as String,
+        userId: request.data!['userId'] as int,
+        userUuid: request.data!['userUuid'] as String,
+        roleId: request.data!['roleId'] as int,
+        roleUuid: request.data!['roleUuid'] as String,
         status: request.data!['status'] as int,
         createdAt: now,
         updatedAt: now,
@@ -68,8 +70,10 @@ class UserRolesController {
 
       userRole = userRole?.copyWith(
         id: request.data!['id'] as int,
-        userId: request.data!['userId'] as String,
-        roleId: request.data!['roleId'] as String,
+        userId: request.data!['userId'] as int,
+        userUuid: request.data!['userUuid'] as String,
+        roleId: request.data!['roleId'] as int,
+        roleUuid: request.data!['roleUuid'] as String,
         status: request.data!['status'] as int,
         updatedAt: DateTime.now(),
       );

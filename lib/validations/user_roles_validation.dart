@@ -46,14 +46,24 @@ class UserRolesValidation {
       }
     }
 
-    final userIdError = ValidationUtils.validateRequiredUuid(request, 'userId', 'User id reference must be a valid UUID');
+    final userIdError = ValidationUtils.validateRequiredInt(request, 'userId', 'User id reference must be a valid integer');
     if (userIdError != null) {
       return userIdError;
     }
 
-    final roleIdError = ValidationUtils.validateRequiredUuid(request, 'roleId', 'Role id reference must be a valid UUID');
+    final userUuidError = ValidationUtils.validateRequiredUuid(request, 'userUuid', 'User uuid reference must be a valid UUID');
+    if (userUuidError != null) {
+      return userUuidError;
+    }
+
+    final roleIdError = ValidationUtils.validateRequiredInt(request, 'roleId', 'Role id reference must be a valid integer');
     if (roleIdError != null) {
       return roleIdError;
+    }
+
+    final roleUuidError = ValidationUtils.validateRequiredUuid(request, 'roleUuid', 'Role uuid reference must be a valid UUID');
+    if (roleUuidError != null) {
+      return roleUuidError;
     }
 
     return ValidationUtils.validateStatus(request);

@@ -46,14 +46,24 @@ class ProductsTagsValidation {
       }
     }
 
-    final productIdError = ValidationUtils.validateRequiredUuid(request, 'productId', 'Product id reference must be a valid UUID');
+    final productIdError = ValidationUtils.validateRequiredInt(request, 'productId', 'Product id reference must be a valid integer');
     if (productIdError != null) {
       return productIdError;
     }
 
-    final tagIdError = ValidationUtils.validateRequiredUuid(request, 'tagId', 'Tag id reference must be a valid UUID');
+    final productUuidError = ValidationUtils.validateRequiredUuid(request, 'productUuid', 'Product uuid reference must be a valid UUID');
+    if (productUuidError != null) {
+      return productUuidError;
+    }
+
+    final tagIdError = ValidationUtils.validateRequiredInt(request, 'tagId', 'Tag id reference must be a valid integer');
     if (tagIdError != null) {
       return tagIdError;
+    }
+
+    final tagUuidError = ValidationUtils.validateRequiredUuid(request, 'tagUuid', 'Tag uuid reference must be a valid UUID');
+    if (tagUuidError != null) {
+      return tagUuidError;
     }
 
     return ValidationUtils.validateStatus(request);

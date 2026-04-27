@@ -133,15 +133,25 @@ class CompanyProductsValidation {
 			}
 		}
 
-    final companyIdError = _validateRequiredUuid(request, 'companyId', 'Company id reference must be a valid UUID');
+    final companyIdError = _validateRequiredInt(request, 'companyId', 'Company id reference must be a valid integer');
 		if (companyIdError != null) {
 			return companyIdError;
 		}
 
-    final productIdError = _validateRequiredUuid(request, 'productId', 'Product id reference must be a valid UUID');
+    final companyUuidError = _validateRequiredUuid(request, 'companyUuid', 'Company uuid reference must be a valid UUID');
+    if (companyUuidError != null) {
+      return companyUuidError;
+    }
+
+    final productIdError = _validateRequiredInt(request, 'productId', 'Product id reference must be a valid integer');
 		if (productIdError != null) {
 			return productIdError;
 		}
+
+    final productUuidError = _validateRequiredUuid(request, 'productUuid', 'Product uuid reference must be a valid UUID');
+    if (productUuidError != null) {
+      return productUuidError;
+    }
 
 		final descriptionError = _validateRequiredString(request, 'description', 'Description is required');
 		if (descriptionError != null) {

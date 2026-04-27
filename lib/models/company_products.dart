@@ -7,8 +7,10 @@ import 'package:store_management/services/uuid.dart';
 class CompanyProducts {
   int? id;
   String uuid;
-  String companyId;
-  String productId;
+  int companyId;
+  String companyUuid;
+  int productId;
+  String productUuid;
   double price;
   String description;
   int stock;
@@ -20,7 +22,9 @@ class CompanyProducts {
     String? uuid,
     this.id,
     required this.companyId,
+    required this.companyUuid,
     required this.productId,
+    required this.productUuid,
     required this.price,
     required this.description,
     required this.stock,
@@ -29,12 +33,27 @@ class CompanyProducts {
     required this.updatedAt,
   }) : uuid = uuid ?? UUIDGenerator.generate();
 
-  CompanyProducts copyWith({int? id, String? uuid, String? companyId, String? productId, double? price, String? description, int? stock, int? status, DateTime? createdAt, DateTime? updatedAt}) {
+  CompanyProducts copyWith({
+    int? id,
+    String? uuid,
+    int? companyId,
+    String? companyUuid,
+    int? productId,
+    String? productUuid,
+    double? price,
+    String? description,
+    int? stock,
+    int? status,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
     return CompanyProducts(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
       companyId: companyId ?? this.companyId,
+      companyUuid: companyUuid ?? this.companyUuid,
       productId: productId ?? this.productId,
+      productUuid: productUuid ?? this.productUuid,
       price: price ?? this.price,
       description: description ?? this.description,
       stock: stock ?? this.stock,
@@ -49,7 +68,9 @@ class CompanyProducts {
       'id': id,
       'uuid': uuid,
       'companyId': companyId,
+      'companyUuid': companyUuid,
       'productId': productId,
+      'productUuid': productUuid,
       'price': price,
       'description': description,
       'stock': stock,
@@ -63,8 +84,10 @@ class CompanyProducts {
     return CompanyProducts(
       id: ModelParsing.intOrNull(map['id']),
       uuid: map['uuid'] as String,
-      companyId: map['companyId'] as String,
-      productId: map['productId'] as String,
+      companyId: ModelParsing.intOrThrow(map['companyId'], 'companyId'),
+      companyUuid: map['companyUuid'] as String,
+      productId: ModelParsing.intOrThrow(map['productId'], 'productId'),
+      productUuid: map['productUuid'] as String,
       price: ModelParsing.doubleOrThrow(map['price'], 'price'),
       description: map['description'] as String,
       stock: ModelParsing.intOrThrow(map['stock'], 'stock'),
@@ -80,7 +103,7 @@ class CompanyProducts {
 
   @override
   String toString() {
-    return 'CompanyProducts(id: $id, uuid: $uuid, companyId: $companyId, productId: $productId, price: $price, description: $description, stock: $stock, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'CompanyProducts(id: $id, uuid: $uuid, companyId: $companyId, companyUuid: $companyUuid, productId: $productId, productUuid: $productUuid, price: $price, description: $description, stock: $stock, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -90,7 +113,9 @@ class CompanyProducts {
     return other.id == id &&
         other.uuid == uuid &&
         other.companyId == companyId &&
+        other.companyUuid == companyUuid &&
         other.productId == productId &&
+        other.productUuid == productUuid &&
         other.price == price &&
         other.description == description &&
         other.stock == stock &&
@@ -101,6 +126,17 @@ class CompanyProducts {
 
   @override
   int get hashCode {
-    return id.hashCode ^ uuid.hashCode ^ companyId.hashCode ^ productId.hashCode ^ price.hashCode ^ description.hashCode ^ stock.hashCode ^ status.hashCode ^ createdAt.hashCode ^ updatedAt.hashCode;
+    return id.hashCode ^
+        uuid.hashCode ^
+        companyId.hashCode ^
+        companyUuid.hashCode ^
+        productId.hashCode ^
+        productUuid.hashCode ^
+        price.hashCode ^
+        description.hashCode ^
+        stock.hashCode ^
+        status.hashCode ^
+        createdAt.hashCode ^
+        updatedAt.hashCode;
   }
 }
