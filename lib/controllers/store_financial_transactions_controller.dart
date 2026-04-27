@@ -1,4 +1,6 @@
 import 'package:store_management/controllers/controller_utils.dart';
+import 'package:store_management/models/model_enums.dart';
+import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/models/store_financial_transaction.dart';
 import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
@@ -47,15 +49,15 @@ class StoreFinancialTransactionsController {
         clientId: request.data!['clientId'] as int,
         clientUuid: request.data!['clientUuid'] as String,
         transactionNumber: request.data!['transactionNumber'] as String,
-        transactionType: request.data!['transactionType'] as String,
-        sourceType: request.data!['sourceType'] as String,
+        transactionType: FinancialTransactionType.fromValue(request.data!['transactionType'] as String),
+        sourceType: FinancialSourceType.fromValue(request.data!['sourceType'] as String),
         sourceId: request.data!['sourceId'] as int,
         sourceUuid: request.data!['sourceUuid'] as String,
-        amount: (request.data!['amount'] as num).toDouble(),
-        entryType: request.data!['entryType'] as String,
+        amount: ModelParsing.decimalOrThrow(request.data!['amount'], 'amount'),
+        entryType: LedgerEntryType.fromValue(request.data!['entryType'] as String),
         description: request.data!['description'] as String,
         transactionDate: DateTime.fromMillisecondsSinceEpoch(request.data!['transactionDate'] as int),
-        status: request.data!['status'] as int,
+        status: RecordStatus.fromCode(request.data!['status'] as int),
         createdAt: now,
         updatedAt: now,
       );
@@ -84,15 +86,15 @@ class StoreFinancialTransactionsController {
         clientId: request.data!['clientId'] as int,
         clientUuid: request.data!['clientUuid'] as String,
         transactionNumber: request.data!['transactionNumber'] as String,
-        transactionType: request.data!['transactionType'] as String,
-        sourceType: request.data!['sourceType'] as String,
+        transactionType: FinancialTransactionType.fromValue(request.data!['transactionType'] as String),
+        sourceType: FinancialSourceType.fromValue(request.data!['sourceType'] as String),
         sourceId: request.data!['sourceId'] as int,
         sourceUuid: request.data!['sourceUuid'] as String,
-        amount: (request.data!['amount'] as num).toDouble(),
-        entryType: request.data!['entryType'] as String,
+        amount: ModelParsing.decimalOrThrow(request.data!['amount'], 'amount'),
+        entryType: LedgerEntryType.fromValue(request.data!['entryType'] as String),
         description: request.data!['description'] as String,
         transactionDate: DateTime.fromMillisecondsSinceEpoch(request.data!['transactionDate'] as int),
-        status: request.data!['status'] as int,
+        status: RecordStatus.fromCode(request.data!['status'] as int),
         updatedAt: DateTime.now(),
       );
 

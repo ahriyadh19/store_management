@@ -1,6 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:decimal/decimal.dart';
+import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/services/uuid.dart';
 
@@ -13,12 +15,12 @@ class StorePaymentVoucher {
   String clientUuid;
   String voucherNumber;
   String payeeName;
-  double amount;
-  String paymentMethod;
+  Decimal amount;
+  StorePaymentMethod paymentMethod;
   String referenceNumber;
   String description;
   DateTime transactionDate;
-  int status;
+  RecordStatus status;
   DateTime createdAt;
   DateTime updatedAt;
 
@@ -50,12 +52,12 @@ class StorePaymentVoucher {
     String? clientUuid,
     String? voucherNumber,
     String? payeeName,
-    double? amount,
-    String? paymentMethod,
+    Decimal? amount,
+    StorePaymentMethod? paymentMethod,
     String? referenceNumber,
     String? description,
     DateTime? transactionDate,
-    int? status,
+    RecordStatus? status,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -89,12 +91,12 @@ class StorePaymentVoucher {
       'clientUuid': clientUuid,
       'voucherNumber': voucherNumber,
       'payeeName': payeeName,
-      'amount': amount,
-      'paymentMethod': paymentMethod,
+      'amount': amount.toString(),
+      'paymentMethod': paymentMethod.value,
       'referenceNumber': referenceNumber,
       'description': description,
       'transactionDate': transactionDate.millisecondsSinceEpoch,
-      'status': status,
+      'status': status.code,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
@@ -110,12 +112,12 @@ class StorePaymentVoucher {
       clientUuid: map['clientUuid'] as String,
       voucherNumber: map['voucherNumber'] as String,
       payeeName: map['payeeName'] as String,
-      amount: ModelParsing.doubleOrThrow(map['amount'], 'amount'),
-      paymentMethod: map['paymentMethod'] as String,
+      amount: ModelParsing.decimalOrThrow(map['amount'], 'amount'),
+      paymentMethod: ModelParsing.paymentMethodFromValue(map['paymentMethod'], 'paymentMethod'),
       referenceNumber: map['referenceNumber'] as String,
       description: map['description'] as String,
       transactionDate: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['transactionDate'], 'transactionDate'),
-      status: ModelParsing.intOrThrow(map['status'], 'status'),
+      status: ModelParsing.recordStatusFromCode(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
     );

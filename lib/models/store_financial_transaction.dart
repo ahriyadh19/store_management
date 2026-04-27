@@ -1,6 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:decimal/decimal.dart';
+import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/services/uuid.dart';
 
@@ -12,15 +14,15 @@ class StoreFinancialTransaction {
   int clientId;
   String clientUuid;
   String transactionNumber;
-  String transactionType;
-  String sourceType;
+  FinancialTransactionType transactionType;
+  FinancialSourceType sourceType;
   int sourceId;
   String sourceUuid;
-  double amount;
-  String entryType;
+  Decimal amount;
+  LedgerEntryType entryType;
   String description;
   DateTime transactionDate;
-  int status;
+  RecordStatus status;
   DateTime createdAt;
   DateTime updatedAt;
 
@@ -53,15 +55,15 @@ class StoreFinancialTransaction {
     int? clientId,
     String? clientUuid,
     String? transactionNumber,
-    String? transactionType,
-    String? sourceType,
+    FinancialTransactionType? transactionType,
+    FinancialSourceType? sourceType,
     int? sourceId,
     String? sourceUuid,
-    double? amount,
-    String? entryType,
+    Decimal? amount,
+    LedgerEntryType? entryType,
     String? description,
     DateTime? transactionDate,
-    int? status,
+    RecordStatus? status,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -96,15 +98,15 @@ class StoreFinancialTransaction {
       'clientId': clientId,
       'clientUuid': clientUuid,
       'transactionNumber': transactionNumber,
-      'transactionType': transactionType,
-      'sourceType': sourceType,
+      'transactionType': transactionType.value,
+      'sourceType': sourceType.value,
       'sourceId': sourceId,
       'sourceUuid': sourceUuid,
-      'amount': amount,
-      'entryType': entryType,
+      'amount': amount.toString(),
+      'entryType': entryType.value,
       'description': description,
       'transactionDate': transactionDate.millisecondsSinceEpoch,
-      'status': status,
+      'status': status.code,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
@@ -119,15 +121,15 @@ class StoreFinancialTransaction {
       clientId: ModelParsing.intOrThrow(map['clientId'], 'clientId'),
       clientUuid: map['clientUuid'] as String,
       transactionNumber: map['transactionNumber'] as String,
-      transactionType: map['transactionType'] as String,
-      sourceType: map['sourceType'] as String,
+      transactionType: ModelParsing.financialTransactionTypeFromValue(map['transactionType'], 'transactionType'),
+      sourceType: ModelParsing.financialSourceTypeFromValue(map['sourceType'], 'sourceType'),
       sourceId: ModelParsing.intOrThrow(map['sourceId'], 'sourceId'),
       sourceUuid: map['sourceUuid'] as String,
-      amount: ModelParsing.doubleOrThrow(map['amount'], 'amount'),
-      entryType: map['entryType'] as String,
+      amount: ModelParsing.decimalOrThrow(map['amount'], 'amount'),
+      entryType: ModelParsing.ledgerEntryTypeFromValue(map['entryType'], 'entryType'),
       description: map['description'] as String,
       transactionDate: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['transactionDate'], 'transactionDate'),
-      status: ModelParsing.intOrThrow(map['status'], 'status'),
+      status: ModelParsing.recordStatusFromCode(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
     );

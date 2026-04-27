@@ -1,5 +1,6 @@
 import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
+import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/validations/validation_utils.dart';
 
 class StoreReturnsValidation {
@@ -67,7 +68,12 @@ class StoreReturnsValidation {
       return returnNumberError;
     }
 
-    final returnTypeError = ValidationUtils.validateRequiredString(request, 'returnType', 'Return type is required');
+    final returnTypeError = ValidationUtils.validateRequiredEnumString(
+      request,
+      'returnType',
+      'Return type is invalid',
+      StoreReturnType.fromValue,
+    );
     if (returnTypeError != null) {
       return returnTypeError;
     }

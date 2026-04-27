@@ -64,6 +64,7 @@ Implemented model coverage currently includes:
 - core entities such as `Company`, `Product`, `Categories`, `Tags`, `Client`, `User`, `Roles`
 - relationship entities such as `CompanyProducts`, `ProductsTags`, `StoreCompany`, `StoreClient`, `StoreUser`, `UserRoles`
 - financial entities such as `StoreInvoice`, `StorePaymentVoucher`, `StoreReturn`, `StoreFinancialTransaction`
+- transactional detail entities such as `StoreInvoiceItem`, `StoreReturnItem`, `InventoryMovement`, `PaymentAllocation`
 
 ## Financial Module
 
@@ -216,8 +217,16 @@ Still worth improving:
 - dedicated UI screens for domain modules
 - persistence wiring between controllers and Supabase tables
 - reporting and analytics flows
-- automatic ledger posting from invoice and return workflows
 - broader controller and validation test coverage
+
+## Model Improvements
+
+The domain layer now includes:
+
+- enum-backed financial and inventory state instead of unchecked raw strings in core transaction models
+- exact decimal parsing for money fields used by pricing, credit, invoices, vouchers, returns, and ledger entries
+- transactional detail models for invoice lines, return lines, stock history, and payment allocations
+- richer inventory planning fields on company products such as `costPrice`, `sku`, `barcode`, `reorderLevel`, and `reorderQuantity`
 
 ## Development Notes
 

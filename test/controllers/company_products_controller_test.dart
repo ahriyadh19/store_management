@@ -1,6 +1,8 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:store_management/controllers/company_products_controller.dart';
 import 'package:store_management/models/company_products.dart';
+import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/services/request.dart';
 
 void main() {
@@ -15,10 +17,15 @@ void main() {
       companyUuid: '11111111-1111-4111-8111-111111111111',
       productId: 2,
       productUuid: '22222222-2222-4222-8222-222222222222',
-      price: 15.5,
+      price: Decimal.parse('15.5'),
+      costPrice: Decimal.parse('10'),
       description: 'Retail price',
+      sku: 'RICE-001',
+      barcode: '1234567890123',
       stock: 20,
-      status: 1,
+      reorderLevel: 5,
+      reorderQuantity: 10,
+      status: RecordStatus.active,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
@@ -40,7 +47,12 @@ void main() {
     String productUuid = '22222222-2222-4222-8222-222222222222',
     String description = 'Retail price',
     num price = 15.5,
+    num? costPrice = 10,
+    String? sku = 'RICE-001',
+    String? barcode = '1234567890123',
     int stock = 20,
+    int? reorderLevel = 5,
+    int? reorderQuantity = 10,
     int status = 1,
     int? quantity,
     int? availableStock,
@@ -52,7 +64,12 @@ void main() {
       'productUuid': productUuid,
       'description': description,
       'price': price,
+      'costPrice': costPrice,
+      'sku': sku,
+      'barcode': barcode,
       'stock': stock,
+      'reorderLevel': reorderLevel,
+      'reorderQuantity': reorderQuantity,
       'status': status,
     };
 
@@ -80,6 +97,7 @@ void main() {
       expect(response.statusCode, 201);
       expect(response.data, isA<CompanyProducts>());
       expect(response.data?.id, 1);
+      expect(response.data?.price, Decimal.parse('15.5'));
     });
 
     test('create validates required product fields', () {

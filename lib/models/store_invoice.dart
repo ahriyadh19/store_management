@@ -1,6 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:decimal/decimal.dart';
+import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/services/uuid.dart';
 
@@ -12,13 +14,13 @@ class StoreInvoice {
   int clientId;
   String clientUuid;
   String invoiceNumber;
-  double totalAmount;
-  double paidAmount;
-  double balanceAmount;
+  Decimal totalAmount;
+  Decimal paidAmount;
+  Decimal balanceAmount;
   String notes;
   DateTime issuedAt;
   DateTime dueAt;
-  int status;
+  RecordStatus status;
   DateTime createdAt;
   DateTime updatedAt;
 
@@ -49,13 +51,13 @@ class StoreInvoice {
     int? clientId,
     String? clientUuid,
     String? invoiceNumber,
-    double? totalAmount,
-    double? paidAmount,
-    double? balanceAmount,
+    Decimal? totalAmount,
+    Decimal? paidAmount,
+    Decimal? balanceAmount,
     String? notes,
     DateTime? issuedAt,
     DateTime? dueAt,
-    int? status,
+    RecordStatus? status,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -88,13 +90,13 @@ class StoreInvoice {
       'clientId': clientId,
       'clientUuid': clientUuid,
       'invoiceNumber': invoiceNumber,
-      'totalAmount': totalAmount,
-      'paidAmount': paidAmount,
-      'balanceAmount': balanceAmount,
+      'totalAmount': totalAmount.toString(),
+      'paidAmount': paidAmount.toString(),
+      'balanceAmount': balanceAmount.toString(),
       'notes': notes,
       'issuedAt': issuedAt.millisecondsSinceEpoch,
       'dueAt': dueAt.millisecondsSinceEpoch,
-      'status': status,
+      'status': status.code,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
@@ -109,13 +111,13 @@ class StoreInvoice {
       clientId: ModelParsing.intOrThrow(map['clientId'], 'clientId'),
       clientUuid: map['clientUuid'] as String,
       invoiceNumber: map['invoiceNumber'] as String,
-      totalAmount: ModelParsing.doubleOrThrow(map['totalAmount'], 'totalAmount'),
-      paidAmount: ModelParsing.doubleOrThrow(map['paidAmount'], 'paidAmount'),
-      balanceAmount: ModelParsing.doubleOrThrow(map['balanceAmount'], 'balanceAmount'),
+      totalAmount: ModelParsing.decimalOrThrow(map['totalAmount'], 'totalAmount'),
+      paidAmount: ModelParsing.decimalOrThrow(map['paidAmount'], 'paidAmount'),
+      balanceAmount: ModelParsing.decimalOrThrow(map['balanceAmount'], 'balanceAmount'),
       notes: map['notes'] as String,
       issuedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['issuedAt'], 'issuedAt'),
       dueAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['dueAt'], 'dueAt'),
-      status: ModelParsing.intOrThrow(map['status'], 'status'),
+      status: ModelParsing.recordStatusFromCode(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
     );

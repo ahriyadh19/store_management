@@ -1,4 +1,6 @@
 import 'package:store_management/controllers/controller_utils.dart';
+import 'package:store_management/models/model_enums.dart';
+import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/models/store_payment_voucher.dart';
 import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
@@ -48,12 +50,12 @@ class StorePaymentVouchersController {
         clientUuid: request.data!['clientUuid'] as String,
         voucherNumber: request.data!['voucherNumber'] as String,
         payeeName: request.data!['payeeName'] as String,
-        amount: (request.data!['amount'] as num).toDouble(),
-        paymentMethod: request.data!['paymentMethod'] as String,
+        amount: ModelParsing.decimalOrThrow(request.data!['amount'], 'amount'),
+        paymentMethod: StorePaymentMethod.fromValue(request.data!['paymentMethod'] as String),
         referenceNumber: request.data!['referenceNumber'] as String,
         description: request.data!['description'] as String,
         transactionDate: DateTime.fromMillisecondsSinceEpoch(request.data!['transactionDate'] as int),
-        status: request.data!['status'] as int,
+        status: RecordStatus.fromCode(request.data!['status'] as int),
         createdAt: now,
         updatedAt: now,
       );
@@ -83,12 +85,12 @@ class StorePaymentVouchersController {
         clientUuid: request.data!['clientUuid'] as String,
         voucherNumber: request.data!['voucherNumber'] as String,
         payeeName: request.data!['payeeName'] as String,
-        amount: (request.data!['amount'] as num).toDouble(),
-        paymentMethod: request.data!['paymentMethod'] as String,
+        amount: ModelParsing.decimalOrThrow(request.data!['amount'], 'amount'),
+        paymentMethod: StorePaymentMethod.fromValue(request.data!['paymentMethod'] as String),
         referenceNumber: request.data!['referenceNumber'] as String,
         description: request.data!['description'] as String,
         transactionDate: DateTime.fromMillisecondsSinceEpoch(request.data!['transactionDate'] as int),
-        status: request.data!['status'] as int,
+        status: RecordStatus.fromCode(request.data!['status'] as int),
         updatedAt: DateTime.now(),
       );
 

@@ -167,6 +167,27 @@ class CompanyProductsValidation {
 			return _badRequest('Price must be zero or greater');
 		}
 
+		final costPrice = request.data?['costPrice'];
+		if (costPrice != null) {
+			if (costPrice is! num) {
+				return _badRequest('Cost price must be provided as a number');
+			}
+
+			if (costPrice < 0) {
+				return _badRequest('Cost price must be zero or greater');
+			}
+		}
+
+		final sku = request.data?['sku'];
+		if (sku != null && (sku is! String || sku.trim().isEmpty)) {
+			return _badRequest('Sku must be provided as a non-empty string');
+		}
+
+		final barcode = request.data?['barcode'];
+		if (barcode != null && (barcode is! String || barcode.trim().isEmpty)) {
+			return _badRequest('Barcode must be provided as a non-empty string');
+		}
+
 		final stock = request.data?['stock'];
 		if (stock is! int) {
 			return _badRequest('Stock must be provided as an integer');
@@ -174,6 +195,16 @@ class CompanyProductsValidation {
 
 		if (stock < 0) {
 			return _badRequest('Stock must be zero or greater');
+		}
+
+		final reorderLevelError = ValidationUtils.validateOptionalInt(request, 'reorderLevel', 'Reorder level must be provided as a non-negative integer', min: 0);
+		if (reorderLevelError != null) {
+			return reorderLevelError;
+		}
+
+		final reorderQuantityError = ValidationUtils.validateOptionalInt(request, 'reorderQuantity', 'Reorder quantity must be provided as a non-negative integer', min: 0);
+		if (reorderQuantityError != null) {
+			return reorderQuantityError;
 		}
 
 		final statusError = ValidationUtils.validateStatus(request);

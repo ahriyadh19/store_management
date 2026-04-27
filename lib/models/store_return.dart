@@ -1,6 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:decimal/decimal.dart';
+import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/services/uuid.dart';
 
@@ -12,12 +14,12 @@ class StoreReturn {
   int clientId;
   String clientUuid;
   String returnNumber;
-  String returnType;
+  StoreReturnType returnType;
   int itemCount;
-  double totalAmount;
+  Decimal totalAmount;
   String reason;
   DateTime transactionDate;
-  int status;
+  RecordStatus status;
   DateTime createdAt;
   DateTime updatedAt;
 
@@ -47,12 +49,12 @@ class StoreReturn {
     int? clientId,
     String? clientUuid,
     String? returnNumber,
-    String? returnType,
+    StoreReturnType? returnType,
     int? itemCount,
-    double? totalAmount,
+    Decimal? totalAmount,
     String? reason,
     DateTime? transactionDate,
-    int? status,
+    RecordStatus? status,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -84,12 +86,12 @@ class StoreReturn {
       'clientId': clientId,
       'clientUuid': clientUuid,
       'returnNumber': returnNumber,
-      'returnType': returnType,
+      'returnType': returnType.value,
       'itemCount': itemCount,
-      'totalAmount': totalAmount,
+      'totalAmount': totalAmount.toString(),
       'reason': reason,
       'transactionDate': transactionDate.millisecondsSinceEpoch,
-      'status': status,
+      'status': status.code,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
@@ -104,12 +106,12 @@ class StoreReturn {
       clientId: ModelParsing.intOrThrow(map['clientId'], 'clientId'),
       clientUuid: map['clientUuid'] as String,
       returnNumber: map['returnNumber'] as String,
-      returnType: map['returnType'] as String,
+      returnType: ModelParsing.returnTypeFromValue(map['returnType'], 'returnType'),
       itemCount: ModelParsing.intOrThrow(map['itemCount'], 'itemCount'),
-      totalAmount: ModelParsing.doubleOrThrow(map['totalAmount'], 'totalAmount'),
+      totalAmount: ModelParsing.decimalOrThrow(map['totalAmount'], 'totalAmount'),
       reason: map['reason'] as String,
       transactionDate: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['transactionDate'], 'transactionDate'),
-      status: ModelParsing.intOrThrow(map['status'], 'status'),
+      status: ModelParsing.recordStatusFromCode(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
     );

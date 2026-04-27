@@ -1,4 +1,6 @@
+import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/models/company_products.dart';
+import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/controllers/controller_utils.dart';
 import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
@@ -53,10 +55,15 @@ class CompanyProductsController {
         companyUuid: request.data!['companyUuid'] as String,
         productId: request.data!['productId'] as int,
         productUuid: request.data!['productUuid'] as String,
-        price: (request.data!['price'] as num).toDouble(),
+        price: ModelParsing.decimalOrThrow(request.data!['price'], 'price'),
+        costPrice: ModelParsing.decimalOrNull(request.data!['costPrice']),
         description: request.data!['description'] as String,
+        sku: request.data!['sku'] as String?,
+        barcode: request.data!['barcode'] as String?,
         stock: request.data!['stock'] as int,
-        status: request.data!['status'] as int,
+        reorderLevel: ModelParsing.intOrNull(request.data!['reorderLevel']),
+        reorderQuantity: ModelParsing.intOrNull(request.data!['reorderQuantity']),
+        status: RecordStatus.fromCode(request.data!['status'] as int),
         createdAt: now,
         updatedAt: now,
       );
@@ -85,10 +92,15 @@ class CompanyProductsController {
         companyUuid: request.data!['companyUuid'] as String,
         productId: request.data!['productId'] as int,
         productUuid: request.data!['productUuid'] as String,
-        price: (request.data!['price'] as num).toDouble(),
+        price: ModelParsing.decimalOrThrow(request.data!['price'], 'price'),
+        costPrice: ModelParsing.decimalOrNull(request.data!['costPrice']),
         description: request.data!['description'] as String,
+        sku: request.data!['sku'] as String?,
+        barcode: request.data!['barcode'] as String?,
         stock: request.data!['stock'] as int,
-        status: request.data!['status'] as int,
+        reorderLevel: ModelParsing.intOrNull(request.data!['reorderLevel']),
+        reorderQuantity: ModelParsing.intOrNull(request.data!['reorderQuantity']),
+        status: RecordStatus.fromCode(request.data!['status'] as int),
         updatedAt: DateTime.now(),
       );
 

@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:decimal/decimal.dart';
 import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/services/uuid.dart';
 
@@ -13,9 +14,9 @@ class Client {
   String phone;
   String address;
   int status;
-  double creditLimit;
-  double currentCredit;
-  double availableCredit;
+  Decimal creditLimit;
+  Decimal currentCredit;
+  Decimal availableCredit;
   DateTime createdAt;
   DateTime updatedAt;
   Client({
@@ -43,9 +44,9 @@ class Client {
     String? phone,
     String? address,
     int? status,
-    double? creditLimit,
-    double? currentCredit,
-    double? availableCredit,
+    Decimal? creditLimit,
+    Decimal? currentCredit,
+    Decimal? availableCredit,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -76,9 +77,9 @@ class Client {
       'phone': phone,
       'address': address,
       'status': status,
-      'creditLimit': creditLimit,
-      'currentCredit': currentCredit,
-      'availableCredit': availableCredit,
+      'creditLimit': creditLimit.toString(),
+      'currentCredit': currentCredit.toString(),
+      'availableCredit': availableCredit.toString(),
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
@@ -94,9 +95,9 @@ class Client {
       phone: map['phone'] as String,
       address: map['address'] as String,
       status: ModelParsing.intOrThrow(map['status'], 'status'),
-      creditLimit: ModelParsing.doubleOrThrow(map['creditLimit'], 'creditLimit'),
-      currentCredit: ModelParsing.doubleOrThrow(map['currentCredit'], 'currentCredit'),
-      availableCredit: ModelParsing.doubleOrThrow(map['availableCredit'], 'availableCredit'),
+      creditLimit: ModelParsing.decimalOrThrow(map['creditLimit'], 'creditLimit'),
+      currentCredit: ModelParsing.decimalOrThrow(map['currentCredit'], 'currentCredit'),
+      availableCredit: ModelParsing.decimalOrThrow(map['availableCredit'], 'availableCredit'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
     );

@@ -1,4 +1,6 @@
 import 'package:store_management/controllers/controller_utils.dart';
+import 'package:store_management/models/model_enums.dart';
+import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/models/store_invoice.dart';
 import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
@@ -47,13 +49,13 @@ class StoreInvoicesController {
         clientId: request.data!['clientId'] as int,
         clientUuid: request.data!['clientUuid'] as String,
         invoiceNumber: request.data!['invoiceNumber'] as String,
-        totalAmount: (request.data!['totalAmount'] as num).toDouble(),
-        paidAmount: (request.data!['paidAmount'] as num).toDouble(),
-        balanceAmount: (request.data!['balanceAmount'] as num).toDouble(),
+        totalAmount: ModelParsing.decimalOrThrow(request.data!['totalAmount'], 'totalAmount'),
+        paidAmount: ModelParsing.decimalOrThrow(request.data!['paidAmount'], 'paidAmount'),
+        balanceAmount: ModelParsing.decimalOrThrow(request.data!['balanceAmount'], 'balanceAmount'),
         notes: request.data!['notes'] as String,
         issuedAt: DateTime.fromMillisecondsSinceEpoch(request.data!['issuedAt'] as int),
         dueAt: DateTime.fromMillisecondsSinceEpoch(request.data!['dueAt'] as int),
-        status: request.data!['status'] as int,
+        status: RecordStatus.fromCode(request.data!['status'] as int),
         createdAt: now,
         updatedAt: now,
       );
@@ -82,13 +84,13 @@ class StoreInvoicesController {
         clientId: request.data!['clientId'] as int,
         clientUuid: request.data!['clientUuid'] as String,
         invoiceNumber: request.data!['invoiceNumber'] as String,
-        totalAmount: (request.data!['totalAmount'] as num).toDouble(),
-        paidAmount: (request.data!['paidAmount'] as num).toDouble(),
-        balanceAmount: (request.data!['balanceAmount'] as num).toDouble(),
+        totalAmount: ModelParsing.decimalOrThrow(request.data!['totalAmount'], 'totalAmount'),
+        paidAmount: ModelParsing.decimalOrThrow(request.data!['paidAmount'], 'paidAmount'),
+        balanceAmount: ModelParsing.decimalOrThrow(request.data!['balanceAmount'], 'balanceAmount'),
         notes: request.data!['notes'] as String,
         issuedAt: DateTime.fromMillisecondsSinceEpoch(request.data!['issuedAt'] as int),
         dueAt: DateTime.fromMillisecondsSinceEpoch(request.data!['dueAt'] as int),
-        status: request.data!['status'] as int,
+        status: RecordStatus.fromCode(request.data!['status'] as int),
         updatedAt: DateTime.now(),
       );
 

@@ -1,4 +1,6 @@
 import 'package:store_management/controllers/controller_utils.dart';
+import 'package:store_management/models/model_enums.dart';
+import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/models/store_return.dart';
 import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
@@ -47,12 +49,12 @@ class StoreReturnsController {
         clientId: request.data!['clientId'] as int,
         clientUuid: request.data!['clientUuid'] as String,
         returnNumber: request.data!['returnNumber'] as String,
-        returnType: request.data!['returnType'] as String,
+        returnType: StoreReturnType.fromValue(request.data!['returnType'] as String),
         itemCount: request.data!['itemCount'] as int,
-        totalAmount: (request.data!['totalAmount'] as num).toDouble(),
+        totalAmount: ModelParsing.decimalOrThrow(request.data!['totalAmount'], 'totalAmount'),
         reason: request.data!['reason'] as String,
         transactionDate: DateTime.fromMillisecondsSinceEpoch(request.data!['transactionDate'] as int),
-        status: request.data!['status'] as int,
+        status: RecordStatus.fromCode(request.data!['status'] as int),
         createdAt: now,
         updatedAt: now,
       );
@@ -81,12 +83,12 @@ class StoreReturnsController {
         clientId: request.data!['clientId'] as int,
         clientUuid: request.data!['clientUuid'] as String,
         returnNumber: request.data!['returnNumber'] as String,
-        returnType: request.data!['returnType'] as String,
+        returnType: StoreReturnType.fromValue(request.data!['returnType'] as String),
         itemCount: request.data!['itemCount'] as int,
-        totalAmount: (request.data!['totalAmount'] as num).toDouble(),
+        totalAmount: ModelParsing.decimalOrThrow(request.data!['totalAmount'], 'totalAmount'),
         reason: request.data!['reason'] as String,
         transactionDate: DateTime.fromMillisecondsSinceEpoch(request.data!['transactionDate'] as int),
-        status: request.data!['status'] as int,
+        status: RecordStatus.fromCode(request.data!['status'] as int),
         updatedAt: DateTime.now(),
       );
 

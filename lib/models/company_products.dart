@@ -1,6 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:decimal/decimal.dart';
+import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/services/uuid.dart';
 
@@ -11,10 +13,15 @@ class CompanyProducts {
   String companyUuid;
   int productId;
   String productUuid;
-  double price;
+  Decimal price;
+  Decimal? costPrice;
   String description;
+  String? sku;
+  String? barcode;
   int stock;
-  int status;
+  int? reorderLevel;
+  int? reorderQuantity;
+  RecordStatus status;
   DateTime createdAt;
   DateTime updatedAt;
 
@@ -26,8 +33,13 @@ class CompanyProducts {
     required this.productId,
     required this.productUuid,
     required this.price,
+    this.costPrice,
     required this.description,
+    this.sku,
+    this.barcode,
     required this.stock,
+    this.reorderLevel,
+    this.reorderQuantity,
     required this.status,
     required this.createdAt,
     required this.updatedAt,
@@ -40,10 +52,15 @@ class CompanyProducts {
     String? companyUuid,
     int? productId,
     String? productUuid,
-    double? price,
+    Decimal? price,
+    Decimal? costPrice,
     String? description,
+    String? sku,
+    String? barcode,
     int? stock,
-    int? status,
+    int? reorderLevel,
+    int? reorderQuantity,
+    RecordStatus? status,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -55,13 +72,20 @@ class CompanyProducts {
       productId: productId ?? this.productId,
       productUuid: productUuid ?? this.productUuid,
       price: price ?? this.price,
+      costPrice: costPrice ?? this.costPrice,
       description: description ?? this.description,
+      sku: sku ?? this.sku,
+      barcode: barcode ?? this.barcode,
       stock: stock ?? this.stock,
+      reorderLevel: reorderLevel ?? this.reorderLevel,
+      reorderQuantity: reorderQuantity ?? this.reorderQuantity,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  bool get isLowStock => reorderLevel != null && stock <= reorderLevel!;
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
@@ -71,10 +95,15 @@ class CompanyProducts {
       'companyUuid': companyUuid,
       'productId': productId,
       'productUuid': productUuid,
-      'price': price,
+      'price': price.toString(),
+      'costPrice': costPrice?.toString(),
       'description': description,
+      'sku': sku,
+      'barcode': barcode,
       'stock': stock,
-      'status': status,
+      'reorderLevel': reorderLevel,
+      'reorderQuantity': reorderQuantity,
+      'status': status.code,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
@@ -88,10 +117,15 @@ class CompanyProducts {
       companyUuid: map['companyUuid'] as String,
       productId: ModelParsing.intOrThrow(map['productId'], 'productId'),
       productUuid: map['productUuid'] as String,
-      price: ModelParsing.doubleOrThrow(map['price'], 'price'),
+      price: ModelParsing.decimalOrThrow(map['price'], 'price'),
+      costPrice: ModelParsing.decimalOrNull(map['costPrice']),
       description: map['description'] as String,
+      sku: map['sku'] as String?,
+      barcode: map['barcode'] as String?,
       stock: ModelParsing.intOrThrow(map['stock'], 'stock'),
-      status: ModelParsing.intOrThrow(map['status'], 'status'),
+      reorderLevel: ModelParsing.intOrNull(map['reorderLevel']),
+      reorderQuantity: ModelParsing.intOrNull(map['reorderQuantity']),
+      status: ModelParsing.recordStatusFromCode(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
     );
@@ -103,7 +137,7 @@ class CompanyProducts {
 
   @override
   String toString() {
-    return 'CompanyProducts(id: $id, uuid: $uuid, companyId: $companyId, companyUuid: $companyUuid, productId: $productId, productUuid: $productUuid, price: $price, description: $description, stock: $stock, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'CompanyProducts(id: $id, uuid: $uuid, companyId: $companyId, companyUuid: $companyUuid, productId: $productId, productUuid: $productUuid, price: $price, costPrice: $costPrice, description: $description, sku: $sku, barcode: $barcode, stock: $stock, reorderLevel: $reorderLevel, reorderQuantity: $reorderQuantity, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -117,8 +151,13 @@ class CompanyProducts {
         other.productId == productId &&
         other.productUuid == productUuid &&
         other.price == price &&
+        other.costPrice == costPrice &&
         other.description == description &&
+        other.sku == sku &&
+        other.barcode == barcode &&
         other.stock == stock &&
+        other.reorderLevel == reorderLevel &&
+        other.reorderQuantity == reorderQuantity &&
         other.status == status &&
         other.createdAt == createdAt &&
         other.updatedAt == updatedAt;
@@ -133,8 +172,13 @@ class CompanyProducts {
         productId.hashCode ^
         productUuid.hashCode ^
         price.hashCode ^
+        costPrice.hashCode ^
         description.hashCode ^
+        sku.hashCode ^
+        barcode.hashCode ^
         stock.hashCode ^
+        reorderLevel.hashCode ^
+        reorderQuantity.hashCode ^
         status.hashCode ^
         createdAt.hashCode ^
         updatedAt.hashCode;

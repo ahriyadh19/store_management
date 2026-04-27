@@ -1,5 +1,6 @@
 import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
+import 'package:store_management/models/model_enums.dart';
 
 class ValidationUtils {
   static Response badRequest(String message) {
@@ -21,6 +22,26 @@ class ValidationUtils {
   static Response? validateRequiredString(Request request, String key, String message) {
     final value = request.data?[key];
     if (value is! String || value.trim().isEmpty) {
+      return badRequest(message);
+    }
+
+    return null;
+  }
+
+  static Response? validateRequiredEnumString(
+    Request request,
+    String key,
+    String message,
+    Object Function(String value) parser,
+  ) {
+    final stringError = validateRequiredString(request, key, message);
+    if (stringError != null) {
+      return stringError;
+    }
+
+    try {
+      parser((request.data![key] as String).trim());
+    } on FormatException {
       return badRequest(message);
     }
 
@@ -84,7 +105,18 @@ class ValidationUtils {
   }
 
   static Response? validateStatus(Request request, {String key = 'status'}) {
-    return validateRequiredInt(request, key, 'Status must be provided as a non-negative integer', min: 0);
+    final statusError = validateRequiredInt(request, key, 'Status must be provided as a supported status code', min: 0);
+    if (statusError != null) {
+      return statusError;
+    }
+
+    try {
+      RecordStatus.fromCode(request.data![key] as int);
+    } on FormatException {
+      return badRequest('Status must be provided as a supported status code');
+    }
+
+    return null;
   }
 
   static Response? validateEmail(Request request, {String key = 'email'}) {

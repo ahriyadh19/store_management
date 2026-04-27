@@ -1,5 +1,7 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:store_management/controllers/store_invoices_controller.dart';
+import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/models/store_invoice.dart';
 import 'package:store_management/services/request.dart';
 
@@ -16,13 +18,13 @@ void main() {
       clientId: 2,
       clientUuid: '22222222-2222-4222-8222-222222222222',
       invoiceNumber: 'INV-001',
-      totalAmount: 200,
-      paidAmount: 50,
-      balanceAmount: 150,
+      totalAmount: Decimal.parse('200'),
+      paidAmount: Decimal.parse('50'),
+      balanceAmount: Decimal.parse('150'),
       notes: 'Monthly invoice',
       issuedAt: createdAt,
       dueAt: updatedAt,
-      status: 1,
+      status: RecordStatus.active,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
@@ -79,6 +81,7 @@ void main() {
       expect(response.data, isA<StoreInvoice>());
       expect(response.data?.invoiceNumber, 'INV-001');
       expect(response.data?.clientId, 2);
+      expect(response.data?.totalAmount, Decimal.parse('200'));
     });
 
     test('create validates required invoice notes', () {

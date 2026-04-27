@@ -1,5 +1,6 @@
 import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
+import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/validations/validation_utils.dart';
 
 class StorePaymentVouchersValidation {
@@ -77,7 +78,12 @@ class StorePaymentVouchersValidation {
       return amountError;
     }
 
-    final paymentMethodError = ValidationUtils.validateRequiredString(request, 'paymentMethod', 'Payment method is required');
+    final paymentMethodError = ValidationUtils.validateRequiredEnumString(
+      request,
+      'paymentMethod',
+      'Payment method is invalid',
+      StorePaymentMethod.fromValue,
+    );
     if (paymentMethodError != null) {
       return paymentMethodError;
     }

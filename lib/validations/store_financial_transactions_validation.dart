@@ -1,5 +1,6 @@
 import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
+import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/validations/validation_utils.dart';
 
 class StoreFinancialTransactionsValidation {
@@ -67,12 +68,22 @@ class StoreFinancialTransactionsValidation {
       return transactionNumberError;
     }
 
-    final transactionTypeError = ValidationUtils.validateRequiredString(request, 'transactionType', 'Transaction type is required');
+    final transactionTypeError = ValidationUtils.validateRequiredEnumString(
+      request,
+      'transactionType',
+      'Transaction type is invalid',
+      FinancialTransactionType.fromValue,
+    );
     if (transactionTypeError != null) {
       return transactionTypeError;
     }
 
-    final sourceTypeError = ValidationUtils.validateRequiredString(request, 'sourceType', 'Source type is required');
+    final sourceTypeError = ValidationUtils.validateRequiredEnumString(
+      request,
+      'sourceType',
+      'Source type is invalid',
+      FinancialSourceType.fromValue,
+    );
     if (sourceTypeError != null) {
       return sourceTypeError;
     }
@@ -92,7 +103,12 @@ class StoreFinancialTransactionsValidation {
       return amountError;
     }
 
-    final entryTypeError = ValidationUtils.validateRequiredString(request, 'entryType', 'Entry type is required');
+    final entryTypeError = ValidationUtils.validateRequiredEnumString(
+      request,
+      'entryType',
+      'Entry type is invalid',
+      LedgerEntryType.fromValue,
+    );
     if (entryTypeError != null) {
       return entryTypeError;
     }
