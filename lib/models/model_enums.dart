@@ -34,6 +34,19 @@ enum StorePaymentMethod {
   }
 }
 
+enum StoreInvoiceType {
+  cash('cash'),
+  credit('credit');
+
+  const StoreInvoiceType(this.value);
+
+  final String value;
+
+  static StoreInvoiceType fromValue(String value) {
+    return StoreInvoiceType.values.firstWhere((type) => type.value == value, orElse: () => throw FormatException('Unsupported invoice type: $value'));
+  }
+}
+
 enum StoreReturnType {
   salesReturn('sales_return'),
   purchaseReturn('purchase_return'),

@@ -18,6 +18,8 @@ void main() {
       clientId: 2,
       clientUuid: '22222222-2222-4222-8222-222222222222',
       invoiceNumber: 'INV-001',
+      invoiceType: StoreInvoiceType.cash,
+      itemCount: 0,
       totalAmount: Decimal.parse('200'),
       paidAmount: Decimal.parse('50'),
       balanceAmount: Decimal.parse('150'),
@@ -41,6 +43,8 @@ void main() {
     int clientId = 2,
     String clientUuid = '22222222-2222-4222-8222-222222222222',
     String invoiceNumber = 'INV-001',
+    String invoiceType = 'cash',
+    int itemCount = 0,
     num totalAmount = 200,
     num paidAmount = 50,
     num balanceAmount = 150,
@@ -55,6 +59,8 @@ void main() {
       'clientId': clientId,
       'clientUuid': clientUuid,
       'invoiceNumber': invoiceNumber,
+      'invoiceType': invoiceType,
+      'itemCount': itemCount,
       'totalAmount': totalAmount,
       'paidAmount': paidAmount,
       'balanceAmount': balanceAmount,
@@ -80,8 +86,23 @@ void main() {
       expect(response.statusCode, 201);
       expect(response.data, isA<StoreInvoice>());
       expect(response.data?.invoiceNumber, 'INV-001');
+      expect(response.data?.invoiceType, StoreInvoiceType.cash);
+      expect(response.data?.itemCount, 0);
       expect(response.data?.clientId, 2);
       expect(response.data?.totalAmount, Decimal.parse('200'));
+    });
+
+    test('create accepts zero item invoices with credit type', () {
+      final controller = StoreInvoicesController(invoice: buildInvoice());
+
+      final response = controller.create(
+        request: buildRequest(data: buildInvoiceData(invoiceType: 'credit', itemCount: 0, totalAmount: 120, paidAmount: 0, balanceAmount: 120)),
+      );
+
+      expect(response.statusCode, 201);
+      expect(response.data?.invoiceType, StoreInvoiceType.credit);
+      expect(response.data?.itemCount, 0);
+      expect(response.data?.balanceAmount, Decimal.parse('120'));
     });
 
     test('create validates required invoice notes', () {

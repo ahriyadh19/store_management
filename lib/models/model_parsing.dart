@@ -109,6 +109,14 @@ class ModelParsing {
     return StorePaymentMethod.fromValue(value);
   }
 
+  static StoreInvoiceType invoiceTypeFromValue(dynamic value, String fieldName) {
+    if (value is! String) {
+      throw FormatException('Invalid string value for $fieldName: $value');
+    }
+
+    return StoreInvoiceType.fromValue(value);
+  }
+
   static StoreReturnType returnTypeFromValue(dynamic value, String fieldName) {
     if (value is! String) {
       throw FormatException('Invalid string value for $fieldName: $value');

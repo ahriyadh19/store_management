@@ -1,5 +1,6 @@
 import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
+import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/validations/validation_utils.dart';
 
 class StoreInvoicesValidation {
@@ -65,6 +66,16 @@ class StoreInvoicesValidation {
     final invoiceNumberError = ValidationUtils.validateRequiredString(request, 'invoiceNumber', 'Invoice number is required');
     if (invoiceNumberError != null) {
       return invoiceNumberError;
+    }
+
+    final invoiceTypeError = ValidationUtils.validateRequiredEnumString(request, 'invoiceType', 'Invoice type is invalid', StoreInvoiceType.fromValue);
+    if (invoiceTypeError != null) {
+      return invoiceTypeError;
+    }
+
+    final itemCountError = ValidationUtils.validateRequiredInt(request, 'itemCount', 'Item count must be zero or greater', min: 0);
+    if (itemCountError != null) {
+      return itemCountError;
     }
 
     final totalAmountError = ValidationUtils.validateRequiredNum(request, 'totalAmount', 'Total amount must be zero or greater');

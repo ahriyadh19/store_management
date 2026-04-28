@@ -192,7 +192,26 @@ void main() {
     });
 
     test('StoreInvoice and detail items round-trip through map and json', () {
-      final invoice = StoreInvoice(id: 1, uuid: 'invoice-uuid', storeId: 1, storeUuid: '11111111-1111-4111-8111-111111111111', clientId: 2, clientUuid: '22222222-2222-4222-8222-222222222222', invoiceNumber: 'INV-001', totalAmount: money('200'), paidAmount: money('50'), balanceAmount: money('150'), notes: 'Monthly invoice', issuedAt: createdAt, dueAt: updatedAt, status: RecordStatus.active, createdAt: createdAt, updatedAt: updatedAt);
+      final invoice = StoreInvoice(
+        id: 1,
+        uuid: 'invoice-uuid',
+        storeId: 1,
+        storeUuid: '11111111-1111-4111-8111-111111111111',
+        clientId: 2,
+        clientUuid: '22222222-2222-4222-8222-222222222222',
+        invoiceNumber: 'INV-001',
+        invoiceType: StoreInvoiceType.credit,
+        itemCount: 0,
+        totalAmount: money('200'),
+        paidAmount: money('50'),
+        balanceAmount: money('150'),
+        notes: 'Monthly invoice',
+        issuedAt: createdAt,
+        dueAt: updatedAt,
+        status: RecordStatus.active,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
       final item = StoreInvoiceItem(id: 1, uuid: 'invoice-item-uuid', invoiceId: 1, invoiceUuid: '11111111-1111-4111-8111-111111111111', companyProductId: 2, companyProductUuid: '22222222-2222-4222-8222-222222222222', productId: 3, productUuid: '33333333-3333-4333-8333-333333333333', quantity: 2, unitPrice: money('20'), discountAmount: money('1'), taxAmount: money('2'), lineTotal: money('41'), status: RecordStatus.active, createdAt: createdAt, updatedAt: updatedAt);
 
       expect(StoreInvoice.fromMap(invoice.toMap()), equals(invoice));

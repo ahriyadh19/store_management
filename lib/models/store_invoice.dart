@@ -14,6 +14,8 @@ class StoreInvoice {
   int clientId;
   String clientUuid;
   String invoiceNumber;
+  StoreInvoiceType invoiceType;
+  int itemCount;
   Decimal totalAmount;
   Decimal paidAmount;
   Decimal balanceAmount;
@@ -32,6 +34,8 @@ class StoreInvoice {
     required this.clientId,
     required this.clientUuid,
     required this.invoiceNumber,
+    required this.invoiceType,
+    required this.itemCount,
     required this.totalAmount,
     required this.paidAmount,
     required this.balanceAmount,
@@ -51,6 +55,8 @@ class StoreInvoice {
     int? clientId,
     String? clientUuid,
     String? invoiceNumber,
+    StoreInvoiceType? invoiceType,
+    int? itemCount,
     Decimal? totalAmount,
     Decimal? paidAmount,
     Decimal? balanceAmount,
@@ -69,6 +75,8 @@ class StoreInvoice {
       clientId: clientId ?? this.clientId,
       clientUuid: clientUuid ?? this.clientUuid,
       invoiceNumber: invoiceNumber ?? this.invoiceNumber,
+      invoiceType: invoiceType ?? this.invoiceType,
+      itemCount: itemCount ?? this.itemCount,
       totalAmount: totalAmount ?? this.totalAmount,
       paidAmount: paidAmount ?? this.paidAmount,
       balanceAmount: balanceAmount ?? this.balanceAmount,
@@ -90,6 +98,8 @@ class StoreInvoice {
       'clientId': clientId,
       'clientUuid': clientUuid,
       'invoiceNumber': invoiceNumber,
+      'invoiceType': invoiceType.value,
+      'itemCount': itemCount,
       'totalAmount': totalAmount.toString(),
       'paidAmount': paidAmount.toString(),
       'balanceAmount': balanceAmount.toString(),
@@ -111,6 +121,8 @@ class StoreInvoice {
       clientId: ModelParsing.intOrThrow(map['clientId'], 'clientId'),
       clientUuid: map['clientUuid'] as String,
       invoiceNumber: map['invoiceNumber'] as String,
+      invoiceType: ModelParsing.invoiceTypeFromValue(map['invoiceType'], 'invoiceType'),
+      itemCount: ModelParsing.intOrThrow(map['itemCount'], 'itemCount'),
       totalAmount: ModelParsing.decimalOrThrow(map['totalAmount'], 'totalAmount'),
       paidAmount: ModelParsing.decimalOrThrow(map['paidAmount'], 'paidAmount'),
       balanceAmount: ModelParsing.decimalOrThrow(map['balanceAmount'], 'balanceAmount'),
@@ -129,7 +141,7 @@ class StoreInvoice {
 
   @override
   String toString() {
-    return 'StoreInvoice(id: $id, uuid: $uuid, storeId: $storeId, storeUuid: $storeUuid, clientId: $clientId, clientUuid: $clientUuid, invoiceNumber: $invoiceNumber, totalAmount: $totalAmount, paidAmount: $paidAmount, balanceAmount: $balanceAmount, notes: $notes, issuedAt: $issuedAt, dueAt: $dueAt, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'StoreInvoice(id: $id, uuid: $uuid, storeId: $storeId, storeUuid: $storeUuid, clientId: $clientId, clientUuid: $clientUuid, invoiceNumber: $invoiceNumber, invoiceType: $invoiceType, itemCount: $itemCount, totalAmount: $totalAmount, paidAmount: $paidAmount, balanceAmount: $balanceAmount, notes: $notes, issuedAt: $issuedAt, dueAt: $dueAt, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -143,6 +155,8 @@ class StoreInvoice {
       other.clientId == clientId &&
       other.clientUuid == clientUuid &&
         other.invoiceNumber == invoiceNumber &&
+        other.invoiceType == invoiceType &&
+        other.itemCount == itemCount &&
         other.totalAmount == totalAmount &&
         other.paidAmount == paidAmount &&
         other.balanceAmount == balanceAmount &&
@@ -163,6 +177,8 @@ class StoreInvoice {
       clientId.hashCode ^
       clientUuid.hashCode ^
         invoiceNumber.hashCode ^
+        invoiceType.hashCode ^
+        itemCount.hashCode ^
         totalAmount.hashCode ^
         paidAmount.hashCode ^
         balanceAmount.hashCode ^
