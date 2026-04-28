@@ -3,6 +3,8 @@ import 'package:store_management/services/response.dart';
 import 'package:store_management/models/model_enums.dart';
 
 class ValidationUtils {
+  static final RegExp _uuidPattern = RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$');
+
   static Response badRequest(String message) {
     return Response(statusCode: 400, title: 'Bad Request', message: message);
   }
@@ -55,8 +57,20 @@ class ValidationUtils {
     }
 
     final value = (request.data![key] as String).trim();
-    final uuidPattern = RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$');
-    if (!uuidPattern.hasMatch(value)) {
+    if (!_uuidPattern.hasMatch(value)) {
+      return badRequest(message);
+    }
+
+    return null;
+  }
+
+  static Response? validateOptionalUuid(Request request, String key, String message) {
+    final value = request.data?[key];
+    if (value == null) {
+      return null;
+    }
+
+    if (value is! String || !_uuidPattern.hasMatch(value.trim())) {
       return badRequest(message);
     }
 

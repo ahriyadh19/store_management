@@ -1,7 +1,34 @@
 import 'package:decimal/decimal.dart';
 import 'package:store_management/models/model_enums.dart';
+import 'package:store_management/services/uuid.dart';
 
 class ModelParsing {
+  static String? stringOrNull(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+
+    if (value is String) {
+      final trimmed = value.trim();
+      return trimmed.isEmpty ? null : trimmed;
+    }
+
+    return value.toString();
+  }
+
+  static String stringOrThrow(dynamic value, String fieldName) {
+    final parsedValue = stringOrNull(value);
+    if (parsedValue == null) {
+      throw FormatException('Invalid string value for $fieldName: $value');
+    }
+
+    return parsedValue;
+  }
+
+  static String uuidOrGenerate(dynamic value) {
+    return stringOrNull(value) ?? UUIDGenerator.generate();
+  }
+
   static int? intOrNull(dynamic value) {
     if (value == null) {
       return null;

@@ -9,9 +9,7 @@ import 'package:store_management/services/uuid.dart';
 class StoreReturn {
   int? id;
   String uuid;
-  int storeId;
   String storeUuid;
-  int clientId;
   String clientUuid;
   String returnNumber;
   StoreReturnType returnType;
@@ -26,9 +24,7 @@ class StoreReturn {
   StoreReturn({
     this.id,
     String? uuid,
-    required this.storeId,
     required this.storeUuid,
-    required this.clientId,
     required this.clientUuid,
     required this.returnNumber,
     required this.returnType,
@@ -44,9 +40,7 @@ class StoreReturn {
   StoreReturn copyWith({
     int? id,
     String? uuid,
-    int? storeId,
     String? storeUuid,
-    int? clientId,
     String? clientUuid,
     String? returnNumber,
     StoreReturnType? returnType,
@@ -61,9 +55,7 @@ class StoreReturn {
     return StoreReturn(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
-      storeId: storeId ?? this.storeId,
       storeUuid: storeUuid ?? this.storeUuid,
-      clientId: clientId ?? this.clientId,
       clientUuid: clientUuid ?? this.clientUuid,
       returnNumber: returnNumber ?? this.returnNumber,
       returnType: returnType ?? this.returnType,
@@ -81,9 +73,7 @@ class StoreReturn {
     return <String, dynamic>{
       'id': id,
       'uuid': uuid,
-      'storeId': storeId,
       'storeUuid': storeUuid,
-      'clientId': clientId,
       'clientUuid': clientUuid,
       'returnNumber': returnNumber,
       'returnType': returnType.value,
@@ -100,16 +90,14 @@ class StoreReturn {
   factory StoreReturn.fromMap(Map<String, dynamic> map) {
     return StoreReturn(
       id: ModelParsing.intOrNull(map['id']),
-      uuid: map['uuid'] as String,
-      storeId: ModelParsing.intOrThrow(map['storeId'], 'storeId'),
-      storeUuid: map['storeUuid'] as String,
-      clientId: ModelParsing.intOrThrow(map['clientId'], 'clientId'),
-      clientUuid: map['clientUuid'] as String,
-      returnNumber: map['returnNumber'] as String,
+      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
+      storeUuid: ModelParsing.stringOrThrow(map['storeUuid'], 'storeUuid'),
+      clientUuid: ModelParsing.stringOrThrow(map['clientUuid'], 'clientUuid'),
+      returnNumber: ModelParsing.stringOrThrow(map['returnNumber'], 'returnNumber'),
       returnType: ModelParsing.returnTypeFromValue(map['returnType'], 'returnType'),
       itemCount: ModelParsing.intOrThrow(map['itemCount'], 'itemCount'),
       totalAmount: ModelParsing.decimalOrThrow(map['totalAmount'], 'totalAmount'),
-      reason: map['reason'] as String,
+      reason: ModelParsing.stringOrThrow(map['reason'], 'reason'),
       transactionDate: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['transactionDate'], 'transactionDate'),
       status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
@@ -123,7 +111,7 @@ class StoreReturn {
 
   @override
   String toString() {
-    return 'StoreReturn(id: $id, uuid: $uuid, storeId: $storeId, storeUuid: $storeUuid, clientId: $clientId, clientUuid: $clientUuid, returnNumber: $returnNumber, returnType: $returnType, itemCount: $itemCount, totalAmount: $totalAmount, reason: $reason, transactionDate: $transactionDate, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'StoreReturn(id: $id, uuid: $uuid, storeUuid: $storeUuid, clientUuid: $clientUuid, returnNumber: $returnNumber, returnType: $returnType, itemCount: $itemCount, totalAmount: $totalAmount, reason: $reason, transactionDate: $transactionDate, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -132,9 +120,7 @@ class StoreReturn {
 
     return other.id == id &&
         other.uuid == uuid &&
-        other.storeId == storeId &&
         other.storeUuid == storeUuid &&
-      other.clientId == clientId &&
       other.clientUuid == clientUuid &&
         other.returnNumber == returnNumber &&
         other.returnType == returnType &&
@@ -151,9 +137,7 @@ class StoreReturn {
   int get hashCode {
     return id.hashCode ^
         uuid.hashCode ^
-        storeId.hashCode ^
         storeUuid.hashCode ^
-      clientId.hashCode ^
       clientUuid.hashCode ^
         returnNumber.hashCode ^
         returnType.hashCode ^

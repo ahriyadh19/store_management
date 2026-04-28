@@ -12,9 +12,7 @@ void main() {
     return CompanyProducts(
       id: 1,
       uuid: 'company-product-uuid',
-      companyId: 1,
       companyUuid: '11111111-1111-4111-8111-111111111111',
-      productId: 2,
       productUuid: '22222222-2222-4222-8222-222222222222',
       price: Decimal.parse('15.5'),
       costPrice: Decimal.parse('10'),
@@ -40,9 +38,7 @@ void main() {
 
   Map<String, dynamic> buildProductData({
     int? id,
-    int companyId = 1,
     String companyUuid = '11111111-1111-4111-8111-111111111111',
-    int productId = 2,
     String productUuid = '22222222-2222-4222-8222-222222222222',
     String description = 'Retail price',
     num price = 15.5,
@@ -57,9 +53,7 @@ void main() {
     int? availableStock,
   }) {
     final data = <String, dynamic>{
-      'companyId': companyId,
       'companyUuid': companyUuid,
-      'productId': productId,
       'productUuid': productUuid,
       'description': description,
       'price': price,

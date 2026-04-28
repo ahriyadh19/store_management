@@ -7,36 +7,30 @@ import 'package:store_management/services/uuid.dart';
 class StoreUser {
   int? id;
   String uuid;
-  int storeId;
   String storeUuid;
-  int userId;
   String userUuid;
-  int userRoleId;
+  String userRoleUuid;
   int status;
   DateTime createdAt;
   DateTime updatedAt;
   StoreUser({
     this.id,
     String? uuid,
-    required this.storeId,
     required this.storeUuid,
-    required this.userId,
     required this.userUuid,
-    required this.userRoleId,
+    required this.userRoleUuid,
     required this.status,
     required this.createdAt,
     required this.updatedAt,
   }) : uuid = uuid ?? UUIDGenerator.generate();
 
-  StoreUser copyWith({int? id, String? uuid, int? storeId, String? storeUuid, int? userId, String? userUuid, int? userRoleId, int? status, DateTime? createdAt, DateTime? updatedAt}) {
+  StoreUser copyWith({int? id, String? uuid, String? storeUuid, String? userUuid, String? userRoleUuid, int? status, DateTime? createdAt, DateTime? updatedAt}) {
     return StoreUser(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
-      storeId: storeId ?? this.storeId,
       storeUuid: storeUuid ?? this.storeUuid,
-      userId: userId ?? this.userId,
       userUuid: userUuid ?? this.userUuid,
-      userRoleId: userRoleId ?? this.userRoleId,
+      userRoleUuid: userRoleUuid ?? this.userRoleUuid,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -47,11 +41,9 @@ class StoreUser {
     return <String, dynamic>{
       'id': id,
       'uuid': uuid,
-      'storeId': storeId,
       'storeUuid': storeUuid,
-      'userId': userId,
       'userUuid': userUuid,
-      'userRoleId': userRoleId,
+      'userRoleUuid': userRoleUuid,
       'status': status,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
@@ -61,12 +53,10 @@ class StoreUser {
   factory StoreUser.fromMap(Map<String, dynamic> map) {
     return StoreUser(
       id: ModelParsing.intOrNull(map['id']),
-      uuid: map['uuid'] as String,
-      storeId: ModelParsing.intOrThrow(map['storeId'], 'storeId'),
-      storeUuid: map['storeUuid'] as String,
-      userId: ModelParsing.intOrThrow(map['userId'], 'userId'),
-      userUuid: map['userUuid'] as String,
-      userRoleId: ModelParsing.intOrThrow(map['userRoleId'], 'userRoleId'),
+      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
+      storeUuid: ModelParsing.stringOrThrow(map['storeUuid'], 'storeUuid'),
+      userUuid: ModelParsing.stringOrThrow(map['userUuid'], 'userUuid'),
+      userRoleUuid: ModelParsing.stringOrThrow(map['userRoleUuid'], 'userRoleUuid'),
       status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
@@ -79,7 +69,7 @@ class StoreUser {
 
   @override
   String toString() {
-    return 'StoreUser(id: $id, uuid: $uuid, storeId: $storeId, storeUuid: $storeUuid, userId: $userId, userUuid: $userUuid, userRoleId: $userRoleId, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'StoreUser(id: $id, uuid: $uuid, storeUuid: $storeUuid, userUuid: $userUuid, userRoleUuid: $userRoleUuid, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -88,11 +78,9 @@ class StoreUser {
 
     return other.id == id &&
         other.uuid == uuid &&
-        other.storeId == storeId &&
         other.storeUuid == storeUuid &&
-        other.userId == userId &&
         other.userUuid == userUuid &&
-        other.userRoleId == userRoleId &&
+        other.userRoleUuid == userRoleUuid &&
         other.status == status &&
         other.createdAt == createdAt &&
         other.updatedAt == updatedAt;
@@ -100,6 +88,6 @@ class StoreUser {
 
   @override
   int get hashCode {
-    return id.hashCode ^ uuid.hashCode ^ storeId.hashCode ^ storeUuid.hashCode ^ userId.hashCode ^ userUuid.hashCode ^ userRoleId.hashCode ^ status.hashCode ^ createdAt.hashCode ^ updatedAt.hashCode;
+    return id.hashCode ^ uuid.hashCode ^ storeUuid.hashCode ^ userUuid.hashCode ^ userRoleUuid.hashCode ^ status.hashCode ^ createdAt.hashCode ^ updatedAt.hashCode;
   }
 }

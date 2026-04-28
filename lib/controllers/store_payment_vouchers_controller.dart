@@ -44,9 +44,7 @@ class StorePaymentVouchersController {
       final now = DateTime.now();
       paymentVoucher = StorePaymentVoucher(
         id: request.data?['id'] as int?,
-        storeId: request.data!['storeId'] as int,
         storeUuid: request.data!['storeUuid'] as String,
-        clientId: request.data!['clientId'] as int,
         clientUuid: request.data!['clientUuid'] as String,
         voucherNumber: request.data!['voucherNumber'] as String,
         payeeName: request.data!['payeeName'] as String,
@@ -79,9 +77,7 @@ class StorePaymentVouchersController {
 
       paymentVoucher = paymentVoucher?.copyWith(
         id: request.data!['id'] as int,
-        storeId: request.data!['storeId'] as int,
         storeUuid: request.data!['storeUuid'] as String,
-        clientId: request.data!['clientId'] as int,
         clientUuid: request.data!['clientUuid'] as String,
         voucherNumber: request.data!['voucherNumber'] as String,
         payeeName: request.data!['payeeName'] as String,

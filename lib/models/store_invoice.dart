@@ -9,9 +9,7 @@ import 'package:store_management/services/uuid.dart';
 class StoreInvoice {
   int? id;
   String uuid;
-  int storeId;
   String storeUuid;
-  int clientId;
   String clientUuid;
   String invoiceNumber;
   StoreInvoiceType invoiceType;
@@ -29,9 +27,7 @@ class StoreInvoice {
   StoreInvoice({
     this.id,
     String? uuid,
-    required this.storeId,
     required this.storeUuid,
-    required this.clientId,
     required this.clientUuid,
     required this.invoiceNumber,
     required this.invoiceType,
@@ -50,9 +46,7 @@ class StoreInvoice {
   StoreInvoice copyWith({
     int? id,
     String? uuid,
-    int? storeId,
     String? storeUuid,
-    int? clientId,
     String? clientUuid,
     String? invoiceNumber,
     StoreInvoiceType? invoiceType,
@@ -70,9 +64,7 @@ class StoreInvoice {
     return StoreInvoice(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
-      storeId: storeId ?? this.storeId,
       storeUuid: storeUuid ?? this.storeUuid,
-      clientId: clientId ?? this.clientId,
       clientUuid: clientUuid ?? this.clientUuid,
       invoiceNumber: invoiceNumber ?? this.invoiceNumber,
       invoiceType: invoiceType ?? this.invoiceType,
@@ -93,9 +85,7 @@ class StoreInvoice {
     return <String, dynamic>{
       'id': id,
       'uuid': uuid,
-      'storeId': storeId,
       'storeUuid': storeUuid,
-      'clientId': clientId,
       'clientUuid': clientUuid,
       'invoiceNumber': invoiceNumber,
       'invoiceType': invoiceType.value,
@@ -115,18 +105,16 @@ class StoreInvoice {
   factory StoreInvoice.fromMap(Map<String, dynamic> map) {
     return StoreInvoice(
       id: ModelParsing.intOrNull(map['id']),
-      uuid: map['uuid'] as String,
-      storeId: ModelParsing.intOrThrow(map['storeId'], 'storeId'),
-      storeUuid: map['storeUuid'] as String,
-      clientId: ModelParsing.intOrThrow(map['clientId'], 'clientId'),
-      clientUuid: map['clientUuid'] as String,
-      invoiceNumber: map['invoiceNumber'] as String,
+      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
+      storeUuid: ModelParsing.stringOrThrow(map['storeUuid'], 'storeUuid'),
+      clientUuid: ModelParsing.stringOrThrow(map['clientUuid'], 'clientUuid'),
+      invoiceNumber: ModelParsing.stringOrThrow(map['invoiceNumber'], 'invoiceNumber'),
       invoiceType: ModelParsing.invoiceTypeFromValue(map['invoiceType'], 'invoiceType'),
       itemCount: ModelParsing.intOrThrow(map['itemCount'], 'itemCount'),
       totalAmount: ModelParsing.decimalOrThrow(map['totalAmount'], 'totalAmount'),
       paidAmount: ModelParsing.decimalOrThrow(map['paidAmount'], 'paidAmount'),
       balanceAmount: ModelParsing.decimalOrThrow(map['balanceAmount'], 'balanceAmount'),
-      notes: map['notes'] as String,
+      notes: ModelParsing.stringOrThrow(map['notes'], 'notes'),
       issuedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['issuedAt'], 'issuedAt'),
       dueAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['dueAt'], 'dueAt'),
       status: ModelParsing.intOrThrow(map['status'], 'status'),
@@ -141,7 +129,7 @@ class StoreInvoice {
 
   @override
   String toString() {
-    return 'StoreInvoice(id: $id, uuid: $uuid, storeId: $storeId, storeUuid: $storeUuid, clientId: $clientId, clientUuid: $clientUuid, invoiceNumber: $invoiceNumber, invoiceType: $invoiceType, itemCount: $itemCount, totalAmount: $totalAmount, paidAmount: $paidAmount, balanceAmount: $balanceAmount, notes: $notes, issuedAt: $issuedAt, dueAt: $dueAt, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'StoreInvoice(id: $id, uuid: $uuid, storeUuid: $storeUuid, clientUuid: $clientUuid, invoiceNumber: $invoiceNumber, invoiceType: $invoiceType, itemCount: $itemCount, totalAmount: $totalAmount, paidAmount: $paidAmount, balanceAmount: $balanceAmount, notes: $notes, issuedAt: $issuedAt, dueAt: $dueAt, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -150,9 +138,7 @@ class StoreInvoice {
 
     return other.id == id &&
         other.uuid == uuid &&
-        other.storeId == storeId &&
         other.storeUuid == storeUuid &&
-      other.clientId == clientId &&
       other.clientUuid == clientUuid &&
         other.invoiceNumber == invoiceNumber &&
         other.invoiceType == invoiceType &&
@@ -172,9 +158,7 @@ class StoreInvoice {
   int get hashCode {
     return id.hashCode ^
         uuid.hashCode ^
-        storeId.hashCode ^
         storeUuid.hashCode ^
-      clientId.hashCode ^
       clientUuid.hashCode ^
         invoiceNumber.hashCode ^
         invoiceType.hashCode ^

@@ -45,7 +45,7 @@ class CategoriesController {
         name: request.data!['name'] as String,
         description: request.data!['description'] as String,
         status: request.data!['status'] as int,
-        parentId: request.data?['parentId'] as int?,
+        parentUuid: request.data?['parentUuid'] as String?,
         createdAt: now,
         updatedAt: now,
       );
@@ -72,7 +72,7 @@ class CategoriesController {
         name: request.data!['name'] as String,
         description: request.data!['description'] as String,
         status: request.data!['status'] as int,
-        parentId: request.data?['parentId'],
+        parentUuid: request.data?['parentUuid'],
         updatedAt: DateTime.now(),
       );
 

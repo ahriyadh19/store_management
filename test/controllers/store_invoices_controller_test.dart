@@ -13,9 +13,7 @@ void main() {
     return StoreInvoice(
       id: 1,
       uuid: 'invoice-uuid',
-      storeId: 1,
       storeUuid: '11111111-1111-4111-8111-111111111111',
-      clientId: 2,
       clientUuid: '22222222-2222-4222-8222-222222222222',
       invoiceNumber: 'INV-001',
       invoiceType: StoreInvoiceType.cash,
@@ -38,9 +36,7 @@ void main() {
 
   Map<String, dynamic> buildInvoiceData({
     int? id,
-    int storeId = 1,
     String storeUuid = '11111111-1111-4111-8111-111111111111',
-    int clientId = 2,
     String clientUuid = '22222222-2222-4222-8222-222222222222',
     String invoiceNumber = 'INV-001',
     String invoiceType = 'cash',
@@ -54,9 +50,7 @@ void main() {
     int status = 1,
   }) {
     final data = <String, dynamic>{
-      'storeId': storeId,
       'storeUuid': storeUuid,
-      'clientId': clientId,
       'clientUuid': clientUuid,
       'invoiceNumber': invoiceNumber,
       'invoiceType': invoiceType,
@@ -88,7 +82,7 @@ void main() {
       expect(response.data?.invoiceNumber, 'INV-001');
       expect(response.data?.invoiceType, StoreInvoiceType.cash);
       expect(response.data?.itemCount, 0);
-      expect(response.data?.clientId, 2);
+      expect(response.data?.clientUuid, '22222222-2222-4222-8222-222222222222');
       expect(response.data?.totalAmount, Decimal.parse('200'));
     });
 

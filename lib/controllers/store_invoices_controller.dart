@@ -44,9 +44,7 @@ class StoreInvoicesController {
       final now = DateTime.now();
       invoice = StoreInvoice(
         id: request.data?['id'] as int?,
-        storeId: request.data!['storeId'] as int,
         storeUuid: request.data!['storeUuid'] as String,
-        clientId: request.data!['clientId'] as int,
         clientUuid: request.data!['clientUuid'] as String,
         invoiceNumber: request.data!['invoiceNumber'] as String,
         invoiceType: StoreInvoiceType.fromValue(request.data!['invoiceType'] as String),
@@ -81,9 +79,7 @@ class StoreInvoicesController {
 
       invoice = invoice?.copyWith(
         id: request.data!['id'] as int,
-        storeId: request.data!['storeId'] as int,
         storeUuid: request.data!['storeUuid'] as String,
-        clientId: request.data!['clientId'] as int,
         clientUuid: request.data!['clientUuid'] as String,
         invoiceNumber: request.data!['invoiceNumber'] as String,
         invoiceType: StoreInvoiceType.fromValue(request.data!['invoiceType'] as String),

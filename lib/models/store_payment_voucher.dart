@@ -9,9 +9,7 @@ import 'package:store_management/services/uuid.dart';
 class StorePaymentVoucher {
   int? id;
   String uuid;
-  int storeId;
   String storeUuid;
-  int clientId;
   String clientUuid;
   String voucherNumber;
   String payeeName;
@@ -27,9 +25,7 @@ class StorePaymentVoucher {
   StorePaymentVoucher({
     this.id,
     String? uuid,
-    required this.storeId,
     required this.storeUuid,
-    required this.clientId,
     required this.clientUuid,
     required this.voucherNumber,
     required this.payeeName,
@@ -46,9 +42,7 @@ class StorePaymentVoucher {
   StorePaymentVoucher copyWith({
     int? id,
     String? uuid,
-    int? storeId,
     String? storeUuid,
-    int? clientId,
     String? clientUuid,
     String? voucherNumber,
     String? payeeName,
@@ -64,9 +58,7 @@ class StorePaymentVoucher {
     return StorePaymentVoucher(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
-      storeId: storeId ?? this.storeId,
       storeUuid: storeUuid ?? this.storeUuid,
-      clientId: clientId ?? this.clientId,
       clientUuid: clientUuid ?? this.clientUuid,
       voucherNumber: voucherNumber ?? this.voucherNumber,
       payeeName: payeeName ?? this.payeeName,
@@ -85,9 +77,7 @@ class StorePaymentVoucher {
     return <String, dynamic>{
       'id': id,
       'uuid': uuid,
-      'storeId': storeId,
       'storeUuid': storeUuid,
-      'clientId': clientId,
       'clientUuid': clientUuid,
       'voucherNumber': voucherNumber,
       'payeeName': payeeName,
@@ -105,17 +95,15 @@ class StorePaymentVoucher {
   factory StorePaymentVoucher.fromMap(Map<String, dynamic> map) {
     return StorePaymentVoucher(
       id: ModelParsing.intOrNull(map['id']),
-      uuid: map['uuid'] as String,
-      storeId: ModelParsing.intOrThrow(map['storeId'], 'storeId'),
-      storeUuid: map['storeUuid'] as String,
-      clientId: ModelParsing.intOrThrow(map['clientId'], 'clientId'),
-      clientUuid: map['clientUuid'] as String,
-      voucherNumber: map['voucherNumber'] as String,
-      payeeName: map['payeeName'] as String,
+      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
+      storeUuid: ModelParsing.stringOrThrow(map['storeUuid'], 'storeUuid'),
+      clientUuid: ModelParsing.stringOrThrow(map['clientUuid'], 'clientUuid'),
+      voucherNumber: ModelParsing.stringOrThrow(map['voucherNumber'], 'voucherNumber'),
+      payeeName: ModelParsing.stringOrThrow(map['payeeName'], 'payeeName'),
       amount: ModelParsing.decimalOrThrow(map['amount'], 'amount'),
       paymentMethod: ModelParsing.paymentMethodFromValue(map['paymentMethod'], 'paymentMethod'),
-      referenceNumber: map['referenceNumber'] as String,
-      description: map['description'] as String,
+      referenceNumber: ModelParsing.stringOrThrow(map['referenceNumber'], 'referenceNumber'),
+      description: ModelParsing.stringOrThrow(map['description'], 'description'),
       transactionDate: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['transactionDate'], 'transactionDate'),
       status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
@@ -129,7 +117,7 @@ class StorePaymentVoucher {
 
   @override
   String toString() {
-    return 'StorePaymentVoucher(id: $id, uuid: $uuid, storeId: $storeId, storeUuid: $storeUuid, clientId: $clientId, clientUuid: $clientUuid, voucherNumber: $voucherNumber, payeeName: $payeeName, amount: $amount, paymentMethod: $paymentMethod, referenceNumber: $referenceNumber, description: $description, transactionDate: $transactionDate, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'StorePaymentVoucher(id: $id, uuid: $uuid, storeUuid: $storeUuid, clientUuid: $clientUuid, voucherNumber: $voucherNumber, payeeName: $payeeName, amount: $amount, paymentMethod: $paymentMethod, referenceNumber: $referenceNumber, description: $description, transactionDate: $transactionDate, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -138,9 +126,7 @@ class StorePaymentVoucher {
 
     return other.id == id &&
         other.uuid == uuid &&
-        other.storeId == storeId &&
         other.storeUuid == storeUuid &&
-      other.clientId == clientId &&
       other.clientUuid == clientUuid &&
         other.voucherNumber == voucherNumber &&
         other.payeeName == payeeName &&
@@ -158,9 +144,7 @@ class StorePaymentVoucher {
   int get hashCode {
     return id.hashCode ^
         uuid.hashCode ^
-        storeId.hashCode ^
         storeUuid.hashCode ^
-      clientId.hashCode ^
       clientUuid.hashCode ^
         voucherNumber.hashCode ^
         payeeName.hashCode ^

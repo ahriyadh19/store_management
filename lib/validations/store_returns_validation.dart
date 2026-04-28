@@ -43,19 +43,9 @@ class StoreReturnsValidation {
       }
     }
 
-    final storeIdError = ValidationUtils.validateRequiredInt(request, 'storeId', 'Store id is required');
-    if (storeIdError != null) {
-      return storeIdError;
-    }
-
     final storeUuidError = ValidationUtils.validateRequiredUuid(request, 'storeUuid', 'Store uuid must be a valid UUID');
     if (storeUuidError != null) {
       return storeUuidError;
-    }
-
-    final clientIdError = ValidationUtils.validateRequiredInt(request, 'clientId', 'Client id is required');
-    if (clientIdError != null) {
-      return clientIdError;
     }
 
     final clientUuidError = ValidationUtils.validateRequiredUuid(request, 'clientUuid', 'Client uuid must be a valid UUID');

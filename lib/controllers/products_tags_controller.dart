@@ -42,9 +42,7 @@ class ProductsTagsController {
       final now = DateTime.now();
       productTag = ProductsTags(
         id: request.data?['id'] as int?,
-        productId: request.data!['productId'] as int,
         productUuid: request.data!['productUuid'] as String,
-        tagId: request.data!['tagId'] as int,
         tagUuid: request.data!['tagUuid'] as String,
         status: request.data!['status'] as int,
         createdAt: now,
@@ -70,9 +68,7 @@ class ProductsTagsController {
 
       productTag = productTag?.copyWith(
         id: request.data!['id'] as int,
-        productId: request.data!['productId'] as int,
         productUuid: request.data!['productUuid'] as String,
-        tagId: request.data!['tagId'] as int,
         tagUuid: request.data!['tagUuid'] as String,
         status: request.data!['status'] as int,
         updatedAt: DateTime.now(),

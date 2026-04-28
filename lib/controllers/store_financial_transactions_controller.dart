@@ -44,14 +44,11 @@ class StoreFinancialTransactionsController {
       final now = DateTime.now();
       transaction = StoreFinancialTransaction(
         id: request.data?['id'] as int?,
-        storeId: request.data!['storeId'] as int,
         storeUuid: request.data!['storeUuid'] as String,
-        clientId: request.data!['clientId'] as int,
         clientUuid: request.data!['clientUuid'] as String,
         transactionNumber: request.data!['transactionNumber'] as String,
         transactionType: FinancialTransactionType.fromValue(request.data!['transactionType'] as String),
         sourceType: FinancialSourceType.fromValue(request.data!['sourceType'] as String),
-        sourceId: request.data!['sourceId'] as int,
         sourceUuid: request.data!['sourceUuid'] as String,
         amount: ModelParsing.decimalOrThrow(request.data!['amount'], 'amount'),
         entryType: LedgerEntryType.fromValue(request.data!['entryType'] as String),
@@ -81,14 +78,11 @@ class StoreFinancialTransactionsController {
 
       transaction = transaction?.copyWith(
         id: request.data!['id'] as int,
-        storeId: request.data!['storeId'] as int,
         storeUuid: request.data!['storeUuid'] as String,
-        clientId: request.data!['clientId'] as int,
         clientUuid: request.data!['clientUuid'] as String,
         transactionNumber: request.data!['transactionNumber'] as String,
         transactionType: FinancialTransactionType.fromValue(request.data!['transactionType'] as String),
         sourceType: FinancialSourceType.fromValue(request.data!['sourceType'] as String),
-        sourceId: request.data!['sourceId'] as int,
         sourceUuid: request.data!['sourceUuid'] as String,
         amount: ModelParsing.decimalOrThrow(request.data!['amount'], 'amount'),
         entryType: LedgerEntryType.fromValue(request.data!['entryType'] as String),

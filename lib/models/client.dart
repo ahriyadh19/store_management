@@ -88,12 +88,12 @@ class Client {
   factory Client.fromMap(Map<String, dynamic> map) {
     return Client(
       id: ModelParsing.intOrNull(map['id']),
-      uuid: map['uuid'] as String,
-      name: map['name'] as String,
-      description: map['description'] as String,
-      email: map['email'] as String,
-      phone: map['phone'] as String,
-      address: map['address'] as String,
+      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
+      name: ModelParsing.stringOrThrow(map['name'], 'name'),
+      description: ModelParsing.stringOrThrow(map['description'], 'description'),
+      email: ModelParsing.stringOrThrow(map['email'], 'email'),
+      phone: ModelParsing.stringOrThrow(map['phone'], 'phone'),
+      address: ModelParsing.stringOrThrow(map['address'], 'address'),
       status: ModelParsing.intOrThrow(map['status'], 'status'),
       creditLimit: ModelParsing.decimalOrThrow(map['creditLimit'], 'creditLimit'),
       currentCredit: ModelParsing.decimalOrThrow(map['currentCredit'], 'currentCredit'),

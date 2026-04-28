@@ -34,9 +34,9 @@ class Tags {
   factory Tags.fromMap(Map<String, dynamic> map) {
     return Tags(
       id: ModelParsing.intOrNull(map['id']),
-      uuid: map['uuid'] as String,
-      name: map['name'] as String,
-      description: map['description'] as String,
+      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
+      name: ModelParsing.stringOrThrow(map['name'], 'name'),
+      description: ModelParsing.stringOrThrow(map['description'], 'description'),
       status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),

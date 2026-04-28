@@ -50,9 +50,7 @@ class CompanyProductsController {
       final now = DateTime.now();
       companyProduct = CompanyProducts(
         id: request.data?['id'] as int?,
-        companyId: request.data!['companyId'] as int,
         companyUuid: request.data!['companyUuid'] as String,
-        productId: request.data!['productId'] as int,
         productUuid: request.data!['productUuid'] as String,
         price: ModelParsing.decimalOrThrow(request.data!['price'], 'price'),
         costPrice: ModelParsing.decimalOrNull(request.data!['costPrice']),
@@ -87,9 +85,7 @@ class CompanyProductsController {
 
       companyProduct = companyProduct?.copyWith(
         id: request.data!['id'] as int,
-        companyId: request.data!['companyId'] as int,
         companyUuid: request.data!['companyUuid'] as String,
-        productId: request.data!['productId'] as int,
         productUuid: request.data!['productUuid'] as String,
         price: ModelParsing.decimalOrThrow(request.data!['price'], 'price'),
         costPrice: ModelParsing.decimalOrNull(request.data!['costPrice']),

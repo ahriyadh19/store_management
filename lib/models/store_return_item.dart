@@ -8,13 +8,9 @@ import 'package:store_management/services/uuid.dart';
 class StoreReturnItem {
   int? id;
   String uuid;
-  int returnId;
   String returnUuid;
-  int? invoiceItemId;
   String? invoiceItemUuid;
-  int companyProductId;
   String companyProductUuid;
-  int productId;
   String productUuid;
   int quantity;
   Decimal unitPrice;
@@ -27,13 +23,9 @@ class StoreReturnItem {
   StoreReturnItem({
     this.id,
     String? uuid,
-    required this.returnId,
     required this.returnUuid,
-    this.invoiceItemId,
     this.invoiceItemUuid,
-    required this.companyProductId,
     required this.companyProductUuid,
-    required this.productId,
     required this.productUuid,
     required this.quantity,
     required this.unitPrice,
@@ -47,13 +39,9 @@ class StoreReturnItem {
   StoreReturnItem copyWith({
     int? id,
     String? uuid,
-    int? returnId,
     String? returnUuid,
-    int? invoiceItemId,
     String? invoiceItemUuid,
-    int? companyProductId,
     String? companyProductUuid,
-    int? productId,
     String? productUuid,
     int? quantity,
     Decimal? unitPrice,
@@ -66,13 +54,9 @@ class StoreReturnItem {
     return StoreReturnItem(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
-      returnId: returnId ?? this.returnId,
       returnUuid: returnUuid ?? this.returnUuid,
-      invoiceItemId: invoiceItemId ?? this.invoiceItemId,
       invoiceItemUuid: invoiceItemUuid ?? this.invoiceItemUuid,
-      companyProductId: companyProductId ?? this.companyProductId,
       companyProductUuid: companyProductUuid ?? this.companyProductUuid,
-      productId: productId ?? this.productId,
       productUuid: productUuid ?? this.productUuid,
       quantity: quantity ?? this.quantity,
       unitPrice: unitPrice ?? this.unitPrice,
@@ -88,13 +72,9 @@ class StoreReturnItem {
     return <String, dynamic>{
       'id': id,
       'uuid': uuid,
-      'returnId': returnId,
       'returnUuid': returnUuid,
-      'invoiceItemId': invoiceItemId,
       'invoiceItemUuid': invoiceItemUuid,
-      'companyProductId': companyProductId,
       'companyProductUuid': companyProductUuid,
-      'productId': productId,
       'productUuid': productUuid,
       'quantity': quantity,
       'unitPrice': unitPrice.toString(),
@@ -109,19 +89,15 @@ class StoreReturnItem {
   factory StoreReturnItem.fromMap(Map<String, dynamic> map) {
     return StoreReturnItem(
       id: ModelParsing.intOrNull(map['id']),
-      uuid: map['uuid'] as String,
-      returnId: ModelParsing.intOrThrow(map['returnId'], 'returnId'),
-      returnUuid: map['returnUuid'] as String,
-      invoiceItemId: ModelParsing.intOrNull(map['invoiceItemId']),
-      invoiceItemUuid: map['invoiceItemUuid'] as String?,
-      companyProductId: ModelParsing.intOrThrow(map['companyProductId'], 'companyProductId'),
-      companyProductUuid: map['companyProductUuid'] as String,
-      productId: ModelParsing.intOrThrow(map['productId'], 'productId'),
-      productUuid: map['productUuid'] as String,
+      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
+      returnUuid: ModelParsing.stringOrThrow(map['returnUuid'], 'returnUuid'),
+      invoiceItemUuid: ModelParsing.stringOrNull(map['invoiceItemUuid']),
+      companyProductUuid: ModelParsing.stringOrThrow(map['companyProductUuid'], 'companyProductUuid'),
+      productUuid: ModelParsing.stringOrThrow(map['productUuid'], 'productUuid'),
       quantity: ModelParsing.intOrThrow(map['quantity'], 'quantity'),
       unitPrice: ModelParsing.decimalOrThrow(map['unitPrice'], 'unitPrice'),
       lineTotal: ModelParsing.decimalOrThrow(map['lineTotal'], 'lineTotal'),
-      reason: map['reason'] as String,
+      reason: ModelParsing.stringOrThrow(map['reason'], 'reason'),
       status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
@@ -134,7 +110,7 @@ class StoreReturnItem {
 
   @override
   String toString() {
-    return 'StoreReturnItem(id: $id, uuid: $uuid, returnId: $returnId, returnUuid: $returnUuid, invoiceItemId: $invoiceItemId, invoiceItemUuid: $invoiceItemUuid, companyProductId: $companyProductId, companyProductUuid: $companyProductUuid, productId: $productId, productUuid: $productUuid, quantity: $quantity, unitPrice: $unitPrice, lineTotal: $lineTotal, reason: $reason, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'StoreReturnItem(id: $id, uuid: $uuid, returnUuid: $returnUuid, invoiceItemUuid: $invoiceItemUuid, companyProductUuid: $companyProductUuid, productUuid: $productUuid, quantity: $quantity, unitPrice: $unitPrice, lineTotal: $lineTotal, reason: $reason, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -143,13 +119,9 @@ class StoreReturnItem {
 
     return other.id == id &&
         other.uuid == uuid &&
-        other.returnId == returnId &&
         other.returnUuid == returnUuid &&
-        other.invoiceItemId == invoiceItemId &&
         other.invoiceItemUuid == invoiceItemUuid &&
-        other.companyProductId == companyProductId &&
         other.companyProductUuid == companyProductUuid &&
-        other.productId == productId &&
         other.productUuid == productUuid &&
         other.quantity == quantity &&
         other.unitPrice == unitPrice &&
@@ -164,13 +136,9 @@ class StoreReturnItem {
   int get hashCode {
     return id.hashCode ^
         uuid.hashCode ^
-        returnId.hashCode ^
         returnUuid.hashCode ^
-        invoiceItemId.hashCode ^
         invoiceItemUuid.hashCode ^
-        companyProductId.hashCode ^
         companyProductUuid.hashCode ^
-        productId.hashCode ^
         productUuid.hashCode ^
         quantity.hashCode ^
         unitPrice.hashCode ^

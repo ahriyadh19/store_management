@@ -17,6 +17,7 @@ import 'package:store_management/models/store_invoice_item.dart';
 import 'package:store_management/models/store_payment_voucher.dart';
 import 'package:store_management/models/store_return.dart';
 import 'package:store_management/models/store_return_item.dart';
+import 'package:store_management/models/store_user.dart';
 import 'package:store_management/models/user_roles.dart';
 import 'package:store_management/models/users.dart';
 
@@ -29,11 +30,8 @@ void main() {
   group('model uuid generation', () {
     test('detail models generate uuid automatically', () {
       final invoiceItem = StoreInvoiceItem(
-        invoiceId: 1,
         invoiceUuid: '11111111-1111-4111-8111-111111111111',
-        companyProductId: 2,
         companyProductUuid: '22222222-2222-4222-8222-222222222222',
-        productId: 3,
         productUuid: '33333333-3333-4333-8333-333333333333',
         quantity: 2,
         unitPrice: money('20'),
@@ -46,11 +44,8 @@ void main() {
       );
 
       final returnItem = StoreReturnItem(
-        returnId: 1,
         returnUuid: '11111111-1111-4111-8111-111111111111',
-        companyProductId: 2,
         companyProductUuid: '22222222-2222-4222-8222-222222222222',
-        productId: 3,
         productUuid: '33333333-3333-4333-8333-333333333333',
         quantity: 1,
         unitPrice: money('20'),
@@ -62,9 +57,7 @@ void main() {
       );
 
       final movement = InventoryMovement(
-        companyProductId: 2,
         companyProductUuid: '22222222-2222-4222-8222-222222222222',
-        productId: 3,
         productUuid: '33333333-3333-4333-8333-333333333333',
         movementType: InventoryMovementType.sale,
         quantityDelta: -2,
@@ -76,9 +69,7 @@ void main() {
       );
 
       final allocation = PaymentAllocation(
-        paymentVoucherId: 1,
         paymentVoucherUuid: '11111111-1111-4111-8111-111111111111',
-        invoiceId: 2,
         invoiceUuid: '22222222-2222-4222-8222-222222222222',
         allocatedAmount: money('100'),
         allocationDate: createdAt,
@@ -130,9 +121,7 @@ void main() {
       final userRole = UserRoles(
         id: 1,
         uuid: 'user-role-uuid',
-        userId: 1,
         userUuid: '11111111-1111-4111-8111-111111111111',
-        roleId: 2,
         roleUuid: '22222222-2222-4222-8222-222222222222',
         status: 1,
         createdAt: createdAt,
@@ -147,9 +136,7 @@ void main() {
       final companyProduct = CompanyProducts(
         id: 1,
         uuid: 'company-product-uuid',
-        companyId: 1,
         companyUuid: '11111111-1111-4111-8111-111111111111',
-        productId: 2,
         productUuid: '22222222-2222-4222-8222-222222222222',
         price: money('15.50'),
         costPrice: money('10.25'),
@@ -173,9 +160,7 @@ void main() {
       final companyProduct = CompanyProducts.fromMap({
         'id': 1,
         'uuid': 'client-uuid',
-        'companyId': 1,
         'companyUuid': '11111111-1111-4111-8111-111111111111',
-        'productId': 2,
         'productUuid': '22222222-2222-4222-8222-222222222222',
         'price': 15,
         'description': 'Retail price',
@@ -192,9 +177,7 @@ void main() {
       final storeCompany = StoreCompany(
         id: 1,
         uuid: 'store-company-uuid',
-        storeId: 1,
         storeUuid: '11111111-1111-4111-8111-111111111111',
-        companyId: 2,
         companyUuid: '22222222-2222-4222-8222-222222222222',
         status: 1,
         createdAt: createdAt,
@@ -209,9 +192,7 @@ void main() {
       final productTag = ProductsTags(
         id: 1,
         uuid: 'product-tag-uuid',
-        productId: 2,
         productUuid: '22222222-2222-4222-8222-222222222222',
-        tagId: 3,
         tagUuid: '33333333-3333-4333-8333-333333333333',
         status: 1,
         createdAt: createdAt,
@@ -226,9 +207,7 @@ void main() {
       final invoice = StoreInvoice(
         id: 1,
         uuid: 'invoice-uuid',
-        storeId: 1,
         storeUuid: '11111111-1111-4111-8111-111111111111',
-        clientId: 2,
         clientUuid: '22222222-2222-4222-8222-222222222222',
         invoiceNumber: 'INV-001',
         invoiceType: StoreInvoiceType.credit,
@@ -246,11 +225,8 @@ void main() {
       final item = StoreInvoiceItem(
         id: 1,
         uuid: 'invoice-item-uuid',
-        invoiceId: 1,
         invoiceUuid: '11111111-1111-4111-8111-111111111111',
-        companyProductId: 2,
         companyProductUuid: '22222222-2222-4222-8222-222222222222',
-        productId: 3,
         productUuid: '33333333-3333-4333-8333-333333333333',
         quantity: 2,
         unitPrice: money('20'),
@@ -272,9 +248,7 @@ void main() {
       final voucher = StorePaymentVoucher(
         id: 1,
         uuid: 'voucher-uuid',
-        storeId: 1,
         storeUuid: '11111111-1111-4111-8111-111111111111',
-        clientId: 2,
         clientUuid: '22222222-2222-4222-8222-222222222222',
         voucherNumber: 'PV-001',
         payeeName: 'Vendor',
@@ -290,9 +264,7 @@ void main() {
       final allocation = PaymentAllocation(
         id: 1,
         uuid: 'allocation-uuid',
-        paymentVoucherId: 1,
         paymentVoucherUuid: '11111111-1111-4111-8111-111111111111',
-        invoiceId: 2,
         invoiceUuid: '22222222-2222-4222-8222-222222222222',
         allocatedAmount: money('50'),
         allocationDate: createdAt,
@@ -311,9 +283,7 @@ void main() {
       final storeReturn = StoreReturn(
         id: 1,
         uuid: 'return-uuid',
-        storeId: 1,
         storeUuid: '11111111-1111-4111-8111-111111111111',
-        clientId: 2,
         clientUuid: '22222222-2222-4222-8222-222222222222',
         returnNumber: 'RET-001',
         returnType: StoreReturnType.salesReturn,
@@ -328,13 +298,9 @@ void main() {
       final item = StoreReturnItem(
         id: 1,
         uuid: 'return-item-uuid',
-        returnId: 1,
         returnUuid: '11111111-1111-4111-8111-111111111111',
-        invoiceItemId: 2,
         invoiceItemUuid: '22222222-2222-4222-8222-222222222222',
-        companyProductId: 3,
         companyProductUuid: '33333333-3333-4333-8333-333333333333',
-        productId: 4,
         productUuid: '44444444-4444-4444-8444-444444444444',
         quantity: 1,
         unitPrice: money('20'),
@@ -355,14 +321,11 @@ void main() {
       final transaction = StoreFinancialTransaction(
         id: 1,
         uuid: 'financial-transaction-uuid',
-        storeId: 1,
         storeUuid: '11111111-1111-4111-8111-111111111111',
-        clientId: 2,
         clientUuid: '22222222-2222-4222-8222-222222222222',
         transactionNumber: 'FT-001',
         transactionType: FinancialTransactionType.invoicePosting,
         sourceType: FinancialSourceType.invoice,
-        sourceId: 1,
         sourceUuid: '44444444-4444-4444-8444-444444444444',
         amount: money('200'),
         entryType: LedgerEntryType.debit,
@@ -372,7 +335,22 @@ void main() {
         createdAt: createdAt,
         updatedAt: updatedAt,
       );
-      final movement = InventoryMovement(id: 1, uuid: 'movement-uuid', companyProductId: 2, companyProductUuid: '22222222-2222-4222-8222-222222222222', productId: 3, productUuid: '33333333-3333-4333-8333-333333333333', movementType: InventoryMovementType.restock, quantityDelta: 10, balanceAfter: 30, unitCost: money('11.25'), referenceType: InventoryReferenceType.restock, referenceId: 1, referenceUuid: '11111111-1111-4111-8111-111111111111', note: 'Supplier restock', createdByUserId: 4, createdByUserUuid: '44444444-4444-4444-8444-444444444444', createdAt: createdAt, updatedAt: updatedAt);
+      final movement = InventoryMovement(
+        id: 1,
+        uuid: 'movement-uuid',
+        companyProductUuid: '22222222-2222-4222-8222-222222222222',
+        productUuid: '33333333-3333-4333-8333-333333333333',
+        movementType: InventoryMovementType.restock,
+        quantityDelta: 10,
+        balanceAfter: 30,
+        unitCost: money('11.25'),
+        referenceType: InventoryReferenceType.restock,
+        referenceUuid: '11111111-1111-4111-8111-111111111111',
+        note: 'Supplier restock',
+        createdByUserUuid: '44444444-4444-4444-8444-444444444444',
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
 
       expect(StoreFinancialTransaction.fromMap(transaction.toMap()), equals(transaction));
       expect(StoreFinancialTransaction.fromJson(transaction.toJson()), equals(transaction));
@@ -380,12 +358,34 @@ void main() {
       expect(InventoryMovement.fromJson(movement.toJson()), equals(movement));
     });
 
-    test('Categories supports root nodes with null parentId', () {
-      final category = Categories(id: 1, uuid: 'category-uuid', name: 'Root', description: 'Top level category', status: 1, parentId: null, createdAt: createdAt, updatedAt: updatedAt);
+    test('Categories supports root nodes with null parentUuid', () {
+      final category = Categories(id: 1, uuid: 'category-uuid', name: 'Root', description: 'Top level category', status: 1, parentUuid: null, createdAt: createdAt, updatedAt: updatedAt);
 
       expect(Categories.fromMap(category.toMap()), equals(category));
       expect(Categories.fromJson(category.toJson()), equals(category));
-      expect(Categories.fromMap({...category.toMap(), 'parentId': null}).parentId, isNull);
+      expect(Categories.fromMap({...category.toMap(), 'parentUuid': null}).parentUuid, isNull);
+    });
+
+    test('StoreUser round-trips through map and json', () {
+      final storeUser = StoreUser(
+        id: 1,
+        uuid: 'store-user-uuid',
+        storeUuid: '22222222-2222-4222-8222-222222222222',
+        userUuid: '33333333-3333-4333-8333-333333333333',
+        userRoleUuid: '44444444-4444-4444-8444-444444444444',
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+      expect(StoreUser.fromMap(storeUser.toMap()), equals(storeUser));
+      expect(StoreUser.fromJson(storeUser.toJson()), equals(storeUser));
+    });
+
+    test('legacy model maps generate uuid when missing', () {
+      final company = Company.fromMap({'id': 1, 'name': 'Store Co', 'description': 'Main supplier', 'status': 1, 'createdAt': createdAt.millisecondsSinceEpoch, 'updatedAt': updatedAt.millisecondsSinceEpoch});
+
+      expect(company.uuid, isNotEmpty);
     });
 
     test('Client accepts integer credit values from raw maps', () {

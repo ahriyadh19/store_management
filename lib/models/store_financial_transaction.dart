@@ -9,14 +9,11 @@ import 'package:store_management/services/uuid.dart';
 class StoreFinancialTransaction {
   int? id;
   String uuid;
-  int storeId;
   String storeUuid;
-  int clientId;
   String clientUuid;
   String transactionNumber;
   FinancialTransactionType transactionType;
   FinancialSourceType sourceType;
-  int sourceId;
   String sourceUuid;
   Decimal amount;
   LedgerEntryType entryType;
@@ -29,14 +26,11 @@ class StoreFinancialTransaction {
   StoreFinancialTransaction({
     this.id,
     String? uuid,
-    required this.storeId,
     required this.storeUuid,
-    required this.clientId,
     required this.clientUuid,
     required this.transactionNumber,
     required this.transactionType,
     required this.sourceType,
-    required this.sourceId,
     required this.sourceUuid,
     required this.amount,
     required this.entryType,
@@ -50,14 +44,11 @@ class StoreFinancialTransaction {
   StoreFinancialTransaction copyWith({
     int? id,
     String? uuid,
-    int? storeId,
     String? storeUuid,
-    int? clientId,
     String? clientUuid,
     String? transactionNumber,
     FinancialTransactionType? transactionType,
     FinancialSourceType? sourceType,
-    int? sourceId,
     String? sourceUuid,
     Decimal? amount,
     LedgerEntryType? entryType,
@@ -70,14 +61,11 @@ class StoreFinancialTransaction {
     return StoreFinancialTransaction(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
-      storeId: storeId ?? this.storeId,
       storeUuid: storeUuid ?? this.storeUuid,
-      clientId: clientId ?? this.clientId,
       clientUuid: clientUuid ?? this.clientUuid,
       transactionNumber: transactionNumber ?? this.transactionNumber,
       transactionType: transactionType ?? this.transactionType,
       sourceType: sourceType ?? this.sourceType,
-      sourceId: sourceId ?? this.sourceId,
       sourceUuid: sourceUuid ?? this.sourceUuid,
       amount: amount ?? this.amount,
       entryType: entryType ?? this.entryType,
@@ -93,14 +81,11 @@ class StoreFinancialTransaction {
     return <String, dynamic>{
       'id': id,
       'uuid': uuid,
-      'storeId': storeId,
       'storeUuid': storeUuid,
-      'clientId': clientId,
       'clientUuid': clientUuid,
       'transactionNumber': transactionNumber,
       'transactionType': transactionType.value,
       'sourceType': sourceType.value,
-      'sourceId': sourceId,
       'sourceUuid': sourceUuid,
       'amount': amount.toString(),
       'entryType': entryType.value,
@@ -115,19 +100,16 @@ class StoreFinancialTransaction {
   factory StoreFinancialTransaction.fromMap(Map<String, dynamic> map) {
     return StoreFinancialTransaction(
       id: ModelParsing.intOrNull(map['id']),
-      uuid: map['uuid'] as String,
-      storeId: ModelParsing.intOrThrow(map['storeId'], 'storeId'),
-      storeUuid: map['storeUuid'] as String,
-      clientId: ModelParsing.intOrThrow(map['clientId'], 'clientId'),
-      clientUuid: map['clientUuid'] as String,
-      transactionNumber: map['transactionNumber'] as String,
+      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
+      storeUuid: ModelParsing.stringOrThrow(map['storeUuid'], 'storeUuid'),
+      clientUuid: ModelParsing.stringOrThrow(map['clientUuid'], 'clientUuid'),
+      transactionNumber: ModelParsing.stringOrThrow(map['transactionNumber'], 'transactionNumber'),
       transactionType: ModelParsing.financialTransactionTypeFromValue(map['transactionType'], 'transactionType'),
       sourceType: ModelParsing.financialSourceTypeFromValue(map['sourceType'], 'sourceType'),
-      sourceId: ModelParsing.intOrThrow(map['sourceId'], 'sourceId'),
-      sourceUuid: map['sourceUuid'] as String,
+      sourceUuid: ModelParsing.stringOrThrow(map['sourceUuid'], 'sourceUuid'),
       amount: ModelParsing.decimalOrThrow(map['amount'], 'amount'),
       entryType: ModelParsing.ledgerEntryTypeFromValue(map['entryType'], 'entryType'),
-      description: map['description'] as String,
+      description: ModelParsing.stringOrThrow(map['description'], 'description'),
       transactionDate: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['transactionDate'], 'transactionDate'),
       status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
@@ -141,7 +123,7 @@ class StoreFinancialTransaction {
 
   @override
   String toString() {
-    return 'StoreFinancialTransaction(id: $id, uuid: $uuid, storeId: $storeId, storeUuid: $storeUuid, clientId: $clientId, clientUuid: $clientUuid, transactionNumber: $transactionNumber, transactionType: $transactionType, sourceType: $sourceType, sourceId: $sourceId, sourceUuid: $sourceUuid, amount: $amount, entryType: $entryType, description: $description, transactionDate: $transactionDate, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'StoreFinancialTransaction(id: $id, uuid: $uuid, storeUuid: $storeUuid, clientUuid: $clientUuid, transactionNumber: $transactionNumber, transactionType: $transactionType, sourceType: $sourceType, sourceUuid: $sourceUuid, amount: $amount, entryType: $entryType, description: $description, transactionDate: $transactionDate, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -150,14 +132,11 @@ class StoreFinancialTransaction {
 
     return other.id == id &&
         other.uuid == uuid &&
-        other.storeId == storeId &&
         other.storeUuid == storeUuid &&
-      other.clientId == clientId &&
       other.clientUuid == clientUuid &&
         other.transactionNumber == transactionNumber &&
         other.transactionType == transactionType &&
         other.sourceType == sourceType &&
-        other.sourceId == sourceId &&
         other.sourceUuid == sourceUuid &&
         other.amount == amount &&
         other.entryType == entryType &&
@@ -172,14 +151,11 @@ class StoreFinancialTransaction {
   int get hashCode {
     return id.hashCode ^
         uuid.hashCode ^
-        storeId.hashCode ^
         storeUuid.hashCode ^
-      clientId.hashCode ^
       clientUuid.hashCode ^
         transactionNumber.hashCode ^
         transactionType.hashCode ^
         sourceType.hashCode ^
-        sourceId.hashCode ^
         sourceUuid.hashCode ^
         amount.hashCode ^
         entryType.hashCode ^

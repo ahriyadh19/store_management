@@ -7,23 +7,19 @@ import 'package:store_management/services/uuid.dart';
 class ProductsTags {
   int? id;
   String uuid;
-  int productId;
   String productUuid;
-  int tagId;
   String tagUuid;
   int status;
   DateTime createdAt;
   DateTime updatedAt;
-  ProductsTags({this.id, String? uuid, required this.productId, required this.productUuid, required this.tagId, required this.tagUuid, required this.status, required this.createdAt, required this.updatedAt})
+  ProductsTags({this.id, String? uuid, required this.productUuid, required this.tagUuid, required this.status, required this.createdAt, required this.updatedAt})
     : uuid = uuid ?? UUIDGenerator.generate();
 
-  ProductsTags copyWith({int? id, String? uuid, int? productId, String? productUuid, int? tagId, String? tagUuid, int? status, DateTime? createdAt, DateTime? updatedAt}) {
+  ProductsTags copyWith({int? id, String? uuid, String? productUuid, String? tagUuid, int? status, DateTime? createdAt, DateTime? updatedAt}) {
     return ProductsTags(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
-      productId: productId ?? this.productId,
       productUuid: productUuid ?? this.productUuid,
-      tagId: tagId ?? this.tagId,
       tagUuid: tagUuid ?? this.tagUuid,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
@@ -35,9 +31,7 @@ class ProductsTags {
     return <String, dynamic>{
       'id': id,
       'uuid': uuid,
-      'productId': productId,
       'productUuid': productUuid,
-      'tagId': tagId,
       'tagUuid': tagUuid,
       'status': status,
       'createdAt': createdAt.millisecondsSinceEpoch,
@@ -48,11 +42,9 @@ class ProductsTags {
   factory ProductsTags.fromMap(Map<String, dynamic> map) {
     return ProductsTags(
       id: ModelParsing.intOrNull(map['id']),
-      uuid: map['uuid'] as String,
-      productId: ModelParsing.intOrThrow(map['productId'], 'productId'),
-      productUuid: map['productUuid'] as String,
-      tagId: ModelParsing.intOrThrow(map['tagId'], 'tagId'),
-      tagUuid: map['tagUuid'] as String,
+      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
+      productUuid: ModelParsing.stringOrThrow(map['productUuid'], 'productUuid'),
+      tagUuid: ModelParsing.stringOrThrow(map['tagUuid'], 'tagUuid'),
       status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
@@ -65,7 +57,7 @@ class ProductsTags {
 
   @override
   String toString() {
-    return 'ProductsTags(id: $id, uuid: $uuid, productId: $productId, productUuid: $productUuid, tagId: $tagId, tagUuid: $tagUuid, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'ProductsTags(id: $id, uuid: $uuid, productUuid: $productUuid, tagUuid: $tagUuid, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -74,9 +66,7 @@ class ProductsTags {
 
     return other.id == id &&
         other.uuid == uuid &&
-        other.productId == productId &&
         other.productUuid == productUuid &&
-        other.tagId == tagId &&
         other.tagUuid == tagUuid &&
         other.status == status &&
         other.createdAt == createdAt &&
@@ -85,6 +75,6 @@ class ProductsTags {
 
   @override
   int get hashCode {
-    return id.hashCode ^ uuid.hashCode ^ productId.hashCode ^ productUuid.hashCode ^ tagId.hashCode ^ tagUuid.hashCode ^ status.hashCode ^ createdAt.hashCode ^ updatedAt.hashCode;
+    return id.hashCode ^ uuid.hashCode ^ productUuid.hashCode ^ tagUuid.hashCode ^ status.hashCode ^ createdAt.hashCode ^ updatedAt.hashCode;
   }
 }

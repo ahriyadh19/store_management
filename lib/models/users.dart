@@ -49,11 +49,11 @@ class User {
   factory User.fromMap(Map<String, dynamic> map) {
     return User(
       id: ModelParsing.intOrNull(map['id']),
-      name: map['name'] as String,
-      email: map['email'] as String,
-      password: (map['password'] as String?) ?? '',
-      username: map['username'] as String,
-      uuid: map['uuid'] as String,
+      name: ModelParsing.stringOrThrow(map['name'], 'name'),
+      email: ModelParsing.stringOrThrow(map['email'], 'email'),
+      password: ModelParsing.stringOrNull(map['password']) ?? '',
+      username: ModelParsing.stringOrThrow(map['username'], 'username'),
+      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
       status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),

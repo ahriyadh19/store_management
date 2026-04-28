@@ -44,9 +44,7 @@ class StoreReturnsController {
       final now = DateTime.now();
       storeReturn = StoreReturn(
         id: request.data?['id'] as int?,
-        storeId: request.data!['storeId'] as int,
         storeUuid: request.data!['storeUuid'] as String,
-        clientId: request.data!['clientId'] as int,
         clientUuid: request.data!['clientUuid'] as String,
         returnNumber: request.data!['returnNumber'] as String,
         returnType: StoreReturnType.fromValue(request.data!['returnType'] as String),
@@ -78,9 +76,7 @@ class StoreReturnsController {
 
       storeReturn = storeReturn?.copyWith(
         id: request.data!['id'] as int,
-        storeId: request.data!['storeId'] as int,
         storeUuid: request.data!['storeUuid'] as String,
-        clientId: request.data!['clientId'] as int,
         clientUuid: request.data!['clientUuid'] as String,
         returnNumber: request.data!['returnNumber'] as String,
         returnType: StoreReturnType.fromValue(request.data!['returnType'] as String),

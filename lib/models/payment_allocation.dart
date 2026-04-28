@@ -8,9 +8,7 @@ import 'package:store_management/services/uuid.dart';
 class PaymentAllocation {
   int? id;
   String uuid;
-  int paymentVoucherId;
   String paymentVoucherUuid;
-  int invoiceId;
   String invoiceUuid;
   Decimal allocatedAmount;
   DateTime allocationDate;
@@ -21,9 +19,7 @@ class PaymentAllocation {
   PaymentAllocation({
     this.id,
     String? uuid,
-    required this.paymentVoucherId,
     required this.paymentVoucherUuid,
-    required this.invoiceId,
     required this.invoiceUuid,
     required this.allocatedAmount,
     required this.allocationDate,
@@ -35,9 +31,7 @@ class PaymentAllocation {
   PaymentAllocation copyWith({
     int? id,
     String? uuid,
-    int? paymentVoucherId,
     String? paymentVoucherUuid,
-    int? invoiceId,
     String? invoiceUuid,
     Decimal? allocatedAmount,
     DateTime? allocationDate,
@@ -48,9 +42,7 @@ class PaymentAllocation {
     return PaymentAllocation(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
-      paymentVoucherId: paymentVoucherId ?? this.paymentVoucherId,
       paymentVoucherUuid: paymentVoucherUuid ?? this.paymentVoucherUuid,
-      invoiceId: invoiceId ?? this.invoiceId,
       invoiceUuid: invoiceUuid ?? this.invoiceUuid,
       allocatedAmount: allocatedAmount ?? this.allocatedAmount,
       allocationDate: allocationDate ?? this.allocationDate,
@@ -64,9 +56,7 @@ class PaymentAllocation {
     return <String, dynamic>{
       'id': id,
       'uuid': uuid,
-      'paymentVoucherId': paymentVoucherId,
       'paymentVoucherUuid': paymentVoucherUuid,
-      'invoiceId': invoiceId,
       'invoiceUuid': invoiceUuid,
       'allocatedAmount': allocatedAmount.toString(),
       'allocationDate': allocationDate.millisecondsSinceEpoch,
@@ -79,11 +69,9 @@ class PaymentAllocation {
   factory PaymentAllocation.fromMap(Map<String, dynamic> map) {
     return PaymentAllocation(
       id: ModelParsing.intOrNull(map['id']),
-      uuid: map['uuid'] as String,
-      paymentVoucherId: ModelParsing.intOrThrow(map['paymentVoucherId'], 'paymentVoucherId'),
-      paymentVoucherUuid: map['paymentVoucherUuid'] as String,
-      invoiceId: ModelParsing.intOrThrow(map['invoiceId'], 'invoiceId'),
-      invoiceUuid: map['invoiceUuid'] as String,
+      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
+      paymentVoucherUuid: ModelParsing.stringOrThrow(map['paymentVoucherUuid'], 'paymentVoucherUuid'),
+      invoiceUuid: ModelParsing.stringOrThrow(map['invoiceUuid'], 'invoiceUuid'),
       allocatedAmount: ModelParsing.decimalOrThrow(map['allocatedAmount'], 'allocatedAmount'),
       allocationDate: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['allocationDate'], 'allocationDate'),
       status: ModelParsing.intOrThrow(map['status'], 'status'),
@@ -98,7 +86,7 @@ class PaymentAllocation {
 
   @override
   String toString() {
-    return 'PaymentAllocation(id: $id, uuid: $uuid, paymentVoucherId: $paymentVoucherId, paymentVoucherUuid: $paymentVoucherUuid, invoiceId: $invoiceId, invoiceUuid: $invoiceUuid, allocatedAmount: $allocatedAmount, allocationDate: $allocationDate, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'PaymentAllocation(id: $id, uuid: $uuid, paymentVoucherUuid: $paymentVoucherUuid, invoiceUuid: $invoiceUuid, allocatedAmount: $allocatedAmount, allocationDate: $allocationDate, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -107,9 +95,7 @@ class PaymentAllocation {
 
     return other.id == id &&
         other.uuid == uuid &&
-        other.paymentVoucherId == paymentVoucherId &&
         other.paymentVoucherUuid == paymentVoucherUuid &&
-        other.invoiceId == invoiceId &&
         other.invoiceUuid == invoiceUuid &&
         other.allocatedAmount == allocatedAmount &&
         other.allocationDate == allocationDate &&
@@ -122,9 +108,7 @@ class PaymentAllocation {
   int get hashCode {
     return id.hashCode ^
         uuid.hashCode ^
-        paymentVoucherId.hashCode ^
         paymentVoucherUuid.hashCode ^
-        invoiceId.hashCode ^
         invoiceUuid.hashCode ^
         allocatedAmount.hashCode ^
         allocationDate.hashCode ^

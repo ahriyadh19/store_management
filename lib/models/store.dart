@@ -33,12 +33,12 @@ class Store {
   factory Store.fromMap(Map<String, dynamic> map) {
     return Store(
       id: ModelParsing.intOrNull(map['id']),
-      uuid: map['uuid'] as String,
-      name: map['name'] as String,
-      description: map['description'] as String,
-      address: map['address'] as String,
-      phone: map['phone'] as String,
-      email: map['email'] as String,
+      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
+      name: ModelParsing.stringOrThrow(map['name'], 'name'),
+      description: ModelParsing.stringOrThrow(map['description'], 'description'),
+      address: ModelParsing.stringOrThrow(map['address'], 'address'),
+      phone: ModelParsing.stringOrThrow(map['phone'], 'phone'),
+      email: ModelParsing.stringOrThrow(map['email'], 'email'),
     );
   }
 

@@ -8,9 +8,7 @@ import 'package:store_management/services/uuid.dart';
 class CompanyProducts {
   int? id;
   String uuid;
-  int companyId;
   String companyUuid;
-  int productId;
   String productUuid;
   Decimal price;
   Decimal? costPrice;
@@ -27,9 +25,7 @@ class CompanyProducts {
   CompanyProducts({
     String? uuid,
     this.id,
-    required this.companyId,
     required this.companyUuid,
-    required this.productId,
     required this.productUuid,
     required this.price,
     this.costPrice,
@@ -47,9 +43,7 @@ class CompanyProducts {
   CompanyProducts copyWith({
     int? id,
     String? uuid,
-    int? companyId,
     String? companyUuid,
-    int? productId,
     String? productUuid,
     Decimal? price,
     Decimal? costPrice,
@@ -66,9 +60,7 @@ class CompanyProducts {
     return CompanyProducts(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
-      companyId: companyId ?? this.companyId,
       companyUuid: companyUuid ?? this.companyUuid,
-      productId: productId ?? this.productId,
       productUuid: productUuid ?? this.productUuid,
       price: price ?? this.price,
       costPrice: costPrice ?? this.costPrice,
@@ -90,9 +82,7 @@ class CompanyProducts {
     return <String, dynamic>{
       'id': id,
       'uuid': uuid,
-      'companyId': companyId,
       'companyUuid': companyUuid,
-      'productId': productId,
       'productUuid': productUuid,
       'price': price.toString(),
       'costPrice': costPrice?.toString(),
@@ -111,16 +101,14 @@ class CompanyProducts {
   factory CompanyProducts.fromMap(Map<String, dynamic> map) {
     return CompanyProducts(
       id: ModelParsing.intOrNull(map['id']),
-      uuid: map['uuid'] as String,
-      companyId: ModelParsing.intOrThrow(map['companyId'], 'companyId'),
-      companyUuid: map['companyUuid'] as String,
-      productId: ModelParsing.intOrThrow(map['productId'], 'productId'),
-      productUuid: map['productUuid'] as String,
+      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
+      companyUuid: ModelParsing.stringOrThrow(map['companyUuid'], 'companyUuid'),
+      productUuid: ModelParsing.stringOrThrow(map['productUuid'], 'productUuid'),
       price: ModelParsing.decimalOrThrow(map['price'], 'price'),
       costPrice: ModelParsing.decimalOrNull(map['costPrice']),
-      description: map['description'] as String,
-      sku: map['sku'] as String?,
-      barcode: map['barcode'] as String?,
+      description: ModelParsing.stringOrThrow(map['description'], 'description'),
+      sku: ModelParsing.stringOrNull(map['sku']),
+      barcode: ModelParsing.stringOrNull(map['barcode']),
       stock: ModelParsing.intOrThrow(map['stock'], 'stock'),
       reorderLevel: ModelParsing.intOrNull(map['reorderLevel']),
       reorderQuantity: ModelParsing.intOrNull(map['reorderQuantity']),
@@ -136,7 +124,7 @@ class CompanyProducts {
 
   @override
   String toString() {
-    return 'CompanyProducts(id: $id, uuid: $uuid, companyId: $companyId, companyUuid: $companyUuid, productId: $productId, productUuid: $productUuid, price: $price, costPrice: $costPrice, description: $description, sku: $sku, barcode: $barcode, stock: $stock, reorderLevel: $reorderLevel, reorderQuantity: $reorderQuantity, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'CompanyProducts(id: $id, uuid: $uuid, companyUuid: $companyUuid, productUuid: $productUuid, price: $price, costPrice: $costPrice, description: $description, sku: $sku, barcode: $barcode, stock: $stock, reorderLevel: $reorderLevel, reorderQuantity: $reorderQuantity, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -145,9 +133,7 @@ class CompanyProducts {
 
     return other.id == id &&
         other.uuid == uuid &&
-        other.companyId == companyId &&
         other.companyUuid == companyUuid &&
-        other.productId == productId &&
         other.productUuid == productUuid &&
         other.price == price &&
         other.costPrice == costPrice &&
@@ -166,9 +152,7 @@ class CompanyProducts {
   int get hashCode {
     return id.hashCode ^
         uuid.hashCode ^
-        companyId.hashCode ^
         companyUuid.hashCode ^
-        productId.hashCode ^
         productUuid.hashCode ^
         price.hashCode ^
         costPrice.hashCode ^

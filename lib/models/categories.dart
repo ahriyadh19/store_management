@@ -12,21 +12,21 @@ class Categories {
   String name;
   String description;
   int status;
-  int? parentId;
+  String? parentUuid;
   DateTime createdAt;
   DateTime updatedAt;
 
-  Categories({this.id, String? uuid, required this.name, required this.description, required this.status, this.parentId, required this.createdAt, required this.updatedAt})
+  Categories({this.id, String? uuid, required this.name, required this.description, required this.status, this.parentUuid, required this.createdAt, required this.updatedAt})
     : uuid = uuid ?? UUIDGenerator.generate();
 
-  Categories copyWith({int? id, String? uuid, String? name, String? description, int? status, Object? parentId = _unset, DateTime? createdAt, DateTime? updatedAt}) {
+  Categories copyWith({int? id, String? uuid, String? name, String? description, int? status, Object? parentUuid = _unset, DateTime? createdAt, DateTime? updatedAt}) {
     return Categories(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
       name: name ?? this.name,
       description: description ?? this.description,
       status: status ?? this.status,
-      parentId: identical(parentId, _unset) ? this.parentId : parentId as int?,
+      parentUuid: identical(parentUuid, _unset) ? this.parentUuid : parentUuid as String?,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -39,7 +39,7 @@ class Categories {
       'name': name,
       'description': description,
       'status': status,
-      'parentId': parentId,
+      'parentUuid': parentUuid,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
@@ -48,11 +48,11 @@ class Categories {
   factory Categories.fromMap(Map<String, dynamic> map) {
     return Categories(
       id: ModelParsing.intOrNull(map['id']),
-      uuid: map['uuid'] as String,
-      name: map['name'] as String,
-      description: map['description'] as String,
+      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
+      name: ModelParsing.stringOrThrow(map['name'], 'name'),
+      description: ModelParsing.stringOrThrow(map['description'], 'description'),
       status: ModelParsing.intOrThrow(map['status'], 'status'),
-      parentId: ModelParsing.intOrNull(map['parentId']),
+      parentUuid: ModelParsing.stringOrNull(map['parentUuid']),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
     );
@@ -64,7 +64,7 @@ class Categories {
 
   @override
   String toString() {
-    return 'Categories(id: $id, uuid: $uuid, name: $name, description: $description, status: $status, parentId: $parentId, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Categories(id: $id, uuid: $uuid, name: $name, description: $description, status: $status, parentUuid: $parentUuid, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -76,13 +76,13 @@ class Categories {
         other.name == name &&
         other.description == description &&
         other.status == status &&
-        other.parentId == parentId &&
+        other.parentUuid == parentUuid &&
         other.createdAt == createdAt &&
         other.updatedAt == updatedAt;
   }
 
   @override
   int get hashCode {
-    return id.hashCode ^ uuid.hashCode ^ name.hashCode ^ description.hashCode ^ status.hashCode ^ parentId.hashCode ^ createdAt.hashCode ^ updatedAt.hashCode;
+    return id.hashCode ^ uuid.hashCode ^ name.hashCode ^ description.hashCode ^ status.hashCode ^ parentUuid.hashCode ^ createdAt.hashCode ^ updatedAt.hashCode;
   }
 }

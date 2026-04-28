@@ -8,11 +8,8 @@ import 'package:store_management/services/uuid.dart';
 class StoreInvoiceItem {
   int? id;
   String uuid;
-  int invoiceId;
   String invoiceUuid;
-  int companyProductId;
   String companyProductUuid;
-  int productId;
   String productUuid;
   int quantity;
   Decimal unitPrice;
@@ -26,11 +23,8 @@ class StoreInvoiceItem {
   StoreInvoiceItem({
     this.id,
     String? uuid,
-    required this.invoiceId,
     required this.invoiceUuid,
-    required this.companyProductId,
     required this.companyProductUuid,
-    required this.productId,
     required this.productUuid,
     required this.quantity,
     required this.unitPrice,
@@ -45,11 +39,8 @@ class StoreInvoiceItem {
   StoreInvoiceItem copyWith({
     int? id,
     String? uuid,
-    int? invoiceId,
     String? invoiceUuid,
-    int? companyProductId,
     String? companyProductUuid,
-    int? productId,
     String? productUuid,
     int? quantity,
     Decimal? unitPrice,
@@ -63,11 +54,8 @@ class StoreInvoiceItem {
     return StoreInvoiceItem(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
-      invoiceId: invoiceId ?? this.invoiceId,
       invoiceUuid: invoiceUuid ?? this.invoiceUuid,
-      companyProductId: companyProductId ?? this.companyProductId,
       companyProductUuid: companyProductUuid ?? this.companyProductUuid,
-      productId: productId ?? this.productId,
       productUuid: productUuid ?? this.productUuid,
       quantity: quantity ?? this.quantity,
       unitPrice: unitPrice ?? this.unitPrice,
@@ -84,11 +72,8 @@ class StoreInvoiceItem {
     return <String, dynamic>{
       'id': id,
       'uuid': uuid,
-      'invoiceId': invoiceId,
       'invoiceUuid': invoiceUuid,
-      'companyProductId': companyProductId,
       'companyProductUuid': companyProductUuid,
-      'productId': productId,
       'productUuid': productUuid,
       'quantity': quantity,
       'unitPrice': unitPrice.toString(),
@@ -104,13 +89,10 @@ class StoreInvoiceItem {
   factory StoreInvoiceItem.fromMap(Map<String, dynamic> map) {
     return StoreInvoiceItem(
       id: ModelParsing.intOrNull(map['id']),
-      uuid: map['uuid'] as String,
-      invoiceId: ModelParsing.intOrThrow(map['invoiceId'], 'invoiceId'),
-      invoiceUuid: map['invoiceUuid'] as String,
-      companyProductId: ModelParsing.intOrThrow(map['companyProductId'], 'companyProductId'),
-      companyProductUuid: map['companyProductUuid'] as String,
-      productId: ModelParsing.intOrThrow(map['productId'], 'productId'),
-      productUuid: map['productUuid'] as String,
+      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
+      invoiceUuid: ModelParsing.stringOrThrow(map['invoiceUuid'], 'invoiceUuid'),
+      companyProductUuid: ModelParsing.stringOrThrow(map['companyProductUuid'], 'companyProductUuid'),
+      productUuid: ModelParsing.stringOrThrow(map['productUuid'], 'productUuid'),
       quantity: ModelParsing.intOrThrow(map['quantity'], 'quantity'),
       unitPrice: ModelParsing.decimalOrThrow(map['unitPrice'], 'unitPrice'),
       discountAmount: ModelParsing.decimalOrThrow(map['discountAmount'], 'discountAmount'),
@@ -128,7 +110,7 @@ class StoreInvoiceItem {
 
   @override
   String toString() {
-    return 'StoreInvoiceItem(id: $id, uuid: $uuid, invoiceId: $invoiceId, invoiceUuid: $invoiceUuid, companyProductId: $companyProductId, companyProductUuid: $companyProductUuid, productId: $productId, productUuid: $productUuid, quantity: $quantity, unitPrice: $unitPrice, discountAmount: $discountAmount, taxAmount: $taxAmount, lineTotal: $lineTotal, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'StoreInvoiceItem(id: $id, uuid: $uuid, invoiceUuid: $invoiceUuid, companyProductUuid: $companyProductUuid, productUuid: $productUuid, quantity: $quantity, unitPrice: $unitPrice, discountAmount: $discountAmount, taxAmount: $taxAmount, lineTotal: $lineTotal, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -137,11 +119,8 @@ class StoreInvoiceItem {
 
     return other.id == id &&
         other.uuid == uuid &&
-        other.invoiceId == invoiceId &&
         other.invoiceUuid == invoiceUuid &&
-        other.companyProductId == companyProductId &&
         other.companyProductUuid == companyProductUuid &&
-        other.productId == productId &&
         other.productUuid == productUuid &&
         other.quantity == quantity &&
         other.unitPrice == unitPrice &&
@@ -157,11 +136,8 @@ class StoreInvoiceItem {
   int get hashCode {
     return id.hashCode ^
         uuid.hashCode ^
-        invoiceId.hashCode ^
         invoiceUuid.hashCode ^
-        companyProductId.hashCode ^
         companyProductUuid.hashCode ^
-        productId.hashCode ^
         productUuid.hashCode ^
         quantity.hashCode ^
         unitPrice.hashCode ^
