@@ -37,6 +37,7 @@ On Linux desktop, Supabase auth uses file-based local storage so session state s
 - `flutter_bloc` for auth state management
 - `decimal` for precision-safe money fields
 - `shared_preferences` for persisted client settings such as locale
+- ObjectBox for local offline persistence bootstrap on IO platforms
 
 ## Project Structure
 
@@ -103,7 +104,18 @@ Financial records are scoped to both the store and the client. Each record carri
 
 This keeps invoices, vouchers, returns, and ledger entries attached to a specific client within a specific store rather than being generic store-level transactions.
 
-Money values use `Decimal` in Dart to avoid precision loss, and relation-heavy models consistently use numeric `...Id` fields plus string `...Uuid` fields.
+Money values use `Decimal` in Dart to avoid precision loss, and relation-heavy models use UUID-only relation links while keeping entity-local primary `id` fields where needed.
+
+## Offline Persistence Prep
+
+The app is now prepared for ObjectBox-based offline storage on IO platforms.
+
+- `lib/services/local_database.dart` exposes a platform-safe local database entry point.
+- `lib/services/local_database_objectbox.dart` initializes the ObjectBox store on Android, iOS, Linux, macOS, and Windows.
+- `lib/services/local_database_stub.dart` keeps web builds safe by exposing a no-op implementation.
+- `lib/models/offline_sync_record.dart` provides a generic local sync record entity keyed by `modelType + uuid` for caching serialized domain records.
+
+This is an infrastructure/bootstrap step. It does not yet replace Supabase reads and writes with repository-backed offline sync flows.
 
 ## Database
 
@@ -195,6 +207,12 @@ Run all tests:
 
 ```bash
 flutter test
+```
+
+Regenerate ObjectBox code after changing ObjectBox entities:
+
+```bash
+dart run build_runner build --delete-conflicting-outputs
 ```
 
 Run focused tests:

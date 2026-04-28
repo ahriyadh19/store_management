@@ -11,6 +11,7 @@ import 'package:store_management/index.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/localization/locale_controller.dart';
 import 'package:store_management/services/auth_repository.dart';
+import 'package:store_management/services/local_database.dart';
 import 'package:store_management/services/supabase_auth_storage.dart';
 import 'package:store_management/views/auth_view.dart';
 
@@ -22,10 +23,11 @@ Future<void> main() async {
 
   final config = await _loadSupabaseConfig();
   final localeController = await LocaleController.create();
+  final localDatabase = await LocalDatabase.create();
 
   await Supabase.initialize(url: config.url, anonKey: config.anonKey, authOptions: _buildAuthOptions());
 
-  runApp(MyApp(localeController: localeController));
+  runApp(MyApp(localeController: localeController, localDatabase: localDatabase));
 }
 
 FlutterAuthClientOptions _buildAuthOptions() {
@@ -74,45 +76,49 @@ class _SupabaseConfig {
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({super.key, this.authRepository, LocaleController? localeController}) : localeController = localeController ?? LocaleController();
+  MyApp({super.key, this.authRepository, this.localDatabase, LocaleController? localeController}) : localeController = localeController ?? LocaleController();
 
   final AuthRepository? authRepository;
+  final LocalDatabase? localDatabase;
   final LocaleController localeController;
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => AuthController(authRepository: authRepository ?? SupabaseAuthRepository()),
-      child: AnimatedBuilder(
-        animation: localeController,
-        builder: (context, child) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            locale: localeController.locale,
-            supportedLocales: AppLocalizations.supportedLocales,
-            localizationsDelegates: const [AppLocalizations.delegate, GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
-            localeResolutionCallback: (locale, supportedLocales) {
-              if (locale == null) {
-                return supportedLocales.first;
-              }
-
-              for (final supportedLocale in supportedLocales) {
-                if (supportedLocale.languageCode == locale.languageCode) {
-                  return supportedLocale;
+    return RepositoryProvider<LocalDatabase?>.value(
+      value: localDatabase,
+      child: BlocProvider(
+        create: (_) => AuthController(authRepository: authRepository ?? SupabaseAuthRepository()),
+        child: AnimatedBuilder(
+          animation: localeController,
+          builder: (context, child) {
+            return MaterialApp(
+              debugShowCheckedModeBanner: false,
+              locale: localeController.locale,
+              supportedLocales: AppLocalizations.supportedLocales,
+              localizationsDelegates: const [AppLocalizations.delegate, GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
+              localeResolutionCallback: (locale, supportedLocales) {
+                if (locale == null) {
+                  return supportedLocales.first;
                 }
-              }
 
-              return supportedLocales.first;
-            },
-            onGenerateTitle: (context) => context.l10n.appTitle,
-            theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1F7A8C)),
-              scaffoldBackgroundColor: const Color(0xFFF4F7FB),
-              useMaterial3: true,
-            ),
-            home: AuthGate(localeController: localeController),
-          );
-        },
+                for (final supportedLocale in supportedLocales) {
+                  if (supportedLocale.languageCode == locale.languageCode) {
+                    return supportedLocale;
+                  }
+                }
+
+                return supportedLocales.first;
+              },
+              onGenerateTitle: (context) => context.l10n.appTitle,
+              theme: ThemeData(
+                colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1F7A8C)),
+                scaffoldBackgroundColor: const Color(0xFFF4F7FB),
+                useMaterial3: true,
+              ),
+              home: AuthGate(localeController: localeController),
+            );
+          },
+        ),
       ),
     );
   }

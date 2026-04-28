@@ -1,0 +1,74 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:9107254583230726546",
+      "lastPropertyId": "9:8922167803272805751",
+      "name": "OfflineSyncRecord",
+      "properties": [
+        {
+          "id": "1:1345220678252556207",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3289595506263569904",
+          "name": "cacheKey",
+          "indexId": "1:3770003775933858745",
+          "type": 9,
+          "flags": 34848
+        },
+        {
+          "id": "3:5755707226838329373",
+          "name": "modelType",
+          "type": 9
+        },
+        {
+          "id": "4:3551551265418361290",
+          "name": "recordUuid",
+          "type": 9
+        },
+        {
+          "id": "5:7538036441123904072",
+          "name": "payloadJson",
+          "type": 9
+        },
+        {
+          "id": "6:6499086407427611310",
+          "name": "updatedAtMillis",
+          "type": 6
+        },
+        {
+          "id": "7:5832159942945371575",
+          "name": "remoteUpdatedAtMillis",
+          "type": 6
+        },
+        {
+          "id": "8:5253294807579552108",
+          "name": "syncState",
+          "type": 6
+        },
+        {
+          "id": "9:8922167803272805751",
+          "name": "isDeleted",
+          "type": 1
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "1:9107254583230726546",
+  "lastIndexId": "1:3770003775933858745",
+  "lastRelationId": "0:0",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [],
+  "retiredRelationUids": [],
+  "version": 1
+}
