@@ -2,7 +2,6 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
-import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/services/uuid.dart';
 
@@ -21,7 +20,7 @@ class CompanyProducts {
   int stock;
   int? reorderLevel;
   int? reorderQuantity;
-  RecordStatus status;
+  int status;
   DateTime createdAt;
   DateTime updatedAt;
 
@@ -60,7 +59,7 @@ class CompanyProducts {
     int? stock,
     int? reorderLevel,
     int? reorderQuantity,
-    RecordStatus? status,
+    int? status,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -103,7 +102,7 @@ class CompanyProducts {
       'stock': stock,
       'reorderLevel': reorderLevel,
       'reorderQuantity': reorderQuantity,
-      'status': status.code,
+      'status': status,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
@@ -125,7 +124,7 @@ class CompanyProducts {
       stock: ModelParsing.intOrThrow(map['stock'], 'stock'),
       reorderLevel: ModelParsing.intOrNull(map['reorderLevel']),
       reorderQuantity: ModelParsing.intOrNull(map['reorderQuantity']),
-      status: ModelParsing.recordStatusFromCode(map['status'], 'status'),
+      status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
     );

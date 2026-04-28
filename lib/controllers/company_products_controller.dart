@@ -1,4 +1,3 @@
-import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/models/company_products.dart';
 import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/controllers/controller_utils.dart';
@@ -63,7 +62,7 @@ class CompanyProductsController {
         stock: request.data!['stock'] as int,
         reorderLevel: ModelParsing.intOrNull(request.data!['reorderLevel']),
         reorderQuantity: ModelParsing.intOrNull(request.data!['reorderQuantity']),
-        status: RecordStatus.fromCode(request.data!['status'] as int),
+        status: request.data!['status'] as int,
         createdAt: now,
         updatedAt: now,
       );
@@ -100,7 +99,7 @@ class CompanyProductsController {
         stock: request.data!['stock'] as int,
         reorderLevel: ModelParsing.intOrNull(request.data!['reorderLevel']),
         reorderQuantity: ModelParsing.intOrNull(request.data!['reorderQuantity']),
-        status: RecordStatus.fromCode(request.data!['status'] as int),
+        status: request.data!['status'] as int,
         updatedAt: DateTime.now(),
       );
 

@@ -22,7 +22,7 @@ class StoreFinancialTransaction {
   LedgerEntryType entryType;
   String description;
   DateTime transactionDate;
-  RecordStatus status;
+  int status;
   DateTime createdAt;
   DateTime updatedAt;
 
@@ -63,7 +63,7 @@ class StoreFinancialTransaction {
     LedgerEntryType? entryType,
     String? description,
     DateTime? transactionDate,
-    RecordStatus? status,
+    int? status,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -106,7 +106,7 @@ class StoreFinancialTransaction {
       'entryType': entryType.value,
       'description': description,
       'transactionDate': transactionDate.millisecondsSinceEpoch,
-      'status': status.code,
+      'status': status,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
@@ -129,7 +129,7 @@ class StoreFinancialTransaction {
       entryType: ModelParsing.ledgerEntryTypeFromValue(map['entryType'], 'entryType'),
       description: map['description'] as String,
       transactionDate: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['transactionDate'], 'transactionDate'),
-      status: ModelParsing.recordStatusFromCode(map['status'], 'status'),
+      status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
     );

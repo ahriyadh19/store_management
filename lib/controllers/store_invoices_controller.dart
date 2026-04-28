@@ -57,7 +57,7 @@ class StoreInvoicesController {
         notes: request.data!['notes'] as String,
         issuedAt: DateTime.fromMillisecondsSinceEpoch(request.data!['issuedAt'] as int),
         dueAt: DateTime.fromMillisecondsSinceEpoch(request.data!['dueAt'] as int),
-        status: RecordStatus.fromCode(request.data!['status'] as int),
+        status: request.data!['status'] as int,
         createdAt: now,
         updatedAt: now,
       );
@@ -94,7 +94,7 @@ class StoreInvoicesController {
         notes: request.data!['notes'] as String,
         issuedAt: DateTime.fromMillisecondsSinceEpoch(request.data!['issuedAt'] as int),
         dueAt: DateTime.fromMillisecondsSinceEpoch(request.data!['dueAt'] as int),
-        status: RecordStatus.fromCode(request.data!['status'] as int),
+        status: request.data!['status'] as int,
         updatedAt: DateTime.now(),
       );
 

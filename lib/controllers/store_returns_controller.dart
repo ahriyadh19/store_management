@@ -54,7 +54,7 @@ class StoreReturnsController {
         totalAmount: ModelParsing.decimalOrThrow(request.data!['totalAmount'], 'totalAmount'),
         reason: request.data!['reason'] as String,
         transactionDate: DateTime.fromMillisecondsSinceEpoch(request.data!['transactionDate'] as int),
-        status: RecordStatus.fromCode(request.data!['status'] as int),
+        status: request.data!['status'] as int,
         createdAt: now,
         updatedAt: now,
       );
@@ -88,7 +88,7 @@ class StoreReturnsController {
         totalAmount: ModelParsing.decimalOrThrow(request.data!['totalAmount'], 'totalAmount'),
         reason: request.data!['reason'] as String,
         transactionDate: DateTime.fromMillisecondsSinceEpoch(request.data!['transactionDate'] as int),
-        status: RecordStatus.fromCode(request.data!['status'] as int),
+        status: request.data!['status'] as int,
         updatedAt: DateTime.now(),
       );
 

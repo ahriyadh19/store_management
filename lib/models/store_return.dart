@@ -19,7 +19,7 @@ class StoreReturn {
   Decimal totalAmount;
   String reason;
   DateTime transactionDate;
-  RecordStatus status;
+  int status;
   DateTime createdAt;
   DateTime updatedAt;
 
@@ -54,7 +54,7 @@ class StoreReturn {
     Decimal? totalAmount,
     String? reason,
     DateTime? transactionDate,
-    RecordStatus? status,
+    int? status,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -91,7 +91,7 @@ class StoreReturn {
       'totalAmount': totalAmount.toString(),
       'reason': reason,
       'transactionDate': transactionDate.millisecondsSinceEpoch,
-      'status': status.code,
+      'status': status,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
@@ -111,7 +111,7 @@ class StoreReturn {
       totalAmount: ModelParsing.decimalOrThrow(map['totalAmount'], 'totalAmount'),
       reason: map['reason'] as String,
       transactionDate: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['transactionDate'], 'transactionDate'),
-      status: ModelParsing.recordStatusFromCode(map['status'], 'status'),
+      status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
     );

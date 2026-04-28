@@ -55,7 +55,7 @@ class StorePaymentVouchersController {
         referenceNumber: request.data!['referenceNumber'] as String,
         description: request.data!['description'] as String,
         transactionDate: DateTime.fromMillisecondsSinceEpoch(request.data!['transactionDate'] as int),
-        status: RecordStatus.fromCode(request.data!['status'] as int),
+        status: request.data!['status'] as int,
         createdAt: now,
         updatedAt: now,
       );
@@ -90,7 +90,7 @@ class StorePaymentVouchersController {
         referenceNumber: request.data!['referenceNumber'] as String,
         description: request.data!['description'] as String,
         transactionDate: DateTime.fromMillisecondsSinceEpoch(request.data!['transactionDate'] as int),
-        status: RecordStatus.fromCode(request.data!['status'] as int),
+        status: request.data!['status'] as int,
         updatedAt: DateTime.now(),
       );
 

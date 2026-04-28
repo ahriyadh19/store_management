@@ -20,7 +20,7 @@ class StorePaymentVoucher {
   String referenceNumber;
   String description;
   DateTime transactionDate;
-  RecordStatus status;
+  int status;
   DateTime createdAt;
   DateTime updatedAt;
 
@@ -57,7 +57,7 @@ class StorePaymentVoucher {
     String? referenceNumber,
     String? description,
     DateTime? transactionDate,
-    RecordStatus? status,
+    int? status,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -96,7 +96,7 @@ class StorePaymentVoucher {
       'referenceNumber': referenceNumber,
       'description': description,
       'transactionDate': transactionDate.millisecondsSinceEpoch,
-      'status': status.code,
+      'status': status,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
@@ -117,7 +117,7 @@ class StorePaymentVoucher {
       referenceNumber: map['referenceNumber'] as String,
       description: map['description'] as String,
       transactionDate: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['transactionDate'], 'transactionDate'),
-      status: ModelParsing.recordStatusFromCode(map['status'], 'status'),
+      status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
     );

@@ -40,7 +40,7 @@ void main() {
         discountAmount: money('0'),
         taxAmount: money('2'),
         lineTotal: money('42'),
-        status: RecordStatus.active,
+        status: 1,
         createdAt: createdAt,
         updatedAt: updatedAt,
       );
@@ -56,7 +56,7 @@ void main() {
         unitPrice: money('20'),
         lineTotal: money('20'),
         reason: 'Damaged box',
-        status: RecordStatus.active,
+        status: 1,
         createdAt: createdAt,
         updatedAt: updatedAt,
       );
@@ -82,7 +82,7 @@ void main() {
         invoiceUuid: '22222222-2222-4222-8222-222222222222',
         allocatedAmount: money('100'),
         allocationDate: createdAt,
-        status: RecordStatus.active,
+        status: 1,
         createdAt: createdAt,
         updatedAt: updatedAt,
       );
@@ -100,6 +100,7 @@ void main() {
 
       expect(Company.fromMap(company.toMap()), equals(company));
       expect(Company.fromJson(company.toJson()), equals(company));
+      expect(company.status, 1);
     });
 
     test('Product round-trips through map and json', () {
@@ -126,7 +127,17 @@ void main() {
     });
 
     test('UserRoles round-trips through map and json', () {
-      final userRole = UserRoles(id: 1, uuid: 'user-role-uuid', userId: 1, userUuid: '11111111-1111-4111-8111-111111111111', roleId: 2, roleUuid: '22222222-2222-4222-8222-222222222222', status: 1, createdAt: createdAt, updatedAt: updatedAt);
+      final userRole = UserRoles(
+        id: 1,
+        uuid: 'user-role-uuid',
+        userId: 1,
+        userUuid: '11111111-1111-4111-8111-111111111111',
+        roleId: 2,
+        roleUuid: '22222222-2222-4222-8222-222222222222',
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
 
       expect(UserRoles.fromMap(userRole.toMap()), equals(userRole));
       expect(UserRoles.fromJson(userRole.toJson()), equals(userRole));
@@ -148,7 +159,7 @@ void main() {
         stock: 20,
         reorderLevel: 5,
         reorderQuantity: 10,
-        status: RecordStatus.active,
+        status: 1,
         createdAt: createdAt,
         updatedAt: updatedAt,
       );
@@ -178,14 +189,34 @@ void main() {
     });
 
     test('StoreCompany round-trips through map and json', () {
-      final storeCompany = StoreCompany(id: 1, uuid: 'store-company-uuid', storeId: 1, storeUuid: '11111111-1111-4111-8111-111111111111', companyId: 2, companyUuid: '22222222-2222-4222-8222-222222222222', status: 1, createdAt: createdAt, updatedAt: updatedAt);
+      final storeCompany = StoreCompany(
+        id: 1,
+        uuid: 'store-company-uuid',
+        storeId: 1,
+        storeUuid: '11111111-1111-4111-8111-111111111111',
+        companyId: 2,
+        companyUuid: '22222222-2222-4222-8222-222222222222',
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
 
       expect(StoreCompany.fromMap(storeCompany.toMap()), equals(storeCompany));
       expect(StoreCompany.fromJson(storeCompany.toJson()), equals(storeCompany));
     });
 
     test('ProductsTags round-trips through map and json', () {
-      final productTag = ProductsTags(id: 1, uuid: 'product-tag-uuid', productId: 2, productUuid: '22222222-2222-4222-8222-222222222222', tagId: 3, tagUuid: '33333333-3333-4333-8333-333333333333', status: 1, createdAt: createdAt, updatedAt: updatedAt);
+      final productTag = ProductsTags(
+        id: 1,
+        uuid: 'product-tag-uuid',
+        productId: 2,
+        productUuid: '22222222-2222-4222-8222-222222222222',
+        tagId: 3,
+        tagUuid: '33333333-3333-4333-8333-333333333333',
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
 
       expect(ProductsTags.fromMap(productTag.toMap()), equals(productTag));
       expect(ProductsTags.fromJson(productTag.toJson()), equals(productTag));
@@ -208,11 +239,28 @@ void main() {
         notes: 'Monthly invoice',
         issuedAt: createdAt,
         dueAt: updatedAt,
-        status: RecordStatus.active,
+        status: 1,
         createdAt: createdAt,
         updatedAt: updatedAt,
       );
-      final item = StoreInvoiceItem(id: 1, uuid: 'invoice-item-uuid', invoiceId: 1, invoiceUuid: '11111111-1111-4111-8111-111111111111', companyProductId: 2, companyProductUuid: '22222222-2222-4222-8222-222222222222', productId: 3, productUuid: '33333333-3333-4333-8333-333333333333', quantity: 2, unitPrice: money('20'), discountAmount: money('1'), taxAmount: money('2'), lineTotal: money('41'), status: RecordStatus.active, createdAt: createdAt, updatedAt: updatedAt);
+      final item = StoreInvoiceItem(
+        id: 1,
+        uuid: 'invoice-item-uuid',
+        invoiceId: 1,
+        invoiceUuid: '11111111-1111-4111-8111-111111111111',
+        companyProductId: 2,
+        companyProductUuid: '22222222-2222-4222-8222-222222222222',
+        productId: 3,
+        productUuid: '33333333-3333-4333-8333-333333333333',
+        quantity: 2,
+        unitPrice: money('20'),
+        discountAmount: money('1'),
+        taxAmount: money('2'),
+        lineTotal: money('41'),
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
 
       expect(StoreInvoice.fromMap(invoice.toMap()), equals(invoice));
       expect(StoreInvoice.fromJson(invoice.toJson()), equals(invoice));
@@ -221,8 +269,37 @@ void main() {
     });
 
     test('StorePaymentVoucher and PaymentAllocation round-trip through map and json', () {
-      final voucher = StorePaymentVoucher(id: 1, uuid: 'voucher-uuid', storeId: 1, storeUuid: '11111111-1111-4111-8111-111111111111', clientId: 2, clientUuid: '22222222-2222-4222-8222-222222222222', voucherNumber: 'PV-001', payeeName: 'Vendor', amount: money('100'), paymentMethod: StorePaymentMethod.cash, referenceNumber: 'REF-001', description: 'Supplier payment', transactionDate: createdAt, status: RecordStatus.active, createdAt: createdAt, updatedAt: updatedAt);
-      final allocation = PaymentAllocation(id: 1, uuid: 'allocation-uuid', paymentVoucherId: 1, paymentVoucherUuid: '11111111-1111-4111-8111-111111111111', invoiceId: 2, invoiceUuid: '22222222-2222-4222-8222-222222222222', allocatedAmount: money('50'), allocationDate: createdAt, status: RecordStatus.active, createdAt: createdAt, updatedAt: updatedAt);
+      final voucher = StorePaymentVoucher(
+        id: 1,
+        uuid: 'voucher-uuid',
+        storeId: 1,
+        storeUuid: '11111111-1111-4111-8111-111111111111',
+        clientId: 2,
+        clientUuid: '22222222-2222-4222-8222-222222222222',
+        voucherNumber: 'PV-001',
+        payeeName: 'Vendor',
+        amount: money('100'),
+        paymentMethod: StorePaymentMethod.cash,
+        referenceNumber: 'REF-001',
+        description: 'Supplier payment',
+        transactionDate: createdAt,
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+      final allocation = PaymentAllocation(
+        id: 1,
+        uuid: 'allocation-uuid',
+        paymentVoucherId: 1,
+        paymentVoucherUuid: '11111111-1111-4111-8111-111111111111',
+        invoiceId: 2,
+        invoiceUuid: '22222222-2222-4222-8222-222222222222',
+        allocatedAmount: money('50'),
+        allocationDate: createdAt,
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
 
       expect(StorePaymentVoucher.fromMap(voucher.toMap()), equals(voucher));
       expect(StorePaymentVoucher.fromJson(voucher.toJson()), equals(voucher));
@@ -231,8 +308,42 @@ void main() {
     });
 
     test('StoreReturn and return items round-trip through map and json', () {
-      final storeReturn = StoreReturn(id: 1, uuid: 'return-uuid', storeId: 1, storeUuid: '11111111-1111-4111-8111-111111111111', clientId: 2, clientUuid: '22222222-2222-4222-8222-222222222222', returnNumber: 'RET-001', returnType: StoreReturnType.salesReturn, itemCount: 3, totalAmount: money('60'), reason: 'Damaged items', transactionDate: createdAt, status: RecordStatus.active, createdAt: createdAt, updatedAt: updatedAt);
-      final item = StoreReturnItem(id: 1, uuid: 'return-item-uuid', returnId: 1, returnUuid: '11111111-1111-4111-8111-111111111111', invoiceItemId: 2, invoiceItemUuid: '22222222-2222-4222-8222-222222222222', companyProductId: 3, companyProductUuid: '33333333-3333-4333-8333-333333333333', productId: 4, productUuid: '44444444-4444-4444-8444-444444444444', quantity: 1, unitPrice: money('20'), lineTotal: money('20'), reason: 'Expired item', status: RecordStatus.active, createdAt: createdAt, updatedAt: updatedAt);
+      final storeReturn = StoreReturn(
+        id: 1,
+        uuid: 'return-uuid',
+        storeId: 1,
+        storeUuid: '11111111-1111-4111-8111-111111111111',
+        clientId: 2,
+        clientUuid: '22222222-2222-4222-8222-222222222222',
+        returnNumber: 'RET-001',
+        returnType: StoreReturnType.salesReturn,
+        itemCount: 3,
+        totalAmount: money('60'),
+        reason: 'Damaged items',
+        transactionDate: createdAt,
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+      final item = StoreReturnItem(
+        id: 1,
+        uuid: 'return-item-uuid',
+        returnId: 1,
+        returnUuid: '11111111-1111-4111-8111-111111111111',
+        invoiceItemId: 2,
+        invoiceItemUuid: '22222222-2222-4222-8222-222222222222',
+        companyProductId: 3,
+        companyProductUuid: '33333333-3333-4333-8333-333333333333',
+        productId: 4,
+        productUuid: '44444444-4444-4444-8444-444444444444',
+        quantity: 1,
+        unitPrice: money('20'),
+        lineTotal: money('20'),
+        reason: 'Expired item',
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
 
       expect(StoreReturn.fromMap(storeReturn.toMap()), equals(storeReturn));
       expect(StoreReturn.fromJson(storeReturn.toJson()), equals(storeReturn));
@@ -241,7 +352,26 @@ void main() {
     });
 
     test('StoreFinancialTransaction and InventoryMovement round-trip through map and json', () {
-      final transaction = StoreFinancialTransaction(id: 1, uuid: 'financial-transaction-uuid', storeId: 1, storeUuid: '11111111-1111-4111-8111-111111111111', clientId: 2, clientUuid: '22222222-2222-4222-8222-222222222222', transactionNumber: 'FT-001', transactionType: FinancialTransactionType.invoicePosting, sourceType: FinancialSourceType.invoice, sourceId: 1, sourceUuid: '44444444-4444-4444-8444-444444444444', amount: money('200'), entryType: LedgerEntryType.debit, description: 'Invoice posting', transactionDate: createdAt, status: RecordStatus.active, createdAt: createdAt, updatedAt: updatedAt);
+      final transaction = StoreFinancialTransaction(
+        id: 1,
+        uuid: 'financial-transaction-uuid',
+        storeId: 1,
+        storeUuid: '11111111-1111-4111-8111-111111111111',
+        clientId: 2,
+        clientUuid: '22222222-2222-4222-8222-222222222222',
+        transactionNumber: 'FT-001',
+        transactionType: FinancialTransactionType.invoicePosting,
+        sourceType: FinancialSourceType.invoice,
+        sourceId: 1,
+        sourceUuid: '44444444-4444-4444-8444-444444444444',
+        amount: money('200'),
+        entryType: LedgerEntryType.debit,
+        description: 'Invoice posting',
+        transactionDate: createdAt,
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
       final movement = InventoryMovement(id: 1, uuid: 'movement-uuid', companyProductId: 2, companyProductUuid: '22222222-2222-4222-8222-222222222222', productId: 3, productUuid: '33333333-3333-4333-8333-333333333333', movementType: InventoryMovementType.restock, quantityDelta: 10, balanceAfter: 30, unitCost: money('11.25'), referenceType: InventoryReferenceType.restock, referenceId: 1, referenceUuid: '11111111-1111-4111-8111-111111111111', note: 'Supplier restock', createdByUserId: 4, createdByUserUuid: '44444444-4444-4444-8444-444444444444', createdAt: createdAt, updatedAt: updatedAt);
 
       expect(StoreFinancialTransaction.fromMap(transaction.toMap()), equals(transaction));

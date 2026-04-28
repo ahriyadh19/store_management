@@ -105,15 +105,16 @@ class ValidationUtils {
   }
 
   static Response? validateStatus(Request request, {String key = 'status'}) {
-    final statusError = validateRequiredInt(request, key, 'Status must be provided as a supported status code', min: 0);
+    final acceptedCodes = RecordStatus.acceptableCodes.join(', ');
+    final statusMessage = 'Status must be one of the accepted status codes: $acceptedCodes';
+    final statusError = validateRequiredInt(request, key, statusMessage, min: 0);
     if (statusError != null) {
       return statusError;
     }
 
-    try {
-      RecordStatus.fromCode(request.data![key] as int);
-    } on FormatException {
-      return badRequest('Status must be provided as a supported status code');
+    final statusCode = request.data![key] as int;
+    if (!RecordStatus.isAcceptableCode(statusCode)) {
+      return badRequest(statusMessage);
     }
 
     return null;

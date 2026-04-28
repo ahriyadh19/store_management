@@ -2,7 +2,6 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:store_management/controllers/company_products_controller.dart';
 import 'package:store_management/models/company_products.dart';
-import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/services/request.dart';
 
 void main() {
@@ -25,7 +24,7 @@ void main() {
       stock: 20,
       reorderLevel: 5,
       reorderQuantity: 10,
-      status: RecordStatus.active,
+      status: 1,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );

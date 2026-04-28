@@ -26,7 +26,7 @@ void main() {
       notes: 'Monthly invoice',
       issuedAt: createdAt,
       dueAt: updatedAt,
-      status: RecordStatus.active,
+      status: 1,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );

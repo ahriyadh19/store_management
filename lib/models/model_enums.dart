@@ -6,6 +6,12 @@ enum RecordStatus {
 
   final int code;
 
+  static List<int> get acceptableCodes => List<int>.unmodifiable(RecordStatus.values.map((status) => status.code));
+
+  static bool isAcceptableCode(int code) {
+    return RecordStatus.values.any((status) => status.code == code);
+  }
+
   static RecordStatus fromCode(int code) {
     return RecordStatus.values.firstWhere(
       (status) => status.code == code,

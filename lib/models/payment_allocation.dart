@@ -2,7 +2,6 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
-import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/services/uuid.dart';
 
@@ -15,7 +14,7 @@ class PaymentAllocation {
   String invoiceUuid;
   Decimal allocatedAmount;
   DateTime allocationDate;
-  RecordStatus status;
+  int status;
   DateTime createdAt;
   DateTime updatedAt;
 
@@ -42,7 +41,7 @@ class PaymentAllocation {
     String? invoiceUuid,
     Decimal? allocatedAmount,
     DateTime? allocationDate,
-    RecordStatus? status,
+    int? status,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -71,7 +70,7 @@ class PaymentAllocation {
       'invoiceUuid': invoiceUuid,
       'allocatedAmount': allocatedAmount.toString(),
       'allocationDate': allocationDate.millisecondsSinceEpoch,
-      'status': status.code,
+      'status': status,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
@@ -87,7 +86,7 @@ class PaymentAllocation {
       invoiceUuid: map['invoiceUuid'] as String,
       allocatedAmount: ModelParsing.decimalOrThrow(map['allocatedAmount'], 'allocatedAmount'),
       allocationDate: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['allocationDate'], 'allocationDate'),
-      status: ModelParsing.recordStatusFromCode(map['status'], 'status'),
+      status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
     );

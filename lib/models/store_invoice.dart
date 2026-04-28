@@ -22,7 +22,7 @@ class StoreInvoice {
   String notes;
   DateTime issuedAt;
   DateTime dueAt;
-  RecordStatus status;
+  int status;
   DateTime createdAt;
   DateTime updatedAt;
 
@@ -63,7 +63,7 @@ class StoreInvoice {
     String? notes,
     DateTime? issuedAt,
     DateTime? dueAt,
-    RecordStatus? status,
+    int? status,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -106,7 +106,7 @@ class StoreInvoice {
       'notes': notes,
       'issuedAt': issuedAt.millisecondsSinceEpoch,
       'dueAt': dueAt.millisecondsSinceEpoch,
-      'status': status.code,
+      'status': status,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
@@ -129,7 +129,7 @@ class StoreInvoice {
       notes: map['notes'] as String,
       issuedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['issuedAt'], 'issuedAt'),
       dueAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['dueAt'], 'dueAt'),
-      status: ModelParsing.recordStatusFromCode(map['status'], 'status'),
+      status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
     );

@@ -13,7 +13,6 @@ class Company {
   DateTime createdAt;
   DateTime updatedAt;
 
-  
   Company({
     this.id,
     String? uuid,

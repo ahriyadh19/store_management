@@ -2,7 +2,6 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
-import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/services/uuid.dart';
 
@@ -21,7 +20,7 @@ class StoreReturnItem {
   Decimal unitPrice;
   Decimal lineTotal;
   String reason;
-  RecordStatus status;
+  int status;
   DateTime createdAt;
   DateTime updatedAt;
 
@@ -60,7 +59,7 @@ class StoreReturnItem {
     Decimal? unitPrice,
     Decimal? lineTotal,
     String? reason,
-    RecordStatus? status,
+    int? status,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -101,7 +100,7 @@ class StoreReturnItem {
       'unitPrice': unitPrice.toString(),
       'lineTotal': lineTotal.toString(),
       'reason': reason,
-      'status': status.code,
+      'status': status,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
@@ -123,7 +122,7 @@ class StoreReturnItem {
       unitPrice: ModelParsing.decimalOrThrow(map['unitPrice'], 'unitPrice'),
       lineTotal: ModelParsing.decimalOrThrow(map['lineTotal'], 'lineTotal'),
       reason: map['reason'] as String,
-      status: ModelParsing.recordStatusFromCode(map['status'], 'status'),
+      status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
     );
