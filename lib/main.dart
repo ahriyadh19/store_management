@@ -22,14 +22,22 @@ const _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final config = await _loadSupabaseConfig();
   final localeController = await LocaleController.create();
   final appPreferencesController = await AppPreferencesController.create();
   final localDatabase = await LocalDatabase.create();
 
-  await Supabase.initialize(url: config.url, anonKey: config.anonKey, authOptions: _buildAuthOptions());
+  Object? startupError;
+  StackTrace? startupStackTrace;
 
-  runApp(MyApp(localeController: localeController, appPreferencesController: appPreferencesController, localDatabase: localDatabase));
+  try {
+    final config = await _loadSupabaseConfig();
+    await Supabase.initialize(url: config.url, anonKey: config.anonKey, authOptions: _buildAuthOptions());
+  } catch (error, stackTrace) {
+    startupError = error;
+    startupStackTrace = stackTrace;
+  }
+
+  runApp(MyApp(localeController: localeController, appPreferencesController: appPreferencesController, localDatabase: localDatabase, startupError: startupError, startupStackTrace: startupStackTrace));
 }
 
 FlutterAuthClientOptions _buildAuthOptions() {
@@ -54,20 +62,35 @@ Future<_SupabaseConfig> _loadSupabaseConfig() async {
     return const _SupabaseConfig(url: envUrl, anonKey: envAnonKey);
   }
 
-  if (!kIsWeb) {
-    final file = File('.env.local.json');
-    if (await file.exists()) {
-      final jsonMap = json.decode(await file.readAsString()) as Map<String, dynamic>;
-      final fileUrl = (jsonMap['SUPABASE_URL'] as String?)?.trim() ?? '';
-      final fileAnonKey = (jsonMap['SUPABASE_ANON_KEY'] as String?)?.trim() ?? '';
-
-      if (fileUrl.isNotEmpty && fileAnonKey.isNotEmpty) {
-        return _SupabaseConfig(url: fileUrl, anonKey: fileAnonKey);
-      }
+  if (!kIsWeb && (Platform.isLinux || Platform.isMacOS || Platform.isWindows)) {
+    final fileConfig = await _loadSupabaseConfigFromFile();
+    if (fileConfig != null) {
+      return fileConfig;
     }
   }
 
-  throw StateError('Missing Supabase config. Use --dart-define-from-file=.env.local.json or create .env.local.json in the project root.');
+  throw StateError('Missing Supabase config. Use --dart-define-from-file=.env.local.json. The .env.local.json file fallback only works on desktop platforms.');
+}
+
+Future<_SupabaseConfig?> _loadSupabaseConfigFromFile() async {
+  final file = File('.env.local.json');
+  if (!await file.exists()) {
+    return null;
+  }
+
+  return _parseSupabaseConfig(await file.readAsString());
+}
+
+_SupabaseConfig? _parseSupabaseConfig(String contents) {
+  final jsonMap = json.decode(contents) as Map<String, dynamic>;
+  final fileUrl = (jsonMap['SUPABASE_URL'] as String?)?.trim() ?? '';
+  final fileAnonKey = (jsonMap['SUPABASE_ANON_KEY'] as String?)?.trim() ?? '';
+
+  if (fileUrl.isEmpty || fileAnonKey.isEmpty) {
+    return null;
+  }
+
+  return _SupabaseConfig(url: fileUrl, anonKey: fileAnonKey);
 }
 
 class _SupabaseConfig {
@@ -78,12 +101,14 @@ class _SupabaseConfig {
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({super.key, this.authRepository, this.localDatabase, LocaleController? localeController, AppPreferencesController? appPreferencesController})
+  MyApp({super.key, this.authRepository, this.localDatabase, this.startupError, this.startupStackTrace, LocaleController? localeController, AppPreferencesController? appPreferencesController})
     : localeController = localeController ?? LocaleController(),
       appPreferencesController = appPreferencesController ?? AppPreferencesController();
 
   final AuthRepository? authRepository;
   final LocalDatabase? localDatabase;
+  final Object? startupError;
+  final StackTrace? startupStackTrace;
   final LocaleController localeController;
   final AppPreferencesController appPreferencesController;
 
@@ -126,7 +151,7 @@ class MyApp extends StatelessWidget {
                 scaffoldBackgroundColor: const Color(0xFF09141A),
                 useMaterial3: true,
               ),
-              home: AuthGate(localeController: localeController, appPreferencesController: appPreferencesController),
+              home: startupError == null ? AuthGate(localeController: localeController, appPreferencesController: appPreferencesController) : StartupErrorView(error: startupError!, stackTrace: startupStackTrace),
             );
           },
         ),
@@ -152,5 +177,69 @@ class AuthGate extends StatelessWidget {
         return AuthView(localeController: localeController, appPreferencesController: appPreferencesController);
       },
     );
+  }
+}
+
+class StartupErrorView extends StatelessWidget {
+  const StartupErrorView({super.key, required this.error, this.stackTrace});
+
+  final Object error;
+  final StackTrace? stackTrace;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Startup configuration error', style: theme.textTheme.headlineSmall),
+                    const SizedBox(height: 12),
+                    Text(error.toString(), style: theme.textTheme.bodyLarge),
+                    const SizedBox(height: 16),
+                    Text(_startupRecoverySteps(), style: theme.textTheme.bodyMedium),
+                    if (kDebugMode && stackTrace != null) ...[
+                      const SizedBox(height: 16),
+                      Text('Stack trace', style: theme.textTheme.titleMedium),
+                      const SizedBox(height: 8),
+                      SelectableText(stackTrace.toString(), style: theme.textTheme.bodySmall?.copyWith(fontFamily: 'monospace')),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _startupRecoverySteps() {
+    final buffer = StringBuffer()
+      ..writeln('Provide SUPABASE_URL and SUPABASE_ANON_KEY at launch time.')
+      ..writeln()
+      ..writeln('Recommended:')
+      ..writeln('flutter run --dart-define-from-file=.env.local.json')
+      ..writeln();
+
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+      buffer
+        ..writeln('On mobile, the app cannot read .env.local.json directly from the project root at runtime.')
+        ..writeln('Use the VS Code launch profile "store_management (env)" or pass --dart-define/--dart-define-from-file manually.');
+    } else if (!kIsWeb && (Platform.isLinux || Platform.isMacOS || Platform.isWindows)) {
+      buffer.writeln('On desktop, keeping .env.local.json in the project root also works as a runtime fallback.');
+    }
+
+    return buffer.toString().trimRight();
   }
 }

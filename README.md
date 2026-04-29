@@ -157,7 +157,7 @@ Provide Supabase configuration in one of these ways:
 
 1. Pass `--dart-define` values directly.
 2. Pass `--dart-define-from-file=.env.local.json`.
-3. Create a local `.env.local.json` file in the project root for non-web runs.
+3. On Linux, macOS, or Windows desktop, you can also create a local `.env.local.json` file in the project root and let the app read it directly.
 
 Optional auth redirect configuration:
 
@@ -176,6 +176,8 @@ Example `.env.local.json`:
 
 If no valid configuration is available, the app throws a startup error during Supabase initialization.
 
+On Android and iOS, the app cannot read `.env.local.json` from your project root at runtime, so mobile launches must use `--dart-define` or `--dart-define-from-file`.
+
 ## Running The App
 
 Run with a local config file:
@@ -183,6 +185,8 @@ Run with a local config file:
 ```bash
 flutter run --dart-define-from-file=.env.local.json
 ```
+
+If you launch from VS Code, use a `launch.json` profile that passes `--dart-define-from-file=.env.local.json` so Android and iOS builds receive the values automatically.
 
 Run with inline defines:
 
@@ -192,7 +196,7 @@ flutter run \
   --dart-define=SUPABASE_ANON_KEY=your-anon-key
 ```
 
-For web, prefer `--dart-define` or `--dart-define-from-file`; the fallback `.env.local.json` file path is only read in non-web builds.
+For web, prefer `--dart-define` or `--dart-define-from-file`; web builds do not use the local file fallback.
 
 ## Useful Commands
 

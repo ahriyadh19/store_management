@@ -245,4 +245,40 @@ void main() {
     final emailField = tester.widget<TextField>(find.widgetWithText(TextField, 'Email'));
     expect(emailField.controller?.text, 'manager@store.com');
   });
+
+  testWidgets('opens reset password flow from startup recovery snapshot', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MyApp(
+        authRepository: FakeAuthRepository(
+          startupSnapshot: const AuthSessionSnapshot(status: AuthSessionStatus.passwordRecovery, email: 'owner@store.com'),
+        ),
+        localeController: LocaleController(initialLocale: const Locale('en')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reset password'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Reset link'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Password'), findsOneWidget);
+  });
+
+  testWidgets('returns to auth screen when repository emits signed out', (WidgetTester tester) async {
+    final repository = FakeAuthRepository(seedEmail: 'owner@store.com');
+
+    await tester.pumpWidget(
+      MyApp(
+        authRepository: repository,
+        localeController: LocaleController(initialLocale: const Locale('en')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Welcome to Store Management!'), findsOneWidget);
+
+    repository.emitSession(const AuthSessionSnapshot(status: AuthSessionStatus.signedOut));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sign in'), findsWidgets);
+    expect(find.widgetWithText(TextField, 'Email'), findsOneWidget);
+  });
 }

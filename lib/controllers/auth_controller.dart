@@ -64,6 +64,12 @@ final class AuthSignedOut extends AuthEvent {
 	const AuthSignedOut();
 }
 
+final class _AuthSessionChanged extends AuthEvent {
+  const _AuthSessionChanged(this.snapshot);
+
+  final AuthSessionSnapshot snapshot;
+}
+
 final class AuthState {
 	const AuthState({
 		this.screen = AuthScreen.signIn,
@@ -119,24 +125,35 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
     on<AuthConfirmationLinkSubmitted>(_onConfirmationLinkSubmitted);
     on<AuthPasswordResetCompleted>(_onPasswordResetCompleted);
 		on<AuthSignedOut>(_onSignedOut);
+    on<_AuthSessionChanged>(_onSessionChanged);
 
-    if (_authRepository.hasCurrentSession) {
-      add(const AuthStarted());
-    }
-	}
+
+    _authStateChangesSubscription = _authRepository.authStateChanges.listen((snapshot) {
+      add(_AuthSessionChanged(snapshot));
+    });
+
+    add(const AuthStarted());
+  }
 
 	final AuthRepository _authRepository;
   final AppPreferencesController _appPreferencesController;
+  late final StreamSubscription<AuthSessionSnapshot> _authStateChangesSubscription;
 
   Future<void> _onStarted(AuthStarted event, Emitter<AuthState> emit) async {
+    final incomingSnapshot = await _authRepository.restoreSessionFromIncomingLink();
+    if (incomingSnapshot != null) {
+      add(_AuthSessionChanged(incomingSnapshot));
+      return;
+    }
+
     final user = await _authRepository.getCurrentUserProfile();
-    if (user == null) {
+    if (user == null && _authRepository.currentUserEmail == null) {
       return;
     }
 
 		emit(
 			state.copyWith(
-				status: AuthStatus.authenticated, userEmail: user.email, user: user));
+				status: AuthStatus.authenticated, userEmail: user?.email ?? _authRepository.currentUserEmail, user: user));
   }
 
   void _onScreenChanged(AuthScreenChanged event, Emitter<AuthState> emit) {
@@ -328,16 +345,34 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 
 	Future<void> _onSignedOut(AuthSignedOut event, Emitter<AuthState> emit) async {
 		await _authRepository.signOut();
-		emit(
-			state.copyWith(
-				screen: AuthScreen.signIn,
-				status: AuthStatus.initial,
-				clearMessage: true,
-				clearUserEmail: true,
-				clearUser: true,
-			),
-		);
-	}
+  }
+
+  Future<void> _onSessionChanged(_AuthSessionChanged event, Emitter<AuthState> emit) async {
+    final snapshot = event.snapshot;
+
+    if (snapshot.email != null && snapshot.email!.isNotEmpty) {
+      await _appPreferencesController.saveLastEmail(snapshot.email!);
+    }
+
+    switch (snapshot.status) {
+      case AuthSessionStatus.signedIn:
+        emit(state.copyWith(screen: AuthScreen.signIn, status: AuthStatus.authenticated, messageKey: snapshot.messageKey, clearMessage: snapshot.messageKey == null, userEmail: snapshot.email, user: snapshot.user));
+      case AuthSessionStatus.signedOut:
+        emit(state.copyWith(screen: AuthScreen.signIn, status: AuthStatus.initial,
+            messageKey: snapshot.messageKey, clearMessage: snapshot.messageKey == null, clearUserEmail: true, clearUser: true));
+      case AuthSessionStatus.passwordRecovery:
+        emit(
+          state.copyWith(
+            screen: AuthScreen.resetPassword,
+            status: AuthStatus.passwordResetSent,
+            messageKey: snapshot.messageKey,
+            clearMessage: snapshot.messageKey == null,
+            userEmail: snapshot.email,
+            user: snapshot.user,
+          ),
+        );
+    }
+  }
 
   AppMessageKey? _buildAuthErrorMessage(Object error) {
 		final message = error.toString();
@@ -362,5 +397,11 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
   bool _isValidUsername(String value) {
     final usernamePattern = RegExp(r'^[a-zA-Z0-9_]{3,30}$');
     return usernamePattern.hasMatch(value);
+  }
+
+  @override
+  Future<void> close() async {
+    await _authStateChangesSubscription.cancel();
+    return super.close();
   }
 }

@@ -9,6 +9,8 @@ const _authRedirectTo = String.fromEnvironment('AUTH_REDIRECT_TO');
 
 enum AuthActionStatus { authenticated, confirmEmail, passwordResetSent }
 
+enum AuthSessionStatus { signedIn, signedOut, passwordRecovery }
+
 class AuthActionResult {
   const AuthActionResult({required this.status, this.user, this.email, this.messageKey});
 
@@ -18,11 +20,23 @@ class AuthActionResult {
   final AppMessageKey? messageKey;
 }
 
+class AuthSessionSnapshot {
+  const AuthSessionSnapshot({required this.status, this.user, this.email, this.messageKey});
+
+  final AuthSessionStatus status;
+  final User? user;
+  final String? email;
+  final AppMessageKey? messageKey;
+}
+
 abstract class AuthRepository {
   String? get currentUserEmail;
   bool get hasCurrentSession;
+  Stream<AuthSessionSnapshot> get authStateChanges;
 
   Future<User?> getCurrentUserProfile();
+
+  Future<AuthSessionSnapshot?> restoreSessionFromIncomingLink();
 
   Future<AuthActionResult> signIn({required String email, required String password});
 
@@ -53,6 +67,39 @@ class SupabaseAuthRepository implements AuthRepository {
   bool get hasCurrentSession => _authClient.currentSession != null;
 
   @override
+  Stream<AuthSessionSnapshot> get authStateChanges => _authClient.onAuthStateChange.asyncMap((data) async {
+    final session = data.session;
+    final authUser = session?.user ?? _authClient.currentUser;
+
+    switch (data.event) {
+      case AuthChangeEvent.passwordRecovery:
+        return AuthSessionSnapshot(
+          status: AuthSessionStatus.passwordRecovery,
+          user: await _loadUserProfile(authUserId: authUser?.id, fallbackEmail: authUser?.email, fallbackName: authUser?.userMetadata?['name'] as String?),
+          email: authUser?.email,
+        );
+      case AuthChangeEvent.signedIn:
+      case AuthChangeEvent.initialSession:
+      case AuthChangeEvent.tokenRefreshed:
+      case AuthChangeEvent.userUpdated:
+      case AuthChangeEvent.mfaChallengeVerified:
+        if (authUser == null) {
+          return const AuthSessionSnapshot(status: AuthSessionStatus.signedOut);
+        }
+
+        return AuthSessionSnapshot(
+          status: AuthSessionStatus.signedIn,
+          user: await _loadUserProfile(authUserId: authUser.id, fallbackEmail: authUser.email, fallbackName: authUser.userMetadata?['name'] as String?),
+          email: authUser.email,
+        );
+      case AuthChangeEvent.signedOut:
+        return const AuthSessionSnapshot(status: AuthSessionStatus.signedOut);
+      default:
+        return const AuthSessionSnapshot(status: AuthSessionStatus.signedOut);
+    }
+  });
+
+  @override
   Future<User?> getCurrentUserProfile() async {
     final currentUser = _authClient.currentUser;
     if (currentUser == null) {
@@ -60,6 +107,40 @@ class SupabaseAuthRepository implements AuthRepository {
     }
 
     return _loadUserProfile(authUserId: currentUser.id, fallbackEmail: currentUser.email);
+  }
+
+  @override
+  Future<AuthSessionSnapshot?> restoreSessionFromIncomingLink() async {
+    if (!kIsWeb) {
+      return null;
+    }
+
+    final uri = Uri.base;
+    if (!_containsSessionParams(uri) && !_containsOtpParams(uri)) {
+      return null;
+    }
+
+    await _applyLinkSession(
+      link: uri.toString(),
+      email: currentUserEmail ?? '',
+      requiredOtpTypes: const {OtpType.signup, OtpType.invite, OtpType.email, OtpType.emailChange, OtpType.magiclink, OtpType.recovery},
+      requiredMessageKey: AppMessageKey.confirmationLinkRequired,
+      fullMessageKey: AppMessageKey.confirmationLinkFullRequired,
+      missingMessageKey: AppMessageKey.confirmationLinkMissingDetails,
+    );
+
+    final authUser = _authClient.currentUser;
+    final params = _extractLinkParameters(uri);
+    final otpType = _parseOtpType(params['type']);
+    final isRecovery = otpType == OtpType.recovery;
+    final user = await _loadUserProfile(authUserId: authUser?.id, fallbackEmail: authUser?.email, fallbackName: authUser?.userMetadata?['name'] as String?);
+
+    return AuthSessionSnapshot(
+      status: isRecovery ? AuthSessionStatus.passwordRecovery : (_authClient.currentSession == null ? AuthSessionStatus.signedOut : AuthSessionStatus.signedIn),
+      user: user,
+      email: user?.email ?? authUser?.email,
+      messageKey: isRecovery ? AppMessageKey.passwordResetInstructionsSent : (_authClient.currentSession == null ? AppMessageKey.emailConfirmedSignIn : AppMessageKey.emailConfirmedSuccessfully),
+    );
   }
 
   @override
@@ -259,12 +340,17 @@ class SupabaseAuthRepository implements AuthRepository {
       throw AuthException(missingMessageKey.name);
     }
 
-    await _authClient.verifyOTP(email: email.isEmpty ? null : email, tokenHash: tokenHash, type: otpType);
+    await _authClient.verifyOTP(email: email.trim().isEmpty ? null : email.trim(), tokenHash: tokenHash, type: otpType);
   }
 
   bool _containsSessionParams(Uri uri) {
     final params = _extractLinkParameters(uri);
     return params.containsKey('code') || params.containsKey('access_token');
+  }
+
+  bool _containsOtpParams(Uri uri) {
+    final params = _extractLinkParameters(uri);
+    return params.containsKey('token_hash') || params.containsKey('type');
   }
 
   Map<String, String> _extractLinkParameters(Uri uri) {
@@ -312,11 +398,14 @@ class SupabaseAuthRepository implements AuthRepository {
 }
 
 class FakeAuthRepository implements AuthRepository {
-  FakeAuthRepository({this.seedEmail, this.seedName = 'Demo User'});
+  FakeAuthRepository({this.seedEmail, this.seedName = 'Demo User', this.startupSnapshot});
 
   final String? seedEmail;
   final String seedName;
+  final AuthSessionSnapshot? startupSnapshot;
   User? _currentUser;
+
+  final StreamController<AuthSessionSnapshot> _authStateChanges = StreamController<AuthSessionSnapshot>.broadcast();
 
   @override
   String? get currentUserEmail => _currentUser?.email ?? seedEmail;
@@ -325,13 +414,22 @@ class FakeAuthRepository implements AuthRepository {
   bool get hasCurrentSession => currentUserEmail != null;
 
   @override
+  Stream<AuthSessionSnapshot> get authStateChanges => _authStateChanges.stream;
+
+  @override
   Future<User?> getCurrentUserProfile() async {
     return _currentUser;
   }
 
   @override
+  Future<AuthSessionSnapshot?> restoreSessionFromIncomingLink() async {
+    return startupSnapshot;
+  }
+
+  @override
   Future<AuthActionResult> signIn({required String email, required String password}) async {
     _currentUser = _buildUser(email: email, name: seedName, username: email.split('@').first);
+    _authStateChanges.add(AuthSessionSnapshot(status: AuthSessionStatus.signedIn, user: _currentUser, email: email));
 
     return AuthActionResult(status: AuthActionStatus.authenticated, user: _currentUser, email: email, messageKey: AppMessageKey.signedInSuccessfully);
   }
@@ -365,6 +463,11 @@ class FakeAuthRepository implements AuthRepository {
   @override
   Future<void> signOut() async {
     _currentUser = null;
+    _authStateChanges.add(const AuthSessionSnapshot(status: AuthSessionStatus.signedOut));
+  }
+
+  void emitSession(AuthSessionSnapshot snapshot) {
+    _authStateChanges.add(snapshot);
   }
 
   User _buildUser({required String email, required String name, required String username}) {
