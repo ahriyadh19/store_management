@@ -172,21 +172,8 @@ class _AuthViewState extends State<AuthView> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Align(
-                            alignment: AlignmentDirectional.topEnd,
+                            alignment: AlignmentDirectional.topCenter,
                             child: LanguageSwitcher(localeController: widget.localeController),
-                          ),
-                          Container(
-                            height: 64,
-                            width: 64,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Icon(
-                              Icons.lock_open_rounded,
-                              size: 34,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
                           ),
                           const SizedBox(height: 20),
                           Text(
@@ -308,7 +295,7 @@ class _AuthViewState extends State<AuthView> {
                           if (isSignIn) ...[
                             const SizedBox(height: 12),
                             Align(
-                              alignment: Alignment.centerRight,
+                              alignment: AlignmentDirectional.center,
                               child: TextButton(
                                 onPressed: () {
                                   context.read<AuthController>().add(const AuthScreenChanged(AuthScreen.forgotPassword));
