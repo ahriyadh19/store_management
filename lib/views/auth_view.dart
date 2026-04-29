@@ -100,7 +100,7 @@ class _AuthViewState extends State<AuthView> {
                             ),
                             const SizedBox(height: 12),
                             Align(
-                              alignment: Alignment.centerLeft,
+                              alignment: AlignmentDirectional.centerEnd,
                               child: TextButton(
                                 onPressed: state.isLoading
                                     ? null

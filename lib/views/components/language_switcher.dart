@@ -6,10 +6,9 @@ const _englishFlagAsset = 'lib/assets/icons/en.png';
 const _arabicFlagAsset = 'lib/assets/icons/ar.png';
 
 class LanguageSwitcher extends StatelessWidget {
-  const LanguageSwitcher({super.key, required this.localeController, this.iconColor});
+  const LanguageSwitcher({super.key, required this.localeController});
 
   final LocaleController localeController;
-  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
