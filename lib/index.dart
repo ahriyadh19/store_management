@@ -5,7 +5,7 @@ import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/localization/locale_controller.dart';
 import 'package:store_management/views/components/language_switcher.dart';
 
-Widget _buildIndexDrawer(BuildContext context) {
+Widget _buildIndexDrawer(BuildContext context, LocaleController localeController) {
   final l10n = context.l10n;
 
   return Drawer(
@@ -23,6 +23,10 @@ Widget _buildIndexDrawer(BuildContext context) {
         ListTile(leading: const Icon(Icons.people_rounded), title: Text(l10n.customers)),
         ListTile(leading: const Icon(Icons.bar_chart_rounded), title: Text(l10n.reports)),
         const Spacer(),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: LanguageSwitcher(localeController: localeController),
+        ),
         const Divider(height: 1),
         ListTile(
           leading: const Icon(Icons.logout_rounded),
@@ -49,18 +53,8 @@ class Index extends StatelessWidget {
     final user = authState.user;
 
     return Scaffold(
-      drawer: _buildIndexDrawer(context),
-      appBar: AppBar(
-        title: Text(l10n.appTitle),
-        centerTitle: true,
-        actions: [
-          LanguageSwitcher(localeController: localeController),
-          TextButton(
-            onPressed: () => context.read<AuthController>().add(const AuthSignedOut()),
-            child: Text(l10n.logout),
-          ),
-        ],
-      ),
+      drawer: _buildIndexDrawer(context, localeController),
+      appBar: AppBar(title: Text(l10n.appTitle), centerTitle: true),
       body: Center(
         child: Container(
           width: 420,
@@ -69,13 +63,7 @@ class Index extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x14000000),
-                blurRadius: 24,
-                offset: Offset(0, 12),
-              ),
-            ],
+            boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 24, offset: Offset(0, 12))],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -88,11 +76,7 @@ class Index extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
-              Text(
-                user?.name.isNotEmpty == true ? user!.name : (authState.userEmail ?? l10n.signedInFallback),
-                style: Theme.of(context).textTheme.bodyLarge,
-                textAlign: TextAlign.center,
-              ),
+              Text(user?.name.isNotEmpty == true ? user!.name : (authState.userEmail ?? l10n.signedInFallback), style: Theme.of(context).textTheme.bodyLarge, textAlign: TextAlign.center),
               if (user != null) ...[
                 const SizedBox(height: 12),
                 Text(user.email, style: Theme.of(context).textTheme.bodyMedium, textAlign: TextAlign.center),
