@@ -121,8 +121,7 @@ This is an infrastructure/bootstrap step. It does not yet replace Supabase reads
 
 Supabase schema changes currently live in:
 
-- `supabase/migrations/20260427_000001_store_management_schema.sql`
-- `supabase/migrations/20260428_000002_transaction_detail_models.sql`
+- `supabase/migrations/20260429_000001_initial_schema.sql`
 
 The schema includes:
 
