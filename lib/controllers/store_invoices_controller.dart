@@ -43,7 +43,7 @@ class StoreInvoicesController {
 
       final now = DateTime.now();
       invoice = StoreInvoice(
-        id: request.data?['id'] as int?,
+        id: (request.data?['id'] as int?) ?? 0,
         storeUuid: request.data!['storeUuid'] as String,
         clientUuid: request.data!['clientUuid'] as String,
         invoiceNumber: request.data!['invoiceNumber'] as String,

@@ -6,6 +6,8 @@ import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/objectbox.g.dart';
 import 'package:store_management/services/uuid.dart';
 class CompanyProducts {
+  static const Object _unset = Object();
+
   @Id()
   int id = 0;
   String uuid;
@@ -47,13 +49,13 @@ class CompanyProducts {
     String? companyUuid,
     String? productUuid,
     Decimal? price,
-    Decimal? costPrice,
+    Object? costPrice = _unset,
     String? description,
-    String? sku,
-    String? barcode,
+    Object? sku = _unset,
+    Object? barcode = _unset,
     int? stock,
-    int? reorderLevel,
-    int? reorderQuantity,
+    Object? reorderLevel = _unset,
+    Object? reorderQuantity = _unset,
     int? status,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -64,13 +66,13 @@ class CompanyProducts {
       companyUuid: companyUuid ?? this.companyUuid,
       productUuid: productUuid ?? this.productUuid,
       price: price ?? this.price,
-      costPrice: costPrice ?? this.costPrice,
+      costPrice: identical(costPrice, _unset) ? this.costPrice : costPrice as Decimal?,
       description: description ?? this.description,
-      sku: sku ?? this.sku,
-      barcode: barcode ?? this.barcode,
+      sku: identical(sku, _unset) ? this.sku : sku as String?,
+      barcode: identical(barcode, _unset) ? this.barcode : barcode as String?,
       stock: stock ?? this.stock,
-      reorderLevel: reorderLevel ?? this.reorderLevel,
-      reorderQuantity: reorderQuantity ?? this.reorderQuantity,
+      reorderLevel: identical(reorderLevel, _unset) ? this.reorderLevel : reorderLevel as int?,
+      reorderQuantity: identical(reorderQuantity, _unset) ? this.reorderQuantity : reorderQuantity as int?,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

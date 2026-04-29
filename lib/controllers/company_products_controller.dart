@@ -49,7 +49,7 @@ class CompanyProductsController {
 
       final now = DateTime.now();
       companyProduct = CompanyProducts(
-        id: request.data?['id'] as int?,
+        id: (request.data?['id'] as int?) ?? 0,
         companyUuid: request.data!['companyUuid'] as String,
         productUuid: request.data!['productUuid'] as String,
         price: ModelParsing.decimalOrThrow(request.data!['price'], 'price'),

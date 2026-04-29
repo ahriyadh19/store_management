@@ -86,6 +86,69 @@ void main() {
   });
 
   group('model serialization', () {
+    test('nullable fields can be explicitly cleared via copyWith', () {
+      final companyProduct = CompanyProducts(
+        id: 1,
+        uuid: 'company-product-uuid',
+        companyUuid: '11111111-1111-4111-8111-111111111111',
+        productUuid: '22222222-2222-4222-8222-222222222222',
+        price: money('15.50'),
+        costPrice: money('10.25'),
+        description: 'Retail price',
+        sku: 'RICE-001',
+        barcode: '1234567890123',
+        stock: 20,
+        reorderLevel: 5,
+        reorderQuantity: 10,
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      ).copyWith(costPrice: null, sku: null, barcode: null, reorderLevel: null, reorderQuantity: null);
+
+      final returnItem = StoreReturnItem(
+        id: 1,
+        uuid: 'return-item-uuid',
+        returnUuid: '11111111-1111-4111-8111-111111111111',
+        invoiceItemUuid: '22222222-2222-4222-8222-222222222222',
+        companyProductUuid: '33333333-3333-4333-8333-333333333333',
+        productUuid: '44444444-4444-4444-8444-444444444444',
+        quantity: 1,
+        unitPrice: money('10'),
+        lineTotal: money('10'),
+        reason: 'Damaged',
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      ).copyWith(invoiceItemUuid: null);
+
+      final movement = InventoryMovement(
+        id: 1,
+        uuid: 'movement-uuid',
+        companyProductUuid: '11111111-1111-4111-8111-111111111111',
+        productUuid: '22222222-2222-4222-8222-222222222222',
+        movementType: InventoryMovementType.adjustment,
+        quantityDelta: 1,
+        balanceAfter: 8,
+        unitCost: money('3.50'),
+        referenceType: InventoryReferenceType.adjustment,
+        referenceUuid: '33333333-3333-4333-8333-333333333333',
+        note: 'Manual adjustment',
+        createdByUserUuid: '44444444-4444-4444-8444-444444444444',
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      ).copyWith(unitCost: null, referenceUuid: null, createdByUserUuid: null);
+
+      expect(companyProduct.costPrice, isNull);
+      expect(companyProduct.sku, isNull);
+      expect(companyProduct.barcode, isNull);
+      expect(companyProduct.reorderLevel, isNull);
+      expect(companyProduct.reorderQuantity, isNull);
+      expect(returnItem.invoiceItemUuid, isNull);
+      expect(movement.unitCost, isNull);
+      expect(movement.referenceUuid, isNull);
+      expect(movement.createdByUserUuid, isNull);
+    });
+
     test('Company round-trips through map and json', () {
       final company = Company(id: 1, uuid: 'company-uuid', name: 'Store Co', description: 'Main supplier', status: 1, createdAt: createdAt, updatedAt: updatedAt);
 

@@ -6,6 +6,8 @@ import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/objectbox.g.dart';
 import 'package:store_management/services/uuid.dart';
 class StoreReturnItem {
+  static const Object _unset = Object();
+
   @Id()
   int id = 0;
   String uuid;
@@ -41,7 +43,7 @@ class StoreReturnItem {
     int? id,
     String? uuid,
     String? returnUuid,
-    String? invoiceItemUuid,
+    Object? invoiceItemUuid = _unset,
     String? companyProductUuid,
     String? productUuid,
     int? quantity,
@@ -56,7 +58,7 @@ class StoreReturnItem {
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
       returnUuid: returnUuid ?? this.returnUuid,
-      invoiceItemUuid: invoiceItemUuid ?? this.invoiceItemUuid,
+      invoiceItemUuid: identical(invoiceItemUuid, _unset) ? this.invoiceItemUuid : invoiceItemUuid as String?,
       companyProductUuid: companyProductUuid ?? this.companyProductUuid,
       productUuid: productUuid ?? this.productUuid,
       quantity: quantity ?? this.quantity,

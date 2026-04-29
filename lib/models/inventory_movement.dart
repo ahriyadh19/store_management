@@ -7,6 +7,8 @@ import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/objectbox.g.dart';
 import 'package:store_management/services/uuid.dart';
 class InventoryMovement {
+  static const Object _unset = Object();
+
   @Id()
   int id = 0;
   String uuid;
@@ -48,11 +50,11 @@ class InventoryMovement {
     InventoryMovementType? movementType,
     int? quantityDelta,
     int? balanceAfter,
-    Decimal? unitCost,
+    Object? unitCost = _unset,
     InventoryReferenceType? referenceType,
-    String? referenceUuid,
+    Object? referenceUuid = _unset,
     String? note,
-    String? createdByUserUuid,
+    Object? createdByUserUuid = _unset,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -64,11 +66,11 @@ class InventoryMovement {
       movementType: movementType ?? this.movementType,
       quantityDelta: quantityDelta ?? this.quantityDelta,
       balanceAfter: balanceAfter ?? this.balanceAfter,
-      unitCost: unitCost ?? this.unitCost,
+      unitCost: identical(unitCost, _unset) ? this.unitCost : unitCost as Decimal?,
       referenceType: referenceType ?? this.referenceType,
-      referenceUuid: referenceUuid ?? this.referenceUuid,
+      referenceUuid: identical(referenceUuid, _unset) ? this.referenceUuid : referenceUuid as String?,
       note: note ?? this.note,
-      createdByUserUuid: createdByUserUuid ?? this.createdByUserUuid,
+      createdByUserUuid: identical(createdByUserUuid, _unset) ? this.createdByUserUuid : createdByUserUuid as String?,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

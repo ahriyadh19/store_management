@@ -41,7 +41,7 @@ class TagsController {
 
       final now = DateTime.now();
       tag = Tags(
-        id: request.data?['id'] as int?,
+        id: (request.data?['id'] as int?) ?? 0,
         name: request.data!['name'] as String,
         description: request.data!['description'] as String,
         status: request.data!['status'] as int,

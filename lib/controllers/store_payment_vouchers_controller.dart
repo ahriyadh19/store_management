@@ -43,7 +43,7 @@ class StorePaymentVouchersController {
 
       final now = DateTime.now();
       paymentVoucher = StorePaymentVoucher(
-        id: request.data?['id'] as int?,
+        id: (request.data?['id'] as int?) ?? 0,
         storeUuid: request.data!['storeUuid'] as String,
         clientUuid: request.data!['clientUuid'] as String,
         voucherNumber: request.data!['voucherNumber'] as String,

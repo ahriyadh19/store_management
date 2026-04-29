@@ -43,7 +43,7 @@ class StoreFinancialTransactionsController {
 
       final now = DateTime.now();
       transaction = StoreFinancialTransaction(
-        id: request.data?['id'] as int?,
+        id: (request.data?['id'] as int?) ?? 0,
         storeUuid: request.data!['storeUuid'] as String,
         clientUuid: request.data!['clientUuid'] as String,
         transactionNumber: request.data!['transactionNumber'] as String,

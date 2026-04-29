@@ -41,7 +41,7 @@ class UserRolesController {
 
       final now = DateTime.now();
       userRole = UserRoles(
-        id: request.data?['id'] as int?,
+        id: (request.data?['id'] as int?) ?? 0,
         userUuid: request.data!['userUuid'] as String,
         roleUuid: request.data!['roleUuid'] as String,
         status: request.data!['status'] as int,

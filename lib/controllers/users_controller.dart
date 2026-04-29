@@ -45,7 +45,7 @@ class UsersController {
 
       final now = DateTime.now();
       user = User(
-        id: request.data?['id'] as int?,
+        id: (request.data?['id'] as int?) ?? 0,
         name: request.data!['name'] as String,
         email: request.data!['email'] as String,
         password: request.data!['password'] as String,

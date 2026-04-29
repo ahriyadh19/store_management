@@ -41,7 +41,7 @@ class ProductsTagsController {
 
       final now = DateTime.now();
       productTag = ProductsTags(
-        id: request.data?['id'] as int?,
+        id: (request.data?['id'] as int?) ?? 0,
         productUuid: request.data!['productUuid'] as String,
         tagUuid: request.data!['tagUuid'] as String,
         status: request.data!['status'] as int,
