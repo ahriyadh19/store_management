@@ -29,10 +29,7 @@ class AppLocalizations {
 
   final Locale locale;
 
-  static const supportedLocales = <Locale>[
-    Locale('en'),
-    Locale('ar'),
-  ];
+  static const supportedLocales = <Locale>[Locale('en'), Locale('ar')];
 
   static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
@@ -50,6 +47,39 @@ class AppLocalizations {
     'dashboard': 'Dashboard',
     'products': 'Products',
     'customers': 'Customers',
+    'clients': 'Clients',
+    'companies': 'Companies',
+    'stores': 'Stores',
+    'categories': 'Categories',
+    'tags': 'Tags',
+    'companyProducts': 'Company products',
+    'invoices': 'Invoices',
+    'invoiceItems': 'Invoice items',
+    'returns': 'Returns',
+    'returnItems': 'Return items',
+    'paymentVouchers': 'Payment vouchers',
+    'paymentAllocations': 'Payment allocations',
+    'users': 'Users',
+    'storeUsers': 'Store users',
+    'roles': 'Roles',
+    'userRoles': 'User roles',
+    'storeCompanies': 'Store companies',
+    'inventory': 'Inventory',
+    'transactions': 'Transactions',
+    'overview': 'Overview',
+    'catalog': 'Catalog',
+    'sales': 'Sales',
+    'people': 'People',
+    'operations': 'Operations',
+    'activeModules': 'Active modules',
+    'quickActions': 'Quick actions',
+    'connectedWorkspace': 'Your workspace now surfaces the full product, sales, people, and operations stack from one compact control center.',
+    'signedInAs': 'Signed in as',
+    'readyToManage': 'Ready to manage',
+    'catalogSummary': 'Keep products, categories, tags, and company-specific inventory organized from one place.',
+    'salesSummary': 'Track invoices, returns, and payment workflows without digging through separate screens.',
+    'peopleSummary': 'Manage customers, clients, users, and role assignments as one connected team layer.',
+    'operationsSummary': 'Monitor stock movement, financial activity, stores, and reporting from the same dashboard.',
     'reports': 'Reports',
     'logout': 'Logout',
     'welcomeTitle': 'Welcome to Store Management!',
@@ -130,6 +160,39 @@ class AppLocalizations {
     'dashboard': 'لوحة التحكم',
     'products': 'المنتجات',
     'customers': 'العملاء',
+    'clients': 'العملاء المحتملون',
+    'companies': 'الشركات',
+    'stores': 'المتاجر',
+    'categories': 'الفئات',
+    'tags': 'الوسوم',
+    'companyProducts': 'منتجات الشركة',
+    'invoices': 'الفواتير',
+    'invoiceItems': 'عناصر الفاتورة',
+    'returns': 'المرتجعات',
+    'returnItems': 'عناصر المرتجع',
+    'paymentVouchers': 'سندات الدفع',
+    'paymentAllocations': 'تخصيصات الدفع',
+    'users': 'المستخدمون',
+    'storeUsers': 'مستخدمو المتجر',
+    'roles': 'الأدوار',
+    'userRoles': 'أدوار المستخدمين',
+    'storeCompanies': 'شركات المتجر',
+    'inventory': 'المخزون',
+    'transactions': 'المعاملات',
+    'overview': 'نظرة عامة',
+    'catalog': 'الكتالوج',
+    'sales': 'المبيعات',
+    'people': 'الأشخاص',
+    'operations': 'العمليات',
+    'activeModules': 'الوحدات النشطة',
+    'quickActions': 'إجراءات سريعة',
+    'connectedWorkspace': 'تعرض مساحة العمل الآن كامل طبقات المنتجات والمبيعات والأشخاص والعمليات من مركز تحكم واحد مضغوط.',
+    'signedInAs': 'تم تسجيل الدخول باسم',
+    'readyToManage': 'جاهز للإدارة',
+    'catalogSummary': 'نظّم المنتجات والفئات والوسوم ومخزون الشركة من مكان واحد.',
+    'salesSummary': 'تابع الفواتير والمرتجعات وتدفقات الدفع بدون التنقل بين شاشات منفصلة.',
+    'peopleSummary': 'أدر العملاء والمستخدمين وتعيينات الأدوار كطبقة فريق مترابطة.',
+    'operationsSummary': 'راقب حركة المخزون والنشاط المالي والمتاجر والتقارير من نفس اللوحة.',
     'reports': 'التقارير',
     'logout': 'تسجيل الخروج',
     'welcomeTitle': 'مرحبًا بك في إدارة المتجر!',
@@ -226,6 +289,39 @@ class AppLocalizations {
   String get dashboard => _text('dashboard');
   String get products => _text('products');
   String get customers => _text('customers');
+  String get clients => _text('clients');
+  String get companies => _text('companies');
+  String get stores => _text('stores');
+  String get categories => _text('categories');
+  String get tags => _text('tags');
+  String get companyProducts => _text('companyProducts');
+  String get invoices => _text('invoices');
+  String get invoiceItems => _text('invoiceItems');
+  String get returns => _text('returns');
+  String get returnItems => _text('returnItems');
+  String get paymentVouchers => _text('paymentVouchers');
+  String get paymentAllocations => _text('paymentAllocations');
+  String get users => _text('users');
+  String get storeUsers => _text('storeUsers');
+  String get roles => _text('roles');
+  String get userRoles => _text('userRoles');
+  String get storeCompanies => _text('storeCompanies');
+  String get inventory => _text('inventory');
+  String get transactions => _text('transactions');
+  String get overview => _text('overview');
+  String get catalog => _text('catalog');
+  String get sales => _text('sales');
+  String get people => _text('people');
+  String get operations => _text('operations');
+  String get activeModules => _text('activeModules');
+  String get quickActions => _text('quickActions');
+  String get connectedWorkspace => _text('connectedWorkspace');
+  String get signedInAs => _text('signedInAs');
+  String get readyToManage => _text('readyToManage');
+  String get catalogSummary => _text('catalogSummary');
+  String get salesSummary => _text('salesSummary');
+  String get peopleSummary => _text('peopleSummary');
+  String get operationsSummary => _text('operationsSummary');
   String get reports => _text('reports');
   String get logout => _text('logout');
   String get welcomeTitle => _text('welcomeTitle');
