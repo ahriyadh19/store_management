@@ -4,10 +4,11 @@ import 'dart:convert';
 import 'package:decimal/decimal.dart';
 import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/models/model_parsing.dart';
+import 'package:store_management/objectbox.g.dart';
 import 'package:store_management/services/uuid.dart';
-
 class InventoryMovement {
-  int? id;
+  @Id()
+  int id = 0;
   String uuid;
   String companyProductUuid;
   String productUuid;
@@ -23,7 +24,7 @@ class InventoryMovement {
   DateTime updatedAt;
 
   InventoryMovement({
-    this.id,
+    this.id = 0,
     String? uuid,
     required this.companyProductUuid,
     required this.productUuid,
@@ -94,7 +95,7 @@ class InventoryMovement {
 
   factory InventoryMovement.fromMap(Map<String, dynamic> map) {
     return InventoryMovement(
-      id: ModelParsing.intOrNull(map['id']),
+      id: ModelParsing.intOrNull(map['id']) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
       companyProductUuid: ModelParsing.stringOrThrow(map['companyProductUuid'], 'companyProductUuid'),
       productUuid: ModelParsing.stringOrThrow(map['productUuid'], 'productUuid'),

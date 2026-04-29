@@ -1,7 +1,6 @@
 import 'package:decimal/decimal.dart';
 import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/services/uuid.dart';
-
 class ModelParsing {
   static String? stringOrNull(dynamic value) {
     if (value == null) {

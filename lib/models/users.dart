@@ -2,10 +2,11 @@
 import 'dart:convert';
 
 import 'package:store_management/models/model_parsing.dart';
+import 'package:store_management/objectbox.g.dart';
 import 'package:store_management/services/uuid.dart';
-
 class User {
-  int? id;
+  @Id()
+  int id = 0;
   String name;
   String email;
   String password;
@@ -15,7 +16,7 @@ class User {
   DateTime createdAt;
   DateTime updatedAt;
 
-  User({this.id, required this.name, required this.email, this.password = '', required this.username, String? uuid, required this.status, required this.createdAt, required this.updatedAt})
+  User({this.id = 0, required this.name, required this.email, this.password = '', required this.username, String? uuid, required this.status, required this.createdAt, required this.updatedAt})
     : uuid = uuid ?? UUIDGenerator.generate();
 
   User copyWith({int? id, String? name, String? email, String? password, String? username, String? uuid, int? status, DateTime? createdAt, DateTime? updatedAt}) {
@@ -48,7 +49,7 @@ class User {
 
   factory User.fromMap(Map<String, dynamic> map) {
     return User(
-      id: ModelParsing.intOrNull(map['id']),
+      id: ModelParsing.intOrNull(map['id']) ?? 0,
       name: ModelParsing.stringOrThrow(map['name'], 'name'),
       email: ModelParsing.stringOrThrow(map['email'], 'email'),
       password: ModelParsing.stringOrNull(map['password']) ?? '',

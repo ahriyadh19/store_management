@@ -4,10 +4,11 @@ import 'dart:convert';
 import 'package:decimal/decimal.dart';
 import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/models/model_parsing.dart';
+import 'package:store_management/objectbox.g.dart';
 import 'package:store_management/services/uuid.dart';
-
 class StorePaymentVoucher {
-  int? id;
+  @Id()
+  int id = 0;
   String uuid;
   String storeUuid;
   String clientUuid;
@@ -23,7 +24,7 @@ class StorePaymentVoucher {
   DateTime updatedAt;
 
   StorePaymentVoucher({
-    this.id,
+    this.id = 0,
     String? uuid,
     required this.storeUuid,
     required this.clientUuid,
@@ -94,7 +95,7 @@ class StorePaymentVoucher {
 
   factory StorePaymentVoucher.fromMap(Map<String, dynamic> map) {
     return StorePaymentVoucher(
-      id: ModelParsing.intOrNull(map['id']),
+      id: ModelParsing.intOrNull(map['id']) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
       storeUuid: ModelParsing.stringOrThrow(map['storeUuid'], 'storeUuid'),
       clientUuid: ModelParsing.stringOrThrow(map['clientUuid'], 'clientUuid'),

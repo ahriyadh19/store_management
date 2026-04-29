@@ -2,10 +2,11 @@
 import 'dart:convert';
 
 import 'package:store_management/models/model_parsing.dart';
+import 'package:store_management/objectbox.g.dart';
 import 'package:store_management/services/uuid.dart';
-
 class StoreCompany {
-  int? id;
+  @Id()
+  int id = 0;
   String uuid;
   String storeUuid;
   String companyUuid;
@@ -14,7 +15,7 @@ class StoreCompany {
   DateTime updatedAt;
 
   StoreCompany({
-    this.id,
+    this.id = 0,
     String? uuid,
     required this.storeUuid,
     required this.companyUuid,
@@ -49,7 +50,7 @@ class StoreCompany {
 
   factory StoreCompany.fromMap(Map<String, dynamic> map) {
     return StoreCompany(
-      id: ModelParsing.intOrNull(map['id']),
+      id: ModelParsing.intOrNull(map['id']) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
       storeUuid: ModelParsing.stringOrThrow(map['storeUuid'], 'storeUuid'),
       companyUuid: ModelParsing.stringOrThrow(map['companyUuid'], 'companyUuid'),

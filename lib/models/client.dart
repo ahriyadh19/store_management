@@ -3,10 +3,12 @@ import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
 import 'package:store_management/models/model_parsing.dart';
+import 'package:store_management/objectbox.g.dart';
 import 'package:store_management/services/uuid.dart';
 
 class Client {
-  int? id;
+  @Id()
+  int id = 0;
   String uuid;
   String name;
   String description;
@@ -20,7 +22,7 @@ class Client {
   DateTime createdAt;
   DateTime updatedAt;
   Client({
-    this.id,
+    this.id = 0,
     String? uuid,
     required this.name,
     required this.description,
@@ -87,7 +89,7 @@ class Client {
 
   factory Client.fromMap(Map<String, dynamic> map) {
     return Client(
-      id: ModelParsing.intOrNull(map['id']),
+      id: ModelParsing.intOrNull(map['id']) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
       name: ModelParsing.stringOrThrow(map['name'], 'name'),
       description: ModelParsing.stringOrThrow(map['description'], 'description'),

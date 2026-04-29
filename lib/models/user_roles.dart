@@ -2,10 +2,11 @@
 import 'dart:convert';
 
 import 'package:store_management/models/model_parsing.dart';
+import 'package:store_management/objectbox.g.dart';
 import 'package:store_management/services/uuid.dart';
-
 class UserRoles {
-  int? id;
+  @Id()
+  int id = 0;
   String uuid;
   String userUuid;
   String roleUuid;
@@ -13,7 +14,7 @@ class UserRoles {
   DateTime createdAt;
   DateTime updatedAt;
 
-  UserRoles({this.id, String? uuid, required this.userUuid, required this.roleUuid, required this.status, required this.createdAt, required this.updatedAt})
+  UserRoles({this.id = 0, String? uuid, required this.userUuid, required this.roleUuid, required this.status, required this.createdAt, required this.updatedAt})
     : uuid = uuid ?? UUIDGenerator.generate();
 
   UserRoles copyWith({int? id, String? uuid, String? userUuid, String? roleUuid, int? status, DateTime? createdAt, DateTime? updatedAt}) {
@@ -42,7 +43,7 @@ class UserRoles {
 
   factory UserRoles.fromMap(Map<String, dynamic> map) {
     return UserRoles(
-      id: ModelParsing.intOrNull(map['id']),
+      id: ModelParsing.intOrNull(map['id']) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
       userUuid: ModelParsing.stringOrThrow(map['userUuid'], 'userUuid'),
       roleUuid: ModelParsing.stringOrThrow(map['roleUuid'], 'roleUuid'),

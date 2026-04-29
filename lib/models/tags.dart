@@ -2,10 +2,11 @@
 import 'dart:convert';
 
 import 'package:store_management/models/model_parsing.dart';
+import 'package:store_management/objectbox.g.dart';
 import 'package:store_management/services/uuid.dart';
-
 class Tags {
-  int? id;
+  @Id()
+  int id = 0;
   String uuid;
   String name;
   String description;
@@ -13,7 +14,7 @@ class Tags {
   DateTime createdAt;
   DateTime updatedAt;
 
-  Tags({this.id, String? uuid, required this.name, required this.description, required this.status, required this.createdAt, required this.updatedAt}) : uuid = uuid ?? UUIDGenerator.generate();
+  Tags({this.id = 0, String? uuid, required this.name, required this.description, required this.status, required this.createdAt, required this.updatedAt}) : uuid = uuid ?? UUIDGenerator.generate();
 
   Tags copyWith({int? id, String? uuid, String? name, String? description, int? status, DateTime? createdAt, DateTime? updatedAt}) {
     return Tags(
@@ -33,7 +34,7 @@ class Tags {
 
   factory Tags.fromMap(Map<String, dynamic> map) {
     return Tags(
-      id: ModelParsing.intOrNull(map['id']),
+      id: ModelParsing.intOrNull(map['id']) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
       name: ModelParsing.stringOrThrow(map['name'], 'name'),
       description: ModelParsing.stringOrThrow(map['description'], 'description'),

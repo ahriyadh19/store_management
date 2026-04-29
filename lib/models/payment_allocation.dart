@@ -3,10 +3,11 @@ import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
 import 'package:store_management/models/model_parsing.dart';
+import 'package:store_management/objectbox.g.dart';
 import 'package:store_management/services/uuid.dart';
-
 class PaymentAllocation {
-  int? id;
+  @Id()
+  int id = 0;
   String uuid;
   String paymentVoucherUuid;
   String invoiceUuid;
@@ -17,7 +18,7 @@ class PaymentAllocation {
   DateTime updatedAt;
 
   PaymentAllocation({
-    this.id,
+    this.id = 0,
     String? uuid,
     required this.paymentVoucherUuid,
     required this.invoiceUuid,
@@ -68,7 +69,7 @@ class PaymentAllocation {
 
   factory PaymentAllocation.fromMap(Map<String, dynamic> map) {
     return PaymentAllocation(
-      id: ModelParsing.intOrNull(map['id']),
+      id: ModelParsing.intOrNull(map['id']) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
       paymentVoucherUuid: ModelParsing.stringOrThrow(map['paymentVoucherUuid'], 'paymentVoucherUuid'),
       invoiceUuid: ModelParsing.stringOrThrow(map['invoiceUuid'], 'invoiceUuid'),

@@ -2,12 +2,14 @@
 import 'dart:convert';
 
 import 'package:store_management/models/model_parsing.dart';
+import 'package:store_management/objectbox.g.dart';
 import 'package:store_management/services/uuid.dart';
 
 class Categories {
   static const Object _unset = Object();
 
-  int? id;
+  @Id()
+  int id = 0;
   String uuid;
   String name;
   String description;
@@ -16,8 +18,7 @@ class Categories {
   DateTime createdAt;
   DateTime updatedAt;
 
-  Categories({this.id, String? uuid, required this.name, required this.description, required this.status, this.parentUuid, required this.createdAt, required this.updatedAt})
-    : uuid = uuid ?? UUIDGenerator.generate();
+  Categories({this.id = 0, String? uuid, required this.name, required this.description, required this.status, this.parentUuid, required this.createdAt, required this.updatedAt}) : uuid = uuid ?? UUIDGenerator.generate();
 
   Categories copyWith({int? id, String? uuid, String? name, String? description, int? status, Object? parentUuid = _unset, DateTime? createdAt, DateTime? updatedAt}) {
     return Categories(
@@ -47,7 +48,7 @@ class Categories {
 
   factory Categories.fromMap(Map<String, dynamic> map) {
     return Categories(
-      id: ModelParsing.intOrNull(map['id']),
+      id: ModelParsing.intOrNull(map['id']) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
       name: ModelParsing.stringOrThrow(map['name'], 'name'),
       description: ModelParsing.stringOrThrow(map['description'], 'description'),

@@ -3,10 +3,11 @@ import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
 import 'package:store_management/models/model_parsing.dart';
+import 'package:store_management/objectbox.g.dart';
 import 'package:store_management/services/uuid.dart';
-
 class StoreReturnItem {
-  int? id;
+  @Id()
+  int id = 0;
   String uuid;
   String returnUuid;
   String? invoiceItemUuid;
@@ -21,7 +22,7 @@ class StoreReturnItem {
   DateTime updatedAt;
 
   StoreReturnItem({
-    this.id,
+    this.id = 0,
     String? uuid,
     required this.returnUuid,
     this.invoiceItemUuid,
@@ -88,7 +89,7 @@ class StoreReturnItem {
 
   factory StoreReturnItem.fromMap(Map<String, dynamic> map) {
     return StoreReturnItem(
-      id: ModelParsing.intOrNull(map['id']),
+      id: ModelParsing.intOrNull(map['id']) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
       returnUuid: ModelParsing.stringOrThrow(map['returnUuid'], 'returnUuid'),
       invoiceItemUuid: ModelParsing.stringOrNull(map['invoiceItemUuid']),

@@ -2,10 +2,12 @@
 import 'dart:convert';
 
 import 'package:store_management/models/model_parsing.dart';
+import 'package:store_management/objectbox.g.dart';
 import 'package:store_management/services/uuid.dart';
 
 class Company {
-  int? id;
+  @Id()
+  int id = 0;
   String uuid;
   String name;
   String description;
@@ -13,25 +15,9 @@ class Company {
   DateTime createdAt;
   DateTime updatedAt;
 
-  Company({
-    this.id,
-    String? uuid,
-    required this.name,
-    required this.description,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+  Company({this.id = 0, String? uuid, required this.name, required this.description, required this.status, required this.createdAt, required this.updatedAt}) : uuid = uuid ?? UUIDGenerator.generate();
 
-  Company copyWith({
-    int? id,
-    String? uuid,
-    String? name,
-    String? description,
-    int? status,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
+  Company copyWith({int? id, String? uuid, String? name, String? description, int? status, DateTime? createdAt, DateTime? updatedAt}) {
     return Company(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
@@ -44,20 +30,12 @@ class Company {
   }
 
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'id': id,
-      'uuid': uuid,
-      'name': name,
-      'description': description,
-      'status': status,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
-    };
+    return <String, dynamic>{'id': id, 'uuid': uuid, 'name': name, 'description': description, 'status': status, 'createdAt': createdAt.millisecondsSinceEpoch, 'updatedAt': updatedAt.millisecondsSinceEpoch};
   }
 
   factory Company.fromMap(Map<String, dynamic> map) {
     return Company(
-      id: ModelParsing.intOrNull(map['id']),
+      id: ModelParsing.intOrNull(map['id']) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
       name: ModelParsing.stringOrThrow(map['name'], 'name'),
       description: ModelParsing.stringOrThrow(map['description'], 'description'),

@@ -2,17 +2,18 @@
 import 'dart:convert';
 
 import 'package:store_management/models/model_parsing.dart';
+import 'package:store_management/objectbox.g.dart';
 import 'package:store_management/services/uuid.dart';
-
 class Store {
-  int? id;
+  @Id()
+  int id = 0;
   String uuid;
   String name;
   String description;
   String address;
   String phone;
   String email;
-  Store({this.id, String? uuid, required this.name, required this.description, required this.address, required this.phone, required this.email}) : uuid = uuid ?? UUIDGenerator.generate();
+  Store({this.id = 0, String? uuid, required this.name, required this.description, required this.address, required this.phone, required this.email}) : uuid = uuid ?? UUIDGenerator.generate();
 
   Store copyWith({int? id, String? uuid, String? name, String? description, String? address, String? phone, String? email}) {
     return Store(
@@ -32,7 +33,7 @@ class Store {
 
   factory Store.fromMap(Map<String, dynamic> map) {
     return Store(
-      id: ModelParsing.intOrNull(map['id']),
+      id: ModelParsing.intOrNull(map['id']) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
       name: ModelParsing.stringOrThrow(map['name'], 'name'),
       description: ModelParsing.stringOrThrow(map['description'], 'description'),
