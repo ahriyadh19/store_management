@@ -50,6 +50,8 @@ class AppLocalizations {
     'clients': 'Clients',
     'companies': 'Companies',
     'stores': 'Stores',
+    'branches': 'Branches',
+    'storeBranches': 'Store branches',
     'categories': 'Categories',
     'tags': 'Tags',
     'companyProducts': 'Company products',
@@ -163,6 +165,8 @@ class AppLocalizations {
     'clients': 'العملاء المحتملون',
     'companies': 'الشركات',
     'stores': 'المتاجر',
+    'branches': 'الفروع',
+    'storeBranches': 'فروع المتاجر',
     'categories': 'الفئات',
     'tags': 'الوسوم',
     'companyProducts': 'منتجات الشركة',
@@ -292,6 +296,8 @@ class AppLocalizations {
   String get clients => _text('clients');
   String get companies => _text('companies');
   String get stores => _text('stores');
+  String get branches => _text('branches');
+  String get storeBranches => _text('storeBranches');
   String get categories => _text('categories');
   String get tags => _text('tags');
   String get companyProducts => _text('companyProducts');

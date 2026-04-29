@@ -1,3 +1,4 @@
+export 'branches_validation.dart';
 export 'categories_validation.dart';
 export 'clients_validation.dart';
 export 'company_products_validation.dart';
@@ -7,6 +8,7 @@ export 'payment_allocations_validation.dart';
 export 'products_tags_validation.dart';
 export 'products_validation.dart';
 export 'roles_validation.dart';
+export 'store_branches_validation.dart';
 export 'store_clients_validation.dart';
 export 'store_companies_validation.dart';
 export 'store_financial_transactions_validation.dart';

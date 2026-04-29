@@ -129,6 +129,8 @@ List<_DrawerSection> _buildDrawerSections(AppLocalizations l10n) {
         _DrawerItem(label: l10n.dashboard, icon: Icons.dashboard_rounded, isActive: true),
         _DrawerItem(label: l10n.reports, icon: Icons.bar_chart_rounded),
         _DrawerItem(label: l10n.stores, icon: Icons.store_mall_directory_rounded),
+        _DrawerItem(label: l10n.branches, icon: Icons.storefront_rounded),
+        _DrawerItem(label: l10n.storeBranches, icon: Icons.alt_route_rounded),
       ],
     ),
     _DrawerSection(
@@ -195,10 +197,10 @@ String _initialsForUser(String? name, String? email) {
 
 List<_DashboardMetric> _buildDashboardMetrics(AppLocalizations l10n) {
   return [
-    _DashboardMetric(label: l10n.activeModules, value: '19', icon: Icons.apps_rounded),
+    _DashboardMetric(label: l10n.activeModules, value: '21', icon: Icons.apps_rounded),
     _DashboardMetric(label: l10n.catalog, value: '4', icon: Icons.inventory_2_rounded),
     _DashboardMetric(label: l10n.sales, value: '6', icon: Icons.point_of_sale_rounded),
-    _DashboardMetric(label: l10n.people, value: '8', icon: Icons.groups_rounded),
+    _DashboardMetric(label: l10n.people, value: '10', icon: Icons.groups_rounded),
   ];
 }
 
@@ -224,7 +226,7 @@ List<_DashboardSpotlight> _buildDashboardSpotlights(AppLocalizations l10n) {
       description: l10n.operationsSummary,
       icon: Icons.settings_suggest_rounded,
       accentColor: const Color(0xFF8A5A44),
-      items: [l10n.inventory, l10n.transactions, l10n.reports, l10n.stores],
+      items: [l10n.inventory, l10n.transactions, l10n.stores, l10n.branches, l10n.storeBranches],
     ),
   ];
 }

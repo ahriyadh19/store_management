@@ -1,4 +1,5 @@
 export 'auth_controller.dart';
+export 'branches_controller.dart';
 export 'categories_controller.dart';
 export 'clients_controller.dart';
 export 'company_controller.dart';
@@ -8,6 +9,7 @@ export 'payment_allocations_controller.dart';
 export 'products_controller.dart';
 export 'products_tags_controller.dart';
 export 'roles_controller.dart';
+export 'store_branches_controller.dart';
 export 'store_clients_controller.dart';
 export 'store_companies_controller.dart';
 export 'store_financial_transactions_controller.dart';
