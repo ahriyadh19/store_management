@@ -66,119 +66,48 @@ class _AuthViewState extends State<AuthView> {
 
         final message = l10n.message(messageKey, email: state.userEmail ?? _emailController.text);
 
-        final color = state.status == AuthStatus.failure
-            ? Theme.of(context).colorScheme.error
-            : Theme.of(context).colorScheme.primary;
+        final color = state.status == AuthStatus.failure ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.primary;
 
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: Text(message),
-              backgroundColor: color,
-            ),
-          );
+          ..showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
       },
       child: Scaffold(
-        body: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: BlocBuilder<AuthController, AuthState>(
-                  builder: (context, state) {
-                    final isSignIn = state.screen == AuthScreen.signIn;
-                    final isSignUp = state.screen == AuthScreen.signUp;
+        body: DecoratedBox(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFFF6FBFF), Color(0xFFE9F3F5), Color(0xFFF9F4EC)]),
+          ),
+          child: SafeArea(
+            child: Stack(
+              children: [
+                const Positioned(top: -72, left: -48, child: _BackdropOrb(size: 180, color: Color(0x331F7A8C))),
+                const Positioned(top: 120, right: -54, child: _BackdropOrb(size: 164, color: Color(0x33E08D3C))),
+                const Positioned(bottom: -70, left: 40, child: _BackdropOrb(size: 150, color: Color(0x262D5BFF))),
+                Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 460),
+                      child: BlocBuilder<AuthController, AuthState>(
+                        builder: (context, state) {
+                          final isSignIn = state.screen == AuthScreen.signIn;
+                          final isSignUp = state.screen == AuthScreen.signUp;
 
-                    if (state.screen == AuthScreen.confirmEmail) {
-                      return _AuthStatusCard(
-                        icon: Icons.mark_email_read_rounded,
-                        title: l10n.confirmYourEmail,
-                        description: l10n.confirmEmailDescription(state.userEmail ?? _emailController.text),
-                        input: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              l10n.confirmEmailPasteHint,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: const Color(0xFF5C6672)),
-                            ),
-                            const SizedBox(height: 16),
-                            TextField(
-                              controller: _confirmationLinkController,
-                              minLines: 2,
-                              maxLines: 4,
-                              decoration: InputDecoration(labelText: l10n.confirmationLink, hintText: l10n.confirmationLinkHint, border: const OutlineInputBorder()),
-                            ),
-                            const SizedBox(height: 12),
-                            Align(
-                              alignment: AlignmentDirectional.centerEnd,
-                              child: TextButton(
-                                onPressed: state.isLoading
-                                    ? null
-                                    : () {
-                                        context.read<AuthController>().add(AuthConfirmationResent(email: state.userEmail ?? _emailController.text));
-                                      },
-                                child: Text(l10n.resendEmail),
-                              ),
-                            ),
-                          ],
-                        ),
-                        primaryLabel: l10n.completeConfirmation,
-                        primaryPressed: state.isLoading
-                            ? null
-                            : () {
-                                context.read<AuthController>().add(AuthConfirmationLinkSubmitted(email: state.userEmail ?? _emailController.text, confirmationLink: _confirmationLinkController.text));
-                              },
-                        secondaryLabel: l10n.backToSignIn,
-                        secondaryPressed: () {
-                          context.read<AuthController>().add(const AuthScreenChanged(AuthScreen.signIn));
-                        },
-                        isLoading: state.isLoading,
-                      );
-                    }
-
-                    if (state.screen == AuthScreen.forgotPassword || state.screen == AuthScreen.resetPassword) {
-                      final isResetSent = state.screen == AuthScreen.resetPassword;
-
-                      return _AuthStatusCard(
-                        icon: isResetSent ? Icons.password_rounded : Icons.lock_reset_rounded,
-                        title: isResetSent ? l10n.resetPassword : l10n.forgotPasswordTitle,
-                        description: isResetSent
-                            ? l10n.resetPasswordSentDescription(state.userEmail ?? _emailController.text) : l10n.forgotPasswordDescription,
-                        input: isResetSent
-                            ? Column(
+                          if (state.screen == AuthScreen.confirmEmail) {
+                            return _AuthStatusCard(
+                              icon: Icons.mark_email_read_rounded,
+                              title: l10n.confirmYourEmail,
+                              description: l10n.confirmEmailDescription(state.userEmail ?? _emailController.text),
+                              input: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  Text(l10n.resetPasswordPasteHint, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: const Color(0xFF5C6672))),
+                                  Text(l10n.confirmEmailPasteHint, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: const Color(0xFF5C6672))),
                                   const SizedBox(height: 16),
                                   TextField(
                                     controller: _confirmationLinkController,
                                     minLines: 2,
                                     maxLines: 4,
-                                    decoration: InputDecoration(labelText: l10n.resetLink, hintText: l10n.resetLinkHint, border: const OutlineInputBorder()),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  TextField(
-                                    controller: _passwordController,
-                                    obscureText: _obscurePassword,
-                                    decoration: InputDecoration(
-                                      labelText: l10n.password,
-                                      hintText: l10n.passwordHint,
-                                      border: const OutlineInputBorder(),
-                                      suffixIcon: IconButton(onPressed: _togglePasswordVisibility, icon: Icon(_obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded)),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  TextField(
-                                    controller: _confirmPasswordController,
-                                    obscureText: _obscureConfirmPassword,
-                                    decoration: InputDecoration(
-                                      labelText: l10n.confirmPassword,
-                                      hintText: l10n.confirmPasswordHint,
-                                      border: const OutlineInputBorder(),
-                                      suffixIcon: IconButton(onPressed: _toggleConfirmPasswordVisibility, icon: Icon(_obscureConfirmPassword ? Icons.visibility_off_rounded : Icons.visibility_rounded)),
-                                    ),
+                                    decoration: InputDecoration(labelText: l10n.confirmationLink, hintText: l10n.confirmationLinkHint, border: const OutlineInputBorder()),
                                   ),
                                   const SizedBox(height: 12),
                                   Align(
@@ -187,206 +116,412 @@ class _AuthViewState extends State<AuthView> {
                                       onPressed: state.isLoading
                                           ? null
                                           : () {
-                                              context.read<AuthController>().add(AuthPasswordResetSubmitted(email: state.userEmail ?? _emailController.text));
+                                              context.read<AuthController>().add(AuthConfirmationResent(email: state.userEmail ?? _emailController.text));
                                             },
-                                      child: Text(l10n.sendAgain),
+                                      child: Text(l10n.resendEmail),
                                     ),
                                   ),
                                 ],
-                              )
-                            : TextField(
-                                controller: _emailController,
-                                keyboardType: TextInputType.emailAddress,
-                                decoration: InputDecoration(labelText: l10n.email, hintText: l10n.emailHint, border: const OutlineInputBorder()),
                               ),
-                        primaryLabel: isResetSent ? l10n.completeResetPassword : l10n.sendResetLink,
-                        primaryPressed: state.isLoading
-                            ? null
-                            : () {
-                                if (!isResetSent) {
-                                  context.read<AuthController>().add(AuthPasswordResetSubmitted(email: _emailController.text));
-                                  return;
-                                }
-
-                                if (_passwordController.text != _confirmPasswordController.text) {
-                                  ScaffoldMessenger.of(context)
-                                    ..hideCurrentSnackBar()
-                                    ..showSnackBar(SnackBar(content: Text(l10n.message(AppMessageKey.passwordsDoNotMatch)), backgroundColor: Theme.of(context).colorScheme.error));
-                                  return;
-                                }
-
-                                context.read<AuthController>().add(
-                                  AuthPasswordResetCompleted(email: state.userEmail ?? _emailController.text, resetLink: _confirmationLinkController.text, password: _passwordController.text),
-                                );
+                              primaryLabel: l10n.completeConfirmation,
+                              primaryPressed: state.isLoading
+                                  ? null
+                                  : () {
+                                      context.read<AuthController>().add(AuthConfirmationLinkSubmitted(email: state.userEmail ?? _emailController.text, confirmationLink: _confirmationLinkController.text));
+                                    },
+                              secondaryLabel: l10n.backToSignIn,
+                              secondaryPressed: () {
+                                context.read<AuthController>().add(const AuthScreenChanged(AuthScreen.signIn));
                               },
-                        secondaryLabel: l10n.backToSignIn,
-                        secondaryPressed: () {
-                          context.read<AuthController>().add(const AuthScreenChanged(AuthScreen.signIn));
-                        },
-                        isLoading: state.isLoading,
-                      );
-                    }
+                              isLoading: state.isLoading,
+                            );
+                          }
 
-                    return Container(
-                      padding: const EdgeInsets.all(28),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(28),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x14000000),
-                            blurRadius: 28,
-                            offset: Offset(0, 16),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Align(
-                            alignment: AlignmentDirectional.topCenter,
-                            child: LanguageSwitcher(localeController: widget.localeController),
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            isSignIn ? l10n.signIn : l10n.createAccount,
-                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            isSignIn
-                                ? l10n.signInSubtitle : l10n.signUpSubtitle,
-                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                  color: const Color(0xFF5C6672),
-                                ),
-                          ),
-                          const SizedBox(height: 24),
-                          SegmentedButton<AuthScreen>(
-                            segments: [
-                              ButtonSegment(value: AuthScreen.signIn, label: Text(l10n.signIn)),
-                              ButtonSegment(value: AuthScreen.signUp, label: Text(l10n.signUp)),
-                            ],
-                            selected: {state.screen},
-                            onSelectionChanged: (selection) {
-                              context.read<AuthController>().add(
-                                    AuthScreenChanged(selection.first),
-                                  );
-                            },
-                          ),
-                          const SizedBox(height: 24),
-                          if (isSignUp) ...[
-                            TextField(
-                              controller: _nameController,
-                              decoration: InputDecoration(labelText: l10n.name, hintText: l10n.nameHint, border: const OutlineInputBorder()),
-                            ),
-                            const SizedBox(height: 16),
-                            TextField(
-                              controller: _usernameController,
-                              decoration: InputDecoration(labelText: l10n.username, hintText: l10n.usernameHint, border: const OutlineInputBorder()),
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-                          TextField(
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            decoration: InputDecoration(labelText: l10n.email, hintText: l10n.emailHint, border: const OutlineInputBorder(),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          TextField(
-                            controller: _passwordController,
-                            obscureText: _obscurePassword,
-                            decoration: InputDecoration(
-                              labelText: l10n.password,
-                              hintText: l10n.passwordHint,
-                              border: const OutlineInputBorder(),
-                              suffixIcon: IconButton(
-                                onPressed: _togglePasswordVisibility,
-                                icon: Icon(_obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded),
-                              ),
-                            ),
-                          ),
-                          if (isSignUp) ...[
-                            const SizedBox(height: 16),
-                            TextField(
-                              controller: _confirmPasswordController,
-                              obscureText: _obscureConfirmPassword,
-                              decoration: InputDecoration(
-                                labelText: l10n.confirmPassword,
-                                hintText: l10n.confirmPasswordHint,
-                                border: const OutlineInputBorder(),
-                                suffixIcon: IconButton(
-                                  onPressed: _toggleConfirmPasswordVisibility,
-                                  icon: Icon(_obscureConfirmPassword ? Icons.visibility_off_rounded : Icons.visibility_rounded),
-                                ),
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: 24),
-                          FilledButton(
-                            onPressed: state.isLoading
-                                ? null
-                                : () {
-                                    if (isSignUp && _passwordController.text != _confirmPasswordController.text) {
-                                      ScaffoldMessenger.of(context)
-                                        ..hideCurrentSnackBar()
-                                        ..showSnackBar(SnackBar(content: Text(l10n.message(AppMessageKey.passwordsDoNotMatch)), backgroundColor: Theme.of(context).colorScheme.error));
-                                      return;
-                                    }
+                          if (state.screen == AuthScreen.forgotPassword || state.screen == AuthScreen.resetPassword) {
+                            final isResetSent = state.screen == AuthScreen.resetPassword;
 
-                                    context.read<AuthController>().add(
-                                          AuthSubmitted(
-                                            name: _nameController.text,
-                                            username: _usernameController.text,
-                                            email: _emailController.text,
-                                            password: _passwordController.text,
+                            return _AuthStatusCard(
+                              icon: isResetSent ? Icons.password_rounded : Icons.lock_reset_rounded,
+                              title: isResetSent ? l10n.resetPassword : l10n.forgotPasswordTitle,
+                              description: isResetSent ? l10n.resetPasswordSentDescription(state.userEmail ?? _emailController.text) : l10n.forgotPasswordDescription,
+                              input: isResetSent
+                                  ? Column(
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      children: [
+                                        Text(l10n.resetPasswordPasteHint, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: const Color(0xFF5C6672))),
+                                        const SizedBox(height: 16),
+                                        TextField(
+                                          controller: _confirmationLinkController,
+                                          minLines: 2,
+                                          maxLines: 4,
+                                          decoration: InputDecoration(labelText: l10n.resetLink, hintText: l10n.resetLinkHint, border: const OutlineInputBorder()),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        TextField(
+                                          controller: _passwordController,
+                                          obscureText: _obscurePassword,
+                                          decoration: InputDecoration(
+                                            labelText: l10n.password,
+                                            hintText: l10n.passwordHint,
+                                            border: const OutlineInputBorder(),
+                                            suffixIcon: IconButton(onPressed: _togglePasswordVisibility, icon: Icon(_obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded)),
                                           ),
-                                        );
-                                  },
-                            style: FilledButton.styleFrom(
-                              minimumSize: const Size.fromHeight(54),
-                            ),
-                            child: state.isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2.4),
-                                  )
-                                : Text(isSignIn ? l10n.continueLabel : l10n.createAccount),
-                          ),
-                          if (isSignIn) ...[
-                            const SizedBox(height: 12),
-                            Align(
-                              alignment: AlignmentDirectional.center,
-                              child: TextButton(
-                                onPressed: () {
-                                  context.read<AuthController>().add(const AuthScreenChanged(AuthScreen.forgotPassword));
-                                },
-                                child: Text(l10n.forgotPasswordAction),
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: 14),
-                          Text(
-                            isSignIn
-                                ? l10n.signInFooter : l10n.signUpFooter,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: const Color(0xFF5C6672),
-                                ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                                        ),
+                                        const SizedBox(height: 16),
+                                        TextField(
+                                          controller: _confirmPasswordController,
+                                          obscureText: _obscureConfirmPassword,
+                                          decoration: InputDecoration(
+                                            labelText: l10n.confirmPassword,
+                                            hintText: l10n.confirmPasswordHint,
+                                            border: const OutlineInputBorder(),
+                                            suffixIcon: IconButton(onPressed: _toggleConfirmPasswordVisibility, icon: Icon(_obscureConfirmPassword ? Icons.visibility_off_rounded : Icons.visibility_rounded)),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Align(
+                                          alignment: AlignmentDirectional.centerEnd,
+                                          child: TextButton(
+                                            onPressed: state.isLoading
+                                                ? null
+                                                : () {
+                                                    context.read<AuthController>().add(AuthPasswordResetSubmitted(email: state.userEmail ?? _emailController.text));
+                                                  },
+                                            child: Text(l10n.sendAgain),
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  : TextField(
+                                      controller: _emailController,
+                                      keyboardType: TextInputType.emailAddress,
+                                      decoration: InputDecoration(labelText: l10n.email, hintText: l10n.emailHint, border: const OutlineInputBorder()),
+                                    ),
+                              primaryLabel: isResetSent ? l10n.completeResetPassword : l10n.sendResetLink,
+                              primaryPressed: state.isLoading
+                                  ? null
+                                  : () {
+                                      if (!isResetSent) {
+                                        context.read<AuthController>().add(AuthPasswordResetSubmitted(email: _emailController.text));
+                                        return;
+                                      }
+
+                                      if (_passwordController.text != _confirmPasswordController.text) {
+                                        ScaffoldMessenger.of(context)
+                                          ..hideCurrentSnackBar()
+                                          ..showSnackBar(SnackBar(content: Text(l10n.message(AppMessageKey.passwordsDoNotMatch)), backgroundColor: Theme.of(context).colorScheme.error));
+                                        return;
+                                      }
+
+                                      context.read<AuthController>().add(
+                                        AuthPasswordResetCompleted(email: state.userEmail ?? _emailController.text, resetLink: _confirmationLinkController.text, password: _passwordController.text),
+                                      );
+                                    },
+                              secondaryLabel: l10n.backToSignIn,
+                              secondaryPressed: () {
+                                context.read<AuthController>().add(const AuthScreenChanged(AuthScreen.signIn));
+                              },
+                              isLoading: state.isLoading,
+                            );
+                          }
+
+                          return _AuthMainContent(
+                            l10n: l10n,
+                            localeController: widget.localeController,
+                            isSignIn: isSignIn,
+                            isSignUp: isSignUp,
+                            isLoading: state.isLoading,
+                            emailController: _emailController,
+                            nameController: _nameController,
+                            usernameController: _usernameController,
+                            passwordController: _passwordController,
+                            confirmPasswordController: _confirmPasswordController,
+                            obscurePassword: _obscurePassword,
+                            obscureConfirmPassword: _obscureConfirmPassword,
+                            onTogglePasswordVisibility: _togglePasswordVisibility,
+                            onToggleConfirmPasswordVisibility: _toggleConfirmPasswordVisibility,
+                            onForgotPassword: () {
+                              context.read<AuthController>().add(const AuthScreenChanged(AuthScreen.forgotPassword));
+                            },
+                            onSwitchScreen: (selection) {
+                              context.read<AuthController>().add(AuthScreenChanged(selection));
+                            },
+                            onSubmit: () {
+                              if (isSignUp && _passwordController.text != _confirmPasswordController.text) {
+                                ScaffoldMessenger.of(context)
+                                  ..hideCurrentSnackBar()
+                                  ..showSnackBar(SnackBar(content: Text(l10n.message(AppMessageKey.passwordsDoNotMatch)), backgroundColor: Theme.of(context).colorScheme.error));
+                                return;
+                              }
+
+                              context.read<AuthController>().add(AuthSubmitted(name: _nameController.text, username: _usernameController.text, email: _emailController.text, password: _passwordController.text));
+                            },
+                            currentScreen: state.screen,
+                          );
+                        },
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _BackdropOrb extends StatelessWidget {
+  const _BackdropOrb({required this.size, required this.color});
+
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          boxShadow: [BoxShadow(color: color, blurRadius: 40, spreadRadius: 12)],
+        ),
+      ),
+    );
+  }
+}
+
+class _AuthMainContent extends StatelessWidget {
+  const _AuthMainContent({
+    required this.l10n,
+    required this.localeController,
+    required this.isSignIn,
+    required this.isSignUp,
+    required this.isLoading,
+    required this.emailController,
+    required this.nameController,
+    required this.usernameController,
+    required this.passwordController,
+    required this.confirmPasswordController,
+    required this.obscurePassword,
+    required this.obscureConfirmPassword,
+    required this.onTogglePasswordVisibility,
+    required this.onToggleConfirmPasswordVisibility,
+    required this.onForgotPassword,
+    required this.onSwitchScreen,
+    required this.onSubmit,
+    required this.currentScreen,
+  });
+
+  final AppLocalizations l10n;
+  final LocaleController localeController;
+  final bool isSignIn;
+  final bool isSignUp;
+  final bool isLoading;
+  final TextEditingController emailController;
+  final TextEditingController nameController;
+  final TextEditingController usernameController;
+  final TextEditingController passwordController;
+  final TextEditingController confirmPasswordController;
+  final bool obscurePassword;
+  final bool obscureConfirmPassword;
+  final VoidCallback onTogglePasswordVisibility;
+  final VoidCallback onToggleConfirmPasswordVisibility;
+  final VoidCallback onForgotPassword;
+  final ValueChanged<AuthScreen> onSwitchScreen;
+  final VoidCallback onSubmit;
+  final AuthScreen currentScreen;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final viewportHeight = MediaQuery.sizeOf(context).height;
+    final isCompactHeight = viewportHeight < 760;
+    final cardPadding = isCompactHeight ? 20.0 : 28.0;
+    final sectionGap = isCompactHeight ? 18.0 : 24.0;
+    final fieldGap = isCompactHeight ? 12.0 : 16.0;
+    final headerGap = isCompactHeight ? 22.0 : 28.0;
+    final headerIconSize = isCompactHeight ? 46.0 : 52.0;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: EdgeInsets.all(cardPadding),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.9),
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.7)),
+            boxShadow: const [BoxShadow(color: Color(0x18000000), blurRadius: 34, offset: Offset(0, 18))],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    height: headerIconSize,
+                    width: headerIconSize,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(colors: [Color(0xFF1F7A8C), Color(0xFF39A6BC)]),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Icon(Icons.storefront_rounded, color: Colors.white, size: 28),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.appTitle, style: (isCompactHeight ? theme.textTheme.titleMedium : theme.textTheme.titleLarge)?.copyWith(fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 2),
+                        Text(isSignIn ? l10n.signInFooter : l10n.signUpFooter, style: theme.textTheme.bodySmall?.copyWith(color: const Color(0xFF6B7280))),
+                      ],
+                    ),
+                  ),
+                  LanguageSwitcher(localeController: localeController),
+                ],
+              ),
+              SizedBox(height: headerGap),
+              Text(isSignIn ? l10n.signIn : l10n.createAccount, style: (isCompactHeight ? theme.textTheme.headlineSmall : theme.textTheme.headlineMedium)?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 8),
+              Text(isSignIn ? l10n.signInSubtitle : l10n.signUpSubtitle, style: theme.textTheme.bodyLarge?.copyWith(color: const Color(0xFF5C6672))),
+              SizedBox(height: sectionGap),
+              SegmentedButton<AuthScreen>(
+                style: ButtonStyle(padding: WidgetStateProperty.all(EdgeInsets.symmetric(vertical: isCompactHeight ? 10 : 12))),
+                segments: [
+                  ButtonSegment(value: AuthScreen.signIn, label: Text(l10n.signIn)),
+                  ButtonSegment(value: AuthScreen.signUp, label: Text(l10n.signUp)),
+                ],
+                selected: {currentScreen},
+                onSelectionChanged: (selection) => onSwitchScreen(selection.first),
+              ),
+              SizedBox(height: sectionGap),
+              if (isSignUp) ...[
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(labelText: l10n.name, hintText: l10n.nameHint, border: const OutlineInputBorder()),
+                ),
+                SizedBox(height: fieldGap),
+                TextField(
+                  controller: usernameController,
+                  decoration: InputDecoration(labelText: l10n.username, hintText: l10n.usernameHint, border: const OutlineInputBorder()),
+                ),
+                SizedBox(height: fieldGap),
+              ],
+              TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(labelText: l10n.email, hintText: l10n.emailHint, border: const OutlineInputBorder()),
+              ),
+              SizedBox(height: fieldGap),
+              TextField(
+                controller: passwordController,
+                obscureText: obscurePassword,
+                decoration: InputDecoration(
+                  labelText: l10n.password,
+                  hintText: l10n.passwordHint,
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(onPressed: onTogglePasswordVisibility, icon: Icon(obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded)),
+                ),
+              ),
+              if (isSignUp) ...[
+                SizedBox(height: fieldGap),
+                TextField(
+                  controller: confirmPasswordController,
+                  obscureText: obscureConfirmPassword,
+                  decoration: InputDecoration(
+                    labelText: l10n.confirmPassword,
+                    hintText: l10n.confirmPasswordHint,
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(onPressed: onToggleConfirmPasswordVisibility, icon: Icon(obscureConfirmPassword ? Icons.visibility_off_rounded : Icons.visibility_rounded)),
+                  ),
+                ),
+              ],
+              SizedBox(height: sectionGap),
+              FilledButton(
+                onPressed: isLoading ? null : onSubmit,
+                style: FilledButton.styleFrom(minimumSize: Size.fromHeight(isCompactHeight ? 52 : 56)),
+                child: isLoading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2.4)) : Text(isSignIn ? l10n.continueLabel : l10n.createAccount),
+              ),
+              if (isSignIn) ...[
+                SizedBox(height: isCompactHeight ? 8 : 12),
+                Align(
+                  alignment: AlignmentDirectional.center,
+                  child: TextButton(onPressed: onForgotPassword, child: Text(l10n.forgotPasswordAction)),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 18),
+        const _PlatformAvailabilitySection(),
+      ],
+    );
+  }
+}
+
+class _PlatformAvailabilitySection extends StatelessWidget {
+  const _PlatformAvailabilitySection();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final isCompactHeight = MediaQuery.sizeOf(context).height < 760;
+    const platformIcons = ['lib/assets/icons/android.png', 'lib/assets/icons/apple.png', 'lib/assets/icons/linux.png', 'lib/assets/icons/windows.png'];
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: isCompactHeight ? 14 : 18, vertical: isCompactHeight ? 12 : 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.75)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.availablePlatformsTitle,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700, color: const Color(0xFF5C6672), letterSpacing: 0.2),
+          ),
+          SizedBox(height: isCompactHeight ? 10 : 12),
+          Center(
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              spacing: isCompactHeight ? 10 : 12,
+              runSpacing: isCompactHeight ? 10 : 12,
+              children: [for (final assetPath in platformIcons) _PlatformPill(assetPath: assetPath)],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PlatformPill extends StatelessWidget {
+  const _PlatformPill({required this.assetPath});
+
+  final String assetPath;
+
+  @override
+  Widget build(BuildContext context) {
+    final isCompactHeight = MediaQuery.sizeOf(context).height < 760;
+    return Container(
+      height: isCompactHeight ? 46 : 52,
+      width: isCompactHeight ? 46 : 52,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0x0F111827)),
+        boxShadow: const [BoxShadow(color: Color(0x12000000), blurRadius: 16, offset: Offset(0, 8))],
+      ),
+      child: Image.asset(assetPath, fit: BoxFit.contain),
     );
   }
 }

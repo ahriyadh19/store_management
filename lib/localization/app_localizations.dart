@@ -91,6 +91,7 @@ class AppLocalizations {
     'forgotPasswordAction': 'Forgot password?',
     'signInFooter': 'Sign in with your email and password.',
     'signUpFooter': 'Enter your details below to create your account.',
+    'availablePlatformsTitle': 'Available at',
     'language': 'Language',
     'english': 'English',
     'arabic': 'العربية',
@@ -164,6 +165,14 @@ class AppLocalizations {
     'forgotPasswordAction': 'نسيت كلمة المرور؟',
     'signInFooter': 'سجّل الدخول باستخدام بريدك الإلكتروني وكلمة المرور.',
     'signUpFooter': 'أدخل بياناتك أدناه لإنشاء حسابك.',
+    'availablePlatformsTitle': 'متاح على',
+    'availablePlatformsSubtitle': 'تابع عملك على سطح المكتب والجوال والويب باستخدام الحساب نفسه.',
+    'platformWeb': 'الويب',
+    'platformAndroid': 'أندرويد',
+    'platformIos': 'iOS',
+    'platformLinux': 'لينكس',
+    'platformMacos': 'macOS',
+    'platformWindows': 'ويندوز',
     'language': 'اللغة',
     'english': 'English',
     'arabic': 'العربية',
@@ -246,6 +255,14 @@ class AppLocalizations {
   String get forgotPasswordAction => _text('forgotPasswordAction');
   String get signInFooter => _text('signInFooter');
   String get signUpFooter => _text('signUpFooter');
+  String get availablePlatformsTitle => _text('availablePlatformsTitle');
+  String get availablePlatformsSubtitle => _text('availablePlatformsSubtitle');
+  String get platformWeb => _text('platformWeb');
+  String get platformAndroid => _text('platformAndroid');
+  String get platformIos => _text('platformIos');
+  String get platformLinux => _text('platformLinux');
+  String get platformMacos => _text('platformMacos');
+  String get platformWindows => _text('platformWindows');
   String get language => _text('language');
   String get english => _text('english');
   String get arabic => _text('arabic');
