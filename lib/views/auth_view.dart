@@ -405,7 +405,20 @@ class _AuthMainContent extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _ThemeModeMenuButton(appPreferencesController: appPreferencesController),
+                    const SizedBox(width: 8),
+                    LanguageSwitcher(localeController: localeController),
+                  ],
+                ),
+              ),
+              SizedBox(height: isCompactHeight ? 14 : 16),
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     height: headerIconSize,
@@ -416,9 +429,10 @@ class _AuthMainContent extends StatelessWidget {
                     ),
                     child: const Icon(Icons.storefront_rounded, color: Colors.white, size: 28),
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
+                  const SizedBox(width: 12),
+                  Flexible(
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(l10n.appTitle, style: (isCompactHeight ? theme.textTheme.titleMedium : theme.textTheme.titleLarge)?.copyWith(fontWeight: FontWeight.w800)),
@@ -426,13 +440,6 @@ class _AuthMainContent extends StatelessWidget {
                         Text(isSignIn ? l10n.signInFooter : l10n.signUpFooter, style: theme.textTheme.bodySmall?.copyWith(color: const Color(0xFF6B7280))),
                       ],
                     ),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _ThemeModeMenuButton(appPreferencesController: appPreferencesController),
-                      LanguageSwitcher(localeController: localeController),
-                    ],
                   ),
                 ],
               ),
