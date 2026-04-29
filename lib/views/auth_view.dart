@@ -3,12 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:store_management/controllers/auth_controller.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/localization/locale_controller.dart';
+import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/views/components/language_switcher.dart';
 
 class AuthView extends StatefulWidget {
-  const AuthView({super.key, required this.localeController});
+  const AuthView({super.key, required this.localeController, required this.appPreferencesController});
 
   final LocaleController localeController;
+  final AppPreferencesController appPreferencesController;
 
   @override
   State<AuthView> createState() => _AuthViewState();
@@ -24,6 +26,15 @@ class _AuthViewState extends State<AuthView> {
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final initialEmail = widget.appPreferencesController.lastEmail;
+    if (initialEmail.isNotEmpty) {
+      _emailController.text = initialEmail;
+    }
+  }
 
   void _togglePasswordVisibility() {
     setState(() {
@@ -228,6 +239,7 @@ class _AuthViewState extends State<AuthView> {
                           return _AuthMainContent(
                             l10n: l10n,
                             localeController: widget.localeController,
+                            appPreferencesController: widget.appPreferencesController,
                             isSignIn: isSignIn,
                             isSignUp: isSignUp,
                             isLoading: state.isLoading,
@@ -298,6 +310,7 @@ class _AuthMainContent extends StatelessWidget {
   const _AuthMainContent({
     required this.l10n,
     required this.localeController,
+    required this.appPreferencesController,
     required this.isSignIn,
     required this.isSignUp,
     required this.isLoading,
@@ -318,6 +331,7 @@ class _AuthMainContent extends StatelessWidget {
 
   final AppLocalizations l10n;
   final LocaleController localeController;
+  final AppPreferencesController appPreferencesController;
   final bool isSignIn;
   final bool isSignUp;
   final bool isLoading;
@@ -382,7 +396,13 @@ class _AuthMainContent extends StatelessWidget {
                       ],
                     ),
                   ),
-                  LanguageSwitcher(localeController: localeController),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(tooltip: l10n.theme, onPressed: appPreferencesController.toggleThemeMode, icon: Icon(appPreferencesController.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded)),
+                      LanguageSwitcher(localeController: localeController),
+                    ],
+                  ),
                 ],
               ),
               SizedBox(height: headerGap),

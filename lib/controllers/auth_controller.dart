@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/models/users.dart';
+import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/services/auth_repository.dart';
 
 enum AuthScreen { signIn, signUp, forgotPassword, confirmEmail, resetPassword }
@@ -101,12 +102,13 @@ final class AuthState {
 }
 
 class AuthController extends Bloc<AuthEvent, AuthState> {
-	AuthController({required AuthRepository authRepository})
+  AuthController({required AuthRepository authRepository, required AppPreferencesController appPreferencesController})
 			: _authRepository = authRepository,
+      _appPreferencesController = appPreferencesController,
 				super(
 					AuthState(
 						status: authRepository.currentUserEmail == null ? AuthStatus.initial : AuthStatus.authenticated,
-						userEmail: authRepository.currentUserEmail,
+            userEmail: authRepository.currentUserEmail ?? appPreferencesController.lastEmail,
 					),
 				) {
     on<AuthStarted>(_onStarted);
@@ -124,6 +126,7 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 	}
 
 	final AuthRepository _authRepository;
+  final AppPreferencesController _appPreferencesController;
 
   Future<void> _onStarted(AuthStarted event, Emitter<AuthState> emit) async {
     final user = await _authRepository.getCurrentUserProfile();
@@ -203,6 +206,8 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 					? await _authRepository.signIn(email: email, password: password)
 					: await _authRepository.signUp(name: name, email: email, password: password, username: username);
 
+      await _appPreferencesController.saveLastEmail(result.email ?? email);
+
       if (result.status == AuthActionStatus.confirmEmail) {
         emit(state.copyWith(screen: AuthScreen.confirmEmail, status: AuthStatus.confirmEmailRequired, messageKey: result.messageKey, userEmail: result.email ?? email, user: result.user));
         return;
@@ -228,6 +233,7 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 
     try {
       final result = await _authRepository.sendPasswordReset(email: email);
+      await _appPreferencesController.saveLastEmail(result.email ?? email);
       emit(state.copyWith(screen: AuthScreen.resetPassword, status: AuthStatus.passwordResetSent, messageKey: result.messageKey, userEmail: result.email ?? email));
     } catch (error) {
       emit(state.copyWith(status: AuthStatus.failure, messageKey: _buildAuthErrorMessage(error)));
@@ -244,6 +250,7 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 
     try {
       await _authRepository.resendSignUpConfirmation(email: email);
+      await _appPreferencesController.saveLastEmail(email);
       emit(state.copyWith(screen: AuthScreen.confirmEmail, status: AuthStatus.confirmEmailRequired, messageKey: AppMessageKey.confirmationEmailResent, userEmail: email,
 				),
 			);
@@ -275,6 +282,7 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 
     try {
       final result = await _authRepository.completeEmailConfirmation(email: email, confirmationLink: confirmationLink);
+      await _appPreferencesController.saveLastEmail(result.email ?? email);
 
       if (result.status == AuthActionStatus.authenticated) {
         emit(state.copyWith(status: AuthStatus.authenticated, messageKey: result.messageKey, userEmail: result.email ?? email, user: result.user));
@@ -311,6 +319,7 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 
     try {
       final result = await _authRepository.completePasswordReset(email: email, resetLink: resetLink, password: password);
+      await _appPreferencesController.saveLastEmail(result.email ?? email);
       emit(state.copyWith(status: AuthStatus.authenticated, messageKey: result.messageKey, userEmail: result.email ?? email, user: result.user));
     } catch (error) {
       emit(state.copyWith(status: AuthStatus.failure, messageKey: _buildAuthErrorMessage(error)));

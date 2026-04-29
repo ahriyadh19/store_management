@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:store_management/localization/locale_controller.dart';
 import 'package:store_management/main.dart';
+import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/services/auth_repository.dart';
 
 void main() {
@@ -196,5 +197,33 @@ void main() {
     expect(find.text('البريد الإلكتروني'), findsOneWidget);
     expect(find.text('كلمة المرور'), findsOneWidget);
     expect(Directionality.of(tester.element(find.text('تسجيل الدخول').first)), TextDirection.rtl);
+  });
+
+  testWidgets('uses dark theme mode when preferences request it', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MyApp(
+        authRepository: FakeAuthRepository(),
+        localeController: LocaleController(initialLocale: const Locale('en')),
+        appPreferencesController: AppPreferencesController(initialThemeMode: ThemeMode.dark),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    expect(app.themeMode, ThemeMode.dark);
+  });
+
+  testWidgets('prefills the remembered email on auth screen', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MyApp(
+        authRepository: FakeAuthRepository(),
+        localeController: LocaleController(initialLocale: const Locale('en')),
+        appPreferencesController: AppPreferencesController(initialLastEmail: 'remembered@store.com'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final emailField = tester.widget<TextField>(find.widgetWithText(TextField, 'Email'));
+    expect(emailField.controller?.text, 'remembered@store.com');
   });
 }

@@ -10,6 +10,7 @@ import 'package:store_management/controllers/auth_controller.dart';
 import 'package:store_management/index.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/localization/locale_controller.dart';
+import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/services/auth_repository.dart';
 import 'package:store_management/services/local_database.dart';
 import 'package:store_management/services/supabase_auth_storage.dart';
@@ -23,11 +24,12 @@ Future<void> main() async {
 
   final config = await _loadSupabaseConfig();
   final localeController = await LocaleController.create();
+  final appPreferencesController = await AppPreferencesController.create();
   final localDatabase = await LocalDatabase.create();
 
   await Supabase.initialize(url: config.url, anonKey: config.anonKey, authOptions: _buildAuthOptions());
 
-  runApp(MyApp(localeController: localeController, localDatabase: localDatabase));
+  runApp(MyApp(localeController: localeController, appPreferencesController: appPreferencesController, localDatabase: localDatabase));
 }
 
 FlutterAuthClientOptions _buildAuthOptions() {
@@ -76,20 +78,23 @@ class _SupabaseConfig {
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({super.key, this.authRepository, this.localDatabase, LocaleController? localeController}) : localeController = localeController ?? LocaleController();
+  MyApp({super.key, this.authRepository, this.localDatabase, LocaleController? localeController, AppPreferencesController? appPreferencesController})
+    : localeController = localeController ?? LocaleController(),
+      appPreferencesController = appPreferencesController ?? AppPreferencesController();
 
   final AuthRepository? authRepository;
   final LocalDatabase? localDatabase;
   final LocaleController localeController;
+  final AppPreferencesController appPreferencesController;
 
   @override
   Widget build(BuildContext context) {
     return RepositoryProvider<LocalDatabase?>.value(
       value: localDatabase,
       child: BlocProvider(
-        create: (_) => AuthController(authRepository: authRepository ?? SupabaseAuthRepository()),
+        create: (_) => AuthController(authRepository: authRepository ?? SupabaseAuthRepository(), appPreferencesController: appPreferencesController),
         child: AnimatedBuilder(
-          animation: localeController,
+          animation: Listenable.merge([localeController, appPreferencesController]),
           builder: (context, child) {
             return MaterialApp(
               debugShowCheckedModeBanner: false,
@@ -110,12 +115,18 @@ class MyApp extends StatelessWidget {
                 return supportedLocales.first;
               },
               onGenerateTitle: (context) => context.l10n.appTitle,
+              themeMode: appPreferencesController.themeMode,
               theme: ThemeData(
-                colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1F7A8C)),
+                colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1F7A8C), brightness: Brightness.light),
                 scaffoldBackgroundColor: const Color(0xFFF4F7FB),
                 useMaterial3: true,
               ),
-              home: AuthGate(localeController: localeController),
+              darkTheme: ThemeData(
+                colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF39A6BC), brightness: Brightness.dark),
+                scaffoldBackgroundColor: const Color(0xFF09141A),
+                useMaterial3: true,
+              ),
+              home: AuthGate(localeController: localeController, appPreferencesController: appPreferencesController),
             );
           },
         ),
@@ -125,19 +136,20 @@ class MyApp extends StatelessWidget {
 }
 
 class AuthGate extends StatelessWidget {
-  const AuthGate({super.key, required this.localeController});
+  const AuthGate({super.key, required this.localeController, required this.appPreferencesController});
 
   final LocaleController localeController;
+  final AppPreferencesController appPreferencesController;
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthController, AuthState>(
       builder: (context, state) {
         if (state.isAuthenticated) {
-          return Index(localeController: localeController);
+          return Index(localeController: localeController, appPreferencesController: appPreferencesController);
         }
 
-        return AuthView(localeController: localeController);
+        return AuthView(localeController: localeController, appPreferencesController: appPreferencesController);
       },
     );
   }

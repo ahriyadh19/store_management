@@ -92,6 +92,8 @@ class AppLocalizations {
     'signInFooter': 'Sign in with your email and password.',
     'signUpFooter': 'Enter your details below to create your account.',
     'availablePlatformsTitle': 'Available at',
+    'theme': 'Theme',
+    'darkMode': 'Dark mode',
     'language': 'Language',
     'english': 'English',
     'arabic': 'العربية',
@@ -173,6 +175,8 @@ class AppLocalizations {
     'platformLinux': 'لينكس',
     'platformMacos': 'macOS',
     'platformWindows': 'ويندوز',
+    'theme': 'المظهر',
+    'darkMode': 'الوضع الداكن',
     'language': 'اللغة',
     'english': 'English',
     'arabic': 'العربية',
@@ -263,6 +267,8 @@ class AppLocalizations {
   String get platformLinux => _text('platformLinux');
   String get platformMacos => _text('platformMacos');
   String get platformWindows => _text('platformWindows');
+  String get theme => _text('theme');
+  String get darkMode => _text('darkMode');
   String get language => _text('language');
   String get english => _text('english');
   String get arabic => _text('arabic');
