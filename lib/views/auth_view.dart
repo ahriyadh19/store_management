@@ -25,6 +25,18 @@ class _AuthViewState extends State<AuthView> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
+  void _togglePasswordVisibility() {
+    setState(() {
+      _obscurePassword = !_obscurePassword;
+    });
+  }
+
+  void _toggleConfirmPasswordVisibility() {
+    setState(() {
+      _obscureConfirmPassword = !_obscureConfirmPassword;
+    });
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -135,17 +147,77 @@ class _AuthViewState extends State<AuthView> {
                         description: isResetSent
                             ? l10n.resetPasswordSentDescription(state.userEmail ?? _emailController.text) : l10n.forgotPasswordDescription,
                         input: isResetSent
-                            ? null
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Text(l10n.resetPasswordPasteHint, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: const Color(0xFF5C6672))),
+                                  const SizedBox(height: 16),
+                                  TextField(
+                                    controller: _confirmationLinkController,
+                                    minLines: 2,
+                                    maxLines: 4,
+                                    decoration: InputDecoration(labelText: l10n.resetLink, hintText: l10n.resetLinkHint, border: const OutlineInputBorder()),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  TextField(
+                                    controller: _passwordController,
+                                    obscureText: _obscurePassword,
+                                    decoration: InputDecoration(
+                                      labelText: l10n.password,
+                                      hintText: l10n.passwordHint,
+                                      border: const OutlineInputBorder(),
+                                      suffixIcon: IconButton(onPressed: _togglePasswordVisibility, icon: Icon(_obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded)),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  TextField(
+                                    controller: _confirmPasswordController,
+                                    obscureText: _obscureConfirmPassword,
+                                    decoration: InputDecoration(
+                                      labelText: l10n.confirmPassword,
+                                      hintText: l10n.confirmPasswordHint,
+                                      border: const OutlineInputBorder(),
+                                      suffixIcon: IconButton(onPressed: _toggleConfirmPasswordVisibility, icon: Icon(_obscureConfirmPassword ? Icons.visibility_off_rounded : Icons.visibility_rounded)),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Align(
+                                    alignment: AlignmentDirectional.centerEnd,
+                                    child: TextButton(
+                                      onPressed: state.isLoading
+                                          ? null
+                                          : () {
+                                              context.read<AuthController>().add(AuthPasswordResetSubmitted(email: state.userEmail ?? _emailController.text));
+                                            },
+                                      child: Text(l10n.sendAgain),
+                                    ),
+                                  ),
+                                ],
+                              )
                             : TextField(
                                 controller: _emailController,
                                 keyboardType: TextInputType.emailAddress,
                                 decoration: InputDecoration(labelText: l10n.email, hintText: l10n.emailHint, border: const OutlineInputBorder()),
                               ),
-                        primaryLabel: isResetSent ? l10n.sendAgain : l10n.sendResetLink,
+                        primaryLabel: isResetSent ? l10n.completeResetPassword : l10n.sendResetLink,
                         primaryPressed: state.isLoading
                             ? null
                             : () {
-                                context.read<AuthController>().add(AuthPasswordResetSubmitted(email: _emailController.text));
+                                if (!isResetSent) {
+                                  context.read<AuthController>().add(AuthPasswordResetSubmitted(email: _emailController.text));
+                                  return;
+                                }
+
+                                if (_passwordController.text != _confirmPasswordController.text) {
+                                  ScaffoldMessenger.of(context)
+                                    ..hideCurrentSnackBar()
+                                    ..showSnackBar(SnackBar(content: Text(l10n.message(AppMessageKey.passwordsDoNotMatch)), backgroundColor: Theme.of(context).colorScheme.error));
+                                  return;
+                                }
+
+                                context.read<AuthController>().add(
+                                  AuthPasswordResetCompleted(email: state.userEmail ?? _emailController.text, resetLink: _confirmationLinkController.text, password: _passwordController.text),
+                                );
                               },
                         secondaryLabel: l10n.backToSignIn,
                         secondaryPressed: () {
@@ -231,11 +303,7 @@ class _AuthViewState extends State<AuthView> {
                               hintText: l10n.passwordHint,
                               border: const OutlineInputBorder(),
                               suffixIcon: IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
+                                onPressed: _togglePasswordVisibility,
                                 icon: Icon(_obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded),
                               ),
                             ),
@@ -250,11 +318,7 @@ class _AuthViewState extends State<AuthView> {
                                 hintText: l10n.confirmPasswordHint,
                                 border: const OutlineInputBorder(),
                                 suffixIcon: IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscureConfirmPassword = !_obscureConfirmPassword;
-                                    });
-                                  },
+                                  onPressed: _toggleConfirmPasswordVisibility,
                                   icon: Icon(_obscureConfirmPassword ? Icons.visibility_off_rounded : Icons.visibility_rounded),
                                 ),
                               ),

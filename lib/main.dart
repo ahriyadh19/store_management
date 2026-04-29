@@ -31,7 +31,7 @@ Future<void> main() async {
 }
 
 FlutterAuthClientOptions _buildAuthOptions() {
-  if (!kIsWeb && Platform.isLinux) {
+  if (!kIsWeb && (Platform.isLinux || Platform.isMacOS || Platform.isWindows)) {
     return FlutterAuthClientOptions(
       localStorage: FileLocalStorage(storageKey: 'supabase.auth.token', appDirectoryName: 'store_management'),
       pkceAsyncStorage: FileGotrueAsyncStorage(appDirectoryName: 'store_management'),

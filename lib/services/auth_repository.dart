@@ -1,8 +1,11 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/models/users.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
+
+const _authRedirectTo = String.fromEnvironment('AUTH_REDIRECT_TO');
 
 enum AuthActionStatus { authenticated, confirmEmail, passwordResetSent }
 
@@ -28,6 +31,8 @@ abstract class AuthRepository {
   Future<AuthActionResult> sendPasswordReset({required String email});
 
   Future<AuthActionResult> completeEmailConfirmation({required String email, required String confirmationLink});
+
+  Future<AuthActionResult> completePasswordReset({required String email, required String resetLink, required String password});
 
   Future<void> resendSignUpConfirmation({required String email});
 
@@ -72,10 +77,11 @@ class SupabaseAuthRepository implements AuthRepository {
   @override
   Future<AuthActionResult> signUp({required String name, required String email, required String password, required String username}) async {
     final normalizedUsername = _normalizeUsername(username);
+    final emailRedirectTo = _resolveEmailRedirectTo();
     final response = await _authClient.signUp(
       email: email,
       password: password,
-      data: {'name': name.trim(), 'username': normalizedUsername});
+      emailRedirectTo: emailRedirectTo, data: {'name': name.trim(), 'username': normalizedUsername});
 
     if (response.session != null && response.user != null) {
       await _upsertProfile(authUserId: response.user!.id, email: response.user?.email ?? email, name: name, username: normalizedUsername);
@@ -95,7 +101,7 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<AuthActionResult> sendPasswordReset({required String email}) async {
-    await _authClient.resetPasswordForEmail(email);
+    await _authClient.resetPasswordForEmail(email, redirectTo: _resolveEmailRedirectTo());
 
     return AuthActionResult(status: AuthActionStatus.passwordResetSent, email: email, messageKey: AppMessageKey.passwordResetInstructionsSent,
     );
@@ -110,24 +116,14 @@ class SupabaseAuthRepository implements AuthRepository {
       throw AuthException(AppMessageKey.confirmationLinkRequired.name);
     }
 
-    final uri = Uri.tryParse(trimmedLink);
-    if (uri == null || !uri.hasScheme) {
-      throw AuthException(AppMessageKey.confirmationLinkFullRequired.name);
-    }
-
-    if (_containsSessionParams(uri)) {
-      await _authClient.getSessionFromUrl(uri);
-    } else {
-      final params = _extractLinkParameters(uri);
-      final tokenHash = params['token_hash'];
-      final otpType = _parseOtpType(params['type']);
-
-      if (tokenHash == null || otpType == null) {
-        throw AuthException(AppMessageKey.confirmationLinkMissingDetails.name);
-      }
-
-      await _authClient.verifyOTP(email: trimmedEmail.isEmpty ? null : trimmedEmail, tokenHash: tokenHash, type: otpType);
-    }
+    await _applyLinkSession(
+      link: trimmedLink,
+      email: trimmedEmail,
+      requiredOtpTypes: const {OtpType.signup, OtpType.invite, OtpType.email, OtpType.emailChange, OtpType.magiclink},
+      requiredMessageKey: AppMessageKey.confirmationLinkRequired,
+      fullMessageKey: AppMessageKey.confirmationLinkFullRequired,
+      missingMessageKey: AppMessageKey.confirmationLinkMissingDetails,
+    );
 
     final currentUser = _authClient.currentUser;
     final user = await _loadUserProfile(authUserId: currentUser?.id, fallbackEmail: currentUser?.email ?? trimmedEmail);
@@ -140,8 +136,35 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<AuthActionResult> completePasswordReset({required String email, required String resetLink, required String password}) async {
+    final trimmedEmail = email.trim();
+    final trimmedLink = resetLink.trim();
+    final trimmedPassword = password.trim();
+
+    if (trimmedLink.isEmpty) {
+      throw AuthException(AppMessageKey.resetLinkRequired.name);
+    }
+
+    await _applyLinkSession(
+      link: trimmedLink,
+      email: trimmedEmail,
+      requiredOtpTypes: const {OtpType.recovery},
+      requiredMessageKey: AppMessageKey.resetLinkRequired,
+      fullMessageKey: AppMessageKey.resetLinkFullRequired,
+      missingMessageKey: AppMessageKey.resetLinkMissingDetails,
+    );
+
+    await _authClient.updateUser(UserAttributes(password: trimmedPassword));
+
+    final currentUser = _authClient.currentUser;
+    final user = await _loadUserProfile(authUserId: currentUser?.id, fallbackEmail: currentUser?.email ?? trimmedEmail);
+
+    return AuthActionResult(status: AuthActionStatus.authenticated, email: user?.email ?? currentUser?.email ?? trimmedEmail, user: user, messageKey: AppMessageKey.passwordUpdatedSuccessfully);
+  }
+
+  @override
   Future<void> resendSignUpConfirmation({required String email}) {
-    return _authClient.resend(type: OtpType.signup, email: email);
+    return _authClient.resend(type: OtpType.signup, email: email, emailRedirectTo: _resolveEmailRedirectTo());
   }
 
   @override
@@ -196,6 +219,47 @@ class SupabaseAuthRepository implements AuthRepository {
   String _normalizeUsername(String value) {
     final normalized = value.trim().replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
     return normalized.isEmpty ? 'user' : normalized;
+  }
+
+  String? _resolveEmailRedirectTo() {
+    if (_authRedirectTo.isNotEmpty) {
+      return _authRedirectTo;
+    }
+
+    if (kIsWeb && (Uri.base.scheme == 'http' || Uri.base.scheme == 'https')) {
+      return Uri.base.replace(query: null, fragment: null).toString();
+    }
+
+    return null;
+  }
+
+  Future<void> _applyLinkSession({
+    required String link,
+    required String email,
+    required Set<OtpType> requiredOtpTypes,
+    required AppMessageKey requiredMessageKey,
+    required AppMessageKey fullMessageKey,
+    required AppMessageKey missingMessageKey,
+  }) async {
+    final uri = Uri.tryParse(link);
+    if (uri == null || !uri.hasScheme) {
+      throw AuthException(fullMessageKey.name);
+    }
+
+    if (_containsSessionParams(uri)) {
+      await _authClient.getSessionFromUrl(uri);
+      return;
+    }
+
+    final params = _extractLinkParameters(uri);
+    final tokenHash = params['token_hash'];
+    final otpType = _parseOtpType(params['type']);
+
+    if (tokenHash == null || otpType == null || !requiredOtpTypes.contains(otpType)) {
+      throw AuthException(missingMessageKey.name);
+    }
+
+    await _authClient.verifyOTP(email: email.isEmpty ? null : email, tokenHash: tokenHash, type: otpType);
   }
 
   bool _containsSessionParams(Uri uri) {
@@ -287,6 +351,12 @@ class FakeAuthRepository implements AuthRepository {
   @override
   Future<AuthActionResult> completeEmailConfirmation({required String email, required String confirmationLink}) async {
     return AuthActionResult(status: AuthActionStatus.authenticated, user: _currentUser, email: email, messageKey: AppMessageKey.emailConfirmedSuccessfully);
+  }
+
+  @override
+  Future<AuthActionResult> completePasswordReset({required String email, required String resetLink, required String password}) async {
+    _currentUser = _currentUser ?? _buildUser(email: email, name: seedName, username: email.split('@').first);
+    return AuthActionResult(status: AuthActionStatus.authenticated, user: _currentUser, email: email, messageKey: AppMessageKey.passwordUpdatedSuccessfully);
   }
 
   @override

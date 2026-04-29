@@ -159,12 +159,18 @@ Provide Supabase configuration in one of these ways:
 2. Pass `--dart-define-from-file=.env.local.json`.
 3. Create a local `.env.local.json` file in the project root for non-web runs.
 
+Optional auth redirect configuration:
+
+- Set `AUTH_REDIRECT_TO` when you want email confirmation and password reset links to redirect to a specific URL across platforms.
+- On web, the app falls back to the current page URL when `AUTH_REDIRECT_TO` is not provided.
+
 Example `.env.local.json`:
 
 ```json
 {
   "SUPABASE_URL": "https://your-project.supabase.co",
-  "SUPABASE_ANON_KEY": "your-anon-key"
+  "SUPABASE_ANON_KEY": "your-anon-key",
+  "AUTH_REDIRECT_TO": "https://your-app.example.com/auth/callback"
 }
 ```
 

@@ -11,11 +11,15 @@ enum AppMessageKey {
   confirmationLinkRequired,
   confirmationLinkFullRequired,
   confirmationLinkMissingDetails,
+  resetLinkRequired,
+  resetLinkFullRequired,
+  resetLinkMissingDetails,
   passwordsDoNotMatch,
   signedInSuccessfully,
   accountCreatedSuccessfully,
   accountCreatedConfirmEmail,
   passwordResetInstructionsSent,
+  passwordUpdatedSuccessfully,
   emailConfirmedSignIn,
   emailConfirmedSuccessfully,
 }
@@ -65,9 +69,13 @@ class AppLocalizations {
     'resetPassword': 'Reset password',
     'forgotPasswordTitle': 'Forgot password?',
     'resetPasswordSentDescription': 'A reset link was sent to {email}. Use the link in your email to choose a new password.',
+    'resetPasswordPasteHint': 'Paste the password reset link from your email, then choose a new password.',
+    'resetLink': 'Reset link',
+    'resetLinkHint': 'https://...token_hash=... or https://...code=...',
     'forgotPasswordDescription': 'Enter your email address and we will send you a link to reset your password.',
     'sendAgain': 'Send again',
     'sendResetLink': 'Send reset link',
+    'completeResetPassword': 'Update password',
     'email': 'Email',
     'emailHint': 'name@store.com',
     'name': 'Name',
@@ -96,11 +104,15 @@ class AppLocalizations {
     'confirmationLinkRequired': 'Paste the confirmation link from your email.',
     'confirmationLinkFullRequired': 'Paste the full confirmation link from your email.',
     'confirmationLinkMissingDetails': 'The confirmation link is missing the required verification details.',
+    'resetLinkRequired': 'Paste the password reset link from your email.',
+    'resetLinkFullRequired': 'Paste the full password reset link from your email.',
+    'resetLinkMissingDetails': 'The password reset link is missing the required verification details.',
     'passwordsDoNotMatch': 'Passwords do not match.',
     'signedInSuccessfully': 'Signed in successfully.',
     'accountCreatedSuccessfully': 'Account created successfully.',
     'accountCreatedConfirmEmail': 'Account created. Confirm your email before signing in.',
     'passwordResetInstructionsSent': 'Password reset instructions sent to {email}.',
+    'passwordUpdatedSuccessfully': 'Password updated successfully.',
     'emailConfirmedSignIn': 'Email confirmed. Sign in to continue.',
     'emailConfirmedSuccessfully': 'Email confirmed successfully.',
   };
@@ -130,9 +142,13 @@ class AppLocalizations {
     'resetPassword': 'إعادة تعيين كلمة المرور',
     'forgotPasswordTitle': 'نسيت كلمة المرور؟',
     'resetPasswordSentDescription': 'تم إرسال رابط إعادة التعيين إلى {email}. استخدم الرابط في بريدك الإلكتروني لاختيار كلمة مرور جديدة.',
+    'resetPasswordPasteHint': 'الصق رابط إعادة تعيين كلمة المرور من بريدك الإلكتروني، ثم اختر كلمة مرور جديدة.',
+    'resetLink': 'رابط إعادة التعيين',
+    'resetLinkHint': 'https://...token_hash=... أو https://...code=...',
     'forgotPasswordDescription': 'أدخل بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيين كلمة المرور.',
     'sendAgain': 'إرسال مرة أخرى',
     'sendResetLink': 'إرسال رابط إعادة التعيين',
+    'completeResetPassword': 'تحديث كلمة المرور',
     'email': 'البريد الإلكتروني',
     'emailHint': 'name@store.com',
     'name': 'الاسم',
@@ -161,11 +177,15 @@ class AppLocalizations {
     'confirmationLinkRequired': 'الصق رابط التأكيد من بريدك الإلكتروني.',
     'confirmationLinkFullRequired': 'الصق رابط التأكيد الكامل من بريدك الإلكتروني.',
     'confirmationLinkMissingDetails': 'رابط التأكيد لا يحتوي على بيانات التحقق المطلوبة.',
+    'resetLinkRequired': 'الصق رابط إعادة تعيين كلمة المرور من بريدك الإلكتروني.',
+    'resetLinkFullRequired': 'الصق رابط إعادة تعيين كلمة المرور الكامل من بريدك الإلكتروني.',
+    'resetLinkMissingDetails': 'رابط إعادة تعيين كلمة المرور لا يحتوي على بيانات التحقق المطلوبة.',
     'passwordsDoNotMatch': 'كلمتا المرور غير متطابقتين.',
     'signedInSuccessfully': 'تم تسجيل الدخول بنجاح.',
     'accountCreatedSuccessfully': 'تم إنشاء الحساب بنجاح.',
     'accountCreatedConfirmEmail': 'تم إنشاء الحساب. أكد بريدك الإلكتروني قبل تسجيل الدخول.',
     'passwordResetInstructionsSent': 'تم إرسال تعليمات إعادة تعيين كلمة المرور إلى {email}.',
+    'passwordUpdatedSuccessfully': 'تم تحديث كلمة المرور بنجاح.',
     'emailConfirmedSignIn': 'تم تأكيد البريد الإلكتروني. سجّل الدخول للمتابعة.',
     'emailConfirmedSuccessfully': 'تم تأكيد البريد الإلكتروني بنجاح.',
   };
@@ -204,9 +224,13 @@ class AppLocalizations {
   String get resetPassword => _text('resetPassword');
   String get forgotPasswordTitle => _text('forgotPasswordTitle');
   String resetPasswordSentDescription(String email) => _text('resetPasswordSentDescription', {'email': email});
+  String get resetPasswordPasteHint => _text('resetPasswordPasteHint');
+  String get resetLink => _text('resetLink');
+  String get resetLinkHint => _text('resetLinkHint');
   String get forgotPasswordDescription => _text('forgotPasswordDescription');
   String get sendAgain => _text('sendAgain');
   String get sendResetLink => _text('sendResetLink');
+  String get completeResetPassword => _text('completeResetPassword');
   String get email => _text('email');
   String get emailHint => _text('emailHint');
   String get name => _text('name');
@@ -248,6 +272,12 @@ class AppLocalizations {
         return _text('confirmationLinkFullRequired');
       case AppMessageKey.confirmationLinkMissingDetails:
         return _text('confirmationLinkMissingDetails');
+      case AppMessageKey.resetLinkRequired:
+        return _text('resetLinkRequired');
+      case AppMessageKey.resetLinkFullRequired:
+        return _text('resetLinkFullRequired');
+      case AppMessageKey.resetLinkMissingDetails:
+        return _text('resetLinkMissingDetails');
       case AppMessageKey.passwordsDoNotMatch:
         return _text('passwordsDoNotMatch');
       case AppMessageKey.signedInSuccessfully:
@@ -258,6 +288,8 @@ class AppLocalizations {
         return _text('accountCreatedConfirmEmail');
       case AppMessageKey.passwordResetInstructionsSent:
         return _text('passwordResetInstructionsSent', {'email': email ?? ''});
+      case AppMessageKey.passwordUpdatedSuccessfully:
+        return _text('passwordUpdatedSuccessfully');
       case AppMessageKey.emailConfirmedSignIn:
         return _text('emailConfirmedSignIn');
       case AppMessageKey.emailConfirmedSuccessfully:

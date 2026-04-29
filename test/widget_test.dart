@@ -62,6 +62,56 @@ void main() {
     expect(find.text('Send reset link'), findsOneWidget);
   });
 
+  testWidgets('shows reset completion fields after sending reset link', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MyApp(
+        authRepository: FakeAuthRepository(),
+        localeController: LocaleController(initialLocale: const Locale('en')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Forgot password?'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.widgetWithText(TextField, 'Email'), 'owner@store.com');
+    await tester.tap(find.widgetWithText(FilledButton, 'Send reset link'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Update password'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Reset link'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Password'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Confirm password'), findsOneWidget);
+  });
+
+  testWidgets('completes password reset flow from pasted link', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MyApp(
+        authRepository: FakeAuthRepository(),
+        localeController: LocaleController(initialLocale: const Locale('en')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Forgot password?'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.widgetWithText(TextField, 'Email'), 'owner@store.com');
+    await tester.tap(find.widgetWithText(FilledButton, 'Send reset link'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.widgetWithText(TextField, 'Reset link'), 'https://example.com/#access_token=token&type=recovery');
+    await tester.enterText(find.widgetWithText(TextField, 'Password'), 'secret12');
+    await tester.enterText(find.widgetWithText(TextField, 'Confirm password'), 'secret12');
+
+    final updatePasswordButton = find.widgetWithText(FilledButton, 'Update password');
+    await tester.ensureVisible(updatePasswordButton);
+    await tester.tap(updatePasswordButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Welcome to Store Management!'), findsOneWidget);
+  });
+
   testWidgets('shows username field on sign up', (WidgetTester tester) async {
     await tester.pumpWidget(
       MyApp(

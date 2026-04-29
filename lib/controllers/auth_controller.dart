@@ -51,6 +51,14 @@ final class AuthConfirmationLinkSubmitted extends AuthEvent {
   final String confirmationLink;
 }
 
+final class AuthPasswordResetCompleted extends AuthEvent {
+  const AuthPasswordResetCompleted({required this.email, required this.resetLink, required this.password});
+
+  final String email;
+  final String resetLink;
+  final String password;
+}
+
 final class AuthSignedOut extends AuthEvent {
 	const AuthSignedOut();
 }
@@ -107,6 +115,7 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
     on<AuthPasswordResetSubmitted>(_onPasswordResetSubmitted);
     on<AuthConfirmationResent>(_onConfirmationResent);
     on<AuthConfirmationLinkSubmitted>(_onConfirmationLinkSubmitted);
+    on<AuthPasswordResetCompleted>(_onPasswordResetCompleted);
 		on<AuthSignedOut>(_onSignedOut);
 
     if (_authRepository.hasCurrentSession) {
@@ -273,6 +282,36 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
       }
 
       emit(state.copyWith(screen: AuthScreen.signIn, status: AuthStatus.initial, messageKey: result.messageKey, userEmail: result.email ?? email, clearUser: true));
+    } catch (error) {
+      emit(state.copyWith(status: AuthStatus.failure, messageKey: _buildAuthErrorMessage(error)));
+    }
+  }
+
+  Future<void> _onPasswordResetCompleted(AuthPasswordResetCompleted event, Emitter<AuthState> emit) async {
+    final email = event.email.trim();
+    final resetLink = event.resetLink.trim();
+    final password = event.password.trim();
+
+    if (email.isEmpty || !email.contains('@')) {
+      emit(state.copyWith(status: AuthStatus.failure, messageKey: AppMessageKey.validEmailRequired));
+      return;
+    }
+
+    if (resetLink.isEmpty) {
+      emit(state.copyWith(status: AuthStatus.failure, messageKey: AppMessageKey.resetLinkRequired));
+      return;
+    }
+
+    if (password.length < 6) {
+      emit(state.copyWith(status: AuthStatus.failure, messageKey: AppMessageKey.passwordTooShort));
+      return;
+    }
+
+    emit(state.copyWith(status: AuthStatus.submitting, clearMessage: true));
+
+    try {
+      final result = await _authRepository.completePasswordReset(email: email, resetLink: resetLink, password: password);
+      emit(state.copyWith(status: AuthStatus.authenticated, messageKey: result.messageKey, userEmail: result.email ?? email, user: result.user));
     } catch (error) {
       emit(state.copyWith(status: AuthStatus.failure, messageKey: _buildAuthErrorMessage(error)));
     }
