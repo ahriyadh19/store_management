@@ -5,30 +5,39 @@ class AppPreferencesController extends ChangeNotifier {
   AppPreferencesController({
     ThemeMode initialThemeMode = ThemeMode.light,
     String initialLastEmail = '',
+    List<String> initialRecentEmails = const [],
     SharedPreferences? preferences,
   })  : _themeMode = initialThemeMode,
         _lastEmail = initialLastEmail,
+      _recentEmails = List<String>.from(initialRecentEmails),
         _preferences = preferences;
 
   static const _themeModeStorageKey = 'app.themeMode';
   static const _lastEmailStorageKey = 'auth.lastEmail';
+  static const _recentEmailsStorageKey = 'auth.recentEmails';
+  static const _maxRecentEmails = 5;
 
   ThemeMode _themeMode;
   String _lastEmail;
+  List<String> _recentEmails;
   final SharedPreferences? _preferences;
 
   ThemeMode get themeMode => _themeMode;
   String get lastEmail => _lastEmail;
+  List<String> get recentEmails => List.unmodifiable(_recentEmails);
   bool get isDarkMode => _themeMode == ThemeMode.dark;
 
   static Future<AppPreferencesController> create() async {
     final preferences = await SharedPreferences.getInstance();
     final themeMode = preferences.getString(_themeModeStorageKey);
     final lastEmail = preferences.getString(_lastEmailStorageKey) ?? '';
+    final recentEmails = preferences.getStringList(_recentEmailsStorageKey) ?? <String>[];
+    final hydratedRecentEmails = recentEmails.isNotEmpty ? recentEmails : (lastEmail.isNotEmpty ? <String>[lastEmail] : const <String>[]);
 
     return AppPreferencesController(
       initialThemeMode: _themeModeFromStorage(themeMode),
-      initialLastEmail: lastEmail,
+      initialLastEmail: hydratedRecentEmails.isNotEmpty ? hydratedRecentEmails.first : lastEmail,
+      initialRecentEmails: hydratedRecentEmails,
       preferences: preferences,
     );
   }
@@ -47,21 +56,35 @@ class AppPreferencesController extends ChangeNotifier {
     return setThemeMode(isDarkMode ? ThemeMode.light : ThemeMode.dark);
   }
 
-  Future<void> saveLastEmail(String value) async {
+  Future<void> saveRecentEmail(String value) async {
     final trimmedValue = value.trim();
-    if (trimmedValue.isEmpty || trimmedValue == _lastEmail) {
+    if (trimmedValue.isEmpty) {
+      return;
+    }
+
+    final nextRecentEmails = [trimmedValue, ..._recentEmails.where((item) => item.toLowerCase() != trimmedValue.toLowerCase())].take(_maxRecentEmails).toList();
+    final hasChanged = trimmedValue != _lastEmail || nextRecentEmails.join('|') != _recentEmails.join('|');
+    if (!hasChanged) {
       return;
     }
 
     _lastEmail = trimmedValue;
+    _recentEmails = nextRecentEmails;
     notifyListeners();
     await _preferences?.setString(_lastEmailStorageKey, trimmedValue);
+    await _preferences?.setStringList(_recentEmailsStorageKey, nextRecentEmails);
+  }
+
+  Future<void> saveLastEmail(String value) async {
+    await saveRecentEmail(value);
   }
 
   static ThemeMode _themeModeFromStorage(String? value) {
     switch (value) {
       case 'dark':
         return ThemeMode.dark;
+      case 'system':
+        return ThemeMode.system;
       case 'light':
       default:
         return ThemeMode.light;
@@ -72,8 +95,9 @@ class AppPreferencesController extends ChangeNotifier {
     switch (value) {
       case ThemeMode.dark:
         return 'dark';
-      case ThemeMode.light:
       case ThemeMode.system:
+        return 'system';
+      case ThemeMode.light:
         return 'light';
     }
   }

@@ -92,8 +92,12 @@ class AppLocalizations {
     'signInFooter': 'Sign in with your email and password.',
     'signUpFooter': 'Enter your details below to create your account.',
     'availablePlatformsTitle': 'Available at',
+    'settings': 'Settings',
     'theme': 'Theme',
     'darkMode': 'Dark mode',
+    'lightMode': 'Light mode',
+    'systemMode': 'System mode',
+    'recentEmails': 'Recent emails',
     'language': 'Language',
     'english': 'English',
     'arabic': 'العربية',
@@ -175,8 +179,12 @@ class AppLocalizations {
     'platformLinux': 'لينكس',
     'platformMacos': 'macOS',
     'platformWindows': 'ويندوز',
+    'settings': 'الإعدادات',
     'theme': 'المظهر',
     'darkMode': 'الوضع الداكن',
+    'lightMode': 'الوضع الفاتح',
+    'systemMode': 'وضع النظام',
+    'recentEmails': 'رسائل البريد الأخيرة',
     'language': 'اللغة',
     'english': 'English',
     'arabic': 'العربية',
@@ -267,8 +275,12 @@ class AppLocalizations {
   String get platformLinux => _text('platformLinux');
   String get platformMacos => _text('platformMacos');
   String get platformWindows => _text('platformWindows');
+  String get settings => _text('settings');
   String get theme => _text('theme');
   String get darkMode => _text('darkMode');
+  String get lightMode => _text('lightMode');
+  String get systemMode => _text('systemMode');
+  String get recentEmails => _text('recentEmails');
   String get language => _text('language');
   String get english => _text('english');
   String get arabic => _text('arabic');

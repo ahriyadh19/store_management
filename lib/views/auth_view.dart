@@ -62,6 +62,8 @@ class _AuthViewState extends State<AuthView> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return BlocListener<AuthController, AuthState>(
       listenWhen: (previous, current) => previous.messageKey != current.messageKey || previous.userEmail != current.userEmail,
@@ -85,8 +87,12 @@ class _AuthViewState extends State<AuthView> {
       },
       child: Scaffold(
         body: DecoratedBox(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFFF6FBFF), Color(0xFFE9F3F5), Color(0xFFF9F4EC)]),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDarkMode ? const [Color(0xFF07131A), Color(0xFF0C1C24), Color(0xFF14151F)] : const [Color(0xFFF6FBFF), Color(0xFFE9F3F5), Color(0xFFF9F4EC)],
+            ),
           ),
           child: SafeArea(
             child: Stack(
@@ -150,6 +156,7 @@ class _AuthViewState extends State<AuthView> {
 
                           if (state.screen == AuthScreen.forgotPassword || state.screen == AuthScreen.resetPassword) {
                             final isResetSent = state.screen == AuthScreen.resetPassword;
+                            final recentEmails = widget.appPreferencesController.recentEmails;
 
                             return _AuthStatusCard(
                               icon: isResetSent ? Icons.password_rounded : Icons.lock_reset_rounded,
@@ -203,10 +210,26 @@ class _AuthViewState extends State<AuthView> {
                                         ),
                                       ],
                                     )
-                                  : TextField(
-                                      controller: _emailController,
-                                      keyboardType: TextInputType.emailAddress,
-                                      decoration: InputDecoration(labelText: l10n.email, hintText: l10n.emailHint, border: const OutlineInputBorder()),
+                                  : Column(
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      children: [
+                                        TextField(
+                                          controller: _emailController,
+                                          keyboardType: TextInputType.emailAddress,
+                                          decoration: InputDecoration(labelText: l10n.email, hintText: l10n.emailHint, border: const OutlineInputBorder()),
+                                        ),
+                                        if (recentEmails.isNotEmpty) ...[
+                                          const SizedBox(height: 12),
+                                          _RecentEmailSuggestions(
+                                            title: l10n.recentEmails,
+                                            currentEmail: _emailController.text,
+                                            emails: recentEmails,
+                                            onSelected: (email) {
+                                              _emailController.text = email;
+                                            },
+                                          ),
+                                        ],
+                                      ],
                                     ),
                               primaryLabel: isResetSent ? l10n.completeResetPassword : l10n.sendResetLink,
                               primaryPressed: state.isLoading
@@ -359,6 +382,8 @@ class _AuthMainContent extends StatelessWidget {
     final fieldGap = isCompactHeight ? 12.0 : 16.0;
     final headerGap = isCompactHeight ? 22.0 : 28.0;
     final headerIconSize = isCompactHeight ? 46.0 : 52.0;
+    final recentEmails = appPreferencesController.recentEmails;
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -366,10 +391,16 @@ class _AuthMainContent extends StatelessWidget {
         Container(
           padding: EdgeInsets.all(cardPadding),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.9),
+            color: theme.colorScheme.surface.withValues(alpha: isDarkMode ? 0.92 : 0.9),
             borderRadius: BorderRadius.circular(32),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.7)),
-            boxShadow: const [BoxShadow(color: Color(0x18000000), blurRadius: 34, offset: Offset(0, 18))],
+            border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: isDarkMode ? 0.45 : 0.25)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDarkMode ? 0.28 : 0.09),
+                blurRadius: 34,
+                offset: const Offset(0, 18),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -399,7 +430,7 @@ class _AuthMainContent extends StatelessWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(tooltip: l10n.theme, onPressed: appPreferencesController.toggleThemeMode, icon: Icon(appPreferencesController.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded)),
+                      _ThemeModeMenuButton(appPreferencesController: appPreferencesController),
                       LanguageSwitcher(localeController: localeController),
                     ],
                   ),
@@ -437,6 +468,17 @@ class _AuthMainContent extends StatelessWidget {
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(labelText: l10n.email, hintText: l10n.emailHint, border: const OutlineInputBorder()),
               ),
+              if (!isSignUp && recentEmails.isNotEmpty) ...[
+                SizedBox(height: fieldGap),
+                _RecentEmailSuggestions(
+                  title: l10n.recentEmails,
+                  currentEmail: emailController.text,
+                  emails: recentEmails,
+                  onSelected: (email) {
+                    emailController.text = email;
+                  },
+                ),
+              ],
               SizedBox(height: fieldGap),
               TextField(
                 controller: passwordController,
@@ -496,9 +538,9 @@ class _PlatformAvailabilitySection extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: isCompactHeight ? 14 : 18, vertical: isCompactHeight ? 12 : 16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.72),
+        color: Theme.of(context).colorScheme.surface.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.88 : 0.72),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.75)),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -536,12 +578,101 @@ class _PlatformPill extends StatelessWidget {
       width: isCompactHeight ? 46 : 52,
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.96),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x0F111827)),
-        boxShadow: const [BoxShadow(color: Color(0x12000000), blurRadius: 16, offset: Offset(0, 8))],
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.35)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.07),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Image.asset(assetPath, fit: BoxFit.contain),
+    );
+  }
+}
+
+class _RecentEmailSuggestions extends StatelessWidget {
+  const _RecentEmailSuggestions({required this.title, required this.currentEmail, required this.emails, required this.onSelected});
+
+  final String title;
+  final String currentEmail;
+  final List<String> emails;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700, color: theme.colorScheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [for (final email in emails) ActionChip(label: Text(email), avatar: Icon(email == currentEmail ? Icons.check_circle_rounded : Icons.email_outlined, size: 18), onPressed: () => onSelected(email))],
+        ),
+      ],
+    );
+  }
+}
+
+class _ThemeModeMenuButton extends StatelessWidget {
+  const _ThemeModeMenuButton({required this.appPreferencesController});
+
+  final AppPreferencesController appPreferencesController;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
+    String labelFor(ThemeMode mode) {
+      switch (mode) {
+        case ThemeMode.light:
+          return l10n.lightMode;
+        case ThemeMode.dark:
+          return l10n.darkMode;
+        case ThemeMode.system:
+          return l10n.systemMode;
+      }
+    }
+
+    IconData iconFor(ThemeMode mode) {
+      switch (mode) {
+        case ThemeMode.light:
+          return Icons.light_mode_rounded;
+        case ThemeMode.dark:
+          return Icons.dark_mode_rounded;
+        case ThemeMode.system:
+          return Icons.brightness_auto_rounded;
+      }
+    }
+
+    return PopupMenuButton<ThemeMode>(
+      tooltip: l10n.settings,
+      onSelected: appPreferencesController.setThemeMode,
+      itemBuilder: (context) => [
+        PopupMenuItem<ThemeMode>(
+          value: ThemeMode.system,
+          child: ListTile(leading: Icon(iconFor(ThemeMode.system)), title: Text(labelFor(ThemeMode.system)), contentPadding: EdgeInsets.zero),
+        ),
+        PopupMenuItem<ThemeMode>(
+          value: ThemeMode.light,
+          child: ListTile(leading: Icon(iconFor(ThemeMode.light)), title: Text(labelFor(ThemeMode.light)), contentPadding: EdgeInsets.zero),
+        ),
+        PopupMenuItem<ThemeMode>(
+          value: ThemeMode.dark,
+          child: ListTile(leading: Icon(iconFor(ThemeMode.dark)), title: Text(labelFor(ThemeMode.dark)), contentPadding: EdgeInsets.zero),
+        ),
+      ],
+      child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Icon(iconFor(appPreferencesController.themeMode))),
     );
   }
 }
@@ -574,9 +705,15 @@ class _AuthStatusCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(28),
-        boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 28, offset: Offset(0, 16))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.24 : 0.08),
+            blurRadius: 28,
+            offset: const Offset(0, 16),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -226,4 +226,23 @@ void main() {
     final emailField = tester.widget<TextField>(find.widgetWithText(TextField, 'Email'));
     expect(emailField.controller?.text, 'remembered@store.com');
   });
+
+  testWidgets('shows recent email suggestions and applies the selected one', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MyApp(
+        authRepository: FakeAuthRepository(),
+        localeController: LocaleController(initialLocale: const Locale('en')),
+        appPreferencesController: AppPreferencesController(initialRecentEmails: const ['owner@store.com', 'manager@store.com']),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Recent emails'), findsOneWidget);
+
+    await tester.tap(find.text('manager@store.com'));
+    await tester.pumpAndSettle();
+
+    final emailField = tester.widget<TextField>(find.widgetWithText(TextField, 'Email'));
+    expect(emailField.controller?.text, 'manager@store.com');
+  });
 }

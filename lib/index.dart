@@ -10,7 +10,8 @@ Widget _buildIndexDrawer(BuildContext context, LocaleController localeController
   final l10n = context.l10n;
 
   return Drawer(
-    child: Column(
+    child: ListView(
+      padding: EdgeInsets.zero,
       children: [
         DrawerHeader(
           decoration: const BoxDecoration(color: Color(0xFF1F7A8C)),
@@ -23,19 +24,21 @@ Widget _buildIndexDrawer(BuildContext context, LocaleController localeController
         ListTile(leading: const Icon(Icons.inventory_2_rounded), title: Text(l10n.products)),
         ListTile(leading: const Icon(Icons.people_rounded), title: Text(l10n.customers)),
         ListTile(leading: const Icon(Icons.bar_chart_rounded), title: Text(l10n.reports)),
-        const Spacer(),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: LanguageSwitcher(localeController: localeController),
         ),
-        SwitchListTile.adaptive(
-          secondary: Icon(appPreferencesController.isDarkMode ? Icons.dark_mode_rounded : Icons.light_mode_rounded),
-          title: Text(l10n.darkMode),
-          value: appPreferencesController.isDarkMode,
-          onChanged: (_) {
-            appPreferencesController.toggleThemeMode();
-          },
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(l10n.settings, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+          ),
         ),
+        _ThemeModeOptionTile(icon: Icons.brightness_auto_rounded, label: l10n.systemMode, value: ThemeMode.system, currentValue: appPreferencesController.themeMode, onSelected: appPreferencesController.setThemeMode),
+        _ThemeModeOptionTile(icon: Icons.light_mode_rounded, label: l10n.lightMode, value: ThemeMode.light, currentValue: appPreferencesController.themeMode, onSelected: appPreferencesController.setThemeMode),
+        _ThemeModeOptionTile(icon: Icons.dark_mode_rounded, label: l10n.darkMode, value: ThemeMode.dark, currentValue: appPreferencesController.themeMode, onSelected: appPreferencesController.setThemeMode),
+        const SizedBox(height: 8),
         const Divider(height: 1),
         ListTile(
           leading: const Icon(Icons.logout_rounded),
@@ -61,13 +64,25 @@ class Index extends StatelessWidget {
     final l10n = context.l10n;
     final authState = context.watch<AuthController>().state;
     final user = authState.user;
+    final theme = Theme.of(context);
 
     return Scaffold(
       drawer: _buildIndexDrawer(context, localeController, appPreferencesController),
       appBar: AppBar(
         title: Text(l10n.appTitle),
         centerTitle: true,
-        actions: [IconButton(tooltip: l10n.theme, onPressed: appPreferencesController.toggleThemeMode, icon: Icon(appPreferencesController.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded))],
+        actions: [
+          PopupMenuButton<ThemeMode>(
+            tooltip: l10n.settings,
+            onSelected: appPreferencesController.setThemeMode,
+            icon: Icon(_themeIconFor(appPreferencesController.themeMode)),
+            itemBuilder: (context) => [
+              PopupMenuItem<ThemeMode>(value: ThemeMode.system, child: Text(l10n.systemMode)),
+              PopupMenuItem<ThemeMode>(value: ThemeMode.light, child: Text(l10n.lightMode)),
+              PopupMenuItem<ThemeMode>(value: ThemeMode.dark, child: Text(l10n.darkMode)),
+            ],
+          ),
+        ],
       ),
       body: Center(
         child: Container(
@@ -75,9 +90,15 @@ class Index extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           margin: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+            color: theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
-            boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 24, offset: Offset(0, 12))],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.24 : 0.08),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -105,6 +126,41 @@ class Index extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+IconData _themeIconFor(ThemeMode mode) {
+  switch (mode) {
+    case ThemeMode.system:
+      return Icons.brightness_auto_rounded;
+    case ThemeMode.light:
+      return Icons.light_mode_rounded;
+    case ThemeMode.dark:
+      return Icons.dark_mode_rounded;
+  }
+}
+
+class _ThemeModeOptionTile extends StatelessWidget {
+  const _ThemeModeOptionTile({required this.icon, required this.label, required this.value, required this.currentValue, required this.onSelected});
+
+  final IconData icon;
+  final String label;
+  final ThemeMode value;
+  final ThemeMode currentValue;
+  final ValueChanged<ThemeMode> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final isSelected = value == currentValue;
+
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(label),
+      trailing: isSelected ? Icon(Icons.check_rounded, color: Theme.of(context).colorScheme.primary) : null,
+      selected: isSelected,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      onTap: () => onSelected(value),
     );
   }
 }
