@@ -20,11 +20,17 @@ void main() {
     );
 
     expect(find.text('Create Product'), findsOneWidget);
-    expect(find.text('Show form'), findsOneWidget);
-    expect(find.text('Hide form'), findsOneWidget);
+  expect(find.byType(Switch), findsOneWidget);
+  expect(find.text('Hide create'), findsOneWidget);
     expect(find.text('Products Datatable'), findsOneWidget);
     expect(find.text('Actions'), findsOneWidget);
+  expect(find.text('Rows per page:'), findsOneWidget);
+  expect(find.text('10'), findsWidgets);
 
+  await tester.tap(find.byType(Switch));
+  await tester.pumpAndSettle();
+
+  expect(find.text('Show create'), findsOneWidget);
     await tester.enterText(find.byType(TextFormField).first, 'Warehouse Rice 50kg');
     final saveButton = find.widgetWithText(FilledButton, 'Save Product');
     await tester.ensureVisible(saveButton);

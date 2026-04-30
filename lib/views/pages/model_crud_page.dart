@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:store_management/views/components/model_form.dart';
 
-enum CreateFormVisibility { show, hide }
-
-enum ModelCrudMode { create, edit }
-
 class ModelCrudPage<T extends Object> extends StatefulWidget {
   const ModelCrudPage({
     super.key,
@@ -30,7 +26,8 @@ class ModelCrudPage<T extends Object> extends StatefulWidget {
 class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   late final List<T> _records;
   late T _draftModel;
-  CreateFormVisibility _createFormVisibility = CreateFormVisibility.show;
+  bool _showCreateForm = false;
+  int _rowsPerPage = 10;
 
   @override
   void initState() {
@@ -38,9 +35,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     _draftModel = widget.formDefinition.sampleModel;
     _records = <T>[
       widget.formDefinition.sampleModel,
-      widget.formDefinition.buildModel(
-        widget.formDefinition.toMap(widget.formDefinition.sampleModel),
-      ),
+      widget.formDefinition.buildModel(widget.formDefinition.toMap(widget.formDefinition.sampleModel)),
     ];
   }
 
@@ -61,7 +56,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
               ),
               const SizedBox(height: 24),
               _buildCreateFormToggle(context),
-              if (_createFormVisibility == CreateFormVisibility.show) ...[
+              if (_showCreateForm) ...[
                 const SizedBox(height: 16),
                 _buildCreateFormCard(context),
               ],
@@ -85,34 +80,25 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Create ${widget.entityLabel}',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
+                  Text('Create ${widget.entityLabel}', style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 6),
-                  Text(
-                    'Use the radio buttons to show or hide the create form above the ${widget.title.toLowerCase()} table.',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
+                  Text('Show or hide the create form.', style: Theme.of(context).textTheme.bodyMedium),
                 ],
               ),
             ),
             const SizedBox(width: 12),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
+            Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                _CreateFormRadioButton(
-                  label: 'Show form',
-                  value: CreateFormVisibility.show,
-                  groupValue: _createFormVisibility,
-                  onChanged: _handleCreateFormVisibilityChanged,
-                ),
-                _CreateFormRadioButton(
-                  label: 'Hide form',
-                  value: CreateFormVisibility.hide,
-                  groupValue: _createFormVisibility,
-                  onChanged: _handleCreateFormVisibilityChanged,
+                Text(_showCreateForm ? 'Show create' : 'Hide create'),
+                const SizedBox(width: 8),
+                Switch(
+                  value: _showCreateForm,
+                  onChanged: (value) {
+                    setState(() {
+                      _showCreateForm = value;
+                    });
+                  },
                 ),
               ],
             ),
@@ -130,15 +116,9 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Save ${widget.entityLabel}',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
+            Text('Save ${widget.entityLabel}', style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 8),
-            Text(
-              'Create a new ${widget.entityLabel.toLowerCase()} and it will be added directly to the table below.',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            Text('Add a new ${widget.entityLabel.toLowerCase()} to the table.', style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 24),
             ModelForm(
               key: ValueKey('${widget.entityLabel}-create-${widget.formDefinition.toMap(_draftModel)}'),
@@ -161,7 +141,17 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
 
   Widget _buildTableCard(BuildContext context, BoxConstraints constraints) {
     final columns = _buildColumns();
-    final rows = _buildRows(context);
+    final source = _ModelTableSource<T>(
+      records: _records,
+      visibleFields: _visibleFields,
+      toMap: widget.formDefinition.toMap,
+      formatCellValue: _formatCellValue,
+      entityLabel: widget.entityLabel,
+      onView: _openDetailsPage,
+      onEdit: _showEditSheet,
+      onDelete: _confirmDelete,
+      context: context,
+    );
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -176,15 +166,9 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        '${widget.title} Datatable',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
+                      Text('${widget.title} Datatable', style: Theme.of(context).textTheme.headlineSmall),
                       const SizedBox(height: 8),
-                      Text(
-                        'Each row shows ${widget.entityLabel.toLowerCase()} information with view, edit, and delete actions in the last column.',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
+                      Text('View, edit, and delete are in the last column.', style: Theme.of(context).textTheme.bodyMedium),
                     ],
                   ),
                 ),
@@ -197,11 +181,22 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
               borderRadius: BorderRadius.circular(16),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minWidth: constraints.maxWidth - 48),
-                  child: DataTable(
+                child: SizedBox(
+                  width: constraints.maxWidth >= 960 ? constraints.maxWidth - 48 : 960,
+                  child: PaginatedDataTable(
+                    header: Text('${widget.entityLabel} records'),
                     columns: columns,
-                    rows: rows,
+                    source: source,
+                    rowsPerPage: _resolvedRowsPerPage,
+                    availableRowsPerPage: const [10, 25, 50, 100],
+                    onRowsPerPageChanged: (value) {
+                      if (value == null) {
+                        return;
+                      }
+                      setState(() {
+                        _rowsPerPage = value;
+                      });
+                    },
                     columnSpacing: 24,
                     dataRowMinHeight: 64,
                     dataRowMaxHeight: 72,
@@ -219,54 +214,10 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   List<DataColumn> _buildColumns() {
-    final visibleFields = _visibleFields;
     return [
-      for (final field in visibleFields) DataColumn(label: Text(field.label)),
+      for (final field in _visibleFields) DataColumn(label: Text(field.label)),
       const DataColumn(label: Text('Actions')),
     ];
-  }
-
-  List<DataRow> _buildRows(BuildContext context) {
-    return _records.map((record) {
-      final data = widget.formDefinition.toMap(record);
-      return DataRow(
-        cells: [
-          for (final field in _visibleFields)
-            DataCell(
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 180),
-                child: Text(
-                  _formatCellValue(data[field.key]),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
-                ),
-              ),
-            ),
-          DataCell(
-            Wrap(
-              spacing: 8,
-              children: [
-                IconButton(
-                  tooltip: 'View ${widget.entityLabel}',
-                  onPressed: () => _openDetailsPage(record),
-                  icon: const Icon(Icons.visibility_outlined),
-                ),
-                IconButton(
-                  tooltip: 'Edit ${widget.entityLabel}',
-                  onPressed: () => _showEditSheet(record),
-                  icon: const Icon(Icons.edit_outlined),
-                ),
-                IconButton(
-                  tooltip: 'Delete ${widget.entityLabel}',
-                  onPressed: () => _confirmDelete(record),
-                  icon: Icon(Icons.delete_outline_rounded, color: Theme.of(context).colorScheme.error),
-                ),
-              ],
-            ),
-          ),
-        ],
-      );
-    }).toList();
   }
 
   List<ModelFormFieldDefinition> get _visibleFields {
@@ -277,13 +228,11 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     return widget.formDefinition.fields;
   }
 
-  void _handleCreateFormVisibilityChanged(CreateFormVisibility? value) {
-    if (value == null) {
-      return;
+  int get _resolvedRowsPerPage {
+    if (const {10, 25, 50, 100}.contains(_rowsPerPage)) {
+      return _rowsPerPage;
     }
-    setState(() {
-      _createFormVisibility = value;
-    });
+    return 10;
   }
 
   void _handleCreateSubmit(Map<String, dynamic> values) {
@@ -291,7 +240,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     setState(() {
       _records.insert(0, model);
       _draftModel = widget.formDefinition.sampleModel;
-      _createFormVisibility = CreateFormVisibility.hide;
+      _showCreateForm = false;
     });
     _showFeedback('Saved ${widget.entityLabel.toLowerCase()} successfully.');
   }
@@ -315,16 +264,8 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    'Edit ${widget.entityLabel}',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Update the selected ${widget.entityLabel.toLowerCase()} in a modal sheet, then submit the changes.',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 24),
+                  Text('Edit ${widget.entityLabel}', style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 16),
                   ModelForm(
                     definition: widget.formDefinition.fields,
                     initialData: widget.formDefinition.toMap(record),
@@ -371,9 +312,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'This is a destructive action. The selected ${widget.entityLabel.toLowerCase()} will be removed from the table.',
-              ),
+              Text('The selected ${widget.entityLabel.toLowerCase()} will be removed.'),
               const SizedBox(height: 16),
               Container(
                 width: double.infinity,
@@ -401,10 +340,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
+            TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: colorScheme.error),
               onPressed: () => Navigator.of(context).pop(true),
@@ -500,10 +436,7 @@ class _ModuleHeader extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            colorScheme.primaryContainer,
-            colorScheme.secondaryContainer,
-          ],
+          colors: [colorScheme.primaryContainer, colorScheme.secondaryContainer],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -531,10 +464,7 @@ class _ModuleHeader extends StatelessWidget {
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        description,
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
+                      Text(description, style: Theme.of(context).textTheme.bodyLarge),
                     ],
                   ),
                 ),
@@ -561,48 +491,6 @@ class _ModuleHeader extends StatelessWidget {
   }
 }
 
-class _CreateFormRadioButton extends StatelessWidget {
-  const _CreateFormRadioButton({
-    required this.label,
-    required this.value,
-    required this.groupValue,
-    required this.onChanged,
-  });
-
-  final String label;
-  final CreateFormVisibility value;
-  final CreateFormVisibility groupValue;
-  final ValueChanged<CreateFormVisibility?> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () => onChanged(value),
-      borderRadius: BorderRadius.circular(999),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: groupValue == value ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                groupValue == value ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
-                color: groupValue == value ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 8),
-              Text(label),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _SummaryChip extends StatelessWidget {
   const _SummaryChip({required this.label, required this.value});
 
@@ -620,14 +508,8 @@ class _SummaryChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            '$label: ',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text('$label: ', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+          Text(value, style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
     );
@@ -652,33 +534,24 @@ class _ModelDetailsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text('$entityLabel Details')),
       body: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16),
         children: [
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 children: [
-                  CircleAvatar(radius: 28, child: Icon(icon)),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(title, style: Theme.of(context).textTheme.headlineSmall),
-                        const SizedBox(height: 8),
-                        Text('This details page shows the selected $entityLabel record from the index datatable.'),
-                      ],
-                    ),
-                  ),
+                  CircleAvatar(radius: 20, child: Icon(icon, size: 20)),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(title, style: Theme.of(context).textTheme.titleLarge)),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
                   for (final entry in data.entries) ...[
@@ -686,17 +559,19 @@ class _ModelDetailsPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(
-                          width: 180,
+                          width: 132,
                           child: Text(
                             entry.key,
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(child: Text(entry.value?.toString() ?? '-')),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(entry.value?.toString() ?? '-', maxLines: 3, overflow: TextOverflow.ellipsis),
+                        ),
                       ],
                     ),
-                    if (entry.key != data.keys.last) const Divider(height: 24),
+                    if (entry.key != data.keys.last) const Divider(height: 16),
                   ],
                 ],
               ),
@@ -706,4 +581,86 @@ class _ModelDetailsPage extends StatelessWidget {
       ),
     );
   }
+}
+
+class _ModelTableSource<T extends Object> extends DataTableSource {
+  _ModelTableSource({
+    required this.records,
+    required this.visibleFields,
+    required this.toMap,
+    required this.formatCellValue,
+    required this.entityLabel,
+    required this.onView,
+    required this.onEdit,
+    required this.onDelete,
+    required this.context,
+  });
+
+  final List<T> records;
+  final List<ModelFormFieldDefinition> visibleFields;
+  final Map<String, dynamic> Function(T model) toMap;
+  final String Function(Object? value) formatCellValue;
+  final String entityLabel;
+  final void Function(T record) onView;
+  final Future<void> Function(T record) onEdit;
+  final Future<void> Function(T record) onDelete;
+  final BuildContext context;
+
+  @override
+  DataRow? getRow(int index) {
+    if (index >= records.length) {
+      return null;
+    }
+
+    final record = records[index];
+    final data = toMap(record);
+
+    return DataRow.byIndex(
+      index: index,
+      cells: [
+        for (final field in visibleFields)
+          DataCell(
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 180),
+              child: Text(
+                formatCellValue(data[field.key]),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+              ),
+            ),
+          ),
+        DataCell(
+          Wrap(
+            spacing: 4,
+            children: [
+              IconButton(
+                tooltip: 'View $entityLabel',
+                onPressed: () => onView(record),
+                icon: const Icon(Icons.visibility_outlined, size: 20),
+              ),
+              IconButton(
+                tooltip: 'Edit $entityLabel',
+                onPressed: () => onEdit(record),
+                icon: const Icon(Icons.edit_outlined, size: 20),
+              ),
+              IconButton(
+                tooltip: 'Delete $entityLabel',
+                onPressed: () => onDelete(record),
+                icon: Icon(Icons.delete_outline_rounded, size: 20, color: Theme.of(context).colorScheme.error),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  bool get isRowCountApproximate => false;
+
+  @override
+  int get rowCount => records.length;
+
+  @override
+  int get selectedRowCount => 0;
 }
