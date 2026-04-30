@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/models/client.dart';
 import 'package:store_management/views/pages/model_crud_page.dart';
 import 'package:store_management/views/pages/model_module_pages.dart';
@@ -19,13 +20,14 @@ class ClientsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return ModelCrudPage<Client>(
       title: title,
-      entityLabel: 'Client',
+      entityLabel: clientEntityLabel(l10n),
       description: description,
       icon: icon,
       highlights: highlights,
-      formDefinition: clientFormDefinition,
+      formDefinition: clientFormDefinition(l10n),
     );
   }
 }

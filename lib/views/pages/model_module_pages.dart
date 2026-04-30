@@ -1,4 +1,5 @@
 import 'package:decimal/decimal.dart';
+import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/models/branch.dart';
 import 'package:store_management/models/categories.dart';
 import 'package:store_management/models/client.dart';
@@ -15,39 +16,39 @@ import 'package:store_management/models/store_return.dart';
 import 'package:store_management/models/tags.dart';
 import 'package:store_management/models/users.dart';
 import 'package:store_management/views/components/model_form.dart';
-final ModelFormDefinition<Store> storeFormDefinition = ModelFormDefinition<Store>(
+ModelFormDefinition<Store> storeFormDefinition(AppLocalizations l10n) => ModelFormDefinition<Store>(
   fields: [
-    _textField('name', 'Store name', required: true),
-    _multilineField('description', 'Description', required: true),
-    _multilineField('address', 'Address', required: true),
-    _textField('phone', 'Phone', type: ModelFormFieldType.phone, required: true),
-    _textField('email', 'Email', type: ModelFormFieldType.email, required: true),
+    _textField('name', _t(l10n, 'Store name', 'اسم المتجر'), required: true),
+    _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
+    _multilineField('address', _t(l10n, 'Address', 'العنوان'), required: true),
+    _textField('phone', _t(l10n, 'Phone', 'الهاتف'), type: ModelFormFieldType.phone, required: true),
+    _textField('email', _t(l10n, 'Email', 'البريد الإلكتروني'), type: ModelFormFieldType.email, required: true),
   ],
   fromMap: Store.fromMap,
   toMap: (store) => store.toMap(),
   sampleModel: Store(
     name: 'Central Store',
-    description: 'Primary retail location and stock coordination point.',
+    description: _t(l10n, 'Primary retail location and stock coordination point.', 'موقع البيع الرئيسي ونقطة تنسيق المخزون.'),
     address: '12 Commerce Ave, Downtown',
     phone: '+967700000001',
     email: 'central@store.app',
   ),
 );
 
-final ModelFormDefinition<Branch> branchFormDefinition = ModelFormDefinition<Branch>(
+ModelFormDefinition<Branch> branchFormDefinition(AppLocalizations l10n) => ModelFormDefinition<Branch>(
   fields: [
-    _textField('name', 'Branch name', required: true),
-    _multilineField('description', 'Description', required: true),
-    _multilineField('address', 'Address', required: true),
-    _textField('phone', 'Phone', type: ModelFormFieldType.phone, required: true),
-    _textField('email', 'Email', type: ModelFormFieldType.email, required: true),
-    _statusField(),
+    _textField('name', _t(l10n, 'Branch name', 'اسم الفرع'), required: true),
+    _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
+    _multilineField('address', _t(l10n, 'Address', 'العنوان'), required: true),
+    _textField('phone', _t(l10n, 'Phone', 'الهاتف'), type: ModelFormFieldType.phone, required: true),
+    _textField('email', _t(l10n, 'Email', 'البريد الإلكتروني'), type: ModelFormFieldType.email, required: true),
+    _statusField(l10n),
   ],
   fromMap: Branch.fromMap,
   toMap: (branch) => branch.toMap(),
   sampleModel: Branch(
     name: 'North Branch',
-    description: 'Regional storefront for walk-in sales.',
+    description: _t(l10n, 'Regional storefront for walk-in sales.', 'واجهة بيع إقليمية للمبيعات المباشرة.'),
     address: '45 Market Road, North District',
     phone: '+967700000002',
     email: 'north.branch@store.app',
@@ -57,35 +58,35 @@ final ModelFormDefinition<Branch> branchFormDefinition = ModelFormDefinition<Bra
   ),
 );
 
-final ModelFormDefinition<Product> productFormDefinition = ModelFormDefinition<Product>(
+ModelFormDefinition<Product> productFormDefinition(AppLocalizations l10n) => ModelFormDefinition<Product>(
   fields: [
-    _textField('name', 'Product name', required: true),
-    _multilineField('description', 'Description', required: true),
-    _statusField(),
+    _textField('name', _t(l10n, 'Product name', 'اسم المنتج'), required: true),
+    _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
+    _statusField(l10n),
   ],
   fromMap: Product.fromMap,
   toMap: (product) => product.toMap(),
   sampleModel: Product(
     name: 'Premium Flour 25kg',
-    description: 'Bulk flour package used by regular wholesale customers.',
+    description: _t(l10n, 'Bulk flour package used by regular wholesale customers.', 'عبوة دقيق كبيرة يستخدمها عملاء الجملة بشكل منتظم.'),
     status: RecordStatus.active.code,
     createdAt: _createdAt,
     updatedAt: _updatedAt,
   ),
 );
 
-final ModelFormDefinition<Categories> categoryFormDefinition = ModelFormDefinition<Categories>(
+ModelFormDefinition<Categories> categoryFormDefinition(AppLocalizations l10n) => ModelFormDefinition<Categories>(
   fields: [
-    _textField('name', 'Category name', required: true),
-    _multilineField('description', 'Description', required: true),
-    _textField('parentUuid', 'Parent category UUID'),
-    _statusField(),
+    _textField('name', _t(l10n, 'Category name', 'اسم الفئة'), required: true),
+    _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
+    _textField('parentUuid', _t(l10n, 'Parent category UUID', 'معرّف الفئة الأصلية UUID')),
+    _statusField(l10n),
   ],
   fromMap: Categories.fromMap,
   toMap: (category) => category.toMap(),
   sampleModel: Categories(
     name: 'Bakery Supplies',
-    description: 'Flour, sugar, yeast, and baking accessories.',
+    description: _t(l10n, 'Flour, sugar, yeast, and baking accessories.', 'الدقيق والسكر والخميرة وإكسسوارات الخبز.'),
     status: RecordStatus.active.code,
     parentUuid: null,
     createdAt: _createdAt,
@@ -93,40 +94,40 @@ final ModelFormDefinition<Categories> categoryFormDefinition = ModelFormDefiniti
   ),
 );
 
-final ModelFormDefinition<Tags> tagFormDefinition = ModelFormDefinition<Tags>(
+ModelFormDefinition<Tags> tagFormDefinition(AppLocalizations l10n) => ModelFormDefinition<Tags>(
   fields: [
-    _textField('name', 'Tag name', required: true),
-    _multilineField('description', 'Description', required: true),
-    _statusField(),
+    _textField('name', _t(l10n, 'Tag name', 'اسم الوسم'), required: true),
+    _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
+    _statusField(l10n),
   ],
   fromMap: Tags.fromMap,
   toMap: (tag) => tag.toMap(),
   sampleModel: Tags(
     name: 'Fast moving',
-    description: 'Products with high turnover and replenishment priority.',
+    description: _t(l10n, 'Products with high turnover and replenishment priority.', 'منتجات ذات دوران مرتفع وأولوية في إعادة التزويد.'),
     status: RecordStatus.active.code,
     createdAt: _createdAt,
     updatedAt: _updatedAt,
   ),
 );
 
-final ModelFormDefinition<Client> clientFormDefinition = ModelFormDefinition<Client>(
+ModelFormDefinition<Client> clientFormDefinition(AppLocalizations l10n) => ModelFormDefinition<Client>(
   fields: [
-    _textField('name', 'Client name', required: true),
-    _multilineField('description', 'Description', required: true),
-    _textField('email', 'Email', type: ModelFormFieldType.email, required: true),
-    _textField('phone', 'Phone', type: ModelFormFieldType.phone, required: true),
-    _multilineField('address', 'Address', required: true),
-    _decimalField('creditLimit', 'Credit limit', required: true),
-    _decimalField('currentCredit', 'Current credit', required: true),
-    _decimalField('availableCredit', 'Available credit', required: true),
-    _statusField(),
+    _textField('name', _t(l10n, 'Client name', 'اسم العميل'), required: true),
+    _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
+    _textField('email', _t(l10n, 'Email', 'البريد الإلكتروني'), type: ModelFormFieldType.email, required: true),
+    _textField('phone', _t(l10n, 'Phone', 'الهاتف'), type: ModelFormFieldType.phone, required: true),
+    _multilineField('address', _t(l10n, 'Address', 'العنوان'), required: true),
+    _decimalField('creditLimit', _t(l10n, 'Credit limit', 'حد الائتمان'), required: true),
+    _decimalField('currentCredit', _t(l10n, 'Current credit', 'الائتمان الحالي'), required: true),
+    _decimalField('availableCredit', _t(l10n, 'Available credit', 'الائتمان المتاح'), required: true),
+    _statusField(l10n),
   ],
   fromMap: Client.fromMap,
   toMap: (client) => client.toMap(),
   sampleModel: Client(
     name: 'Blue Market',
-    description: 'High-volume client with monthly billing terms.',
+    description: _t(l10n, 'High-volume client with monthly billing terms.', 'عميل بحجم تعامل مرتفع وبشروط فوترة شهرية.'),
     email: 'accounts@bluemarket.com',
     phone: '+967700000010',
     address: '85 Trade Street, Sanaa',
@@ -139,34 +140,34 @@ final ModelFormDefinition<Client> clientFormDefinition = ModelFormDefinition<Cli
   ),
 );
 
-final ModelFormDefinition<Company> companyFormDefinition = ModelFormDefinition<Company>(
+ModelFormDefinition<Company> companyFormDefinition(AppLocalizations l10n) => ModelFormDefinition<Company>(
   fields: [
-    _textField('name', 'Company name', required: true),
-    _multilineField('description', 'Description', required: true),
-    _statusField(),
+    _textField('name', _t(l10n, 'Company name', 'اسم الشركة'), required: true),
+    _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
+    _statusField(l10n),
   ],
   fromMap: Company.fromMap,
   toMap: (company) => company.toMap(),
   sampleModel: Company(
     name: 'Al Noor Trading',
-    description: 'Primary supplier of packaged food and household items.',
+    description: _t(l10n, 'Primary supplier of packaged food and household items.', 'المورّد الرئيسي للمواد الغذائية المعبأة والمواد المنزلية.'),
     status: RecordStatus.active.code,
     createdAt: _createdAt,
     updatedAt: _updatedAt,
   ),
 );
 
-final ModelFormDefinition<User> userFormDefinition = ModelFormDefinition<User>(
+ModelFormDefinition<User> userFormDefinition(AppLocalizations l10n) => ModelFormDefinition<User>(
   fields: [
-    _textField('name', 'Full name', required: true),
-    _textField('username', 'Username', required: true),
-    _textField('email', 'Email', type: ModelFormFieldType.email, required: true),
+    _textField('name', _t(l10n, 'Full name', 'الاسم الكامل'), required: true),
+    _textField('username', _t(l10n, 'Username', 'اسم المستخدم'), required: true),
+    _textField('email', _t(l10n, 'Email', 'البريد الإلكتروني'), type: ModelFormFieldType.email, required: true),
     _textField(
       'password',
-      'Password',
-      hintText: 'Leave empty when not changing the password.',
+      _t(l10n, 'Password', 'كلمة المرور'),
+      hintText: _t(l10n, 'Leave empty when not changing the password.', 'اتركه فارغًا عند عدم تغيير كلمة المرور.'),
     ),
-    _statusField(),
+    _statusField(l10n),
   ],
   fromMap: User.fromMap,
   toMap: (user) => user.toMap(includePassword: false),
@@ -181,37 +182,37 @@ final ModelFormDefinition<User> userFormDefinition = ModelFormDefinition<User>(
   ),
 );
 
-final ModelFormDefinition<Roles> roleFormDefinition = ModelFormDefinition<Roles>(
+ModelFormDefinition<Roles> roleFormDefinition(AppLocalizations l10n) => ModelFormDefinition<Roles>(
   fields: [
-    _textField('name', 'Role name', required: true),
-    _multilineField('description', 'Description', required: true),
-    _statusField(),
+    _textField('name', _t(l10n, 'Role name', 'اسم الدور'), required: true),
+    _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
+    _statusField(l10n),
   ],
   fromMap: Roles.fromMap,
   toMap: (role) => role.toMap(),
   sampleModel: Roles(
     name: 'Store Supervisor',
-    description: 'Can manage inventory updates, clients, and invoice approvals.',
+    description: _t(l10n, 'Can manage inventory updates, clients, and invoice approvals.', 'يمكنه إدارة تحديثات المخزون والعملاء واعتمادات الفواتير.'),
     status: RecordStatus.active.code,
     createdAt: _createdAt,
     updatedAt: _updatedAt,
   ),
 );
 
-final ModelFormDefinition<StoreInvoice> invoiceFormDefinition = ModelFormDefinition<StoreInvoice>(
+ModelFormDefinition<StoreInvoice> invoiceFormDefinition(AppLocalizations l10n) => ModelFormDefinition<StoreInvoice>(
   fields: [
-    _textField('storeUuid', 'Store UUID', required: true),
-    _textField('clientUuid', 'Client UUID', required: true),
-    _textField('invoiceNumber', 'Invoice number', required: true),
-    _selectionField('invoiceType', 'Invoice type', _invoiceTypeOptions, required: true),
-    _integerField('itemCount', 'Item count', required: true),
-    _decimalField('totalAmount', 'Total amount', required: true),
-    _decimalField('paidAmount', 'Paid amount', required: true),
-    _decimalField('balanceAmount', 'Balance amount', required: true),
-    _multilineField('notes', 'Notes', required: true),
-    _dateTimeField('issuedAt', 'Issued at', required: true),
-    _dateTimeField('dueAt', 'Due at', required: true),
-    _statusField(),
+    _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
+    _textField('clientUuid', _t(l10n, 'Client UUID', 'معرّف العميل UUID'), required: true),
+    _textField('invoiceNumber', _t(l10n, 'Invoice number', 'رقم الفاتورة'), required: true),
+    _selectionField('invoiceType', _t(l10n, 'Invoice type', 'نوع الفاتورة'), _invoiceTypeOptions(l10n), required: true),
+    _integerField('itemCount', _t(l10n, 'Item count', 'عدد العناصر'), required: true),
+    _decimalField('totalAmount', _t(l10n, 'Total amount', 'المبلغ الإجمالي'), required: true),
+    _decimalField('paidAmount', _t(l10n, 'Paid amount', 'المبلغ المدفوع'), required: true),
+    _decimalField('balanceAmount', _t(l10n, 'Balance amount', 'المبلغ المتبقي'), required: true),
+    _multilineField('notes', _t(l10n, 'Notes', 'ملاحظات'), required: true),
+    _dateTimeField('issuedAt', _t(l10n, 'Issued at', 'تاريخ الإصدار'), required: true),
+    _dateTimeField('dueAt', _t(l10n, 'Due at', 'تاريخ الاستحقاق'), required: true),
+    _statusField(l10n),
   ],
   fromMap: StoreInvoice.fromMap,
   toMap: (invoice) => invoice.toMap(),
@@ -224,7 +225,7 @@ final ModelFormDefinition<StoreInvoice> invoiceFormDefinition = ModelFormDefinit
     totalAmount: Decimal.parse('830.50'),
     paidAmount: Decimal.parse('300'),
     balanceAmount: Decimal.parse('530.50'),
-    notes: 'Deliver through branch pickup.',
+    notes: _t(l10n, 'Deliver through branch pickup.', 'يتم التسليم عبر الاستلام من الفرع.'),
     issuedAt: _transactionAt,
     dueAt: _transactionAt.add(const Duration(days: 14)),
     status: RecordStatus.active.code,
@@ -233,17 +234,17 @@ final ModelFormDefinition<StoreInvoice> invoiceFormDefinition = ModelFormDefinit
   ),
 );
 
-final ModelFormDefinition<StoreReturn> returnFormDefinition = ModelFormDefinition<StoreReturn>(
+ModelFormDefinition<StoreReturn> returnFormDefinition(AppLocalizations l10n) => ModelFormDefinition<StoreReturn>(
   fields: [
-    _textField('storeUuid', 'Store UUID', required: true),
-    _textField('clientUuid', 'Client UUID', required: true),
-    _textField('returnNumber', 'Return number', required: true),
-    _selectionField('returnType', 'Return type', _returnTypeOptions, required: true),
-    _integerField('itemCount', 'Item count', required: true),
-    _decimalField('totalAmount', 'Total amount', required: true),
-    _multilineField('reason', 'Reason', required: true),
-    _dateTimeField('transactionDate', 'Transaction date', required: true),
-    _statusField(),
+    _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
+    _textField('clientUuid', _t(l10n, 'Client UUID', 'معرّف العميل UUID'), required: true),
+    _textField('returnNumber', _t(l10n, 'Return number', 'رقم المرتجع'), required: true),
+    _selectionField('returnType', _t(l10n, 'Return type', 'نوع المرتجع'), _returnTypeOptions(l10n), required: true),
+    _integerField('itemCount', _t(l10n, 'Item count', 'عدد العناصر'), required: true),
+    _decimalField('totalAmount', _t(l10n, 'Total amount', 'المبلغ الإجمالي'), required: true),
+    _multilineField('reason', _t(l10n, 'Reason', 'السبب'), required: true),
+    _dateTimeField('transactionDate', _t(l10n, 'Transaction date', 'تاريخ العملية'), required: true),
+    _statusField(l10n),
   ],
   fromMap: StoreReturn.fromMap,
   toMap: (storeReturn) => storeReturn.toMap(),
@@ -254,7 +255,7 @@ final ModelFormDefinition<StoreReturn> returnFormDefinition = ModelFormDefinitio
     returnType: StoreReturnType.salesReturn,
     itemCount: 2,
     totalAmount: Decimal.parse('120'),
-    reason: 'Packaging arrived damaged during delivery.',
+    reason: _t(l10n, 'Packaging arrived damaged during delivery.', 'وصل التغليف تالفًا أثناء التسليم.'),
     transactionDate: _transactionAt,
     status: RecordStatus.active.code,
     createdAt: _createdAt,
@@ -262,18 +263,18 @@ final ModelFormDefinition<StoreReturn> returnFormDefinition = ModelFormDefinitio
   ),
 );
 
-final ModelFormDefinition<StorePaymentVoucher> paymentVoucherFormDefinition = ModelFormDefinition<StorePaymentVoucher>(
+ModelFormDefinition<StorePaymentVoucher> paymentVoucherFormDefinition(AppLocalizations l10n) => ModelFormDefinition<StorePaymentVoucher>(
   fields: [
-    _textField('storeUuid', 'Store UUID', required: true),
-    _textField('clientUuid', 'Client UUID', required: true),
-    _textField('voucherNumber', 'Voucher number', required: true),
-    _textField('payeeName', 'Payee name', required: true),
-    _decimalField('amount', 'Amount', required: true),
-    _selectionField('paymentMethod', 'Payment method', _paymentMethodOptions, required: true),
-    _textField('referenceNumber', 'Reference number', required: true),
-    _multilineField('description', 'Description', required: true),
-    _dateTimeField('transactionDate', 'Transaction date', required: true),
-    _statusField(),
+    _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
+    _textField('clientUuid', _t(l10n, 'Client UUID', 'معرّف العميل UUID'), required: true),
+    _textField('voucherNumber', _t(l10n, 'Voucher number', 'رقم السند'), required: true),
+    _textField('payeeName', _t(l10n, 'Payee name', 'اسم المستفيد'), required: true),
+    _decimalField('amount', _t(l10n, 'Amount', 'المبلغ'), required: true),
+    _selectionField('paymentMethod', _t(l10n, 'Payment method', 'طريقة الدفع'), _paymentMethodOptions(l10n), required: true),
+    _textField('referenceNumber', _t(l10n, 'Reference number', 'الرقم المرجعي'), required: true),
+    _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
+    _dateTimeField('transactionDate', _t(l10n, 'Transaction date', 'تاريخ العملية'), required: true),
+    _statusField(l10n),
   ],
   fromMap: StorePaymentVoucher.fromMap,
   toMap: (voucher) => voucher.toMap(),
@@ -285,7 +286,7 @@ final ModelFormDefinition<StorePaymentVoucher> paymentVoucherFormDefinition = Mo
     amount: Decimal.parse('300'),
     paymentMethod: StorePaymentMethod.bankTransfer,
     referenceNumber: 'TRX-4488',
-    description: 'Partial settlement for credit invoice.',
+    description: _t(l10n, 'Partial settlement for credit invoice.', 'تسوية جزئية لفاتورة آجلة.'),
     transactionDate: _transactionAt,
     status: RecordStatus.active.code,
     createdAt: _createdAt,
@@ -293,18 +294,18 @@ final ModelFormDefinition<StorePaymentVoucher> paymentVoucherFormDefinition = Mo
   ),
 );
 
-final ModelFormDefinition<InventoryMovement> inventoryMovementFormDefinition = ModelFormDefinition<InventoryMovement>(
+ModelFormDefinition<InventoryMovement> inventoryMovementFormDefinition(AppLocalizations l10n) => ModelFormDefinition<InventoryMovement>(
   fields: [
-    _textField('companyProductUuid', 'Company product UUID', required: true),
-    _textField('productUuid', 'Product UUID', required: true),
-    _selectionField('movementType', 'Movement type', _movementTypeOptions, required: true),
-    _integerField('quantityDelta', 'Quantity delta', required: true),
-    _integerField('balanceAfter', 'Balance after', required: true),
-    _decimalField('unitCost', 'Unit cost'),
-    _selectionField('referenceType', 'Reference type', _referenceTypeOptions, required: true),
-    _textField('referenceUuid', 'Reference UUID'),
-    _multilineField('note', 'Note', required: true),
-    _textField('createdByUserUuid', 'Created by user UUID'),
+    _textField('companyProductUuid', _t(l10n, 'Company product UUID', 'معرّف منتج الشركة UUID'), required: true),
+    _textField('productUuid', _t(l10n, 'Product UUID', 'معرّف المنتج UUID'), required: true),
+    _selectionField('movementType', _t(l10n, 'Movement type', 'نوع الحركة'), _movementTypeOptions(l10n), required: true),
+    _integerField('quantityDelta', _t(l10n, 'Quantity delta', 'تغير الكمية'), required: true),
+    _integerField('balanceAfter', _t(l10n, 'Balance after', 'الرصيد بعد الحركة'), required: true),
+    _decimalField('unitCost', _t(l10n, 'Unit cost', 'تكلفة الوحدة')),
+    _selectionField('referenceType', _t(l10n, 'Reference type', 'نوع المرجع'), _referenceTypeOptions(l10n), required: true),
+    _textField('referenceUuid', _t(l10n, 'Reference UUID', 'معرّف المرجع UUID')),
+    _multilineField('note', _t(l10n, 'Note', 'ملاحظة'), required: true),
+    _textField('createdByUserUuid', _t(l10n, 'Created by user UUID', 'معرّف المستخدم المنشئ UUID')),
   ],
   fromMap: InventoryMovement.fromMap,
   toMap: (movement) => movement.toMap(),
@@ -317,26 +318,26 @@ final ModelFormDefinition<InventoryMovement> inventoryMovementFormDefinition = M
     unitCost: Decimal.parse('9.75'),
     referenceType: InventoryReferenceType.restock,
     referenceUuid: 'restock-2024-0005',
-    note: 'Weekly replenishment from warehouse.',
+    note: _t(l10n, 'Weekly replenishment from warehouse.', 'إعادة تزويد أسبوعية من المستودع.'),
     createdByUserUuid: 'user-ops-manager-001',
     createdAt: _createdAt,
     updatedAt: _updatedAt,
   ),
 );
 
-final ModelFormDefinition<StoreFinancialTransaction> transactionFormDefinition = ModelFormDefinition<StoreFinancialTransaction>(
+ModelFormDefinition<StoreFinancialTransaction> transactionFormDefinition(AppLocalizations l10n) => ModelFormDefinition<StoreFinancialTransaction>(
   fields: [
-    _textField('storeUuid', 'Store UUID', required: true),
-    _textField('clientUuid', 'Client UUID', required: true),
-    _textField('transactionNumber', 'Transaction number', required: true),
-    _selectionField('transactionType', 'Transaction type', _transactionTypeOptions, required: true),
-    _selectionField('sourceType', 'Source type', _sourceTypeOptions, required: true),
-    _textField('sourceUuid', 'Source UUID', required: true),
-    _decimalField('amount', 'Amount', required: true),
-    _selectionField('entryType', 'Entry type', _entryTypeOptions, required: true),
-    _multilineField('description', 'Description', required: true),
-    _dateTimeField('transactionDate', 'Transaction date', required: true),
-    _statusField(),
+    _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
+    _textField('clientUuid', _t(l10n, 'Client UUID', 'معرّف العميل UUID'), required: true),
+    _textField('transactionNumber', _t(l10n, 'Transaction number', 'رقم العملية'), required: true),
+    _selectionField('transactionType', _t(l10n, 'Transaction type', 'نوع العملية'), _transactionTypeOptions(l10n), required: true),
+    _selectionField('sourceType', _t(l10n, 'Source type', 'نوع المصدر'), _sourceTypeOptions(l10n), required: true),
+    _textField('sourceUuid', _t(l10n, 'Source UUID', 'معرّف المصدر UUID'), required: true),
+    _decimalField('amount', _t(l10n, 'Amount', 'المبلغ'), required: true),
+    _selectionField('entryType', _t(l10n, 'Entry type', 'نوع القيد'), _entryTypeOptions(l10n), required: true),
+    _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
+    _dateTimeField('transactionDate', _t(l10n, 'Transaction date', 'تاريخ العملية'), required: true),
+    _statusField(l10n),
   ],
   fromMap: StoreFinancialTransaction.fromMap,
   toMap: (transaction) => transaction.toMap(),
@@ -349,7 +350,7 @@ final ModelFormDefinition<StoreFinancialTransaction> transactionFormDefinition =
     sourceUuid: 'PV-2024-0011',
     amount: Decimal.parse('300'),
     entryType: LedgerEntryType.credit,
-    description: 'Payment receipt linked to voucher settlement.',
+    description: _t(l10n, 'Payment receipt linked to voucher settlement.', 'إيصال دفع مرتبط بتسوية سند.'),
     transactionDate: _transactionAt,
     status: RecordStatus.active.code,
     createdAt: _createdAt,
@@ -431,56 +432,119 @@ ModelFormFieldDefinition _selectionField(
   );
 }
 
-ModelFormFieldDefinition _statusField() {
-  return _selectionField('status', 'Status', _statusOptions, required: true);
+ModelFormFieldDefinition _statusField(AppLocalizations l10n) {
+  return _selectionField('status', _t(l10n, 'Status', 'الحالة'), _statusOptions(l10n), required: true);
 }
 
-final List<ModelFormSelectOption> _statusOptions = [
-  const ModelFormSelectOption(label: 'Active', value: 1),
-  const ModelFormSelectOption(label: 'Inactive', value: 0),
+List<ModelFormSelectOption> _statusOptions(AppLocalizations l10n) => [
+  ModelFormSelectOption(label: _t(l10n, 'Active', 'نشط'), value: 1),
+  ModelFormSelectOption(label: _t(l10n, 'Inactive', 'غير نشط'), value: 0),
 ];
 
-final List<ModelFormSelectOption> _paymentMethodOptions = [
+List<ModelFormSelectOption> _paymentMethodOptions(AppLocalizations l10n) => [
   for (final method in StorePaymentMethod.values)
-    ModelFormSelectOption(label: _enumLabel(method.name), value: method.value),
+    ModelFormSelectOption(label: _enumLabel(l10n, method.name), value: method.value),
 ];
 
-final List<ModelFormSelectOption> _invoiceTypeOptions = [
+List<ModelFormSelectOption> _invoiceTypeOptions(AppLocalizations l10n) => [
   for (final type in StoreInvoiceType.values)
-    ModelFormSelectOption(label: _enumLabel(type.name), value: type.value),
+    ModelFormSelectOption(label: _enumLabel(l10n, type.name), value: type.value),
 ];
 
-final List<ModelFormSelectOption> _returnTypeOptions = [
+List<ModelFormSelectOption> _returnTypeOptions(AppLocalizations l10n) => [
   for (final type in StoreReturnType.values)
-    ModelFormSelectOption(label: _enumLabel(type.name), value: type.value),
+    ModelFormSelectOption(label: _enumLabel(l10n, type.name), value: type.value),
 ];
 
-final List<ModelFormSelectOption> _movementTypeOptions = [
+List<ModelFormSelectOption> _movementTypeOptions(AppLocalizations l10n) => [
   for (final type in InventoryMovementType.values)
-    ModelFormSelectOption(label: _enumLabel(type.name), value: type.value),
+    ModelFormSelectOption(label: _enumLabel(l10n, type.name), value: type.value),
 ];
 
-final List<ModelFormSelectOption> _referenceTypeOptions = [
+List<ModelFormSelectOption> _referenceTypeOptions(AppLocalizations l10n) => [
   for (final type in InventoryReferenceType.values)
-    ModelFormSelectOption(label: _enumLabel(type.name), value: type.value),
+    ModelFormSelectOption(label: _enumLabel(l10n, type.name), value: type.value),
 ];
 
-final List<ModelFormSelectOption> _transactionTypeOptions = [
+List<ModelFormSelectOption> _transactionTypeOptions(AppLocalizations l10n) => [
   for (final type in FinancialTransactionType.values)
-    ModelFormSelectOption(label: _enumLabel(type.name), value: type.value),
+    ModelFormSelectOption(label: _enumLabel(l10n, type.name), value: type.value),
 ];
 
-final List<ModelFormSelectOption> _sourceTypeOptions = [
+List<ModelFormSelectOption> _sourceTypeOptions(AppLocalizations l10n) => [
   for (final type in FinancialSourceType.values)
-    ModelFormSelectOption(label: _enumLabel(type.name), value: type.value),
+    ModelFormSelectOption(label: _enumLabel(l10n, type.name), value: type.value),
 ];
 
-final List<ModelFormSelectOption> _entryTypeOptions = [
+List<ModelFormSelectOption> _entryTypeOptions(AppLocalizations l10n) => [
   for (final type in LedgerEntryType.values)
-    ModelFormSelectOption(label: _enumLabel(type.name), value: type.value),
+    ModelFormSelectOption(label: _enumLabel(l10n, type.name), value: type.value),
 ];
 
-String _enumLabel(String value) {
+String _enumLabel(AppLocalizations l10n, String value) {
+  if (l10n.isArabic) {
+    switch (value) {
+      case 'inactive':
+        return 'غير نشط';
+      case 'active':
+        return 'نشط';
+      case 'cash':
+        return 'نقدي';
+      case 'bankTransfer':
+        return 'تحويل بنكي';
+      case 'card':
+        return 'بطاقة';
+      case 'cheque':
+        return 'شيك';
+      case 'mobileMoney':
+        return 'محفظة إلكترونية';
+      case 'other':
+        return 'أخرى';
+      case 'credit':
+        return 'آجل';
+      case 'salesReturn':
+        return 'مرتجع مبيعات';
+      case 'purchaseReturn':
+        return 'مرتجع مشتريات';
+      case 'adjustmentReturn':
+        return 'مرتجع تسوية';
+      case 'invoicePosting':
+        return 'ترحيل فاتورة';
+      case 'paymentReceipt':
+        return 'استلام دفعة';
+      case 'returnPosting':
+        return 'ترحيل مرتجع';
+      case 'adjustment':
+        return 'تسوية';
+      case 'paymentVoucher':
+        return 'سند دفع';
+      case 'storeReturn':
+        return 'مرتجع متجر';
+      case 'inventoryMovement':
+        return 'حركة مخزون';
+      case 'manual':
+        return 'يدوي';
+      case 'debit':
+        return 'مدين';
+      case 'purchase':
+        return 'شراء';
+      case 'sale':
+        return 'بيع';
+      case 'returnIn':
+        return 'مرتجع وارد';
+      case 'returnOut':
+        return 'مرتجع صادر';
+      case 'restock':
+        return 'إعادة تزويد';
+      case 'invoice':
+        return 'فاتورة';
+      case 'invoiceItem':
+        return 'عنصر فاتورة';
+      case 'returnItem':
+        return 'عنصر مرتجع';
+    }
+  }
+
   final buffer = StringBuffer();
   for (var index = 0; index < value.length; index++) {
     final character = value[index];
@@ -492,6 +556,25 @@ String _enumLabel(String value) {
   }
   return buffer.toString();
 }
+
+String _t(AppLocalizations l10n, String english, String arabic) {
+  return l10n.isArabic ? arabic : english;
+}
+
+String storeEntityLabel(AppLocalizations l10n) => _t(l10n, 'Store', 'متجر');
+String branchEntityLabel(AppLocalizations l10n) => _t(l10n, 'Branch', 'فرع');
+String productEntityLabel(AppLocalizations l10n) => _t(l10n, 'Product', 'منتج');
+String categoryEntityLabel(AppLocalizations l10n) => _t(l10n, 'Category', 'فئة');
+String tagEntityLabel(AppLocalizations l10n) => _t(l10n, 'Tag', 'وسم');
+String clientEntityLabel(AppLocalizations l10n) => _t(l10n, 'Client', 'عميل');
+String companyEntityLabel(AppLocalizations l10n) => _t(l10n, 'Company', 'شركة');
+String userEntityLabel(AppLocalizations l10n) => _t(l10n, 'User', 'مستخدم');
+String roleEntityLabel(AppLocalizations l10n) => _t(l10n, 'Role', 'دور');
+String invoiceEntityLabel(AppLocalizations l10n) => _t(l10n, 'Invoice', 'فاتورة');
+String returnEntityLabel(AppLocalizations l10n) => _t(l10n, 'Return', 'مرتجع');
+String paymentVoucherEntityLabel(AppLocalizations l10n) => _t(l10n, 'Payment voucher', 'سند دفع');
+String inventoryMovementEntityLabel(AppLocalizations l10n) => _t(l10n, 'Inventory movement', 'حركة مخزون');
+String transactionEntityLabel(AppLocalizations l10n) => _t(l10n, 'Transaction', 'عملية');
 
 final DateTime _createdAt = DateTime(2024, 4, 20, 9, 0);
 final DateTime _updatedAt = DateTime(2024, 4, 21, 14, 30);

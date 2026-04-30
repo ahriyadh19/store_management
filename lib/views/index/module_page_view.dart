@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:store_management/localization/app_localizations.dart';
 
 class ModulePageView extends StatelessWidget {
   const ModulePageView({super.key, required this.title, required this.icon, required this.description, this.highlights = const []});
@@ -10,6 +11,7 @@ class ModulePageView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -63,13 +65,23 @@ class ModulePageView extends StatelessWidget {
                   spacing: 16,
                   runSpacing: 16,
                   children: [
-                    _ModuleStatusCard(title: 'Status', value: 'Ready', caption: 'Navigation is active and this screen is connected.', icon: Icons.check_circle_rounded),
-                    _ModuleStatusCard(title: 'Content', value: 'Empty', caption: 'Add forms, tables, and filters here next.', icon: Icons.dashboard_customize_rounded),
+                    _ModuleStatusCard(
+                      title: l10n.isArabic ? 'الحالة' : 'Status',
+                      value: l10n.isArabic ? 'جاهز' : 'Ready',
+                      caption: l10n.isArabic ? 'التنقل نشط وهذه الشاشة متصلة.' : 'Navigation is active and this screen is connected.',
+                      icon: Icons.check_circle_rounded,
+                    ),
+                    _ModuleStatusCard(
+                      title: l10n.isArabic ? 'المحتوى' : 'Content',
+                      value: l10n.isArabic ? 'فارغ' : 'Empty',
+                      caption: l10n.isArabic ? 'أضف النماذج والجداول والفلاتر هنا لاحقًا.' : 'Add forms, tables, and filters here next.',
+                      icon: Icons.dashboard_customize_rounded,
+                    ),
                   ],
                 ),
                 if (highlights.isNotEmpty) ...[
                   const SizedBox(height: 24),
-                  Text('Planned sections', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+                  Text(l10n.isArabic ? 'الأقسام المخطط لها' : 'Planned sections', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 14),
                   Wrap(
                     spacing: 12,

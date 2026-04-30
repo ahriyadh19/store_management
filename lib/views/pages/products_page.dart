@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/models/product.dart';
 import 'package:store_management/views/pages/model_crud_page.dart';
 import 'package:store_management/views/pages/model_module_pages.dart';
@@ -19,13 +20,14 @@ class ProductsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return ModelCrudPage<Product>(
       title: title,
-      entityLabel: 'Product',
+      entityLabel: productEntityLabel(l10n),
       description: description,
       icon: icon,
       highlights: highlights,
-      formDefinition: productFormDefinition,
+      formDefinition: productFormDefinition(l10n),
     );
   }
 }

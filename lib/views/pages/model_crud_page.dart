@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/views/components/model_form.dart';
 
 class ModelCrudPage<T extends Object> extends StatefulWidget {
@@ -70,6 +71,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   Widget _buildCreateFormToggle(BuildContext context) {
+    final l10n = context.l10n;
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Padding(
@@ -80,9 +82,9 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Create ${widget.entityLabel}', style: Theme.of(context).textTheme.titleLarge),
+                  Text(l10n.createEntity(widget.entityLabel), style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 6),
-                  Text('Show or hide the create form.', style: Theme.of(context).textTheme.bodyMedium),
+                  Text(l10n.showOrHideCreateForm, style: Theme.of(context).textTheme.bodyMedium),
                 ],
               ),
             ),
@@ -90,7 +92,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(_showCreateForm ? 'Show create' : 'Hide create'),
+                Text(_showCreateForm ? l10n.hideCreate : l10n.showCreate),
                 const SizedBox(width: 8),
                 Switch(
                   value: _showCreateForm,
@@ -109,6 +111,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   Widget _buildCreateFormCard(BuildContext context) {
+    final l10n = context.l10n;
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Padding(
@@ -116,16 +119,16 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Save ${widget.entityLabel}', style: Theme.of(context).textTheme.headlineSmall),
+            Text(l10n.saveEntity(widget.entityLabel), style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 8),
-            Text('Add a new ${widget.entityLabel.toLowerCase()} to the table.', style: Theme.of(context).textTheme.bodyMedium),
+            Text(l10n.addEntityToTable(widget.entityLabel), style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 24),
             ModelForm(
               key: ValueKey('${widget.entityLabel}-create-${widget.formDefinition.toMap(_draftModel)}'),
               definition: widget.formDefinition.fields,
               initialData: widget.formDefinition.toMap(_draftModel),
-              submitLabel: 'Save ${widget.entityLabel}',
-              cancelLabel: 'Reset',
+              submitLabel: l10n.saveEntity(widget.entityLabel),
+              cancelLabel: l10n.reset,
               onCancel: () {
                 setState(() {
                   _draftModel = widget.formDefinition.sampleModel;
@@ -140,6 +143,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   Widget _buildTableCard(BuildContext context, BoxConstraints constraints) {
+    final l10n = context.l10n;
     final columns = _buildColumns();
     final source = _ModelTableSource<T>(
       records: _records,
@@ -166,14 +170,14 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('${widget.title} Datatable', style: Theme.of(context).textTheme.headlineSmall),
+                      Text(l10n.dataTableTitle(widget.title), style: Theme.of(context).textTheme.headlineSmall),
                       const SizedBox(height: 8),
-                      Text('View, edit, and delete are in the last column.', style: Theme.of(context).textTheme.bodyMedium),
+                      Text(l10n.actionsColumnHint, style: Theme.of(context).textTheme.bodyMedium),
                     ],
                   ),
                 ),
                 const SizedBox(width: 16),
-                _SummaryChip(label: 'Rows', value: _records.length.toString()),
+                _SummaryChip(label: l10n.rows, value: _records.length.toString()),
               ],
             ),
             const SizedBox(height: 20),
@@ -182,7 +186,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                 decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), color: Theme.of(context).colorScheme.surfaceContainerLowest),
-                child: Text('No data available.', style: Theme.of(context).textTheme.bodyLarge),
+                child: Text(l10n.noDataAvailable, style: Theme.of(context).textTheme.bodyLarge),
               )
             else
               ClipRRect(
@@ -192,7 +196,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
                   child: SizedBox(
                     width: constraints.maxWidth >= 960 ? constraints.maxWidth - 48 : 960,
                     child: PaginatedDataTable(
-                      header: Text('${widget.entityLabel} records'),
+                      header: Text(l10n.recordsHeader(widget.entityLabel)),
                       columns: columns,
                       source: source,
                       rowsPerPage: _resolvedRowsPerPage,
@@ -223,7 +227,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   List<DataColumn> _buildColumns() {
     return [
       for (final field in _visibleFields) DataColumn(label: Text(field.label)),
-      const DataColumn(label: Text('Actions')),
+      DataColumn(label: Text(context.l10n.actions)),
     ];
   }
 
@@ -249,7 +253,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       _draftModel = widget.formDefinition.sampleModel;
       _showCreateForm = false;
     });
-    _showFeedback('Saved ${widget.entityLabel.toLowerCase()} successfully.');
+    _showFeedback(context.l10n.savedEntitySuccessfully(widget.entityLabel));
   }
 
   Future<void> _showEditSheet(T record) async {
@@ -271,13 +275,13 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Edit ${widget.entityLabel}', style: Theme.of(context).textTheme.headlineSmall),
+                  Text(context.l10n.editEntity(widget.entityLabel), style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 16),
                   ModelForm(
                     definition: widget.formDefinition.fields,
                     initialData: widget.formDefinition.toMap(record),
-                    submitLabel: 'Update ${widget.entityLabel}',
-                    cancelLabel: 'Close',
+                    submitLabel: context.l10n.updateEntity(widget.entityLabel),
+                    cancelLabel: context.l10n.close,
                     onCancel: () => Navigator.of(context).pop(),
                     onSubmit: (values) {
                       final model = widget.formDefinition.buildModel(values, existingModel: record);
@@ -296,6 +300,10 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       return;
     }
 
+    if (!mounted) {
+      return;
+    }
+
     final index = _indexOfRecord(record);
     if (index == -1) {
       return;
@@ -304,7 +312,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     setState(() {
       _records[index] = updatedModel;
     });
-    _showFeedback('Updated ${widget.entityLabel.toLowerCase()} successfully.');
+    _showFeedback(context.l10n.updatedEntitySuccessfully(widget.entityLabel));
   }
 
   Future<void> _confirmDelete(T record) async {
@@ -314,12 +322,12 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       builder: (context) {
         final colorScheme = Theme.of(context).colorScheme;
         return AlertDialog(
-          title: Text('Delete ${widget.entityLabel}?'),
+          title: Text(context.l10n.deleteEntityQuestion(widget.entityLabel)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('The selected ${widget.entityLabel.toLowerCase()} will be removed.'),
+              Text(context.l10n.deleteEntityMessage(widget.entityLabel)),
               const SizedBox(height: 16),
               Container(
                 width: double.infinity,
@@ -347,11 +355,11 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(context.l10n.cancel)),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: colorScheme.error),
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete'),
+              child: Text(context.l10n.deleteLabel),
             ),
           ],
         );
@@ -362,10 +370,14 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       return;
     }
 
+    if (!mounted) {
+      return;
+    }
+
     setState(() {
       _records.removeAt(_indexOfRecord(record));
     });
-    _showFeedback('Deleted ${widget.entityLabel.toLowerCase()} successfully.');
+    _showFeedback(context.l10n.deletedEntitySuccessfully(widget.entityLabel));
   }
 
   void _openDetailsPage(T record) {
@@ -375,6 +387,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
           entityLabel: widget.entityLabel,
           title: widget.title,
           icon: widget.icon,
+          fields: widget.formDefinition.fields,
           data: widget.formDefinition.toMap(record),
         ),
       ),
@@ -528,18 +541,20 @@ class _ModelDetailsPage extends StatelessWidget {
     required this.entityLabel,
     required this.title,
     required this.icon,
+    required this.fields,
     required this.data,
   });
 
   final String entityLabel;
   final String title;
   final IconData icon;
+  final List<ModelFormFieldDefinition> fields;
   final Map<String, dynamic> data;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('$entityLabel Details')),
+      appBar: AppBar(title: Text(context.l10n.entityDetails(entityLabel))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -568,7 +583,7 @@ class _ModelDetailsPage extends StatelessWidget {
                         SizedBox(
                           width: 132,
                           child: Text(
-                            entry.key,
+                            _fieldLabel(context, entry.key),
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
                           ),
                         ),
@@ -587,6 +602,28 @@ class _ModelDetailsPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _fieldLabel(BuildContext context, String key) {
+    for (final field in fields) {
+      if (field.key == key) {
+        return field.label;
+      }
+    }
+
+    final l10n = context.l10n;
+    switch (key) {
+      case 'id':
+        return 'ID';
+      case 'uuid':
+        return 'UUID';
+      case 'createdAt':
+        return l10n.isArabic ? 'تاريخ الإنشاء' : 'Created at';
+      case 'updatedAt':
+        return l10n.isArabic ? 'تاريخ التحديث' : 'Updated at';
+      default:
+        return key;
+    }
   }
 }
 
@@ -641,17 +678,17 @@ class _ModelTableSource<T extends Object> extends DataTableSource {
             spacing: 4,
             children: [
               IconButton(
-                tooltip: 'View $entityLabel',
+                tooltip: context.l10n.viewEntity(entityLabel),
                 onPressed: () => onView(record),
                 icon: const Icon(Icons.visibility_outlined, size: 20),
               ),
               IconButton(
-                tooltip: 'Edit $entityLabel',
+                tooltip: context.l10n.editEntity(entityLabel),
                 onPressed: () => onEdit(record),
                 icon: const Icon(Icons.edit_outlined, size: 20),
               ),
               IconButton(
-                tooltip: 'Delete $entityLabel',
+                tooltip: context.l10n.deleteEntityQuestion(entityLabel),
                 onPressed: () => onDelete(record),
                 icon: Icon(Icons.delete_outline_rounded, size: 20, color: Theme.of(context).colorScheme.error),
               ),

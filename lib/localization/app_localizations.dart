@@ -133,6 +133,36 @@ class AppLocalizations {
     'language': 'Language',
     'english': 'English',
     'arabic': 'العربية',
+    'showCreate': 'Show create',
+    'hideCreate': 'Hide create',
+    'showOrHideCreateForm': 'Show or hide the create form.',
+    'reset': 'Reset',
+    'close': 'Close',
+    'cancel': 'Cancel',
+    'delete': 'Delete',
+    'actions': 'Actions',
+    'rows': 'Rows',
+    'noDataAvailable': 'No data available.',
+    'dataTableTitle': '{title} Datatable',
+    'recordsHeader': '{entity} records',
+    'createEntity': 'Create {entity}',
+    'saveEntity': 'Save {entity}',
+    'editEntity': 'Edit {entity}',
+    'updateEntity': 'Update {entity}',
+    'deleteEntityQuestion': 'Delete {entity}?',
+    'entityDetails': '{entity} Details',
+    'addEntityToTable': 'Add a new {entity} to the table.',
+    'actionsColumnHint': 'View, edit, and delete are in the last column.',
+    'deleteEntityMessage': 'The selected {entity} will be removed.',
+    'savedEntitySuccessfully': 'Saved {entity} successfully.',
+    'updatedEntitySuccessfully': 'Updated {entity} successfully.',
+    'deletedEntitySuccessfully': 'Deleted {entity} successfully.',
+    'viewEntity': 'View {entity}',
+    'addFieldRequired': '{field} is required',
+    'validFieldRequired': 'Enter a valid {field}',
+    'fieldMustBeInteger': '{field} must be an integer',
+    'fieldMustBeNumber': '{field} must be a number',
+    'fieldMustUseDateTimeFormat': '{field} must use YYYY-MM-DD or YYYY-MM-DD HH:MM',
     'nameRequired': 'Name is required.',
     'usernameRequired': 'Username is required.',
     'usernameInvalid': 'Username can use letters, numbers, and underscores only.',
@@ -255,6 +285,36 @@ class AppLocalizations {
     'language': 'اللغة',
     'english': 'English',
     'arabic': 'العربية',
+    'showCreate': 'إظهار الإنشاء',
+    'hideCreate': 'إخفاء الإنشاء',
+    'showOrHideCreateForm': 'إظهار أو إخفاء نموذج الإنشاء.',
+    'reset': 'إعادة تعيين',
+    'close': 'إغلاق',
+    'cancel': 'إلغاء',
+    'delete': 'حذف',
+    'actions': 'الإجراءات',
+    'rows': 'الصفوف',
+    'noDataAvailable': 'لا توجد بيانات.',
+    'dataTableTitle': 'جدول {title}',
+    'recordsHeader': 'سجلات {entity}',
+    'createEntity': 'إنشاء {entity}',
+    'saveEntity': 'حفظ {entity}',
+    'editEntity': 'تعديل {entity}',
+    'updateEntity': 'تحديث {entity}',
+    'deleteEntityQuestion': 'حذف {entity}؟',
+    'entityDetails': 'تفاصيل {entity}',
+    'addEntityToTable': 'أضف {entity} جديدًا إلى الجدول.',
+    'actionsColumnHint': 'العرض والتعديل والحذف موجودة في العمود الأخير.',
+    'deleteEntityMessage': 'سيتم حذف {entity} المحدد.',
+    'savedEntitySuccessfully': 'تم حفظ {entity} بنجاح.',
+    'updatedEntitySuccessfully': 'تم تحديث {entity} بنجاح.',
+    'deletedEntitySuccessfully': 'تم حذف {entity} بنجاح.',
+    'viewEntity': 'عرض {entity}',
+    'addFieldRequired': '{field} مطلوب',
+    'validFieldRequired': 'أدخل {field} صالحًا',
+    'fieldMustBeInteger': 'يجب أن يكون {field} عددًا صحيحًا',
+    'fieldMustBeNumber': 'يجب أن يكون {field} رقمًا',
+    'fieldMustUseDateTimeFormat': 'يجب أن يستخدم {field} التنسيق YYYY-MM-DD أو YYYY-MM-DD HH:MM',
     'nameRequired': 'الاسم مطلوب.',
     'usernameRequired': 'اسم المستخدم مطلوب.',
     'usernameInvalid': 'يمكن أن يحتوي اسم المستخدم على أحرف وأرقام وشرطة سفلية فقط.',
@@ -386,6 +446,36 @@ class AppLocalizations {
   String get language => _text('language');
   String get english => _text('english');
   String get arabic => _text('arabic');
+  String get showCreate => _text('showCreate');
+  String get hideCreate => _text('hideCreate');
+  String get showOrHideCreateForm => _text('showOrHideCreateForm');
+  String get reset => _text('reset');
+  String get close => _text('close');
+  String get cancel => _text('cancel');
+  String get deleteLabel => _text('delete');
+  String get actions => _text('actions');
+  String get rows => _text('rows');
+  String get noDataAvailable => _text('noDataAvailable');
+  String dataTableTitle(String title) => _text('dataTableTitle', {'title': title});
+  String recordsHeader(String entity) => _text('recordsHeader', {'entity': entity});
+  String createEntity(String entity) => _text('createEntity', {'entity': entity});
+  String saveEntity(String entity) => _text('saveEntity', {'entity': entity});
+  String editEntity(String entity) => _text('editEntity', {'entity': entity});
+  String updateEntity(String entity) => _text('updateEntity', {'entity': entity});
+  String deleteEntityQuestion(String entity) => _text('deleteEntityQuestion', {'entity': entity});
+  String entityDetails(String entity) => _text('entityDetails', {'entity': entity});
+  String addEntityToTable(String entity) => _text('addEntityToTable', {'entity': entity});
+  String get actionsColumnHint => _text('actionsColumnHint');
+  String deleteEntityMessage(String entity) => _text('deleteEntityMessage', {'entity': entity});
+  String savedEntitySuccessfully(String entity) => _text('savedEntitySuccessfully', {'entity': entity});
+  String updatedEntitySuccessfully(String entity) => _text('updatedEntitySuccessfully', {'entity': entity});
+  String deletedEntitySuccessfully(String entity) => _text('deletedEntitySuccessfully', {'entity': entity});
+  String viewEntity(String entity) => _text('viewEntity', {'entity': entity});
+  String fieldRequired(String field) => _text('addFieldRequired', {'field': field});
+  String validField(String field) => _text('validFieldRequired', {'field': field});
+  String fieldMustBeInteger(String field) => _text('fieldMustBeInteger', {'field': field});
+  String fieldMustBeNumber(String field) => _text('fieldMustBeNumber', {'field': field});
+  String fieldMustUseDateTimeFormat(String field) => _text('fieldMustUseDateTimeFormat', {'field': field});
 
   String message(AppMessageKey key, {String? email}) {
     switch (key) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:store_management/localization/app_localizations.dart';
 
 enum ModelFormFieldType { text, multiline, email, phone, integer, decimal, dateTime, selection }
 
@@ -73,7 +74,7 @@ class ModelForm extends StatefulWidget {
     required this.onSubmit,
     this.initialData = const <String, dynamic>{},
     this.onCancel,
-    this.cancelLabel = 'Cancel',
+    this.cancelLabel,
   });
 
   final List<ModelFormFieldDefinition> definition;
@@ -81,7 +82,7 @@ class ModelForm extends StatefulWidget {
   final String submitLabel;
   final ValueChanged<Map<String, dynamic>> onSubmit;
   final VoidCallback? onCancel;
-  final String cancelLabel;
+  final String? cancelLabel;
 
   @override
   State<ModelForm> createState() => _ModelFormState();
@@ -131,6 +132,7 @@ class _ModelFormState extends State<ModelForm> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Form(
       key: _formKey,
       child: Column(
@@ -149,7 +151,7 @@ class _ModelFormState extends State<ModelForm> {
               if (widget.onCancel != null)
                 OutlinedButton(
                   onPressed: widget.onCancel,
-                  child: Text(widget.cancelLabel),
+                  child: Text(widget.cancelLabel ?? l10n.cancel),
                 ),
               FilledButton.icon(
                 onPressed: _handleSubmit,
@@ -164,6 +166,7 @@ class _ModelFormState extends State<ModelForm> {
   }
 
   Widget _buildField(BuildContext context, ModelFormFieldDefinition field) {
+    final l10n = context.l10n;
     if (field.type == ModelFormFieldType.selection) {
       return DropdownButtonFormField<Object?>(
         initialValue: _selectedValues[field.key],
@@ -191,7 +194,7 @@ class _ModelFormState extends State<ModelForm> {
         validator: (_) {
           final selected = _selectedValues[field.key];
           if (field.required && selected == null) {
-            return '${field.label} is required';
+            return l10n.fieldRequired(field.label);
           }
           return null;
         },
@@ -226,9 +229,10 @@ class _ModelFormState extends State<ModelForm> {
   }
 
   String? _validateField(ModelFormFieldDefinition field, String? value) {
+    final l10n = context.l10n;
     final trimmedValue = value?.trim() ?? '';
     if (field.required && trimmedValue.isEmpty) {
-      return '${field.label} is required';
+      return l10n.fieldRequired(field.label);
     }
     if (trimmedValue.isEmpty) {
       return null;
@@ -237,19 +241,19 @@ class _ModelFormState extends State<ModelForm> {
     switch (field.type) {
       case ModelFormFieldType.email:
         if (!trimmedValue.contains('@')) {
-          return 'Enter a valid ${field.label.toLowerCase()}';
+          return l10n.validField(field.label.toLowerCase());
         }
       case ModelFormFieldType.integer:
         if (int.tryParse(trimmedValue) == null) {
-          return '${field.label} must be an integer';
+          return l10n.fieldMustBeInteger(field.label);
         }
       case ModelFormFieldType.decimal:
         if (num.tryParse(trimmedValue) == null) {
-          return '${field.label} must be a number';
+          return l10n.fieldMustBeNumber(field.label);
         }
       case ModelFormFieldType.dateTime:
         if (DateTime.tryParse(trimmedValue) == null) {
-          return '${field.label} must use YYYY-MM-DD or YYYY-MM-DD HH:MM';
+          return l10n.fieldMustUseDateTimeFormat(field.label);
         }
       default:
         break;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/models/categories.dart';
 import 'package:store_management/views/pages/model_crud_page.dart';
 import 'package:store_management/views/pages/model_module_pages.dart';
@@ -19,13 +20,14 @@ class CategoriesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return ModelCrudPage<Categories>(
       title: title,
-      entityLabel: 'Category',
+      entityLabel: categoryEntityLabel(l10n),
       description: description,
       icon: icon,
       highlights: highlights,
-      formDefinition: categoryFormDefinition,
+      formDefinition: categoryFormDefinition(l10n),
     );
   }
 }
