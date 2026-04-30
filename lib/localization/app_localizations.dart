@@ -139,6 +139,9 @@ class AppLocalizations {
     'reset': 'Reset',
     'close': 'Close',
     'cancel': 'Cancel',
+    'closeApplicationQuestion': 'Close application?',
+    'closeApplicationWarning': 'Any unsaved data will be lost if you close the app now.',
+    'closeAnyway': 'Close anyway',
     'delete': 'Delete',
     'actions': 'Actions',
     'rows': 'Rows',
@@ -291,6 +294,9 @@ class AppLocalizations {
     'reset': 'إعادة تعيين',
     'close': 'إغلاق',
     'cancel': 'إلغاء',
+    'closeApplicationQuestion': 'إغلاق التطبيق؟',
+    'closeApplicationWarning': 'ستفقد أي بيانات غير محفوظة إذا أغلقت التطبيق الآن.',
+    'closeAnyway': 'إغلاق على أي حال',
     'delete': 'حذف',
     'actions': 'الإجراءات',
     'rows': 'الصفوف',
@@ -452,6 +458,9 @@ class AppLocalizations {
   String get reset => _text('reset');
   String get close => _text('close');
   String get cancel => _text('cancel');
+  String get closeApplicationQuestion => _text('closeApplicationQuestion');
+  String get closeApplicationWarning => _text('closeApplicationWarning');
+  String get closeAnyway => _text('closeAnyway');
   String get deleteLabel => _text('delete');
   String get actions => _text('actions');
   String get rows => _text('rows');

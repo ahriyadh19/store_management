@@ -15,12 +15,17 @@ import 'package:store_management/services/auth_repository.dart';
 import 'package:store_management/services/local_database.dart';
 import 'package:store_management/services/supabase_auth_storage.dart';
 import 'package:store_management/views/auth_view.dart';
+import 'package:window_manager/window_manager.dart';
 
 const _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 const _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    await windowManager.ensureInitialized();
+  }
 
   final localeController = await LocaleController.create();
   final appPreferencesController = await AppPreferencesController.create();
@@ -123,6 +128,9 @@ class MyApp extends StatelessWidget {
           builder: (context, child) {
             return MaterialApp(
               debugShowCheckedModeBanner: false,
+              builder: (context, child) {
+                return WindowCloseGuard(child: child ?? const SizedBox.shrink());
+              },
               locale: localeController.locale,
               supportedLocales: AppLocalizations.supportedLocales,
               localizationsDelegates: const [AppLocalizations.delegate, GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
@@ -157,6 +165,91 @@ class MyApp extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class WindowCloseGuard extends StatefulWidget {
+  const WindowCloseGuard({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<WindowCloseGuard> createState() => _WindowCloseGuardState();
+}
+
+class _WindowCloseGuardState extends State<WindowCloseGuard> with WindowListener {
+  bool _isConfigured = false;
+  bool _isClosing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _configureWindowCloseHandling();
+  }
+
+  Future<void> _configureWindowCloseHandling() async {
+    if (kIsWeb || !Platform.isWindows) {
+      return;
+    }
+
+    windowManager.addListener(this);
+    await windowManager.setPreventClose(true);
+
+    if (mounted) {
+      setState(() {
+        _isConfigured = true;
+      });
+    }
+  }
+
+  @override
+  Future<void> onWindowClose() async {
+    if (!_isConfigured || _isClosing || !mounted) {
+      return;
+    }
+
+    final shouldClose = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        final colorScheme = Theme.of(context).colorScheme;
+        final l10n = context.l10n;
+
+        return AlertDialog(
+          icon: Icon(Icons.warning_rounded, color: colorScheme.error),
+          title: Text(l10n.closeApplicationQuestion),
+          content: Text(l10n.closeApplicationWarning),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: colorScheme.error, foregroundColor: colorScheme.onError),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.closeAnyway),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldClose != true) {
+      return;
+    }
+
+    _isClosing = true;
+    await windowManager.destroy();
+  }
+
+  @override
+  void dispose() {
+    if (!kIsWeb && Platform.isWindows) {
+      windowManager.removeListener(this);
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
   }
 }
 
