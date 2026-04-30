@@ -177,36 +177,43 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
               ],
             ),
             const SizedBox(height: 20),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: SizedBox(
-                  width: constraints.maxWidth >= 960 ? constraints.maxWidth - 48 : 960,
-                  child: PaginatedDataTable(
-                    header: Text('${widget.entityLabel} records'),
-                    columns: columns,
-                    source: source,
-                    rowsPerPage: _resolvedRowsPerPage,
-                    availableRowsPerPage: const [10, 25, 50, 100],
-                    onRowsPerPageChanged: (value) {
-                      if (value == null) {
-                        return;
-                      }
-                      setState(() {
-                        _rowsPerPage = value;
-                      });
-                    },
-                    columnSpacing: 24,
-                    dataRowMinHeight: 64,
-                    dataRowMaxHeight: 72,
-                    headingRowColor: WidgetStateProperty.resolveWith(
-                      (_) => Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+            if (_records.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), color: Theme.of(context).colorScheme.surfaceContainerLowest),
+                child: Text('No data available.', style: Theme.of(context).textTheme.bodyLarge),
+              )
+            else
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: constraints.maxWidth >= 960 ? constraints.maxWidth - 48 : 960,
+                    child: PaginatedDataTable(
+                      header: Text('${widget.entityLabel} records'),
+                      columns: columns,
+                      source: source,
+                      rowsPerPage: _resolvedRowsPerPage,
+                      availableRowsPerPage: const [10, 25, 50, 100],
+                      showEmptyRows: false,
+                      onRowsPerPageChanged: (value) {
+                        if (value == null) {
+                          return;
+                        }
+                        setState(() {
+                          _rowsPerPage = value;
+                        });
+                      },
+                      columnSpacing: 24,
+                      dataRowMinHeight: 64,
+                      dataRowMaxHeight: 72,
+                      headingRowColor: WidgetStateProperty.resolveWith((_) => Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35)),
                     ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),

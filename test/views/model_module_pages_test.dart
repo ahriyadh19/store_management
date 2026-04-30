@@ -42,5 +42,27 @@ void main() {
     expect(find.byTooltip('View Product'), findsWidgets);
     expect(find.byTooltip('Edit Product'), findsWidgets);
     expect(find.byTooltip('Delete Product'), findsWidgets);
+
+    final deleteButtons = find.byTooltip('Delete Product');
+    await tester.ensureVisible(deleteButtons.first);
+    await tester.tap(deleteButtons.first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.byTooltip('Delete Product').first);
+    await tester.tap(find.byTooltip('Delete Product').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.byTooltip('Delete Product').first);
+    await tester.tap(find.byTooltip('Delete Product').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No data available.'), findsOneWidget);
+    expect(find.text('Rows per page:'), findsNothing);
   });
 }
