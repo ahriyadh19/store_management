@@ -5,7 +5,6 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -27,8 +26,17 @@ void main() {
     await tester.tap(find.byTooltip('Open navigation menu'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Menu'), findsOneWidget);
+    expect(find.text('Menu'), findsWidgets);
     expect(find.text('Products'), findsOneWidget);
+    expect(find.text('Store branches'), findsNothing);
+    expect(find.text('Company products'), findsNothing);
+    expect(find.text('Invoice items'), findsNothing);
+    expect(find.text('Return items'), findsNothing);
+    expect(find.text('Payment allocations'), findsNothing);
+    expect(find.text('Customers'), findsNothing);
+    expect(find.text('Store companies'), findsNothing);
+    expect(find.text('Store users'), findsNothing);
+    expect(find.text('User roles'), findsNothing);
   });
 
   testWidgets('shows auth screen by default', (WidgetTester tester) async {

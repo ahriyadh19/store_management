@@ -1,5 +1,6 @@
 import 'package:decimal/decimal.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:store_management/models/branch.dart';
 import 'package:store_management/models/categories.dart';
 import 'package:store_management/models/client.dart';
 import 'package:store_management/models/company.dart';
@@ -10,6 +11,7 @@ import 'package:store_management/models/payment_allocation.dart';
 import 'package:store_management/models/product.dart';
 import 'package:store_management/models/products_tags.dart';
 import 'package:store_management/models/roles.dart';
+import 'package:store_management/models/store_branches.dart';
 import 'package:store_management/models/store_company.dart';
 import 'package:store_management/models/store_financial_transaction.dart';
 import 'package:store_management/models/store_invoice.dart';
@@ -249,6 +251,35 @@ void main() {
 
       expect(StoreCompany.fromMap(storeCompany.toMap()), equals(storeCompany));
       expect(StoreCompany.fromJson(storeCompany.toJson()), equals(storeCompany));
+    });
+
+    test('Branch and StoreBranches round-trip through map and json', () {
+      final branch = Branch(
+        id: 1,
+        uuid: 'branch-uuid',
+        name: 'City Branch',
+        description: 'Handles downtown customers',
+        address: '1 Market Street',
+        phone: '+256700100200',
+        email: 'branch@example.com',
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+      final storeBranch = StoreBranches(
+        id: 1,
+        uuid: 'store-branch-uuid',
+        storeUuid: '11111111-1111-4111-8111-111111111111',
+        branchUuid: '22222222-2222-4222-8222-222222222222',
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+      expect(Branch.fromMap(branch.toMap()), equals(branch));
+      expect(Branch.fromJson(branch.toJson()), equals(branch));
+      expect(StoreBranches.fromMap(storeBranch.toMap()), equals(storeBranch));
+      expect(StoreBranches.fromJson(storeBranch.toJson()), equals(storeBranch));
     });
 
     test('ProductsTags round-trips through map and json', () {

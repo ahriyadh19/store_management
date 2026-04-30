@@ -15,7 +15,7 @@ Widget _buildIndexDrawer(BuildContext context, LocaleController localeController
   final drawerSections = _buildDrawerSections(l10n);
 
   return Drawer(
-    width: 316,
+    width: MediaQuery.of(context).size.width * 0.30,
     child: DecoratedBox(
       decoration: BoxDecoration(
         color: colorScheme.surface,
@@ -123,53 +123,49 @@ Widget _buildIndexDrawer(BuildContext context, LocaleController localeController
 List<_DrawerSection> _buildDrawerSections(AppLocalizations l10n) {
   return [
     _DrawerSection(
+      key: _DrawerSectionKey.overview,
       title: l10n.overview,
       icon: Icons.space_dashboard_rounded,
       items: [
-        _DrawerItem(label: l10n.dashboard, icon: Icons.dashboard_rounded, isActive: true),
-        _DrawerItem(label: l10n.reports, icon: Icons.bar_chart_rounded),
+        _DrawerItem(label: l10n.dashboard, icon: Icons.dashboard_rounded, isActive: true, countsAsModule: false),
+        _DrawerItem(label: l10n.reports, icon: Icons.bar_chart_rounded, countsAsModule: false),
         _DrawerItem(label: l10n.stores, icon: Icons.store_mall_directory_rounded),
         _DrawerItem(label: l10n.branches, icon: Icons.storefront_rounded),
-        _DrawerItem(label: l10n.storeBranches, icon: Icons.alt_route_rounded),
       ],
     ),
     _DrawerSection(
+      key: _DrawerSectionKey.catalog,
       title: l10n.catalog,
       icon: Icons.inventory_2_rounded,
       items: [
         _DrawerItem(label: l10n.products, icon: Icons.inventory_2_rounded),
         _DrawerItem(label: l10n.categories, icon: Icons.category_rounded),
         _DrawerItem(label: l10n.tags, icon: Icons.sell_rounded),
-        _DrawerItem(label: l10n.companyProducts, icon: Icons.widgets_rounded),
       ],
     ),
     _DrawerSection(
+      key: _DrawerSectionKey.sales,
       title: l10n.sales,
       icon: Icons.point_of_sale_rounded,
       items: [
         _DrawerItem(label: l10n.invoices, icon: Icons.receipt_long_rounded),
-        _DrawerItem(label: l10n.invoiceItems, icon: Icons.receipt_rounded),
         _DrawerItem(label: l10n.returns, icon: Icons.assignment_return_rounded),
-        _DrawerItem(label: l10n.returnItems, icon: Icons.assignment_returned_rounded),
         _DrawerItem(label: l10n.paymentVouchers, icon: Icons.account_balance_wallet_rounded),
-        _DrawerItem(label: l10n.paymentAllocations, icon: Icons.account_tree_rounded),
       ],
     ),
     _DrawerSection(
+      key: _DrawerSectionKey.people,
       title: l10n.people,
       icon: Icons.groups_rounded,
       items: [
-        _DrawerItem(label: l10n.customers, icon: Icons.people_rounded),
         _DrawerItem(label: l10n.clients, icon: Icons.support_agent_rounded),
         _DrawerItem(label: l10n.companies, icon: Icons.apartment_rounded),
-        _DrawerItem(label: l10n.storeCompanies, icon: Icons.domain_rounded),
         _DrawerItem(label: l10n.users, icon: Icons.person_outline_rounded),
-        _DrawerItem(label: l10n.storeUsers, icon: Icons.badge_rounded),
         _DrawerItem(label: l10n.roles, icon: Icons.admin_panel_settings_rounded),
-        _DrawerItem(label: l10n.userRoles, icon: Icons.verified_user_rounded),
       ],
     ),
     _DrawerSection(
+      key: _DrawerSectionKey.operations,
       title: l10n.operations,
       icon: Icons.settings_suggest_rounded,
       items: [
@@ -196,37 +192,33 @@ String _initialsForUser(String? name, String? email) {
 }
 
 List<_DashboardMetric> _buildDashboardMetrics(AppLocalizations l10n) {
+  final drawerSections = _buildDrawerSections(l10n);
+  final activeModuleCount = drawerSections.fold<int>(0, (count, section) => count + section.items.where((item) => item.countsAsModule).length);
+
+  int sectionCount(_DrawerSectionKey key) {
+    final section = drawerSections.firstWhere((candidate) => candidate.key == key);
+    return section.items.where((item) => item.countsAsModule).length;
+  }
+
   return [
-    _DashboardMetric(label: l10n.activeModules, value: '21', icon: Icons.apps_rounded),
-    _DashboardMetric(label: l10n.catalog, value: '4', icon: Icons.inventory_2_rounded),
-    _DashboardMetric(label: l10n.sales, value: '6', icon: Icons.point_of_sale_rounded),
-    _DashboardMetric(label: l10n.people, value: '10', icon: Icons.groups_rounded),
+    _DashboardMetric(label: l10n.activeModules, value: '$activeModuleCount', icon: Icons.apps_rounded),
+    _DashboardMetric(label: l10n.catalog, value: '${sectionCount(_DrawerSectionKey.catalog)}', icon: Icons.inventory_2_rounded),
+    _DashboardMetric(label: l10n.sales, value: '${sectionCount(_DrawerSectionKey.sales)}', icon: Icons.point_of_sale_rounded),
+    _DashboardMetric(label: l10n.people, value: '${sectionCount(_DrawerSectionKey.people)}', icon: Icons.groups_rounded),
   ];
 }
 
 List<_DashboardSpotlight> _buildDashboardSpotlights(AppLocalizations l10n) {
   return [
-    _DashboardSpotlight(
-      title: l10n.catalog,
-      description: l10n.catalogSummary,
-      icon: Icons.inventory_2_rounded,
-      accentColor: const Color(0xFF157A6E),
-      items: [l10n.products, l10n.categories, l10n.tags, l10n.companyProducts],
-    ),
-    _DashboardSpotlight(
-      title: l10n.sales,
-      description: l10n.salesSummary,
-      icon: Icons.point_of_sale_rounded,
-      accentColor: const Color(0xFFC8553D),
-      items: [l10n.invoices, l10n.returns, l10n.paymentVouchers, l10n.paymentAllocations],
-    ),
-    _DashboardSpotlight(title: l10n.people, description: l10n.peopleSummary, icon: Icons.groups_rounded, accentColor: const Color(0xFF4E5D94), items: [l10n.customers, l10n.clients, l10n.users, l10n.roles]),
+    _DashboardSpotlight(title: l10n.catalog, description: l10n.catalogSummary, icon: Icons.inventory_2_rounded, accentColor: const Color(0xFF157A6E), items: [l10n.products, l10n.categories, l10n.tags]),
+    _DashboardSpotlight(title: l10n.sales, description: l10n.salesSummary, icon: Icons.point_of_sale_rounded, accentColor: const Color(0xFFC8553D), items: [l10n.invoices, l10n.returns, l10n.paymentVouchers]),
+    _DashboardSpotlight(title: l10n.people, description: l10n.peopleSummary, icon: Icons.groups_rounded, accentColor: const Color(0xFF4E5D94), items: [l10n.clients, l10n.companies, l10n.users, l10n.roles]),
     _DashboardSpotlight(
       title: l10n.operations,
       description: l10n.operationsSummary,
       icon: Icons.settings_suggest_rounded,
       accentColor: const Color(0xFF8A5A44),
-      items: [l10n.inventory, l10n.transactions, l10n.stores, l10n.branches, l10n.storeBranches],
+      items: [l10n.inventory, l10n.transactions, l10n.stores, l10n.branches],
     ),
   ];
 }
@@ -396,20 +388,24 @@ IconData _themeIconFor(ThemeMode mode) {
   }
 }
 
-class _DrawerSection {
-  const _DrawerSection({required this.title, required this.icon, required this.items});
+enum _DrawerSectionKey { overview, catalog, sales, people, operations }
 
+class _DrawerSection {
+  const _DrawerSection({required this.key, required this.title, required this.icon, required this.items});
+
+  final _DrawerSectionKey key;
   final String title;
   final IconData icon;
   final List<_DrawerItem> items;
 }
 
 class _DrawerItem {
-  const _DrawerItem({required this.label, required this.icon, this.isActive = false});
+  const _DrawerItem({required this.label, required this.icon, this.isActive = false, this.countsAsModule = true});
 
   final String label;
   final IconData icon;
   final bool isActive;
+  final bool countsAsModule;
 }
 
 class _DashboardMetric {

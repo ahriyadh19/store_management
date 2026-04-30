@@ -4,19 +4,25 @@ Store Management is a Flutter application for store operations backed by Supabas
 
 ## Overview
 
-The app is organized around store administration and related business entities:
+The app is organized around primary operational modules plus supporting relation/detail records.
 
-- companies and company product pricing
+Primary modules:
+
+- stores and branches
 - products, categories, and tags
-- users, roles, and role assignments
-- store relationships such as store-company, store-client, and store-user
-- client-linked financial records for each store:
-  - invoices
-  - payment vouchers
-  - returns
-  - financial transaction ledger entries
+- clients and companies
+- users and roles
+- invoices, payment vouchers, returns, inventory, and transaction ledgers
+
+Supporting records:
+
+- relation tables such as `store_branches`, `store_clients`, `store_companies`, `store_users`, and `user_roles`
+- pricing/link tables such as `company_products` and `products_tags`
+- transaction detail tables such as `store_invoice_items`, `store_return_items`, and `payment_allocations`
 
 The UI currently covers authentication and a dashboard-style landing screen. The model and controller layers are more complete than the feature screens, so the project is in a good state for continuing page, form, and persistence work.
+
+The dashboard drawer should only surface the primary modules. Supporting relation/detail records remain part of the data model, controllers, validation, tests, and offline persistence, but they are intentionally hidden from top-level navigation because they depend on parent records.
 
 ## Current App Flow
 
@@ -71,29 +77,23 @@ test/
 
 ## Implemented Modules
 
-Controllers currently exist for:
+Top-level modules currently represented in the shell/dashboard are:
 
-- authentication
-- companies
-- company products
-- categories
-- products
-- product tags
-- tags
-- roles
-- users
-- user roles
+- stores and branches
+- products, categories, and tags
+- clients and companies
+- users and roles
 - store invoices
 - store payment vouchers
 - store returns
 - store financial transactions
+- inventory movements
 
-Models currently cover:
+Supporting controllers and models also exist for relation/detail records that should not appear as standalone drawer destinations:
 
-- core entities such as company, product, category, tag, client, user, role, and store
-- relationship entities such as company products, product tags, store-client, store-company, store-user, and user roles
-- financial entities such as store invoice, store payment voucher, store return, and store financial transaction
-- transaction detail entities such as store invoice item, store return item, inventory movement, and payment allocation
+- store clients, store companies, store users, store branches, and user roles
+- company products and product tags
+- store invoice items, store return items, and payment allocations
 
 ## Financial Data Model
 

@@ -60,6 +60,18 @@ void main() {
     };
   }
 
+  Map<String, dynamic> buildBranchData({
+    int id = 10,
+    String name = 'City Branch',
+    String description = 'Handles downtown customers',
+    String address = 'Plot 7 City Square',
+    String phone = '+256700000010',
+    String email = 'branch@example.com',
+    int status = 1,
+  }) {
+    return {'id': id, 'name': name, 'description': description, 'address': address, 'phone': phone, 'email': email, 'status': status};
+  }
+
   Map<String, dynamic> buildStoreClientData({
     int id = 3,
     String storeUuid = '11111111-1111-4111-8111-111111111111',
@@ -102,6 +114,10 @@ void main() {
       'userRoleUuid': userRoleUuid,
       'status': status,
     };
+  }
+
+  Map<String, dynamic> buildStoreBranchesData({int id = 11, String storeUuid = '11111111-1111-4111-8111-111111111111', String branchUuid = '22222222-2222-4222-8222-222222222222', int status = 1}) {
+    return {'id': id, 'storeUuid': storeUuid, 'branchUuid': branchUuid, 'status': status};
   }
 
   Map<String, dynamic> buildPaymentAllocationData({
@@ -204,10 +220,10 @@ void main() {
 
   group('Barrel exports', () {
     test('controllers and validations barrels expose new surfaces', () {
-      final controller = ClientsController();
-      final validationResult = StoresValidation.validateAll(buildRequest());
+      final controller = BranchesController();
+      final validationResult = BranchesValidation.validateAll(buildRequest());
 
-      expect(controller, isA<ClientsController>());
+      expect(controller, isA<BranchesController>());
       expect(validationResult, isNull);
     });
   });
@@ -238,6 +254,23 @@ void main() {
       expect(updateResponse.statusCode, 200);
       expect(updateResponse.data?.name, 'Airport Branch');
       expect(updateResponse.data?.email, 'airport@example.com');
+    });
+
+    test('branches controller creates and updates branch fields', () {
+      final controller = BranchesController();
+
+      final createResponse = controller.create(request: buildRequest(data: buildBranchData()));
+      final updateResponse = controller.update(
+        request: buildRequest(
+          data: buildBranchData(name: 'Airport Branch', email: 'airport.branch@example.com'),
+        ),
+      );
+
+      expect(createResponse.statusCode, 201);
+      expect(createResponse.data?.status, 1);
+      expect(updateResponse.statusCode, 200);
+      expect(updateResponse.data?.name, 'Airport Branch');
+      expect(updateResponse.data?.email, 'airport.branch@example.com');
     });
 
     test('store clients controller deletes created store client', () {
@@ -280,6 +313,18 @@ void main() {
 
       expect(createResponse.statusCode, 201);
       expect(createResponse.data?.userRoleUuid, '55555555-5555-4555-8555-555555555555');
+      expect(allResponse.statusCode, 200);
+      expect(allResponse.data, hasLength(1));
+    });
+
+    test('store branches controller creates and lists store branch relations', () {
+      final controller = StoreBranchesController();
+
+      final createResponse = controller.create(request: buildRequest(data: buildStoreBranchesData()));
+      final allResponse = controller.all(request: buildRequest());
+
+      expect(createResponse.statusCode, 201);
+      expect(createResponse.data?.branchUuid, '22222222-2222-4222-8222-222222222222');
       expect(allResponse.statusCode, 200);
       expect(allResponse.data, hasLength(1));
     });
