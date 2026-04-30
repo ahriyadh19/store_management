@@ -15,7 +15,7 @@ Widget _buildIndexDrawer(BuildContext context, LocaleController localeController
   final drawerSections = _buildDrawerSections(l10n);
 
   return Drawer(
-    width: MediaQuery.of(context).size.width * 0.30,
+    width: 330,
     child: DecoratedBox(
       decoration: BoxDecoration(
         color: colorScheme.surface,
@@ -241,18 +241,7 @@ class Index extends StatelessWidget {
 
     return Scaffold(
       drawer: _buildIndexDrawer(context, localeController, appPreferencesController),
-      appBar: AppBar(
-        title: Text(l10n.appTitle),
-        centerTitle: true,
-        actions: [
-          Builder(
-            builder: (context) => Padding(
-              padding: const EdgeInsetsDirectional.only(end: 12),
-              child: IconButton(tooltip: l10n.menu, onPressed: () => Scaffold.of(context).openDrawer(), icon: Icon(_themeIconFor(appPreferencesController.themeMode))),
-            ),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text(l10n.appTitle), centerTitle: true, elevation: 0, backgroundColor: Colors.transparent),
       body: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [colorScheme.surface, colorScheme.surfaceContainerLow]),
@@ -377,6 +366,8 @@ class Index extends StatelessWidget {
   }
 }
 
+/*
+
 IconData _themeIconFor(ThemeMode mode) {
   switch (mode) {
     case ThemeMode.system:
@@ -387,7 +378,7 @@ IconData _themeIconFor(ThemeMode mode) {
       return Icons.dark_mode_rounded;
   }
 }
-
+*/
 enum _DrawerSectionKey { overview, catalog, sales, people, operations }
 
 class _DrawerSection {

@@ -7,11 +7,15 @@ import 'package:store_management/models/company.dart';
 import 'package:store_management/models/company_products.dart';
 import 'package:store_management/models/inventory_movement.dart';
 import 'package:store_management/models/model_enums.dart';
+import 'package:store_management/models/offline_sync_record.dart';
 import 'package:store_management/models/payment_allocation.dart';
 import 'package:store_management/models/product.dart';
 import 'package:store_management/models/products_tags.dart';
 import 'package:store_management/models/roles.dart';
+import 'package:store_management/models/status_info.dart';
+import 'package:store_management/models/store.dart';
 import 'package:store_management/models/store_branches.dart';
+import 'package:store_management/models/store_client.dart';
 import 'package:store_management/models/store_company.dart';
 import 'package:store_management/models/store_financial_transaction.dart';
 import 'package:store_management/models/store_invoice.dart';
@@ -20,6 +24,7 @@ import 'package:store_management/models/store_payment_voucher.dart';
 import 'package:store_management/models/store_return.dart';
 import 'package:store_management/models/store_return_item.dart';
 import 'package:store_management/models/store_user.dart';
+import 'package:store_management/models/tags.dart' as app_models;
 import 'package:store_management/models/user_roles.dart';
 import 'package:store_management/models/users.dart';
 
@@ -253,6 +258,24 @@ void main() {
       expect(StoreCompany.fromJson(storeCompany.toJson()), equals(storeCompany));
     });
 
+    test('Store and StoreClient round-trip through map and json', () {
+      final store = Store(id: 1, uuid: 'store-uuid', name: 'Main Store', description: 'Flagship branch', address: '1 Market Street', phone: '+256700100200', email: 'store@example.com');
+      final storeClient = StoreClient(
+        id: 1,
+        uuid: 'store-client-uuid',
+        storeUuid: '11111111-1111-4111-8111-111111111111',
+        clientUuid: '22222222-2222-4222-8222-222222222222',
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+      expect(Store.fromMap(store.toMap()), equals(store));
+      expect(Store.fromJson(store.toJson()), equals(store));
+      expect(StoreClient.fromMap(storeClient.toMap()), equals(storeClient));
+      expect(StoreClient.fromJson(storeClient.toJson()), equals(storeClient));
+    });
+
     test('Branch and StoreBranches round-trip through map and json', () {
       final branch = Branch(
         id: 1,
@@ -295,6 +318,13 @@ void main() {
 
       expect(ProductsTags.fromMap(productTag.toMap()), equals(productTag));
       expect(ProductsTags.fromJson(productTag.toJson()), equals(productTag));
+    });
+
+    test('Tags round-trip through map and json', () {
+      final tag = app_models.Tags(id: 1, uuid: 'tag-uuid', name: 'Featured', description: 'Highlighted products', status: 1, createdAt: createdAt, updatedAt: updatedAt);
+
+      expect(app_models.Tags.fromMap(tag.toMap()), equals(tag));
+      expect(app_models.Tags.fromJson(tag.toJson()), equals(tag));
     });
 
     test('StoreInvoice and detail items round-trip through map and json', () {
@@ -502,6 +532,27 @@ void main() {
       expect(client.creditLimit, money('100'));
       expect(client.currentCredit, money('25'));
       expect(client.availableCredit, money('75'));
+    });
+
+    test('StatusInfo round-trips through map and json', () {
+      final statusInfo = StatusInfo(name: 'Active', bgColor: '#E8F5E9', textColor: '#1B5E20', borderColor: '#66BB6A', icon: 'check_circle');
+
+      expect(StatusInfo.fromMap(statusInfo.toMap()), equals(statusInfo));
+      expect(StatusInfo.fromJson(statusInfo.toJson()), equals(statusInfo));
+      expect(statusInfo.copyWith(name: 'Archived').name, 'Archived');
+    });
+
+    test('OfflineSyncRecord keeps expected defaults', () {
+      final record = OfflineSyncRecord(cacheKey: 'client:client-uuid', modelType: 'client', recordUuid: 'client-uuid', payloadJson: '{"uuid":"client-uuid"}', updatedAtMillis: createdAt.millisecondsSinceEpoch);
+
+      expect(record.id, 0);
+      expect(record.syncState, OfflineSyncState.pendingUpsert);
+      expect(record.isDeleted, isFalse);
+      expect(record.remoteUpdatedAtMillis, isNull);
+      expect(OfflineSyncState.isValid(OfflineSyncState.synced), isTrue);
+      expect(OfflineSyncState.isValid(OfflineSyncState.pendingUpsert), isTrue);
+      expect(OfflineSyncState.isValid(OfflineSyncState.pendingDelete), isTrue);
+      expect(OfflineSyncState.isValid(99), isFalse);
     });
   });
 }
