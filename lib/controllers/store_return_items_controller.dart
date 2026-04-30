@@ -1,5 +1,4 @@
 import 'package:store_management/controllers/controller_utils.dart';
-import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/models/store_return_item.dart';
 import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
@@ -40,20 +39,7 @@ class StoreReturnItemsController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      storeReturnItem = StoreReturnItem(
-        id: (request.data?['id'] as int?) ?? 0,
-        returnUuid: request.data!['returnUuid'] as String,
-        invoiceItemUuid: request.data?['invoiceItemUuid'] as String?,
-        companyProductUuid: request.data!['companyProductUuid'] as String,
-        productUuid: request.data!['productUuid'] as String,
-        quantity: request.data!['quantity'] as int,
-        unitPrice: ModelParsing.decimalOrThrow(request.data!['unitPrice'], 'unitPrice'),
-        lineTotal: ModelParsing.decimalOrThrow(request.data!['lineTotal'], 'lineTotal'),
-        reason: request.data!['reason'] as String,
-        status: request.data!['status'] as int,
-        createdAt: now,
-        updatedAt: now,
+      storeReturnItem = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: StoreReturnItem.fromMap,
       );
 
       return Response(statusCode: 201, title: 'Store Return Item Added', message: 'The store return item has been added successfully', data: storeReturnItem);
@@ -73,18 +59,7 @@ class StoreReturnItemsController {
         return ControllerUtils.notFound('Store return item');
       }
 
-      storeReturnItem = storeReturnItem?.copyWith(
-        id: request.data!['id'] as int,
-        returnUuid: request.data!['returnUuid'] as String,
-        invoiceItemUuid: request.data?['invoiceItemUuid'] as String?,
-        companyProductUuid: request.data!['companyProductUuid'] as String,
-        productUuid: request.data!['productUuid'] as String,
-        quantity: request.data!['quantity'] as int,
-        unitPrice: ModelParsing.decimalOrThrow(request.data!['unitPrice'], 'unitPrice'),
-        lineTotal: ModelParsing.decimalOrThrow(request.data!['lineTotal'], 'lineTotal'),
-        reason: request.data!['reason'] as String,
-        status: request.data!['status'] as int,
-        updatedAt: DateTime.now(),
+      storeReturnItem = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: storeReturnItem, toMap: (model) => model.toMap(), fromMap: StoreReturnItem.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Store Return Item Updated', message: 'The store return item has been updated successfully', data: storeReturnItem);

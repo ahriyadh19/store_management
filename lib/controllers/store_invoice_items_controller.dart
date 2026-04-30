@@ -1,5 +1,4 @@
 import 'package:store_management/controllers/controller_utils.dart';
-import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/models/store_invoice_item.dart';
 import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
@@ -40,20 +39,7 @@ class StoreInvoiceItemsController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      storeInvoiceItem = StoreInvoiceItem(
-        id: (request.data?['id'] as int?) ?? 0,
-        invoiceUuid: request.data!['invoiceUuid'] as String,
-        companyProductUuid: request.data!['companyProductUuid'] as String,
-        productUuid: request.data!['productUuid'] as String,
-        quantity: request.data!['quantity'] as int,
-        unitPrice: ModelParsing.decimalOrThrow(request.data!['unitPrice'], 'unitPrice'),
-        discountAmount: ModelParsing.decimalOrThrow(request.data!['discountAmount'], 'discountAmount'),
-        taxAmount: ModelParsing.decimalOrThrow(request.data!['taxAmount'], 'taxAmount'),
-        lineTotal: ModelParsing.decimalOrThrow(request.data!['lineTotal'], 'lineTotal'),
-        status: request.data!['status'] as int,
-        createdAt: now,
-        updatedAt: now,
+      storeInvoiceItem = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: StoreInvoiceItem.fromMap,
       );
 
       return Response(statusCode: 201, title: 'Store Invoice Item Added', message: 'The store invoice item has been added successfully', data: storeInvoiceItem);
@@ -73,18 +59,7 @@ class StoreInvoiceItemsController {
         return ControllerUtils.notFound('Store invoice item');
       }
 
-      storeInvoiceItem = storeInvoiceItem?.copyWith(
-        id: request.data!['id'] as int,
-        invoiceUuid: request.data!['invoiceUuid'] as String,
-        companyProductUuid: request.data!['companyProductUuid'] as String,
-        productUuid: request.data!['productUuid'] as String,
-        quantity: request.data!['quantity'] as int,
-        unitPrice: ModelParsing.decimalOrThrow(request.data!['unitPrice'], 'unitPrice'),
-        discountAmount: ModelParsing.decimalOrThrow(request.data!['discountAmount'], 'discountAmount'),
-        taxAmount: ModelParsing.decimalOrThrow(request.data!['taxAmount'], 'taxAmount'),
-        lineTotal: ModelParsing.decimalOrThrow(request.data!['lineTotal'], 'lineTotal'),
-        status: request.data!['status'] as int,
-        updatedAt: DateTime.now(),
+      storeInvoiceItem = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: storeInvoiceItem, toMap: (model) => model.toMap(), fromMap: StoreInvoiceItem.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Store Invoice Item Updated', message: 'The store invoice item has been updated successfully', data: storeInvoiceItem);

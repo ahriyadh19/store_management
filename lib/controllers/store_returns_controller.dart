@@ -1,6 +1,4 @@
 import 'package:store_management/controllers/controller_utils.dart';
-import 'package:store_management/models/model_enums.dart';
-import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/models/store_return.dart';
 import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
@@ -41,20 +39,7 @@ class StoreReturnsController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      storeReturn = StoreReturn(
-        id: (request.data?['id'] as int?) ?? 0,
-        storeUuid: request.data!['storeUuid'] as String,
-        clientUuid: request.data!['clientUuid'] as String,
-        returnNumber: request.data!['returnNumber'] as String,
-        returnType: StoreReturnType.fromValue(request.data!['returnType'] as String),
-        itemCount: request.data!['itemCount'] as int,
-        totalAmount: ModelParsing.decimalOrThrow(request.data!['totalAmount'], 'totalAmount'),
-        reason: request.data!['reason'] as String,
-        transactionDate: DateTime.fromMillisecondsSinceEpoch(request.data!['transactionDate'] as int),
-        status: request.data!['status'] as int,
-        createdAt: now,
-        updatedAt: now,
+      storeReturn = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: StoreReturn.fromMap,
       );
 
       return Response(statusCode: 201, title: 'Return Added', message: 'The return has been added successfully', data: storeReturn);
@@ -74,18 +59,7 @@ class StoreReturnsController {
         return ControllerUtils.notFound('Store return');
       }
 
-      storeReturn = storeReturn?.copyWith(
-        id: request.data!['id'] as int,
-        storeUuid: request.data!['storeUuid'] as String,
-        clientUuid: request.data!['clientUuid'] as String,
-        returnNumber: request.data!['returnNumber'] as String,
-        returnType: StoreReturnType.fromValue(request.data!['returnType'] as String),
-        itemCount: request.data!['itemCount'] as int,
-        totalAmount: ModelParsing.decimalOrThrow(request.data!['totalAmount'], 'totalAmount'),
-        reason: request.data!['reason'] as String,
-        transactionDate: DateTime.fromMillisecondsSinceEpoch(request.data!['transactionDate'] as int),
-        status: request.data!['status'] as int,
-        updatedAt: DateTime.now(),
+      storeReturn = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: storeReturn, toMap: (model) => model.toMap(), fromMap: StoreReturn.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Return Updated', message: 'The return has been updated successfully', data: storeReturn);

@@ -1,6 +1,4 @@
 import 'package:store_management/controllers/controller_utils.dart';
-import 'package:store_management/models/model_enums.dart';
-import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/models/store_financial_transaction.dart';
 import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
@@ -41,22 +39,7 @@ class StoreFinancialTransactionsController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      transaction = StoreFinancialTransaction(
-        id: (request.data?['id'] as int?) ?? 0,
-        storeUuid: request.data!['storeUuid'] as String,
-        clientUuid: request.data!['clientUuid'] as String,
-        transactionNumber: request.data!['transactionNumber'] as String,
-        transactionType: FinancialTransactionType.fromValue(request.data!['transactionType'] as String),
-        sourceType: FinancialSourceType.fromValue(request.data!['sourceType'] as String),
-        sourceUuid: request.data!['sourceUuid'] as String,
-        amount: ModelParsing.decimalOrThrow(request.data!['amount'], 'amount'),
-        entryType: LedgerEntryType.fromValue(request.data!['entryType'] as String),
-        description: request.data!['description'] as String,
-        transactionDate: DateTime.fromMillisecondsSinceEpoch(request.data!['transactionDate'] as int),
-        status: request.data!['status'] as int,
-        createdAt: now,
-        updatedAt: now,
+      transaction = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: StoreFinancialTransaction.fromMap,
       );
 
       return Response(statusCode: 201, title: 'Financial Transaction Added', message: 'The financial transaction has been added successfully', data: transaction);
@@ -76,20 +59,7 @@ class StoreFinancialTransactionsController {
         return ControllerUtils.notFound('Store financial transaction');
       }
 
-      transaction = transaction?.copyWith(
-        id: request.data!['id'] as int,
-        storeUuid: request.data!['storeUuid'] as String,
-        clientUuid: request.data!['clientUuid'] as String,
-        transactionNumber: request.data!['transactionNumber'] as String,
-        transactionType: FinancialTransactionType.fromValue(request.data!['transactionType'] as String),
-        sourceType: FinancialSourceType.fromValue(request.data!['sourceType'] as String),
-        sourceUuid: request.data!['sourceUuid'] as String,
-        amount: ModelParsing.decimalOrThrow(request.data!['amount'], 'amount'),
-        entryType: LedgerEntryType.fromValue(request.data!['entryType'] as String),
-        description: request.data!['description'] as String,
-        transactionDate: DateTime.fromMillisecondsSinceEpoch(request.data!['transactionDate'] as int),
-        status: request.data!['status'] as int,
-        updatedAt: DateTime.now(),
+      transaction = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: transaction, toMap: (model) => model.toMap(), fromMap: StoreFinancialTransaction.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Financial Transaction Updated', message: 'The financial transaction has been updated successfully', data: transaction);

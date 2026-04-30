@@ -1,6 +1,5 @@
 import 'package:store_management/controllers/controller_utils.dart';
 import 'package:store_management/models/client.dart';
-import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
 import 'package:store_management/validations/clients_validation.dart';
@@ -40,20 +39,7 @@ class ClientsController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      client = Client(
-        id: (request.data?['id'] as int?) ?? 0,
-        name: request.data!['name'] as String,
-        description: request.data!['description'] as String,
-        email: request.data!['email'] as String,
-        phone: request.data!['phone'] as String,
-        address: request.data!['address'] as String,
-        status: request.data!['status'] as int,
-        creditLimit: ModelParsing.decimalOrThrow(request.data!['creditLimit'], 'creditLimit'),
-        currentCredit: ModelParsing.decimalOrThrow(request.data!['currentCredit'], 'currentCredit'),
-        availableCredit: ModelParsing.decimalOrThrow(request.data!['availableCredit'], 'availableCredit'),
-        createdAt: now,
-        updatedAt: now,
+      client = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: Client.fromMap,
       );
 
       return Response(statusCode: 201, title: 'Client Added', message: 'The client has been added successfully', data: client);
@@ -73,18 +59,7 @@ class ClientsController {
         return ControllerUtils.notFound('Client');
       }
 
-      client = client?.copyWith(
-        id: request.data!['id'] as int,
-        name: request.data!['name'] as String,
-        description: request.data!['description'] as String,
-        email: request.data!['email'] as String,
-        phone: request.data!['phone'] as String,
-        address: request.data!['address'] as String,
-        status: request.data!['status'] as int,
-        creditLimit: ModelParsing.decimalOrThrow(request.data!['creditLimit'], 'creditLimit'),
-        currentCredit: ModelParsing.decimalOrThrow(request.data!['currentCredit'], 'currentCredit'),
-        availableCredit: ModelParsing.decimalOrThrow(request.data!['availableCredit'], 'availableCredit'),
-        updatedAt: DateTime.now(),
+      client = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: client, toMap: (model) => model.toMap(), fromMap: Client.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Client Updated', message: 'The client has been updated successfully', data: client);

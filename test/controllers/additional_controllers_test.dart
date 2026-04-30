@@ -138,6 +138,90 @@ void main() {
     };
   }
 
+  Map<String, dynamic> buildPaymentVoucherData({
+    int id = 12,
+    String storeUuid = '11111111-1111-4111-8111-111111111111',
+    String clientUuid = '22222222-2222-4222-8222-222222222222',
+    String voucherNumber = 'PV-001',
+    String payeeName = 'Supplier One',
+    num amount = 250.75,
+    String paymentMethod = 'cash',
+    String referenceNumber = 'REF-001',
+    String description = 'Vendor settlement',
+    int transactionDateMs = 1714003200000,
+    int status = 1,
+  }) {
+    return {
+      'id': id,
+      'storeUuid': storeUuid,
+      'clientUuid': clientUuid,
+      'voucherNumber': voucherNumber,
+      'payeeName': payeeName,
+      'amount': amount,
+      'paymentMethod': paymentMethod,
+      'referenceNumber': referenceNumber,
+      'description': description,
+      'transactionDate': transactionDateMs,
+      'status': status,
+    };
+  }
+
+  Map<String, dynamic> buildStoreReturnData({
+    int id = 13,
+    String storeUuid = '11111111-1111-4111-8111-111111111111',
+    String clientUuid = '22222222-2222-4222-8222-222222222222',
+    String returnNumber = 'RET-001',
+    String returnType = 'sales_return',
+    int itemCount = 1,
+    num totalAmount = 80,
+    String reason = 'Customer returned item',
+    int transactionDateMs = 1714089600000,
+    int status = 1,
+  }) {
+    return {
+      'id': id,
+      'storeUuid': storeUuid,
+      'clientUuid': clientUuid,
+      'returnNumber': returnNumber,
+      'returnType': returnType,
+      'itemCount': itemCount,
+      'totalAmount': totalAmount,
+      'reason': reason,
+      'transactionDate': transactionDateMs,
+      'status': status,
+    };
+  }
+
+  Map<String, dynamic> buildFinancialTransactionData({
+    int id = 14,
+    String storeUuid = '11111111-1111-4111-8111-111111111111',
+    String clientUuid = '22222222-2222-4222-8222-222222222222',
+    String transactionNumber = 'TXN-001',
+    String transactionType = 'payment_receipt',
+    String sourceType = 'payment_voucher',
+    String sourceUuid = '66666666-6666-4666-8666-666666666666',
+    num amount = 250.75,
+    String entryType = 'debit',
+    String description = 'Payment posted',
+    int transactionDateMs = 1714176000000,
+    int status = 1,
+  }) {
+    return {
+      'id': id,
+      'storeUuid': storeUuid,
+      'clientUuid': clientUuid,
+      'transactionNumber': transactionNumber,
+      'transactionType': transactionType,
+      'sourceType': sourceType,
+      'sourceUuid': sourceUuid,
+      'amount': amount,
+      'entryType': entryType,
+      'description': description,
+      'transactionDate': transactionDateMs,
+      'status': status,
+    };
+  }
+
   Map<String, dynamic> buildStoreInvoiceItemData({
     int id = 7,
     String invoiceUuid = '77777777-7777-4777-8777-777777777777',
@@ -337,6 +421,38 @@ void main() {
       expect(response.statusCode, 201);
       expect(response.data?.allocatedAmount, Decimal.parse('85.5'));
       expect(response.data?.allocationDate, allocationDate);
+    });
+
+    test('store payment vouchers controller parses decimal and enum fields', () {
+      final controller = StorePaymentVouchersController();
+
+      final response = controller.create(request: buildRequest(data: buildPaymentVoucherData()));
+
+      expect(response.statusCode, 201);
+      expect(response.data?.amount, Decimal.parse('250.75'));
+      expect(response.data?.paymentMethod, StorePaymentMethod.cash);
+    });
+
+    test('store returns controller parses total amount and enum fields', () {
+      final controller = StoreReturnsController();
+
+      final response = controller.create(request: buildRequest(data: buildStoreReturnData()));
+
+      expect(response.statusCode, 201);
+      expect(response.data?.returnType, StoreReturnType.salesReturn);
+      expect(response.data?.totalAmount, Decimal.parse('80'));
+    });
+
+    test('store financial transactions controller parses enum and amount fields', () {
+      final controller = StoreFinancialTransactionsController();
+
+      final response = controller.create(request: buildRequest(data: buildFinancialTransactionData()));
+
+      expect(response.statusCode, 201);
+      expect(response.data?.transactionType, FinancialTransactionType.paymentReceipt);
+      expect(response.data?.sourceType, FinancialSourceType.paymentVoucher);
+      expect(response.data?.entryType, LedgerEntryType.debit);
+      expect(response.data?.amount, Decimal.parse('250.75'));
     });
 
     test('store invoice items controller validates required quantity', () {

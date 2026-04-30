@@ -1,6 +1,7 @@
 import 'package:decimal/decimal.dart';
 import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/services/uuid.dart';
+
 class ModelParsing {
   static String? stringOrNull(dynamic value) {
     if (value == null) {
@@ -128,66 +129,38 @@ class ModelParsing {
   }
 
   static StorePaymentMethod paymentMethodFromValue(dynamic value, String fieldName) {
-    if (value is! String) {
-      throw FormatException('Invalid string value for $fieldName: $value');
-    }
-
-    return StorePaymentMethod.fromValue(value);
+    return _enumFromString(value, fieldName, StorePaymentMethod.fromValue);
   }
 
   static StoreInvoiceType invoiceTypeFromValue(dynamic value, String fieldName) {
-    if (value is! String) {
-      throw FormatException('Invalid string value for $fieldName: $value');
-    }
-
-    return StoreInvoiceType.fromValue(value);
+    return _enumFromString(value, fieldName, StoreInvoiceType.fromValue);
   }
 
   static StoreReturnType returnTypeFromValue(dynamic value, String fieldName) {
-    if (value is! String) {
-      throw FormatException('Invalid string value for $fieldName: $value');
-    }
-
-    return StoreReturnType.fromValue(value);
+    return _enumFromString(value, fieldName, StoreReturnType.fromValue);
   }
 
   static FinancialTransactionType financialTransactionTypeFromValue(dynamic value, String fieldName) {
-    if (value is! String) {
-      throw FormatException('Invalid string value for $fieldName: $value');
-    }
-
-    return FinancialTransactionType.fromValue(value);
+    return _enumFromString(value, fieldName, FinancialTransactionType.fromValue);
   }
 
   static FinancialSourceType financialSourceTypeFromValue(dynamic value, String fieldName) {
-    if (value is! String) {
-      throw FormatException('Invalid string value for $fieldName: $value');
-    }
-
-    return FinancialSourceType.fromValue(value);
+    return _enumFromString(value, fieldName, FinancialSourceType.fromValue);
   }
 
   static LedgerEntryType ledgerEntryTypeFromValue(dynamic value, String fieldName) {
-    if (value is! String) {
-      throw FormatException('Invalid string value for $fieldName: $value');
-    }
-
-    return LedgerEntryType.fromValue(value);
+    return _enumFromString(value, fieldName, LedgerEntryType.fromValue);
   }
 
   static InventoryMovementType inventoryMovementTypeFromValue(dynamic value, String fieldName) {
-    if (value is! String) {
-      throw FormatException('Invalid string value for $fieldName: $value');
-    }
-
-    return InventoryMovementType.fromValue(value);
+    return _enumFromString(value, fieldName, InventoryMovementType.fromValue);
   }
 
   static InventoryReferenceType inventoryReferenceTypeFromValue(dynamic value, String fieldName) {
-    if (value is! String) {
-      throw FormatException('Invalid string value for $fieldName: $value');
-    }
+    return _enumFromString(value, fieldName, InventoryReferenceType.fromValue);
+  }
 
-    return InventoryReferenceType.fromValue(value);
+  static T _enumFromString<T>(dynamic value, String fieldName, T Function(String value) parser) {
+    return parser(stringOrThrow(value, fieldName));
   }
 }

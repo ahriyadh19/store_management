@@ -1,6 +1,4 @@
 import 'package:store_management/controllers/controller_utils.dart';
-import 'package:store_management/models/model_enums.dart';
-import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/models/store_payment_voucher.dart';
 import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
@@ -41,21 +39,7 @@ class StorePaymentVouchersController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      paymentVoucher = StorePaymentVoucher(
-        id: (request.data?['id'] as int?) ?? 0,
-        storeUuid: request.data!['storeUuid'] as String,
-        clientUuid: request.data!['clientUuid'] as String,
-        voucherNumber: request.data!['voucherNumber'] as String,
-        payeeName: request.data!['payeeName'] as String,
-        amount: ModelParsing.decimalOrThrow(request.data!['amount'], 'amount'),
-        paymentMethod: StorePaymentMethod.fromValue(request.data!['paymentMethod'] as String),
-        referenceNumber: request.data!['referenceNumber'] as String,
-        description: request.data!['description'] as String,
-        transactionDate: DateTime.fromMillisecondsSinceEpoch(request.data!['transactionDate'] as int),
-        status: request.data!['status'] as int,
-        createdAt: now,
-        updatedAt: now,
+      paymentVoucher = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: StorePaymentVoucher.fromMap,
       );
 
       return Response(statusCode: 201, title: 'Payment Voucher Added', message: 'The payment voucher has been added successfully', data: paymentVoucher);
@@ -75,19 +59,7 @@ class StorePaymentVouchersController {
         return ControllerUtils.notFound('Store payment voucher');
       }
 
-      paymentVoucher = paymentVoucher?.copyWith(
-        id: request.data!['id'] as int,
-        storeUuid: request.data!['storeUuid'] as String,
-        clientUuid: request.data!['clientUuid'] as String,
-        voucherNumber: request.data!['voucherNumber'] as String,
-        payeeName: request.data!['payeeName'] as String,
-        amount: ModelParsing.decimalOrThrow(request.data!['amount'], 'amount'),
-        paymentMethod: StorePaymentMethod.fromValue(request.data!['paymentMethod'] as String),
-        referenceNumber: request.data!['referenceNumber'] as String,
-        description: request.data!['description'] as String,
-        transactionDate: DateTime.fromMillisecondsSinceEpoch(request.data!['transactionDate'] as int),
-        status: request.data!['status'] as int,
-        updatedAt: DateTime.now(),
+      paymentVoucher = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: paymentVoucher, toMap: (model) => model.toMap(), fromMap: StorePaymentVoucher.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Payment Voucher Updated', message: 'The payment voucher has been updated successfully', data: paymentVoucher);

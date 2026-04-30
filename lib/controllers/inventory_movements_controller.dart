@@ -1,7 +1,5 @@
 import 'package:store_management/controllers/controller_utils.dart';
 import 'package:store_management/models/inventory_movement.dart';
-import 'package:store_management/models/model_enums.dart';
-import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
 import 'package:store_management/validations/inventory_movements_validation.dart';
@@ -41,21 +39,7 @@ class InventoryMovementsController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      inventoryMovement = InventoryMovement(
-        id: (request.data?['id'] as int?) ?? 0,
-        companyProductUuid: request.data!['companyProductUuid'] as String,
-        productUuid: request.data!['productUuid'] as String,
-        movementType: InventoryMovementType.fromValue(request.data!['movementType'] as String),
-        quantityDelta: request.data!['quantityDelta'] as int,
-        balanceAfter: request.data!['balanceAfter'] as int,
-        unitCost: ModelParsing.decimalOrNull(request.data!['unitCost']),
-        referenceType: InventoryReferenceType.fromValue(request.data!['referenceType'] as String),
-        referenceUuid: request.data?['referenceUuid'] as String?,
-        note: request.data!['note'] as String,
-        createdByUserUuid: request.data?['createdByUserUuid'] as String?,
-        createdAt: now,
-        updatedAt: now,
+      inventoryMovement = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: InventoryMovement.fromMap,
       );
 
       return Response(statusCode: 201, title: 'Inventory Movement Added', message: 'The inventory movement has been added successfully', data: inventoryMovement);
@@ -75,19 +59,7 @@ class InventoryMovementsController {
         return ControllerUtils.notFound('Inventory movement');
       }
 
-      inventoryMovement = inventoryMovement?.copyWith(
-        id: request.data!['id'] as int,
-        companyProductUuid: request.data!['companyProductUuid'] as String,
-        productUuid: request.data!['productUuid'] as String,
-        movementType: InventoryMovementType.fromValue(request.data!['movementType'] as String),
-        quantityDelta: request.data!['quantityDelta'] as int,
-        balanceAfter: request.data!['balanceAfter'] as int,
-        unitCost: ModelParsing.decimalOrNull(request.data!['unitCost']),
-        referenceType: InventoryReferenceType.fromValue(request.data!['referenceType'] as String),
-        referenceUuid: request.data?['referenceUuid'] as String?,
-        note: request.data!['note'] as String,
-        createdByUserUuid: request.data?['createdByUserUuid'] as String?,
-        updatedAt: DateTime.now(),
+      inventoryMovement = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: inventoryMovement, toMap: (model) => model.toMap(), fromMap: InventoryMovement.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Inventory Movement Updated', message: 'The inventory movement has been updated successfully', data: inventoryMovement);
