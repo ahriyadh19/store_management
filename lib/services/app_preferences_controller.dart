@@ -2,29 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AppPreferencesController extends ChangeNotifier {
-  AppPreferencesController({
-    ThemeMode initialThemeMode = ThemeMode.light,
-    String initialLastEmail = '',
-    List<String> initialRecentEmails = const [],
-    SharedPreferences? preferences,
-  })  : _themeMode = initialThemeMode,
-        _lastEmail = initialLastEmail,
+  AppPreferencesController({ThemeMode initialThemeMode = ThemeMode.light, String initialLastEmail = '', List<String> initialRecentEmails = const [], String initialLastIndexPageKey = '', SharedPreferences? preferences})
+    : _themeMode = initialThemeMode,
+      _lastEmail = initialLastEmail,
       _recentEmails = List<String>.from(initialRecentEmails),
-        _preferences = preferences;
+      _lastIndexPageKey = initialLastIndexPageKey,
+      _preferences = preferences;
 
   static const _themeModeStorageKey = 'app.themeMode';
   static const _lastEmailStorageKey = 'auth.lastEmail';
   static const _recentEmailsStorageKey = 'auth.recentEmails';
+  static const _lastIndexPageStorageKey = 'app.lastIndexPage';
   static const _maxRecentEmails = 5;
 
   ThemeMode _themeMode;
   String _lastEmail;
   List<String> _recentEmails;
+  String _lastIndexPageKey;
   final SharedPreferences? _preferences;
 
   ThemeMode get themeMode => _themeMode;
   String get lastEmail => _lastEmail;
   List<String> get recentEmails => List.unmodifiable(_recentEmails);
+  String get lastIndexPageKey => _lastIndexPageKey;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
 
   static Future<AppPreferencesController> create() async {
@@ -32,12 +32,14 @@ class AppPreferencesController extends ChangeNotifier {
     final themeMode = preferences.getString(_themeModeStorageKey);
     final lastEmail = preferences.getString(_lastEmailStorageKey) ?? '';
     final recentEmails = preferences.getStringList(_recentEmailsStorageKey) ?? <String>[];
+    final lastIndexPageKey = preferences.getString(_lastIndexPageStorageKey) ?? '';
     final hydratedRecentEmails = recentEmails.isNotEmpty ? recentEmails : (lastEmail.isNotEmpty ? <String>[lastEmail] : const <String>[]);
 
     return AppPreferencesController(
       initialThemeMode: _themeModeFromStorage(themeMode),
       initialLastEmail: hydratedRecentEmails.isNotEmpty ? hydratedRecentEmails.first : lastEmail,
       initialRecentEmails: hydratedRecentEmails,
+      initialLastIndexPageKey: lastIndexPageKey,
       preferences: preferences,
     );
   }
@@ -77,6 +79,17 @@ class AppPreferencesController extends ChangeNotifier {
 
   Future<void> saveLastEmail(String value) async {
     await saveRecentEmail(value);
+  }
+
+  Future<void> saveLastIndexPageKey(String value) async {
+    final trimmedValue = value.trim();
+    if (_lastIndexPageKey == trimmedValue) {
+      return;
+    }
+
+    _lastIndexPageKey = trimmedValue;
+    notifyListeners();
+    await _preferences?.setString(_lastIndexPageStorageKey, trimmedValue);
   }
 
   static ThemeMode _themeModeFromStorage(String? value) {
