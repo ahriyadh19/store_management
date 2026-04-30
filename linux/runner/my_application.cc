@@ -1,6 +1,7 @@
 #include "my_application.h"
 
 #include <flutter_linux/flutter_linux.h>
+#include <glib.h>
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
 #endif
@@ -13,6 +14,19 @@ struct _MyApplication {
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
+
+static gchar *get_linux_window_icon_path()
+{
+  g_autoptr(GError) error = nullptr;
+  g_autofree gchar *executable_path = g_file_read_link("/proc/self/exe", &error);
+  if (error != nullptr || executable_path == nullptr)
+  {
+    return nullptr;
+  }
+
+  g_autofree gchar *executable_dir = g_path_get_dirname(executable_path);
+  return g_build_filename(executable_dir, "data", "flutter_assets", "lib", "assets", "icons", "linux.png", nullptr);
+}
 
 // Called when first Flutter frame received.
 static void first_frame_cb(MyApplication* self, FlView* view) {
@@ -50,6 +64,12 @@ static void my_application_activate(GApplication* application) {
     gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
   } else {
     gtk_window_set_title(window, "Store Management");
+  }
+
+  g_autofree gchar *icon_path = get_linux_window_icon_path();
+  if (icon_path != nullptr && g_file_test(icon_path, G_FILE_TEST_EXISTS))
+  {
+    gtk_window_set_icon_from_file(window, icon_path, nullptr);
   }
 
   gtk_window_set_default_size(window, 1280, 720);

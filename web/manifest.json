@@ -1,11 +1,11 @@
 {
-    "name": "store_management",
-    "short_name": "store_management",
+    "name": "Store Management",
+    "short_name": "Store Management",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
+    "background_color": "#FFFFFF",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Store Management application.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
