@@ -126,6 +126,9 @@ class AppLocalizations {
     'availablePlatformsTitle': 'Available at',
     'settings': 'Settings',
     'theme': 'Theme',
+    'appBarBehavior': 'App bar behavior',
+    'stickyAppBar': 'Sticky app bar',
+    'hideAppBarOnScroll': 'Hide app bar on scroll down',
     'darkMode': 'Dark mode',
     'lightMode': 'Light mode',
     'systemMode': 'System mode',
@@ -290,6 +293,9 @@ class AppLocalizations {
     'platformWindows': 'ويندوز',
     'settings': 'الإعدادات',
     'theme': 'المظهر',
+    'appBarBehavior': 'سلوك شريط التطبيق',
+    'stickyAppBar': 'شريط تطبيق ثابت',
+    'hideAppBarOnScroll': 'إخفاء شريط التطبيق عند التمرير لأسفل',
     'darkMode': 'الوضع الداكن',
     'lightMode': 'الوضع الفاتح',
     'systemMode': 'وضع النظام',
@@ -463,6 +469,9 @@ class AppLocalizations {
   String get platformWindows => _text('platformWindows');
   String get settings => _text('settings');
   String get theme => _text('theme');
+  String get appBarBehavior => _text('appBarBehavior');
+  String get stickyAppBar => _text('stickyAppBar');
+  String get hideAppBarOnScroll => _text('hideAppBarOnScroll');
   String get darkMode => _text('darkMode');
   String get lightMode => _text('lightMode');
   String get systemMode => _text('systemMode');

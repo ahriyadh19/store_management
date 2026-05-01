@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:store_management/controllers/auth_controller.dart';
 import 'package:store_management/localization/app_localizations.dart';
@@ -161,6 +162,7 @@ class Index extends StatefulWidget {
 
 class _IndexState extends State<Index> {
   late IndexPage _selectedPage;
+  bool _isAppBarVisible = true;
 
   @override
   void initState() {
@@ -176,6 +178,7 @@ class _IndexState extends State<Index> {
 
     setState(() {
       _selectedPage = page;
+      _isAppBarVisible = true;
     });
     widget.appPreferencesController.saveLastIndexPageKey(page.storageKey);
     Navigator.of(context).maybePop();
@@ -202,39 +205,76 @@ class _IndexState extends State<Index> {
     }
   }
 
+  bool _handleBodyScrollNotification(ScrollNotification notification, bool stickyAppBar) {
+    if (stickyAppBar || notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+
+    if (notification.metrics.pixels <= 0 && !_isAppBarVisible) {
+      setState(() {
+        _isAppBarVisible = true;
+      });
+      return false;
+    }
+
+    if (notification is UserScrollNotification) {
+      if (notification.direction == ScrollDirection.reverse && _isAppBarVisible) {
+        setState(() {
+          _isAppBarVisible = false;
+        });
+      } else if ((notification.direction == ScrollDirection.forward || notification.direction == ScrollDirection.idle) && !_isAppBarVisible) {
+        setState(() {
+          _isAppBarVisible = true;
+        });
+      }
+    }
+
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthController>().state;
     final pageDefinitions = buildIndexPageDefinitions(context, authState, localeController: widget.localeController, appPreferencesController: widget.appPreferencesController);
     final selectedDefinition = pageDefinitions[_selectedPage]!;
 
-    return Scaffold(
-      drawer: _buildIndexDrawer(context, selectedPage: _selectedPage, onSelectPage: _handlePageSelected),
-      appBar: AppBar(
-        title: Text(selectedDefinition.title),
-        centerTitle: true,
-        elevation: 4,
-        backgroundColor: Colors.transparent,
-        shadowColor: Colors.black.withValues(alpha: 0.12),
-        actions: [
-          IconButton(
-            tooltip: context.l10n.settings,
-            icon: const Icon(Icons.settings_rounded),
-            onPressed: () {
-              _handlePageSelected(IndexPage.settings);
-            },
+    return AnimatedBuilder(
+      animation: widget.appPreferencesController,
+      builder: (context, child) {
+        final stickyAppBar = widget.appPreferencesController.stickyAppBar;
+        final effectiveToolbarHeight = stickyAppBar || _isAppBarVisible ? kToolbarHeight : 0.0;
+
+        return Scaffold(
+          drawer: _buildIndexDrawer(context, selectedPage: _selectedPage, onSelectPage: _handlePageSelected),
+          appBar: AppBar(
+            toolbarHeight: effectiveToolbarHeight,
+            title: effectiveToolbarHeight == 0 ? null : Text(selectedDefinition.title),
+            centerTitle: true,
+            elevation: 4,
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.black.withValues(alpha: 0.12),
+            actions: effectiveToolbarHeight == 0
+                ? const <Widget>[]
+                : [
+                    IconButton(
+                      tooltip: context.l10n.settings,
+                      icon: const Icon(Icons.settings_rounded),
+                      onPressed: () {
+                        _handlePageSelected(IndexPage.settings);
+                      },
+                    ),
+                    IconButton(
+                      tooltip: context.l10n.logout,
+                      icon: const Icon(Icons.logout_rounded),
+                      onPressed: () {
+                        _confirmSignOut();
+                      },
+                    ),
+                  ],
           ),
-          // Sign out
-          IconButton(
-            tooltip: context.l10n.logout,
-            icon: const Icon(Icons.logout_rounded),
-            onPressed: () {
-              _confirmSignOut();
-            },
-          ),
-        ],
-      ),
-      body: selectedDefinition.bodyBuilder(context),
+          body: NotificationListener<ScrollNotification>(onNotification: (notification) => _handleBodyScrollNotification(notification, stickyAppBar), child: selectedDefinition.bodyBuilder(context)),
+        );
+      },
     );
   }
 }
