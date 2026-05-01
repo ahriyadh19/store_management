@@ -62,6 +62,31 @@ class SettingsPage extends StatelessWidget {
                       selected: !appPreferencesController.stickyAppBar,
                       onTap: () => appPreferencesController.setStickyAppBar(false),
                     ),
+                    const SizedBox(height: 20),
+                    Text(l10n.storagePreference, style: theme.textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant)),
+                    const SizedBox(height: 8),
+                    _StoragePreferenceOptionTile(
+                      icon: Icons.sync_rounded,
+                      label: l10n.storageHybrid,
+                      description: l10n.storageHybridDescription,
+                      recommendedLabel: l10n.recommended,
+                      selected: appPreferencesController.storagePreference == StoragePreference.hybrid,
+                      onTap: () => appPreferencesController.setStoragePreference(StoragePreference.hybrid),
+                    ),
+                    _StoragePreferenceOptionTile(
+                      icon: Icons.cloud_done_rounded,
+                      label: l10n.storageOnlineOnly,
+                      description: l10n.storageOnlineOnlyDescription,
+                      selected: appPreferencesController.storagePreference == StoragePreference.onlineOnly,
+                      onTap: () => appPreferencesController.setStoragePreference(StoragePreference.onlineOnly),
+                    ),
+                    _StoragePreferenceOptionTile(
+                      icon: Icons.phone_android_rounded,
+                      label: l10n.storageLocalOnly,
+                      description: l10n.storageLocalOnlyDescription,
+                      selected: appPreferencesController.storagePreference == StoragePreference.localOnly,
+                      onTap: () => appPreferencesController.setStoragePreference(StoragePreference.localOnly),
+                    ),
                   ],
                 ),
               ),
@@ -117,6 +142,49 @@ class _AppBarBehaviorOptionTile extends StatelessWidget {
       leading: Icon(icon, size: 20),
       title: Text(label),
       trailing: selected ? Icon(Icons.check_rounded, color: Theme.of(context).colorScheme.primary) : null,
+      selected: selected,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      onTap: onTap,
+    );
+  }
+}
+
+class _StoragePreferenceOptionTile extends StatelessWidget {
+  const _StoragePreferenceOptionTile({required this.icon, required this.label, required this.description, required this.selected, required this.onTap, this.recommendedLabel});
+
+  final IconData icon;
+  final String label;
+  final String description;
+  final bool selected;
+  final VoidCallback onTap;
+  final String? recommendedLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return ListTile(
+      dense: true,
+      visualDensity: const VisualDensity(horizontal: -1, vertical: -1),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      leading: Icon(icon, size: 20),
+      title: Row(
+        children: [
+          Expanded(child: Text(label)),
+          if (recommendedLabel != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(color: colorScheme.primaryContainer, borderRadius: BorderRadius.circular(999)),
+              child: Text(
+                recommendedLabel!,
+                style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700, color: colorScheme.primary),
+              ),
+            ),
+        ],
+      ),
+      subtitle: Padding(padding: const EdgeInsets.only(top: 4), child: Text(description)),
+      trailing: selected ? Icon(Icons.check_rounded, color: colorScheme.primary) : null,
       selected: selected,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       onTap: onTap,

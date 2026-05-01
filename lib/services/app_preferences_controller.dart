@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+enum StoragePreference { hybrid, onlineOnly, localOnly }
+
 class AppPreferencesController extends ChangeNotifier {
   AppPreferencesController({
     ThemeMode initialThemeMode = ThemeMode.light,
@@ -8,6 +10,7 @@ class AppPreferencesController extends ChangeNotifier {
     List<String> initialRecentEmails = const [],
     String initialLastIndexPageKey = '',
     bool initialStickyAppBar = true,
+    StoragePreference initialStoragePreference = StoragePreference.hybrid,
     SharedPreferences? preferences,
   })
     : _themeMode = initialThemeMode,
@@ -15,6 +18,7 @@ class AppPreferencesController extends ChangeNotifier {
       _recentEmails = List<String>.from(initialRecentEmails),
       _lastIndexPageKey = initialLastIndexPageKey,
        _stickyAppBar = initialStickyAppBar,
+       _storagePreference = initialStoragePreference,
       _preferences = preferences;
 
   static const _themeModeStorageKey = 'app.themeMode';
@@ -22,6 +26,7 @@ class AppPreferencesController extends ChangeNotifier {
   static const _recentEmailsStorageKey = 'auth.recentEmails';
   static const _lastIndexPageStorageKey = 'app.lastIndexPage';
   static const _stickyAppBarStorageKey = 'app.stickyAppBar';
+  static const _storagePreferenceStorageKey = 'app.storagePreference';
   static const _maxRecentEmails = 5;
 
   ThemeMode _themeMode;
@@ -29,6 +34,7 @@ class AppPreferencesController extends ChangeNotifier {
   List<String> _recentEmails;
   String _lastIndexPageKey;
   bool _stickyAppBar;
+  StoragePreference _storagePreference;
   final SharedPreferences? _preferences;
 
   ThemeMode get themeMode => _themeMode;
@@ -37,6 +43,7 @@ class AppPreferencesController extends ChangeNotifier {
   String get lastIndexPageKey => _lastIndexPageKey;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
   bool get stickyAppBar => _stickyAppBar;
+  StoragePreference get storagePreference => _storagePreference;
 
   static Future<AppPreferencesController> create() async {
     final preferences = await SharedPreferences.getInstance();
@@ -45,6 +52,7 @@ class AppPreferencesController extends ChangeNotifier {
     final recentEmails = preferences.getStringList(_recentEmailsStorageKey) ?? <String>[];
     final lastIndexPageKey = preferences.getString(_lastIndexPageStorageKey) ?? '';
     final stickyAppBar = preferences.getBool(_stickyAppBarStorageKey) ?? true;
+    final storagePreference = _storagePreferenceFromStorage(preferences.getString(_storagePreferenceStorageKey));
     final hydratedRecentEmails = recentEmails.isNotEmpty ? recentEmails : (lastEmail.isNotEmpty ? <String>[lastEmail] : const <String>[]);
 
     return AppPreferencesController(
@@ -53,6 +61,7 @@ class AppPreferencesController extends ChangeNotifier {
       initialRecentEmails: hydratedRecentEmails,
       initialLastIndexPageKey: lastIndexPageKey,
       initialStickyAppBar: stickyAppBar,
+      initialStoragePreference: storagePreference,
       preferences: preferences,
     );
   }
@@ -115,6 +124,16 @@ class AppPreferencesController extends ChangeNotifier {
     await _preferences?.setBool(_stickyAppBarStorageKey, value);
   }
 
+  Future<void> setStoragePreference(StoragePreference value) async {
+    if (_storagePreference == value) {
+      return;
+    }
+
+    _storagePreference = value;
+    notifyListeners();
+    await _preferences?.setString(_storagePreferenceStorageKey, _storagePreferenceToStorage(value));
+  }
+
   static ThemeMode _themeModeFromStorage(String? value) {
     switch (value) {
       case 'dark':
@@ -135,6 +154,29 @@ class AppPreferencesController extends ChangeNotifier {
         return 'system';
       case ThemeMode.light:
         return 'light';
+    }
+  }
+
+  static StoragePreference _storagePreferenceFromStorage(String? value) {
+    switch (value) {
+      case 'onlineOnly':
+        return StoragePreference.onlineOnly;
+      case 'localOnly':
+        return StoragePreference.localOnly;
+      case 'hybrid':
+      default:
+        return StoragePreference.hybrid;
+    }
+  }
+
+  static String _storagePreferenceToStorage(StoragePreference value) {
+    switch (value) {
+      case StoragePreference.onlineOnly:
+        return 'onlineOnly';
+      case StoragePreference.localOnly:
+        return 'localOnly';
+      case StoragePreference.hybrid:
+        return 'hybrid';
     }
   }
 }

@@ -129,6 +129,14 @@ class AppLocalizations {
     'appBarBehavior': 'App bar behavior',
     'stickyAppBar': 'Sticky app bar',
     'hideAppBarOnScroll': 'Hide app bar on scroll down',
+    'storagePreference': 'Storage preference',
+    'storageHybrid': 'Online + local',
+    'storageHybridDescription': 'Try online first and fall back to local storage if it fails. This keeps data available from anywhere when online and is recommended.',
+    'storageOnlineOnly': 'Online only',
+    'storageOnlineOnlyDescription': 'Always store data online so it stays available from anywhere.',
+    'storageLocalOnly': 'Store local',
+    'storageLocalOnlyDescription': 'Store data only on this device. Shared data will not be available everywhere.',
+    'recommended': 'Recommended',
     'darkMode': 'Dark mode',
     'lightMode': 'Light mode',
     'systemMode': 'System mode',
@@ -296,6 +304,14 @@ class AppLocalizations {
     'appBarBehavior': 'سلوك شريط التطبيق',
     'stickyAppBar': 'شريط تطبيق ثابت',
     'hideAppBarOnScroll': 'إخفاء شريط التطبيق عند التمرير لأسفل',
+    'storagePreference': 'تفضيل التخزين',
+    'storageHybrid': 'عبر الإنترنت + محلي',
+    'storageHybridDescription': 'جرّب الحفظ عبر الإنترنت أولًا ثم استخدم التخزين المحلي إذا فشل. هذا يجعل البيانات متاحة من أي مكان عند الاتصال بالإنترنت وهو الخيار الموصى به.',
+    'storageOnlineOnly': 'عبر الإنترنت فقط',
+    'storageOnlineOnlyDescription': 'احفظ البيانات دائمًا عبر الإنترنت لتبقى متاحة من أي مكان.',
+    'storageLocalOnly': 'تخزين محلي',
+    'storageLocalOnlyDescription': 'احفظ البيانات على هذا الجهاز فقط. لن تكون البيانات المشتركة متاحة في كل مكان.',
+    'recommended': 'موصى به',
     'darkMode': 'الوضع الداكن',
     'lightMode': 'الوضع الفاتح',
     'systemMode': 'وضع النظام',
@@ -472,6 +488,14 @@ class AppLocalizations {
   String get appBarBehavior => _text('appBarBehavior');
   String get stickyAppBar => _text('stickyAppBar');
   String get hideAppBarOnScroll => _text('hideAppBarOnScroll');
+  String get storagePreference => _text('storagePreference');
+  String get storageHybrid => _text('storageHybrid');
+  String get storageHybridDescription => _text('storageHybridDescription');
+  String get storageOnlineOnly => _text('storageOnlineOnly');
+  String get storageOnlineOnlyDescription => _text('storageOnlineOnlyDescription');
+  String get storageLocalOnly => _text('storageLocalOnly');
+  String get storageLocalOnlyDescription => _text('storageLocalOnlyDescription');
+  String get recommended => _text('recommended');
   String get darkMode => _text('darkMode');
   String get lightMode => _text('lightMode');
   String get systemMode => _text('systemMode');
