@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FlutterAuthClientOptions, Supabase;
+import 'package:store_management/app_theme.dart';
 import 'package:store_management/controllers/auth_controller.dart';
 import 'package:store_management/index.dart';
 import 'package:store_management/localization/app_localizations.dart';
@@ -123,6 +124,8 @@ class MyApp extends StatelessWidget {
         child: AnimatedBuilder(
           animation: Listenable.merge([localeController, appPreferencesController]),
           builder: (context, child) {
+            final appLocale = localeController.locale ?? AppLocalizations.supportedLocales.first;
+
             return MaterialApp(
               debugShowCheckedModeBanner: false,
               locale: localeController.locale,
@@ -143,16 +146,8 @@ class MyApp extends StatelessWidget {
               },
               onGenerateTitle: (context) => context.l10n.appTitle,
               themeMode: appPreferencesController.themeMode,
-              theme: ThemeData(
-                colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1F7A8C), brightness: Brightness.light),
-                scaffoldBackgroundColor: const Color(0xFFF4F7FB),
-                useMaterial3: true,
-              ),
-              darkTheme: ThemeData(
-                colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF39A6BC), brightness: Brightness.dark),
-                scaffoldBackgroundColor: const Color(0xFF09141A),
-                useMaterial3: true,
-              ),
+              theme: buildAppTheme(brightness: Brightness.light, locale: appLocale),
+              darkTheme: buildAppTheme(brightness: Brightness.dark, locale: appLocale),
               home: startupError == null ? AuthGate(localeController: localeController, appPreferencesController: appPreferencesController) : StartupErrorView(error: startupError!, stackTrace: startupStackTrace),
             );
           },

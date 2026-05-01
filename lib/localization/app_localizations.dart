@@ -42,6 +42,8 @@ class AppLocalizations {
   bool get isArabic => locale.languageCode == 'ar';
 
   static final Map<String, String> _en = {
+    'bodyFontFamily': 'Mulish',
+    'displayFontFamily': 'Mulish',
     'appTitle': 'Store Management',
     'menu': 'Menu',
     'dashboard': 'Dashboard',
@@ -75,6 +77,13 @@ class AppLocalizations {
     'operations': 'Operations',
     'activeModules': 'Active modules',
     'quickActions': 'Quick actions',
+    'moduleStatusTitle': 'Status',
+    'moduleStatusReady': 'Ready',
+    'moduleStatusReadyCaption': 'Navigation is active and this screen is connected.',
+    'moduleContentTitle': 'Content',
+    'moduleContentEmpty': 'Empty',
+    'moduleContentEmptyCaption': 'Add forms, tables, and filters here next.',
+    'modulePlannedSections': 'Planned sections',
     'connectedWorkspace': 'Your workspace now surfaces the full product, sales, people, and operations stack from one compact control center.',
     'signedInAs': 'Signed in as',
     'readyToManage': 'Ready to manage',
@@ -210,6 +219,8 @@ class AppLocalizations {
   };
 
   static final Map<String, String> _ar = {
+    'bodyFontFamily': 'Cairo',
+    'displayFontFamily': 'Cairo',
     'appTitle': 'إدارة المتجر',
     'menu': 'القائمة',
     'dashboard': 'لوحة التحكم',
@@ -243,6 +254,13 @@ class AppLocalizations {
     'operations': 'العمليات',
     'activeModules': 'الوحدات النشطة',
     'quickActions': 'إجراءات سريعة',
+    'moduleStatusTitle': 'الحالة',
+    'moduleStatusReady': 'جاهز',
+    'moduleStatusReadyCaption': 'التنقل نشط وهذه الشاشة متصلة.',
+    'moduleContentTitle': 'المحتوى',
+    'moduleContentEmpty': 'فارغ',
+    'moduleContentEmptyCaption': 'أضف النماذج والجداول والفلاتر هنا لاحقًا.',
+    'modulePlannedSections': 'الأقسام المخطط لها',
     'connectedWorkspace': 'تعرض مساحة العمل الآن كامل طبقات المنتجات والمبيعات والأشخاص والعمليات من مركز تحكم واحد مضغوط.',
     'signedInAs': 'تم تسجيل الدخول باسم',
     'readyToManage': 'جاهز للإدارة',
@@ -394,6 +412,9 @@ class AppLocalizations {
     return value;
   }
 
+  String get bodyFontFamily => _text('bodyFontFamily');
+  String get displayFontFamily => _text('displayFontFamily');
+
   String get appTitle => _text('appTitle');
   String get menu => _text('menu');
   String get dashboard => _text('dashboard');
@@ -427,6 +448,13 @@ class AppLocalizations {
   String get operations => _text('operations');
   String get activeModules => _text('activeModules');
   String get quickActions => _text('quickActions');
+  String get moduleStatusTitle => _text('moduleStatusTitle');
+  String get moduleStatusReady => _text('moduleStatusReady');
+  String get moduleStatusReadyCaption => _text('moduleStatusReadyCaption');
+  String get moduleContentTitle => _text('moduleContentTitle');
+  String get moduleContentEmpty => _text('moduleContentEmpty');
+  String get moduleContentEmptyCaption => _text('moduleContentEmptyCaption');
+  String get modulePlannedSections => _text('modulePlannedSections');
   String get connectedWorkspace => _text('connectedWorkspace');
   String get signedInAs => _text('signedInAs');
   String get readyToManage => _text('readyToManage');

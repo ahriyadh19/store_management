@@ -65,23 +65,13 @@ class ModulePageView extends StatelessWidget {
                   spacing: 16,
                   runSpacing: 16,
                   children: [
-                    _ModuleStatusCard(
-                      title: l10n.isArabic ? 'الحالة' : 'Status',
-                      value: l10n.isArabic ? 'جاهز' : 'Ready',
-                      caption: l10n.isArabic ? 'التنقل نشط وهذه الشاشة متصلة.' : 'Navigation is active and this screen is connected.',
-                      icon: Icons.check_circle_rounded,
-                    ),
-                    _ModuleStatusCard(
-                      title: l10n.isArabic ? 'المحتوى' : 'Content',
-                      value: l10n.isArabic ? 'فارغ' : 'Empty',
-                      caption: l10n.isArabic ? 'أضف النماذج والجداول والفلاتر هنا لاحقًا.' : 'Add forms, tables, and filters here next.',
-                      icon: Icons.dashboard_customize_rounded,
-                    ),
+                    _ModuleStatusCard(title: l10n.moduleStatusTitle, value: l10n.moduleStatusReady, caption: l10n.moduleStatusReadyCaption, icon: Icons.check_circle_rounded),
+                    _ModuleStatusCard(title: l10n.moduleContentTitle, value: l10n.moduleContentEmpty, caption: l10n.moduleContentEmptyCaption, icon: Icons.dashboard_customize_rounded),
                   ],
                 ),
                 if (highlights.isNotEmpty) ...[
                   const SizedBox(height: 24),
-                  Text(l10n.isArabic ? 'الأقسام المخطط لها' : 'Planned sections', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+                  Text(l10n.modulePlannedSections, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 14),
                   Wrap(
                     spacing: 12,
