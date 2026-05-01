@@ -15,11 +15,16 @@ class InventoryMovement {
   String companyProductUuid;
   String productUuid;
   InventoryMovementType movementType;
+  InventoryHolderType? inventoryHolderType;
+  String? inventoryHolderUuid;
   int quantityDelta;
   int balanceAfter;
   Decimal? unitCost;
   InventoryReferenceType referenceType;
   String? referenceUuid;
+  InventoryHolderType? counterpartyHolderType;
+  String? counterpartyHolderUuid;
+  String? transactionUuid;
   String note;
   String? createdByUserUuid;
   DateTime createdAt;
@@ -34,11 +39,16 @@ class InventoryMovement {
     required this.companyProductUuid,
     required this.productUuid,
     required this.movementType,
+    this.inventoryHolderType,
+    this.inventoryHolderUuid,
     required this.quantityDelta,
     required this.balanceAfter,
     this.unitCost,
     required this.referenceType,
     this.referenceUuid,
+    this.counterpartyHolderType,
+    this.counterpartyHolderUuid,
+    this.transactionUuid,
     required this.note,
     this.createdByUserUuid,
     required this.createdAt,
@@ -54,11 +64,16 @@ class InventoryMovement {
     String? companyProductUuid,
     String? productUuid,
     InventoryMovementType? movementType,
+    Object? inventoryHolderType = _unset,
+    Object? inventoryHolderUuid = _unset,
     int? quantityDelta,
     int? balanceAfter,
     Object? unitCost = _unset,
     InventoryReferenceType? referenceType,
     Object? referenceUuid = _unset,
+    Object? counterpartyHolderType = _unset,
+    Object? counterpartyHolderUuid = _unset,
+    Object? transactionUuid = _unset,
     String? note,
     Object? createdByUserUuid = _unset,
     DateTime? createdAt,
@@ -73,11 +88,16 @@ class InventoryMovement {
       companyProductUuid: companyProductUuid ?? this.companyProductUuid,
       productUuid: productUuid ?? this.productUuid,
       movementType: movementType ?? this.movementType,
+      inventoryHolderType: identical(inventoryHolderType, _unset) ? this.inventoryHolderType : inventoryHolderType as InventoryHolderType?,
+      inventoryHolderUuid: identical(inventoryHolderUuid, _unset) ? this.inventoryHolderUuid : inventoryHolderUuid as String?,
       quantityDelta: quantityDelta ?? this.quantityDelta,
       balanceAfter: balanceAfter ?? this.balanceAfter,
       unitCost: identical(unitCost, _unset) ? this.unitCost : unitCost as Decimal?,
       referenceType: referenceType ?? this.referenceType,
       referenceUuid: identical(referenceUuid, _unset) ? this.referenceUuid : referenceUuid as String?,
+      counterpartyHolderType: identical(counterpartyHolderType, _unset) ? this.counterpartyHolderType : counterpartyHolderType as InventoryHolderType?,
+      counterpartyHolderUuid: identical(counterpartyHolderUuid, _unset) ? this.counterpartyHolderUuid : counterpartyHolderUuid as String?,
+      transactionUuid: identical(transactionUuid, _unset) ? this.transactionUuid : transactionUuid as String?,
       note: note ?? this.note,
       createdByUserUuid: identical(createdByUserUuid, _unset) ? this.createdByUserUuid : createdByUserUuid as String?,
       createdAt: createdAt ?? this.createdAt,
@@ -95,11 +115,16 @@ class InventoryMovement {
       'companyProductUuid': companyProductUuid,
       'productUuid': productUuid,
       'movementType': movementType.value,
+      'inventoryHolderType': inventoryHolderType?.value,
+      'inventoryHolderUuid': inventoryHolderUuid,
       'quantityDelta': quantityDelta,
       'balanceAfter': balanceAfter,
       'unitCost': unitCost?.toString(),
       'referenceType': referenceType.value,
       'referenceUuid': referenceUuid,
+      'counterpartyHolderType': counterpartyHolderType?.value,
+      'counterpartyHolderUuid': counterpartyHolderUuid,
+      'transactionUuid': transactionUuid,
       'note': note,
       'createdByUserUuid': createdByUserUuid,
       'createdAt': createdAt.millisecondsSinceEpoch,
@@ -117,11 +142,16 @@ class InventoryMovement {
       companyProductUuid: ModelParsing.stringOrThrow(map['companyProductUuid'], 'companyProductUuid'),
       productUuid: ModelParsing.stringOrThrow(map['productUuid'], 'productUuid'),
       movementType: ModelParsing.inventoryMovementTypeFromValue(map['movementType'], 'movementType'),
+      inventoryHolderType: map['inventoryHolderType'] == null ? null : ModelParsing.inventoryHolderTypeFromValue(map['inventoryHolderType'], 'inventoryHolderType'),
+      inventoryHolderUuid: ModelParsing.stringOrNull(map['inventoryHolderUuid']),
       quantityDelta: ModelParsing.intOrThrow(map['quantityDelta'], 'quantityDelta'),
       balanceAfter: ModelParsing.intOrThrow(map['balanceAfter'], 'balanceAfter'),
       unitCost: ModelParsing.decimalOrNull(map['unitCost']),
       referenceType: ModelParsing.inventoryReferenceTypeFromValue(map['referenceType'], 'referenceType'),
       referenceUuid: ModelParsing.stringOrNull(map['referenceUuid']),
+      counterpartyHolderType: map['counterpartyHolderType'] == null ? null : ModelParsing.inventoryHolderTypeFromValue(map['counterpartyHolderType'], 'counterpartyHolderType'),
+      counterpartyHolderUuid: ModelParsing.stringOrNull(map['counterpartyHolderUuid']),
+      transactionUuid: ModelParsing.stringOrNull(map['transactionUuid']),
       note: ModelParsing.stringOrThrow(map['note'], 'note'),
       createdByUserUuid: ModelParsing.stringOrNull(map['createdByUserUuid']),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
@@ -138,7 +168,7 @@ class InventoryMovement {
 
   @override
   String toString() {
-    return 'InventoryMovement(id: $id, uuid: $uuid, companyProductUuid: $companyProductUuid, productUuid: $productUuid, movementType: $movementType, quantityDelta: $quantityDelta, balanceAfter: $balanceAfter, unitCost: $unitCost, referenceType: $referenceType, referenceUuid: $referenceUuid, note: $note, createdByUserUuid: $createdByUserUuid, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
+    return 'InventoryMovement(id: $id, uuid: $uuid, companyProductUuid: $companyProductUuid, productUuid: $productUuid, movementType: $movementType, inventoryHolderType: $inventoryHolderType, inventoryHolderUuid: $inventoryHolderUuid, quantityDelta: $quantityDelta, balanceAfter: $balanceAfter, unitCost: $unitCost, referenceType: $referenceType, referenceUuid: $referenceUuid, counterpartyHolderType: $counterpartyHolderType, counterpartyHolderUuid: $counterpartyHolderUuid, transactionUuid: $transactionUuid, note: $note, createdByUserUuid: $createdByUserUuid, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
   }
 
   @override
@@ -150,11 +180,16 @@ class InventoryMovement {
         other.companyProductUuid == companyProductUuid &&
         other.productUuid == productUuid &&
         other.movementType == movementType &&
+        other.inventoryHolderType == inventoryHolderType &&
+        other.inventoryHolderUuid == inventoryHolderUuid &&
         other.quantityDelta == quantityDelta &&
         other.balanceAfter == balanceAfter &&
         other.unitCost == unitCost &&
         other.referenceType == referenceType &&
         other.referenceUuid == referenceUuid &&
+        other.counterpartyHolderType == counterpartyHolderType &&
+        other.counterpartyHolderUuid == counterpartyHolderUuid &&
+        other.transactionUuid == transactionUuid &&
         other.note == note &&
         other.createdByUserUuid == createdByUserUuid &&
         other.createdAt == createdAt &&
@@ -171,11 +206,16 @@ class InventoryMovement {
         companyProductUuid.hashCode ^
         productUuid.hashCode ^
         movementType.hashCode ^
+        inventoryHolderType.hashCode ^
+        inventoryHolderUuid.hashCode ^
         quantityDelta.hashCode ^
         balanceAfter.hashCode ^
         unitCost.hashCode ^
         referenceType.hashCode ^
         referenceUuid.hashCode ^
+        counterpartyHolderType.hashCode ^
+        counterpartyHolderUuid.hashCode ^
+        transactionUuid.hashCode ^
         note.hashCode ^
         createdByUserUuid.hashCode ^
         createdAt.hashCode ^

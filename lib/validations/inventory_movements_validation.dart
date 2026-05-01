@@ -84,6 +84,53 @@ class InventoryMovementsValidation {
       return referenceUuidError;
     }
 
+    final inventoryHolderTypeError = ValidationUtils.validateOptionalEnumString(
+      request,
+      'inventoryHolderType',
+      'Inventory holder type must be a supported inventory holder value',
+      (value) => InventoryHolderType.fromValue(value),
+    );
+    if (inventoryHolderTypeError != null) {
+      return inventoryHolderTypeError;
+    }
+
+    final inventoryHolderUuidError = ValidationUtils.validateOptionalUuid(request, 'inventoryHolderUuid', 'Inventory holder uuid must be a valid UUID');
+    if (inventoryHolderUuidError != null) {
+      return inventoryHolderUuidError;
+    }
+
+    final hasInventoryHolderType = request.data?['inventoryHolderType'] != null;
+    final hasInventoryHolderUuid = request.data?['inventoryHolderUuid'] != null;
+    if (hasInventoryHolderType != hasInventoryHolderUuid) {
+      return ValidationUtils.badRequest('Inventory holder type and inventory holder uuid must be provided together');
+    }
+
+    final counterpartyHolderTypeError = ValidationUtils.validateOptionalEnumString(
+      request,
+      'counterpartyHolderType',
+      'Counterparty holder type must be a supported inventory holder value',
+      (value) => InventoryHolderType.fromValue(value),
+    );
+    if (counterpartyHolderTypeError != null) {
+      return counterpartyHolderTypeError;
+    }
+
+    final counterpartyHolderUuidError = ValidationUtils.validateOptionalUuid(request, 'counterpartyHolderUuid', 'Counterparty holder uuid must be a valid UUID');
+    if (counterpartyHolderUuidError != null) {
+      return counterpartyHolderUuidError;
+    }
+
+    final hasCounterpartyHolderType = request.data?['counterpartyHolderType'] != null;
+    final hasCounterpartyHolderUuid = request.data?['counterpartyHolderUuid'] != null;
+    if (hasCounterpartyHolderType != hasCounterpartyHolderUuid) {
+      return ValidationUtils.badRequest('Counterparty holder type and counterparty holder uuid must be provided together');
+    }
+
+    final transactionUuidError = ValidationUtils.validateOptionalUuid(request, 'transactionUuid', 'Transaction uuid must be a valid UUID');
+    if (transactionUuidError != null) {
+      return transactionUuidError;
+    }
+
     final noteError = ValidationUtils.validateRequiredString(request, 'note', 'Inventory movement note is required');
     if (noteError != null) {
       return noteError;

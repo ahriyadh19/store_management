@@ -279,11 +279,16 @@ void main() {
     String companyProductUuid = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
     String productUuid = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
     String movementType = 'sale',
+    String? inventoryHolderType,
+    String? inventoryHolderUuid,
     int quantityDelta = -2,
     int balanceAfter = 18,
     num? unitCost = 12.75,
     String referenceType = 'invoice',
     String? referenceUuid = 'ffffffff-ffff-4fff-8fff-ffffffffffff',
+    String? counterpartyHolderType,
+    String? counterpartyHolderUuid,
+    String? transactionUuid,
     String note = 'Sold two units',
     String? createdByUserUuid = '12121212-1212-4121-8121-121212121212',
   }) {
@@ -292,11 +297,16 @@ void main() {
       'companyProductUuid': companyProductUuid,
       'productUuid': productUuid,
       'movementType': movementType,
+      'inventoryHolderType': inventoryHolderType,
+      'inventoryHolderUuid': inventoryHolderUuid,
       'quantityDelta': quantityDelta,
       'balanceAfter': balanceAfter,
       'unitCost': unitCost,
       'referenceType': referenceType,
       'referenceUuid': referenceUuid,
+      'counterpartyHolderType': counterpartyHolderType,
+      'counterpartyHolderUuid': counterpartyHolderUuid,
+      'transactionUuid': transactionUuid,
       'note': note,
       'createdByUserUuid': createdByUserUuid,
     };
@@ -513,6 +523,30 @@ void main() {
       expect(response.data?.unitCost, isNull);
       expect(response.data?.referenceUuid, isNull);
       expect(response.data?.createdByUserUuid, isNull);
+    });
+
+    test('inventory movements controller accepts transfer holder metadata', () {
+      final controller = InventoryMovementsController();
+
+      final response = controller.create(
+        request: buildRequest(
+          data: buildInventoryMovementData(
+            movementType: 'transfer',
+            inventoryHolderType: 'branch',
+            inventoryHolderUuid: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            referenceType: 'transfer',
+            counterpartyHolderType: 'store',
+            counterpartyHolderUuid: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+            transactionUuid: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+          ),
+        ),
+      );
+
+      expect(response.statusCode, 201);
+      expect(response.data?.movementType, InventoryMovementType.transfer);
+      expect(response.data?.inventoryHolderType, InventoryHolderType.branch);
+      expect(response.data?.counterpartyHolderType, InventoryHolderType.store);
+      expect(response.data?.transactionUuid, 'cccccccc-cccc-4ccc-8ccc-cccccccccccc');
     });
   });
 }

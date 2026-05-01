@@ -50,6 +50,25 @@ class ValidationUtils {
     return null;
   }
 
+  static Response? validateOptionalEnumString(Request request, String key, String message, Object Function(String value) parser) {
+    final value = request.data?[key];
+    if (value == null) {
+      return null;
+    }
+
+    if (value is! String || value.trim().isEmpty) {
+      return badRequest(message);
+    }
+
+    try {
+      parser(value.trim());
+    } on FormatException {
+      return badRequest(message);
+    }
+
+    return null;
+  }
+
   static Response? validateRequiredUuid(Request request, String key, String message) {
     final stringError = validateRequiredString(request, key, message);
     if (stringError != null) {

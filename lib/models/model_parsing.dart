@@ -198,6 +198,10 @@ class ModelParsing {
     return _enumFromString(value, fieldName, InventoryReferenceType.fromValue);
   }
 
+  static InventoryHolderType inventoryHolderTypeFromValue(dynamic value, String fieldName) {
+    return _enumFromString(value, fieldName, InventoryHolderType.fromValue);
+  }
+
   static T _enumFromString<T>(dynamic value, String fieldName, T Function(String value) parser) {
     return parser(stringOrThrow(value, fieldName));
   }

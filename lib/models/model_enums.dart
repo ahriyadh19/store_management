@@ -129,6 +129,7 @@ enum InventoryMovementType {
   returnIn('return_in'),
   returnOut('return_out'),
   restock('restock'),
+  transfer('transfer'),
   adjustment('adjustment');
 
   const InventoryMovementType(this.value);
@@ -149,6 +150,7 @@ enum InventoryReferenceType {
   storeReturn('store_return'),
   returnItem('return_item'),
   restock('restock'),
+  transfer('transfer'),
   adjustment('adjustment');
 
   const InventoryReferenceType(this.value);
@@ -160,5 +162,18 @@ enum InventoryReferenceType {
       (type) => type.value == value,
       orElse: () => throw FormatException('Unsupported inventory reference type: $value'),
     );
+  }
+}
+
+enum InventoryHolderType {
+  store('store'),
+  branch('branch');
+
+  const InventoryHolderType(this.value);
+
+  final String value;
+
+  static InventoryHolderType fromValue(String value) {
+    return InventoryHolderType.values.firstWhere((type) => type.value == value, orElse: () => throw FormatException('Unsupported inventory holder type: $value'));
   }
 }

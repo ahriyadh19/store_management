@@ -1,6 +1,7 @@
 import 'package:decimal/decimal.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:store_management/models/branch.dart';
+import 'package:store_management/models/branch_product.dart';
 import 'package:store_management/models/categories.dart';
 import 'package:store_management/models/client.dart';
 import 'package:store_management/models/company.dart';
@@ -145,6 +146,21 @@ void main() {
         updatedAt: updatedAt,
       ).copyWith(unitCost: null, referenceUuid: null, createdByUserUuid: null);
 
+      final branchProduct = BranchProduct(
+        id: 1,
+        uuid: 'branch-product-uuid',
+        branchUuid: '55555555-5555-4555-8555-555555555555',
+        companyProductUuid: '66666666-6666-4666-8666-666666666666',
+        productUuid: '77777777-7777-4777-8777-777777777777',
+        stock: 16,
+        reservedQuantity: 3,
+        reorderLevel: 5,
+        lastMovementAt: updatedAt,
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      ).copyWith(reorderLevel: null, lastMovementAt: null);
+
       expect(companyProduct.costPrice, isNull);
       expect(companyProduct.sku, isNull);
       expect(companyProduct.barcode, isNull);
@@ -154,6 +170,8 @@ void main() {
       expect(movement.unitCost, isNull);
       expect(movement.referenceUuid, isNull);
       expect(movement.createdByUserUuid, isNull);
+      expect(branchProduct.reorderLevel, isNull);
+      expect(branchProduct.lastMovementAt, isNull);
     });
 
     test('Company round-trips through map and json', () {
@@ -303,6 +321,28 @@ void main() {
       expect(Branch.fromJson(branch.toJson()), equals(branch));
       expect(StoreBranches.fromMap(storeBranch.toMap()), equals(storeBranch));
       expect(StoreBranches.fromJson(storeBranch.toJson()), equals(storeBranch));
+    });
+
+    test('BranchProduct round-trips through map and json', () {
+      final branchProduct = BranchProduct(
+        id: 1,
+        uuid: 'branch-product-uuid',
+        branchUuid: '11111111-1111-4111-8111-111111111111',
+        companyProductUuid: '22222222-2222-4222-8222-222222222222',
+        productUuid: '33333333-3333-4333-8333-333333333333',
+        stock: 12,
+        reservedQuantity: 2,
+        reorderLevel: 4,
+        lastMovementAt: updatedAt,
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+      expect(BranchProduct.fromMap(branchProduct.toMap()), equals(branchProduct));
+      expect(BranchProduct.fromJson(branchProduct.toJson()), equals(branchProduct));
+      expect(branchProduct.availableQuantity, 10);
+      expect(branchProduct.isLowStock, isFalse);
     });
 
     test('ProductsTags round-trips through map and json', () {
@@ -464,12 +504,17 @@ void main() {
         uuid: 'movement-uuid',
         companyProductUuid: '22222222-2222-4222-8222-222222222222',
         productUuid: '33333333-3333-4333-8333-333333333333',
-        movementType: InventoryMovementType.restock,
+        movementType: InventoryMovementType.transfer,
+        inventoryHolderType: InventoryHolderType.branch,
+        inventoryHolderUuid: '55555555-5555-4555-8555-555555555555',
         quantityDelta: 10,
         balanceAfter: 30,
         unitCost: money('11.25'),
-        referenceType: InventoryReferenceType.restock,
+        referenceType: InventoryReferenceType.transfer,
         referenceUuid: '11111111-1111-4111-8111-111111111111',
+        counterpartyHolderType: InventoryHolderType.store,
+        counterpartyHolderUuid: '66666666-6666-4666-8666-666666666666',
+        transactionUuid: '77777777-7777-4777-8777-777777777777',
         note: 'Supplier restock',
         createdByUserUuid: '44444444-4444-4444-8444-444444444444',
         createdAt: createdAt,
