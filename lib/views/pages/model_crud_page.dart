@@ -131,6 +131,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     final l10n = context.l10n;
     final columns = _buildColumns();
     final rows = _buildRows();
+    final tableMinWidth = constraints.maxWidth >= 960 ? constraints.maxWidth - 48 : 960.0;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -172,22 +173,25 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
-                  constraints: BoxConstraints(minWidth: constraints.maxWidth >= 960 ? constraints.maxWidth - 48 : 960, minHeight: 220, maxHeight: 520),
+                  constraints: BoxConstraints(minWidth: tableMinWidth, minHeight: 220, maxHeight: 520),
                   color: Theme.of(context).colorScheme.surface,
                   child: SingleChildScrollView(
                     scrollDirection: Axis.vertical,
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
-                      child: Theme(
-                        data: Theme.of(context).copyWith(dividerColor: Theme.of(context).colorScheme.outlineVariant),
-                        child: DataTable(
-                          headingRowHeight: 56,
-                          dataRowMinHeight: 64,
-                          dataRowMaxHeight: 72,
-                          columnSpacing: 24,
-                          headingRowColor: WidgetStateProperty.resolveWith((_) => Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35)),
-                          columns: columns,
-                          rows: rows,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minWidth: tableMinWidth),
+                        child: Theme(
+                          data: Theme.of(context).copyWith(dividerColor: Theme.of(context).colorScheme.outlineVariant),
+                          child: DataTable(
+                            headingRowHeight: 56,
+                            dataRowMinHeight: 64,
+                            dataRowMaxHeight: 72,
+                            columnSpacing: 24,
+                            headingRowColor: WidgetStateProperty.resolveWith((_) => Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35)),
+                            columns: columns,
+                            rows: rows,
+                          ),
                         ),
                       ),
                     ),
