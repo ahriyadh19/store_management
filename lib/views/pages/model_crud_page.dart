@@ -152,6 +152,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       visibleFields: _visibleFields,
       toMap: widget.formDefinition.toMap,
       formatCellValue: _formatCellValue,
+      isCompactLayout: isCompactLayout,
       entityLabel: widget.entityLabel,
       l10n: l10n,
       onView: _openDetailsPage,
@@ -209,6 +210,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
                     child: SfDataGrid(
                       source: dataSource,
                       columns: columns,
+                      footerFrozenColumnsCount: 1,
                       allowColumnsResizing: true,
                       onColumnResizeUpdate: (details) {
                         if (details.column.columnName == _actionsColumnName) {
@@ -686,6 +688,7 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
     required List<ModelFormFieldDefinition> visibleFields,
     required Map<String, dynamic> Function(T record) toMap,
     required String Function(Object? value) formatCellValue,
+    required bool isCompactLayout,
     required String entityLabel,
     required AppLocalizations l10n,
     required void Function(T record) onView,
@@ -693,8 +696,20 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
     required Future<void> Function(T record) onDelete,
     required String actionsColumnName,
     required Color errorColor,
-  }) : _records = records,
+  }) : _entries = records
+           .map((record) {
+             final data = toMap(record);
+             final row = DataGridRow(
+               cells: [
+                 for (final field in visibleFields) DataGridCell<Object?>(columnName: field.key, value: data[field.key]),
+                 DataGridCell<String>(columnName: actionsColumnName, value: ''),
+               ],
+             );
+             return _GridRowEntry<T>(record: record, row: row);
+           })
+           .toList(growable: false),
        _formatCellValue = formatCellValue,
+       _isCompactLayout = isCompactLayout,
        _entityLabel = entityLabel,
        _l10n = l10n,
        _onView = onView,
@@ -702,21 +717,16 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
        _onDelete = onDelete,
        _actionsColumnName = actionsColumnName,
        _errorColor = errorColor,
-       _rows = records
-           .map((record) {
-             final data = toMap(record);
-             return DataGridRow(
-               cells: [
-                 for (final field in visibleFields) DataGridCell<Object?>(columnName: field.key, value: data[field.key]),
-                 DataGridCell<String>(columnName: actionsColumnName, value: ''),
-               ],
-             );
-           })
-           .toList(growable: false);
+       _recordByRow = <DataGridRow, T>{} {
+    for (final entry in _entries) {
+      _recordByRow[entry.row] = entry.record;
+    }
+  }
 
-  final List<T> _records;
-  final List<DataGridRow> _rows;
+  final List<_GridRowEntry<T>> _entries;
+  final Map<DataGridRow, T> _recordByRow;
   final String Function(Object? value) _formatCellValue;
+  final bool _isCompactLayout;
   final String _entityLabel;
   final AppLocalizations _l10n;
   final void Function(T record) _onView;
@@ -726,33 +736,27 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
   final Color _errorColor;
 
   @override
-  List<DataGridRow> get rows => _rows;
+  void dispose() {
+    _recordByRow.clear();
+    super.dispose();
+  }
+
+  @override
+  List<DataGridRow> get rows => _entries.map((entry) => entry.row).toList(growable: false);
 
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {
-    final index = _rows.indexOf(row);
-    final record = _records[index];
+    final record = _recordByRow[row];
+    if (record == null) {
+      return DataGridRowAdapter(cells: row.getCells().map((cell) => Text(_formatCellValue(cell.value))).toList(growable: false));
+    }
 
     return DataGridRowAdapter(
       cells: row
           .getCells()
           .map((cell) {
             if (cell.columnName == _actionsColumnName) {
-              return Align(
-                alignment: Alignment.centerLeft,
-                child: Wrap(
-                  spacing: 4,
-                  children: [
-                    IconButton(tooltip: _l10n.viewEntity(_entityLabel), onPressed: () => _onView(record), icon: const Icon(Icons.visibility_outlined, size: 20)),
-                    IconButton(tooltip: _l10n.editEntity(_entityLabel), onPressed: () => _onEdit(record), icon: const Icon(Icons.edit_outlined, size: 20)),
-                    IconButton(
-                      tooltip: _l10n.deleteEntityQuestion(_entityLabel),
-                      onPressed: () => _onDelete(record),
-                      icon: Icon(Icons.delete_outline_rounded, size: 20, color: _errorColor),
-                    ),
-                  ],
-                ),
-              );
+              return _buildActionCell(record);
             }
 
             return Container(
@@ -764,7 +768,59 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
           .toList(growable: false),
     );
   }
+
+  Widget _buildActionCell(T record) {
+    if (_isCompactLayout) {
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: PopupMenuButton<_RowAction>(
+          tooltip: _l10n.actions,
+          icon: const Icon(Icons.more_horiz_rounded),
+          onSelected: (action) {
+            switch (action) {
+              case _RowAction.view:
+                _onView(record);
+              case _RowAction.edit:
+                _onEdit(record);
+              case _RowAction.delete:
+                _onDelete(record);
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem<_RowAction>(value: _RowAction.view, child: Text(_l10n.viewEntity(_entityLabel))),
+            PopupMenuItem<_RowAction>(value: _RowAction.edit, child: Text(_l10n.editEntity(_entityLabel))),
+            PopupMenuItem<_RowAction>(value: _RowAction.delete, child: Text(_l10n.deleteEntityQuestion(_entityLabel))),
+          ],
+        ),
+      );
+    }
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Wrap(
+        spacing: 4,
+        children: [
+          IconButton(tooltip: _l10n.viewEntity(_entityLabel), onPressed: () => _onView(record), icon: const Icon(Icons.visibility_outlined, size: 20)),
+          IconButton(tooltip: _l10n.editEntity(_entityLabel), onPressed: () => _onEdit(record), icon: const Icon(Icons.edit_outlined, size: 20)),
+          IconButton(
+            tooltip: _l10n.deleteEntityQuestion(_entityLabel),
+            onPressed: () => _onDelete(record),
+            icon: Icon(Icons.delete_outline_rounded, size: 20, color: _errorColor),
+          ),
+        ],
+      ),
+    );
+  }
 }
+
+class _GridRowEntry<T extends Object> {
+  const _GridRowEntry({required this.record, required this.row});
+
+  final T record;
+  final DataGridRow row;
+}
+
+enum _RowAction { view, edit, delete }
 
 class _ModuleHeader extends StatelessWidget {
   const _ModuleHeader({required this.title, required this.description, required this.icon, required this.highlights});
