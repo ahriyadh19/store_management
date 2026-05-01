@@ -13,6 +13,67 @@ class ControllerUtils {
     final now = DateTime.now().millisecondsSinceEpoch;
     final existingData = existingModel == null || toMap == null ? const <String, dynamic>{} : toMap(existingModel);
 
-    return fromMap({...existingData, ...data, 'id': data['id'] ?? existingData['id'] ?? 0, 'uuid': existingData['uuid'], 'createdAt': existingData['createdAt'] ?? now, 'updatedAt': now});
+    return fromMap({
+      ...existingData,
+      ...data,
+      ..._pendingUpsertFields(data: data, existingData: existingData, now: now),
+      'id': data['id'] ?? existingData['id'] ?? 0,
+      'uuid': data['uuid'] ?? existingData['uuid'],
+      'createdAt': existingData['createdAt'] ?? data['createdAt'] ?? now,
+      'updatedAt': data['updatedAt'] ?? now,
+    });
+  }
+
+  static T softDeleteModel<T extends Object>({required T model, required Map<String, dynamic> Function(T model) toMap, required T Function(Map<String, dynamic> map) fromMap}) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final existingData = toMap(model);
+
+    return fromMap({
+      ...existingData,
+      'updatedAt': now,
+      'synced': false,
+      'syncedAt': null,
+      'deletedAt': now,
+    });
+  }
+
+  static T markModelAsSynced<T extends Object>({required T model, required Map<String, dynamic> Function(T model) toMap, required T Function(Map<String, dynamic> map) fromMap}) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final existingData = toMap(model);
+
+    return fromMap({
+      ...existingData,
+      'updatedAt': existingData['updatedAt'] ?? now,
+      'synced': true,
+      'syncedAt': now,
+      'deletedAt': existingData['deletedAt'],
+    });
+  }
+
+  static bool isSoftDeletedMap(Map<String, dynamic>? data) {
+    if (data == null) {
+      return false;
+    }
+
+    return data['deletedAt'] != null || data['deleted_at'] != null;
+  }
+
+  static Map<String, dynamic> _pendingUpsertFields({required Map<String, dynamic> data, required Map<String, dynamic> existingData, required int now}) {
+    final explicitSynced = data['synced'];
+    final explicitSyncedAt = data.containsKey('syncedAt') ? data['syncedAt'] : data['synced_at'];
+
+    if (explicitSynced == true) {
+      return <String, dynamic>{
+        'synced': true,
+        'syncedAt': explicitSyncedAt ?? existingData['syncedAt'] ?? now,
+        'deletedAt': data['deletedAt'] ?? data['deleted_at'],
+      };
+    }
+
+    return <String, dynamic>{
+      'synced': false,
+      'syncedAt': null,
+      'deletedAt': data['deletedAt'] ?? data['deleted_at'],
+    };
   }
 }

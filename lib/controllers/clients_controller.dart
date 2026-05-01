@@ -22,7 +22,7 @@ class ClientsController {
         return validationError;
       }
 
-      if (client == null) {
+      if (client == null || ControllerUtils.isSoftDeletedMap(client!.toMap())) {
         return ControllerUtils.notFound('Client');
       }
 
@@ -55,7 +55,7 @@ class ClientsController {
         return validationError;
       }
 
-      if (client == null) {
+      if (client == null || ControllerUtils.isSoftDeletedMap(client!.toMap())) {
         return ControllerUtils.notFound('Client');
       }
 
@@ -75,12 +75,16 @@ class ClientsController {
         return validationError;
       }
 
-      if (client == null) {
+      if (client == null || ControllerUtils.isSoftDeletedMap(client!.toMap())) {
         return ControllerUtils.notFound('Client');
       }
 
-      final deletedClient = client;
-      client = null;
+      final deletedClient = ControllerUtils.softDeleteModel(
+        model: client!,
+        toMap: (model) => model.toMap(),
+        fromMap: Client.fromMap,
+      );
+      client = deletedClient;
       return Response(statusCode: 200, title: 'Client Deleted', message: 'The client has been deleted successfully', data: deletedClient);
     } catch (error) {
       return _errorResponse(error);
@@ -94,7 +98,7 @@ class ClientsController {
         return validationError;
       }
 
-      final clients = client == null ? <Client>[] : <Client>[client!];
+      final clients = client == null || ControllerUtils.isSoftDeletedMap(client!.toMap()) ? <Client>[] : <Client>[client!];
       return Response(statusCode: 200, title: 'Clients Fetched', message: 'The clients have been fetched successfully', data: clients);
     } catch (error) {
       return _errorResponse(error);

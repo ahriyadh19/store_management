@@ -20,6 +20,9 @@ class StoreInvoiceItem {
   int status;
   DateTime createdAt;
   DateTime updatedAt;
+  bool synced;
+  DateTime? deletedAt;
+  DateTime? syncedAt;
 
   StoreInvoiceItem({
     this.id = 0,
@@ -35,6 +38,9 @@ class StoreInvoiceItem {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.synced = false,
+    this.deletedAt,
+    this.syncedAt,
   }) : uuid = uuid ?? UUIDGenerator.generate();
 
   StoreInvoiceItem copyWith({
@@ -51,6 +57,9 @@ class StoreInvoiceItem {
     int? status,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? synced,
+    DateTime? deletedAt,
+    DateTime? syncedAt,
   }) {
     return StoreInvoiceItem(
       id: id ?? this.id,
@@ -66,6 +75,9 @@ class StoreInvoiceItem {
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      synced: synced ?? this.synced,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
     );
   }
 
@@ -84,6 +96,9 @@ class StoreInvoiceItem {
       'status': status,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
+      'synced': synced,
+      'deletedAt': deletedAt?.millisecondsSinceEpoch,
+      'syncedAt': syncedAt?.millisecondsSinceEpoch,
     };
   }
 
@@ -102,6 +117,9 @@ class StoreInvoiceItem {
       status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
+      synced: ModelParsing.boolOrNull(map['synced']) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['deletedAt'] ?? map['deleted_at']),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['syncedAt'] ?? map['synced_at']),
     );
   }
 
@@ -111,7 +129,7 @@ class StoreInvoiceItem {
 
   @override
   String toString() {
-    return 'StoreInvoiceItem(id: $id, uuid: $uuid, invoiceUuid: $invoiceUuid, companyProductUuid: $companyProductUuid, productUuid: $productUuid, quantity: $quantity, unitPrice: $unitPrice, discountAmount: $discountAmount, taxAmount: $taxAmount, lineTotal: $lineTotal, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'StoreInvoiceItem(id: $id, uuid: $uuid, invoiceUuid: $invoiceUuid, companyProductUuid: $companyProductUuid, productUuid: $productUuid, quantity: $quantity, unitPrice: $unitPrice, discountAmount: $discountAmount, taxAmount: $taxAmount, lineTotal: $lineTotal, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
   }
 
   @override
@@ -130,7 +148,10 @@ class StoreInvoiceItem {
         other.lineTotal == lineTotal &&
         other.status == status &&
         other.createdAt == createdAt &&
-        other.updatedAt == updatedAt;
+        other.updatedAt == updatedAt &&
+        other.synced == synced &&
+        other.deletedAt == deletedAt &&
+        other.syncedAt == syncedAt;
   }
 
   @override
@@ -147,6 +168,9 @@ class StoreInvoiceItem {
         lineTotal.hashCode ^
         status.hashCode ^
         createdAt.hashCode ^
-        updatedAt.hashCode;
+        updatedAt.hashCode ^
+        synced.hashCode ^
+        deletedAt.hashCode ^
+        syncedAt.hashCode;
   }
 }

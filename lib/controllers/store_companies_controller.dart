@@ -22,7 +22,7 @@ class StoreCompaniesController {
         return validationError;
       }
 
-      if (storeCompany == null) {
+      if (storeCompany == null || ControllerUtils.isSoftDeletedMap(storeCompany!.toMap())) {
         return ControllerUtils.notFound('Store company');
       }
 
@@ -39,14 +39,7 @@ class StoreCompaniesController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      storeCompany = StoreCompany(
-        id: (request.data?['id'] as int?) ?? 0,
-        storeUuid: request.data!['storeUuid'] as String,
-        companyUuid: request.data!['companyUuid'] as String,
-        status: request.data!['status'] as int,
-        createdAt: now,
-        updatedAt: now,
+      storeCompany = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: StoreCompany.fromMap,
       );
 
       return Response(statusCode: 201, title: 'Store Company Added', message: 'The store company has been added successfully', data: storeCompany);
@@ -62,16 +55,11 @@ class StoreCompaniesController {
         return validationError;
       }
 
-      if (storeCompany == null) {
+      if (storeCompany == null || ControllerUtils.isSoftDeletedMap(storeCompany!.toMap())) {
         return ControllerUtils.notFound('Store company');
       }
 
-      storeCompany = storeCompany?.copyWith(
-        id: request.data!['id'] as int,
-        storeUuid: request.data!['storeUuid'] as String,
-        companyUuid: request.data!['companyUuid'] as String,
-        status: request.data!['status'] as int,
-        updatedAt: DateTime.now(),
+      storeCompany = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: storeCompany, toMap: (model) => model.toMap(), fromMap: StoreCompany.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Store Company Updated', message: 'The store company has been updated successfully', data: storeCompany);
@@ -87,12 +75,16 @@ class StoreCompaniesController {
         return validationError;
       }
 
-      if (storeCompany == null) {
+      if (storeCompany == null || ControllerUtils.isSoftDeletedMap(storeCompany!.toMap())) {
         return ControllerUtils.notFound('Store company');
       }
 
-      final deletedStoreCompany = storeCompany;
-      storeCompany = null;
+      final deletedStoreCompany = ControllerUtils.softDeleteModel(
+        model: storeCompany!,
+        toMap: (model) => model.toMap(),
+        fromMap: StoreCompany.fromMap,
+      );
+      storeCompany = deletedStoreCompany;
       return Response(statusCode: 200, title: 'Store Company Deleted', message: 'The store company has been deleted successfully', data: deletedStoreCompany);
     } catch (error) {
       return _errorResponse(error);
@@ -106,7 +98,7 @@ class StoreCompaniesController {
         return validationError;
       }
 
-      final storeCompanies = storeCompany == null ? <StoreCompany>[] : <StoreCompany>[storeCompany!];
+      final storeCompanies = storeCompany == null || ControllerUtils.isSoftDeletedMap(storeCompany!.toMap()) ? <StoreCompany>[] : <StoreCompany>[storeCompany!];
       return Response(statusCode: 200, title: 'Store Companies Fetched', message: 'The store companies have been fetched successfully', data: storeCompanies);
     } catch (error) {
       return _errorResponse(error);

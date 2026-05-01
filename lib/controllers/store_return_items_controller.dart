@@ -22,7 +22,7 @@ class StoreReturnItemsController {
         return validationError;
       }
 
-      if (storeReturnItem == null) {
+      if (storeReturnItem == null || ControllerUtils.isSoftDeletedMap(storeReturnItem!.toMap())) {
         return ControllerUtils.notFound('Store return item');
       }
 
@@ -55,7 +55,7 @@ class StoreReturnItemsController {
         return validationError;
       }
 
-      if (storeReturnItem == null) {
+      if (storeReturnItem == null || ControllerUtils.isSoftDeletedMap(storeReturnItem!.toMap())) {
         return ControllerUtils.notFound('Store return item');
       }
 
@@ -75,12 +75,16 @@ class StoreReturnItemsController {
         return validationError;
       }
 
-      if (storeReturnItem == null) {
+      if (storeReturnItem == null || ControllerUtils.isSoftDeletedMap(storeReturnItem!.toMap())) {
         return ControllerUtils.notFound('Store return item');
       }
 
-      final deletedStoreReturnItem = storeReturnItem;
-      storeReturnItem = null;
+      final deletedStoreReturnItem = ControllerUtils.softDeleteModel(
+        model: storeReturnItem!,
+        toMap: (model) => model.toMap(),
+        fromMap: StoreReturnItem.fromMap,
+      );
+      storeReturnItem = deletedStoreReturnItem;
       return Response(statusCode: 200, title: 'Store Return Item Deleted', message: 'The store return item has been deleted successfully', data: deletedStoreReturnItem);
     } catch (error) {
       return _errorResponse(error);
@@ -94,7 +98,7 @@ class StoreReturnItemsController {
         return validationError;
       }
 
-      final storeReturnItems = storeReturnItem == null ? <StoreReturnItem>[] : <StoreReturnItem>[storeReturnItem!];
+      final storeReturnItems = storeReturnItem == null || ControllerUtils.isSoftDeletedMap(storeReturnItem!.toMap()) ? <StoreReturnItem>[] : <StoreReturnItem>[storeReturnItem!];
       return Response(statusCode: 200, title: 'Store Return Items Fetched', message: 'The store return items have been fetched successfully', data: storeReturnItems);
     } catch (error) {
       return _errorResponse(error);

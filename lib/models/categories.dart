@@ -17,10 +17,37 @@ class Categories {
   String? parentUuid;
   DateTime createdAt;
   DateTime updatedAt;
+  bool synced;
+  DateTime? deletedAt;
+  DateTime? syncedAt;
 
-  Categories({this.id = 0, String? uuid, required this.name, required this.description, required this.status, this.parentUuid, required this.createdAt, required this.updatedAt}) : uuid = uuid ?? UUIDGenerator.generate();
+  Categories({
+    this.id = 0,
+    String? uuid,
+    required this.name,
+    required this.description,
+    required this.status,
+    this.parentUuid,
+    required this.createdAt,
+    required this.updatedAt,
+    this.synced = false,
+    this.deletedAt,
+    this.syncedAt,
+  }) : uuid = uuid ?? UUIDGenerator.generate();
 
-  Categories copyWith({int? id, String? uuid, String? name, String? description, int? status, Object? parentUuid = _unset, DateTime? createdAt, DateTime? updatedAt}) {
+  Categories copyWith({
+    int? id,
+    String? uuid,
+    String? name,
+    String? description,
+    int? status,
+    Object? parentUuid = _unset,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    bool? synced,
+    DateTime? deletedAt,
+    DateTime? syncedAt,
+  }) {
     return Categories(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
@@ -30,6 +57,9 @@ class Categories {
       parentUuid: identical(parentUuid, _unset) ? this.parentUuid : parentUuid as String?,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      synced: synced ?? this.synced,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
     );
   }
 
@@ -43,6 +73,9 @@ class Categories {
       'parentUuid': parentUuid,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
+      'synced': synced,
+      'deletedAt': deletedAt?.millisecondsSinceEpoch,
+      'syncedAt': syncedAt?.millisecondsSinceEpoch,
     };
   }
 
@@ -56,6 +89,9 @@ class Categories {
       parentUuid: ModelParsing.stringOrNull(map['parentUuid']),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
+      synced: ModelParsing.boolOrNull(map['synced']) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['deletedAt'] ?? map['deleted_at']),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['syncedAt'] ?? map['synced_at']),
     );
   }
 
@@ -65,7 +101,7 @@ class Categories {
 
   @override
   String toString() {
-    return 'Categories(id: $id, uuid: $uuid, name: $name, description: $description, status: $status, parentUuid: $parentUuid, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Categories(id: $id, uuid: $uuid, name: $name, description: $description, status: $status, parentUuid: $parentUuid, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
   }
 
   @override
@@ -79,11 +115,14 @@ class Categories {
         other.status == status &&
         other.parentUuid == parentUuid &&
         other.createdAt == createdAt &&
-        other.updatedAt == updatedAt;
+        other.updatedAt == updatedAt &&
+        other.synced == synced &&
+        other.deletedAt == deletedAt &&
+        other.syncedAt == syncedAt;
   }
 
   @override
   int get hashCode {
-    return id.hashCode ^ uuid.hashCode ^ name.hashCode ^ description.hashCode ^ status.hashCode ^ parentUuid.hashCode ^ createdAt.hashCode ^ updatedAt.hashCode;
+    return id.hashCode ^ uuid.hashCode ^ name.hashCode ^ description.hashCode ^ status.hashCode ^ parentUuid.hashCode ^ createdAt.hashCode ^ updatedAt.hashCode ^ synced.hashCode ^ deletedAt.hashCode ^ syncedAt.hashCode;
   }
 }

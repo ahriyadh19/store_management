@@ -22,7 +22,7 @@ class ProductsTagsController {
         return validationError;
       }
 
-      if (productTag == null) {
+      if (productTag == null || ControllerUtils.isSoftDeletedMap(productTag!.toMap())) {
         return ControllerUtils.notFound('Product tag');
       }
 
@@ -39,14 +39,7 @@ class ProductsTagsController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      productTag = ProductsTags(
-        id: (request.data?['id'] as int?) ?? 0,
-        productUuid: request.data!['productUuid'] as String,
-        tagUuid: request.data!['tagUuid'] as String,
-        status: request.data!['status'] as int,
-        createdAt: now,
-        updatedAt: now,
+      productTag = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: ProductsTags.fromMap,
       );
 
       return Response(statusCode: 201, title: 'Product Tag Added', message: 'The product tag has been added successfully', data: productTag);
@@ -62,16 +55,11 @@ class ProductsTagsController {
         return validationError;
       }
 
-      if (productTag == null) {
+      if (productTag == null || ControllerUtils.isSoftDeletedMap(productTag!.toMap())) {
         return ControllerUtils.notFound('Product tag');
       }
 
-      productTag = productTag?.copyWith(
-        id: request.data!['id'] as int,
-        productUuid: request.data!['productUuid'] as String,
-        tagUuid: request.data!['tagUuid'] as String,
-        status: request.data!['status'] as int,
-        updatedAt: DateTime.now(),
+      productTag = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: productTag, toMap: (model) => model.toMap(), fromMap: ProductsTags.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Product Tag Updated', message: 'The product tag has been updated successfully', data: productTag);
@@ -87,12 +75,16 @@ class ProductsTagsController {
         return validationError;
       }
 
-      if (productTag == null) {
+      if (productTag == null || ControllerUtils.isSoftDeletedMap(productTag!.toMap())) {
         return ControllerUtils.notFound('Product tag');
       }
 
-      final deletedProductTag = productTag;
-      productTag = null;
+      final deletedProductTag = ControllerUtils.softDeleteModel(
+        model: productTag!,
+        toMap: (model) => model.toMap(),
+        fromMap: ProductsTags.fromMap,
+      );
+      productTag = deletedProductTag;
       return Response(statusCode: 200, title: 'Product Tag Deleted', message: 'The product tag has been deleted successfully', data: deletedProductTag);
     } catch (error) {
       return _errorResponse(error);
@@ -106,7 +98,7 @@ class ProductsTagsController {
         return validationError;
       }
 
-      final productTags = productTag == null ? <ProductsTags>[] : <ProductsTags>[productTag!];
+      final productTags = productTag == null || ControllerUtils.isSoftDeletedMap(productTag!.toMap()) ? <ProductsTags>[] : <ProductsTags>[productTag!];
       return Response(statusCode: 200, title: 'Product Tags Fetched', message: 'The product tags have been fetched successfully', data: productTags);
     } catch (error) {
       return _errorResponse(error);

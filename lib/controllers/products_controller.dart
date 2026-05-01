@@ -22,7 +22,7 @@ class ProductsController {
         return validationError;
       }
 
-      if (product == null) {
+      if (product == null || ControllerUtils.isSoftDeletedMap(product!.toMap())) {
         return ControllerUtils.notFound('Product');
       }
 
@@ -39,14 +39,7 @@ class ProductsController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      product = Product(
-        id: (request.data?['id'] as int?) ?? 0,
-        name: request.data!['name'] as String,
-        description: request.data!['description'] as String,
-        status: request.data!['status'] as int,
-        createdAt: now,
-        updatedAt: now,
+      product = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: Product.fromMap,
       );
 
       return Response(statusCode: 201, title: 'Product Added', message: 'The product has been added successfully', data: product);
@@ -62,16 +55,11 @@ class ProductsController {
         return validationError;
       }
 
-      if (product == null) {
+      if (product == null || ControllerUtils.isSoftDeletedMap(product!.toMap())) {
         return ControllerUtils.notFound('Product');
       }
 
-      product = product?.copyWith(
-        id: request.data!['id'] as int,
-        name: request.data!['name'] as String,
-        description: request.data!['description'] as String,
-        status: request.data!['status'] as int,
-        updatedAt: DateTime.now(),
+      product = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: product, toMap: (model) => model.toMap(), fromMap: Product.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Product Updated', message: 'The product has been updated successfully', data: product);
@@ -87,12 +75,16 @@ class ProductsController {
         return validationError;
       }
 
-      if (product == null) {
+      if (product == null || ControllerUtils.isSoftDeletedMap(product!.toMap())) {
         return ControllerUtils.notFound('Product');
       }
 
-      final deletedProduct = product;
-      product = null;
+      final deletedProduct = ControllerUtils.softDeleteModel(
+        model: product!,
+        toMap: (model) => model.toMap(),
+        fromMap: Product.fromMap,
+      );
+      product = deletedProduct;
       return Response(statusCode: 200, title: 'Product Deleted', message: 'The product has been deleted successfully', data: deletedProduct);
     } catch (error) {
       return _errorResponse(error);
@@ -106,7 +98,7 @@ class ProductsController {
         return validationError;
       }
 
-      final products = product == null ? <Product>[] : <Product>[product!];
+      final products = product == null || ControllerUtils.isSoftDeletedMap(product!.toMap()) ? <Product>[] : <Product>[product!];
       return Response(statusCode: 200, title: 'Products Fetched', message: 'The products have been fetched successfully', data: products);
     } catch (error) {
       return _errorResponse(error);

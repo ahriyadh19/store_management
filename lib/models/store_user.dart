@@ -14,6 +14,9 @@ class StoreUser {
   int status;
   DateTime createdAt;
   DateTime updatedAt;
+  bool synced;
+  DateTime? deletedAt;
+  DateTime? syncedAt;
   StoreUser({
     this.id = 0,
     String? uuid,
@@ -23,9 +26,12 @@ class StoreUser {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.synced = false,
+    this.deletedAt,
+    this.syncedAt,
   }) : uuid = uuid ?? UUIDGenerator.generate();
 
-  StoreUser copyWith({int? id, String? uuid, String? storeUuid, String? userUuid, String? userRoleUuid, int? status, DateTime? createdAt, DateTime? updatedAt}) {
+  StoreUser copyWith({int? id, String? uuid, String? storeUuid, String? userUuid, String? userRoleUuid, int? status, DateTime? createdAt, DateTime? updatedAt, bool? synced, DateTime? deletedAt, DateTime? syncedAt}) {
     return StoreUser(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
@@ -35,6 +41,9 @@ class StoreUser {
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      synced: synced ?? this.synced,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
     );
   }
 
@@ -48,6 +57,9 @@ class StoreUser {
       'status': status,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
+      'synced': synced,
+      'deletedAt': deletedAt?.millisecondsSinceEpoch,
+      'syncedAt': syncedAt?.millisecondsSinceEpoch,
     };
   }
 
@@ -61,6 +73,9 @@ class StoreUser {
       status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
+      synced: ModelParsing.boolOrNull(map['synced']) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['deletedAt'] ?? map['deleted_at']),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['syncedAt'] ?? map['synced_at']),
     );
   }
 
@@ -70,7 +85,7 @@ class StoreUser {
 
   @override
   String toString() {
-    return 'StoreUser(id: $id, uuid: $uuid, storeUuid: $storeUuid, userUuid: $userUuid, userRoleUuid: $userRoleUuid, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'StoreUser(id: $id, uuid: $uuid, storeUuid: $storeUuid, userUuid: $userUuid, userRoleUuid: $userRoleUuid, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
   }
 
   @override
@@ -84,11 +99,24 @@ class StoreUser {
         other.userRoleUuid == userRoleUuid &&
         other.status == status &&
         other.createdAt == createdAt &&
-        other.updatedAt == updatedAt;
+        other.updatedAt == updatedAt &&
+        other.synced == synced &&
+        other.deletedAt == deletedAt &&
+        other.syncedAt == syncedAt;
   }
 
   @override
   int get hashCode {
-    return id.hashCode ^ uuid.hashCode ^ storeUuid.hashCode ^ userUuid.hashCode ^ userRoleUuid.hashCode ^ status.hashCode ^ createdAt.hashCode ^ updatedAt.hashCode;
+    return id.hashCode ^
+        uuid.hashCode ^
+        storeUuid.hashCode ^
+        userUuid.hashCode ^
+        userRoleUuid.hashCode ^
+        status.hashCode ^
+        createdAt.hashCode ^
+        updatedAt.hashCode ^
+        synced.hashCode ^
+        deletedAt.hashCode ^
+        syncedAt.hashCode;
   }
 }

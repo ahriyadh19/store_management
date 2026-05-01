@@ -22,7 +22,7 @@ class StorePaymentVouchersController {
         return validationError;
       }
 
-      if (paymentVoucher == null) {
+      if (paymentVoucher == null || ControllerUtils.isSoftDeletedMap(paymentVoucher!.toMap())) {
         return ControllerUtils.notFound('Store payment voucher');
       }
 
@@ -55,7 +55,7 @@ class StorePaymentVouchersController {
         return validationError;
       }
 
-      if (paymentVoucher == null) {
+      if (paymentVoucher == null || ControllerUtils.isSoftDeletedMap(paymentVoucher!.toMap())) {
         return ControllerUtils.notFound('Store payment voucher');
       }
 
@@ -75,12 +75,16 @@ class StorePaymentVouchersController {
         return validationError;
       }
 
-      if (paymentVoucher == null) {
+      if (paymentVoucher == null || ControllerUtils.isSoftDeletedMap(paymentVoucher!.toMap())) {
         return ControllerUtils.notFound('Store payment voucher');
       }
 
-      final deletedVoucher = paymentVoucher;
-      paymentVoucher = null;
+      final deletedVoucher = ControllerUtils.softDeleteModel(
+        model: paymentVoucher!,
+        toMap: (model) => model.toMap(),
+        fromMap: StorePaymentVoucher.fromMap,
+      );
+      paymentVoucher = deletedVoucher;
       return Response(statusCode: 200, title: 'Payment Voucher Deleted', message: 'The payment voucher has been deleted successfully', data: deletedVoucher);
     } catch (error) {
       return _errorResponse(error);
@@ -94,7 +98,7 @@ class StorePaymentVouchersController {
         return validationError;
       }
 
-      final vouchers = paymentVoucher == null ? <StorePaymentVoucher>[] : <StorePaymentVoucher>[paymentVoucher!];
+      final vouchers = paymentVoucher == null || ControllerUtils.isSoftDeletedMap(paymentVoucher!.toMap()) ? <StorePaymentVoucher>[] : <StorePaymentVoucher>[paymentVoucher!];
       return Response(statusCode: 200, title: 'Payment Vouchers Fetched', message: 'The payment vouchers have been fetched successfully', data: vouchers);
     } catch (error) {
       return _errorResponse(error);

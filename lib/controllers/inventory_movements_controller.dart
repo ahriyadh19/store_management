@@ -22,7 +22,7 @@ class InventoryMovementsController {
         return validationError;
       }
 
-      if (inventoryMovement == null) {
+      if (inventoryMovement == null || ControllerUtils.isSoftDeletedMap(inventoryMovement!.toMap())) {
         return ControllerUtils.notFound('Inventory movement');
       }
 
@@ -55,7 +55,7 @@ class InventoryMovementsController {
         return validationError;
       }
 
-      if (inventoryMovement == null) {
+      if (inventoryMovement == null || ControllerUtils.isSoftDeletedMap(inventoryMovement!.toMap())) {
         return ControllerUtils.notFound('Inventory movement');
       }
 
@@ -75,12 +75,16 @@ class InventoryMovementsController {
         return validationError;
       }
 
-      if (inventoryMovement == null) {
+      if (inventoryMovement == null || ControllerUtils.isSoftDeletedMap(inventoryMovement!.toMap())) {
         return ControllerUtils.notFound('Inventory movement');
       }
 
-      final deletedInventoryMovement = inventoryMovement;
-      inventoryMovement = null;
+      final deletedInventoryMovement = ControllerUtils.softDeleteModel(
+        model: inventoryMovement!,
+        toMap: (model) => model.toMap(),
+        fromMap: InventoryMovement.fromMap,
+      );
+      inventoryMovement = deletedInventoryMovement;
       return Response(statusCode: 200, title: 'Inventory Movement Deleted', message: 'The inventory movement has been deleted successfully', data: deletedInventoryMovement);
     } catch (error) {
       return _errorResponse(error);
@@ -94,7 +98,7 @@ class InventoryMovementsController {
         return validationError;
       }
 
-      final inventoryMovements = inventoryMovement == null ? <InventoryMovement>[] : <InventoryMovement>[inventoryMovement!];
+      final inventoryMovements = inventoryMovement == null || ControllerUtils.isSoftDeletedMap(inventoryMovement!.toMap()) ? <InventoryMovement>[] : <InventoryMovement>[inventoryMovement!];
       return Response(statusCode: 200, title: 'Inventory Movements Fetched', message: 'The inventory movements have been fetched successfully', data: inventoryMovements);
     } catch (error) {
       return _errorResponse(error);

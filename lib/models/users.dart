@@ -15,11 +15,27 @@ class User {
   int status;
   DateTime createdAt;
   DateTime updatedAt;
+  bool synced;
+  DateTime? deletedAt;
+  DateTime? syncedAt;
 
-  User({this.id = 0, required this.name, required this.email, this.password = '', required this.username, String? uuid, required this.status, required this.createdAt, required this.updatedAt})
+  User({
+    this.id = 0,
+    required this.name,
+    required this.email,
+    this.password = '',
+    required this.username,
+    String? uuid,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    this.synced = false,
+    this.deletedAt,
+    this.syncedAt,
+  })
     : uuid = uuid ?? UUIDGenerator.generate();
 
-  User copyWith({int? id, String? name, String? email, String? password, String? username, String? uuid, int? status, DateTime? createdAt, DateTime? updatedAt}) {
+  User copyWith({int? id, String? name, String? email, String? password, String? username, String? uuid, int? status, DateTime? createdAt, DateTime? updatedAt, bool? synced, DateTime? deletedAt, DateTime? syncedAt}) {
     return User(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -30,6 +46,9 @@ class User {
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      synced: synced ?? this.synced,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
     );
   }
 
@@ -43,6 +62,9 @@ class User {
       'status': status,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
+      'synced': synced,
+      'deletedAt': deletedAt?.millisecondsSinceEpoch,
+      'syncedAt': syncedAt?.millisecondsSinceEpoch,
       if (includePassword) 'password': password,
     };
   }
@@ -58,6 +80,9 @@ class User {
       status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
+      synced: ModelParsing.boolOrNull(map['synced']) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['deletedAt'] ?? map['deleted_at']),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['syncedAt'] ?? map['synced_at']),
     );
   }
 
@@ -67,7 +92,7 @@ class User {
 
   @override
   String toString() {
-    return 'User(id: $id, name: $name, email: $email, password: ***, username: $username, uuid: $uuid, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'User(id: $id, name: $name, email: $email, password: ***, username: $username, uuid: $uuid, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
   }
 
   @override
@@ -82,11 +107,25 @@ class User {
         other.uuid == uuid &&
         other.status == status &&
         other.createdAt == createdAt &&
-        other.updatedAt == updatedAt;
+        other.updatedAt == updatedAt &&
+        other.synced == synced &&
+        other.deletedAt == deletedAt &&
+        other.syncedAt == syncedAt;
   }
 
   @override
   int get hashCode {
-    return id.hashCode ^ name.hashCode ^ email.hashCode ^ password.hashCode ^ username.hashCode ^ uuid.hashCode ^ status.hashCode ^ createdAt.hashCode ^ updatedAt.hashCode;
+    return id.hashCode ^
+        name.hashCode ^
+        email.hashCode ^
+        password.hashCode ^
+        username.hashCode ^
+        uuid.hashCode ^
+        status.hashCode ^
+        createdAt.hashCode ^
+        updatedAt.hashCode ^
+        synced.hashCode ^
+        deletedAt.hashCode ^
+        syncedAt.hashCode;
   }
 }

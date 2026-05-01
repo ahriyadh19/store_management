@@ -22,7 +22,7 @@ class TagsController {
         return validationError;
       }
 
-      if (tag == null) {
+      if (tag == null || ControllerUtils.isSoftDeletedMap(tag!.toMap())) {
         return ControllerUtils.notFound('Tag');
       }
 
@@ -39,14 +39,7 @@ class TagsController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      tag = Tags(
-        id: (request.data?['id'] as int?) ?? 0,
-        name: request.data!['name'] as String,
-        description: request.data!['description'] as String,
-        status: request.data!['status'] as int,
-        createdAt: now,
-        updatedAt: now,
+      tag = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: Tags.fromMap,
       );
 
       return Response(statusCode: 201, title: 'Tag Added', message: 'The tag has been added successfully', data: tag);
@@ -62,16 +55,11 @@ class TagsController {
         return validationError;
       }
 
-      if (tag == null) {
+      if (tag == null || ControllerUtils.isSoftDeletedMap(tag!.toMap())) {
         return ControllerUtils.notFound('Tag');
       }
 
-      tag = tag?.copyWith(
-        id: request.data!['id'] as int,
-        name: request.data!['name'] as String,
-        description: request.data!['description'] as String,
-        status: request.data!['status'] as int,
-        updatedAt: DateTime.now(),
+      tag = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: tag, toMap: (model) => model.toMap(), fromMap: Tags.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Tag Updated', message: 'The tag has been updated successfully', data: tag);
@@ -87,12 +75,16 @@ class TagsController {
         return validationError;
       }
 
-      if (tag == null) {
+      if (tag == null || ControllerUtils.isSoftDeletedMap(tag!.toMap())) {
         return ControllerUtils.notFound('Tag');
       }
 
-      final deletedTag = tag;
-      tag = null;
+      final deletedTag = ControllerUtils.softDeleteModel(
+        model: tag!,
+        toMap: (model) => model.toMap(),
+        fromMap: Tags.fromMap,
+      );
+      tag = deletedTag;
       return Response(statusCode: 200, title: 'Tag Deleted', message: 'The tag has been deleted successfully', data: deletedTag);
     } catch (error) {
       return _errorResponse(error);
@@ -106,7 +98,7 @@ class TagsController {
         return validationError;
       }
 
-      final tags = tag == null ? <Tags>[] : <Tags>[tag!];
+      final tags = tag == null || ControllerUtils.isSoftDeletedMap(tag!.toMap()) ? <Tags>[] : <Tags>[tag!];
       return Response(statusCode: 200, title: 'Tags Fetched', message: 'The tags have been fetched successfully', data: tags);
     } catch (error) {
       return _errorResponse(error);

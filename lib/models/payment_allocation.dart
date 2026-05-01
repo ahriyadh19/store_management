@@ -16,6 +16,9 @@ class PaymentAllocation {
   int status;
   DateTime createdAt;
   DateTime updatedAt;
+  bool synced;
+  DateTime? deletedAt;
+  DateTime? syncedAt;
 
   PaymentAllocation({
     this.id = 0,
@@ -27,6 +30,9 @@ class PaymentAllocation {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.synced = false,
+    this.deletedAt,
+    this.syncedAt,
   }) : uuid = uuid ?? UUIDGenerator.generate();
 
   PaymentAllocation copyWith({
@@ -39,6 +45,9 @@ class PaymentAllocation {
     int? status,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? synced,
+    DateTime? deletedAt,
+    DateTime? syncedAt,
   }) {
     return PaymentAllocation(
       id: id ?? this.id,
@@ -50,6 +59,9 @@ class PaymentAllocation {
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      synced: synced ?? this.synced,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
     );
   }
 
@@ -64,6 +76,9 @@ class PaymentAllocation {
       'status': status,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
+      'synced': synced,
+      'deletedAt': deletedAt?.millisecondsSinceEpoch,
+      'syncedAt': syncedAt?.millisecondsSinceEpoch,
     };
   }
 
@@ -78,6 +93,9 @@ class PaymentAllocation {
       status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
+      synced: ModelParsing.boolOrNull(map['synced']) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['deletedAt'] ?? map['deleted_at']),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['syncedAt'] ?? map['synced_at']),
     );
   }
 
@@ -87,7 +105,7 @@ class PaymentAllocation {
 
   @override
   String toString() {
-    return 'PaymentAllocation(id: $id, uuid: $uuid, paymentVoucherUuid: $paymentVoucherUuid, invoiceUuid: $invoiceUuid, allocatedAmount: $allocatedAmount, allocationDate: $allocationDate, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'PaymentAllocation(id: $id, uuid: $uuid, paymentVoucherUuid: $paymentVoucherUuid, invoiceUuid: $invoiceUuid, allocatedAmount: $allocatedAmount, allocationDate: $allocationDate, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
   }
 
   @override
@@ -102,7 +120,10 @@ class PaymentAllocation {
         other.allocationDate == allocationDate &&
         other.status == status &&
         other.createdAt == createdAt &&
-        other.updatedAt == updatedAt;
+        other.updatedAt == updatedAt &&
+        other.synced == synced &&
+        other.deletedAt == deletedAt &&
+        other.syncedAt == syncedAt;
   }
 
   @override
@@ -115,6 +136,9 @@ class PaymentAllocation {
         allocationDate.hashCode ^
         status.hashCode ^
         createdAt.hashCode ^
-        updatedAt.hashCode;
+        updatedAt.hashCode ^
+        synced.hashCode ^
+        deletedAt.hashCode ^
+        syncedAt.hashCode;
   }
 }

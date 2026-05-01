@@ -22,7 +22,7 @@ class CategoriesController {
         return validationError;
       }
 
-      if (category == null) {
+      if (category == null || ControllerUtils.isSoftDeletedMap(category!.toMap())) {
         return ControllerUtils.notFound('Category');
       }
 
@@ -39,15 +39,7 @@ class CategoriesController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      category = Categories(
-        id: (request.data?['id'] as int?) ?? 0,
-        name: request.data!['name'] as String,
-        description: request.data!['description'] as String,
-        status: request.data!['status'] as int,
-        parentUuid: request.data?['parentUuid'] as String?,
-        createdAt: now,
-        updatedAt: now,
+      category = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: Categories.fromMap,
       );
 
       return Response(statusCode: 201, title: 'Category Added', message: 'The category has been added successfully', data: category);
@@ -63,17 +55,11 @@ class CategoriesController {
         return validationError;
       }
 
-      if (category == null) {
+      if (category == null || ControllerUtils.isSoftDeletedMap(category!.toMap())) {
         return ControllerUtils.notFound('Category');
       }
 
-      category = category?.copyWith(
-        id: request.data!['id'] as int,
-        name: request.data!['name'] as String,
-        description: request.data!['description'] as String,
-        status: request.data!['status'] as int,
-        parentUuid: request.data?['parentUuid'],
-        updatedAt: DateTime.now(),
+      category = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: category, toMap: (model) => model.toMap(), fromMap: Categories.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Category Updated', message: 'The category has been updated successfully', data: category);
@@ -89,12 +75,16 @@ class CategoriesController {
         return validationError;
       }
 
-      if (category == null) {
+      if (category == null || ControllerUtils.isSoftDeletedMap(category!.toMap())) {
         return ControllerUtils.notFound('Category');
       }
 
-      final deletedCategory = category;
-      category = null;
+      final deletedCategory = ControllerUtils.softDeleteModel(
+        model: category!,
+        toMap: (model) => model.toMap(),
+        fromMap: Categories.fromMap,
+      );
+      category = deletedCategory;
       return Response(statusCode: 200, title: 'Category Deleted', message: 'The category has been deleted successfully', data: deletedCategory);
     } catch (error) {
       return _errorResponse(error);
@@ -108,7 +98,7 @@ class CategoriesController {
         return validationError;
       }
 
-      final categories = category == null ? <Categories>[] : <Categories>[category!];
+      final categories = category == null || ControllerUtils.isSoftDeletedMap(category!.toMap()) ? <Categories>[] : <Categories>[category!];
       return Response(statusCode: 200, title: 'Categories Fetched', message: 'The categories have been fetched successfully', data: categories);
     } catch (error) {
       return _errorResponse(error);

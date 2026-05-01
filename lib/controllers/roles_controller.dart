@@ -22,7 +22,7 @@ class RolesController {
         return validationError;
       }
 
-      if (role == null) {
+      if (role == null || ControllerUtils.isSoftDeletedMap(role!.toMap())) {
         return ControllerUtils.notFound('Role');
       }
 
@@ -39,14 +39,7 @@ class RolesController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      role = Roles(
-        id: (request.data?['id'] as int?) ?? 0,
-        name: request.data!['name'] as String,
-        description: request.data!['description'] as String,
-        status: request.data!['status'] as int,
-        createdAt: now,
-        updatedAt: now,
+      role = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: Roles.fromMap,
       );
 
       return Response(statusCode: 201, title: 'Role Added', message: 'The role has been added successfully', data: role);
@@ -62,16 +55,11 @@ class RolesController {
         return validationError;
       }
 
-      if (role == null) {
+      if (role == null || ControllerUtils.isSoftDeletedMap(role!.toMap())) {
         return ControllerUtils.notFound('Role');
       }
 
-      role = role?.copyWith(
-        id: request.data!['id'] as int,
-        name: request.data!['name'] as String,
-        description: request.data!['description'] as String,
-        status: request.data!['status'] as int,
-        updatedAt: DateTime.now(),
+      role = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: role, toMap: (model) => model.toMap(), fromMap: Roles.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Role Updated', message: 'The role has been updated successfully', data: role);
@@ -87,12 +75,16 @@ class RolesController {
         return validationError;
       }
 
-      if (role == null) {
+      if (role == null || ControllerUtils.isSoftDeletedMap(role!.toMap())) {
         return ControllerUtils.notFound('Role');
       }
 
-      final deletedRole = role;
-      role = null;
+      final deletedRole = ControllerUtils.softDeleteModel(
+        model: role!,
+        toMap: (model) => model.toMap(),
+        fromMap: Roles.fromMap,
+      );
+      role = deletedRole;
       return Response(statusCode: 200, title: 'Role Deleted', message: 'The role has been deleted successfully', data: deletedRole);
     } catch (error) {
       return _errorResponse(error);
@@ -106,7 +98,7 @@ class RolesController {
         return validationError;
       }
 
-      final roles = role == null ? <Roles>[] : <Roles>[role!];
+      final roles = role == null || ControllerUtils.isSoftDeletedMap(role!.toMap()) ? <Roles>[] : <Roles>[role!];
       return Response(statusCode: 200, title: 'Roles Fetched', message: 'The roles have been fetched successfully', data: roles);
     } catch (error) {
       return _errorResponse(error);

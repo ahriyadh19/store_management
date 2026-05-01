@@ -22,7 +22,7 @@ class StoreInvoicesController {
         return validationError;
       }
 
-      if (invoice == null) {
+      if (invoice == null || ControllerUtils.isSoftDeletedMap(invoice!.toMap())) {
         return ControllerUtils.notFound('Store invoice');
       }
 
@@ -55,7 +55,7 @@ class StoreInvoicesController {
         return validationError;
       }
 
-      if (invoice == null) {
+      if (invoice == null || ControllerUtils.isSoftDeletedMap(invoice!.toMap())) {
         return ControllerUtils.notFound('Store invoice');
       }
 
@@ -75,12 +75,16 @@ class StoreInvoicesController {
         return validationError;
       }
 
-      if (invoice == null) {
+      if (invoice == null || ControllerUtils.isSoftDeletedMap(invoice!.toMap())) {
         return ControllerUtils.notFound('Store invoice');
       }
 
-      final deletedInvoice = invoice;
-      invoice = null;
+      final deletedInvoice = ControllerUtils.softDeleteModel(
+        model: invoice!,
+        toMap: (model) => model.toMap(),
+        fromMap: StoreInvoice.fromMap,
+      );
+      invoice = deletedInvoice;
       return Response(statusCode: 200, title: 'Invoice Deleted', message: 'The invoice has been deleted successfully', data: deletedInvoice);
     } catch (error) {
       return _errorResponse(error);
@@ -94,7 +98,7 @@ class StoreInvoicesController {
         return validationError;
       }
 
-      final invoices = invoice == null ? <StoreInvoice>[] : <StoreInvoice>[invoice!];
+      final invoices = invoice == null || ControllerUtils.isSoftDeletedMap(invoice!.toMap()) ? <StoreInvoice>[] : <StoreInvoice>[invoice!];
       return Response(statusCode: 200, title: 'Invoices Fetched', message: 'The invoices have been fetched successfully', data: invoices);
     } catch (error) {
       return _errorResponse(error);

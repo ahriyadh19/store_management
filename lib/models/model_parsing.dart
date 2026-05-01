@@ -87,6 +87,44 @@ class ModelParsing {
     return parsedValue;
   }
 
+  static bool? boolOrNull(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+
+    if (value is bool) {
+      return value;
+    }
+
+    if (value is num) {
+      return value != 0;
+    }
+
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized.isEmpty) {
+        return null;
+      }
+      if (normalized == 'true' || normalized == '1') {
+        return true;
+      }
+      if (normalized == 'false' || normalized == '0') {
+        return false;
+      }
+    }
+
+    return null;
+  }
+
+  static DateTime? dateTimeOrNullFromMillisecondsSinceEpoch(dynamic value) {
+    final parsedValue = intOrNull(value);
+    if (parsedValue == null) {
+      return null;
+    }
+
+    return DateTime.fromMillisecondsSinceEpoch(parsedValue);
+  }
+
   static DateTime dateTimeFromMillisecondsSinceEpoch(dynamic value, String fieldName) {
     return DateTime.fromMillisecondsSinceEpoch(intOrThrow(value, fieldName));
   }

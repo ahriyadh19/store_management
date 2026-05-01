@@ -24,6 +24,9 @@ class CompanyProducts {
   int status;
   DateTime createdAt;
   DateTime updatedAt;
+  bool synced;
+  DateTime? deletedAt;
+  DateTime? syncedAt;
 
   CompanyProducts({
     String? uuid,
@@ -41,6 +44,9 @@ class CompanyProducts {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.synced = false,
+    this.deletedAt,
+    this.syncedAt,
   }) : uuid = uuid ?? UUIDGenerator.generate();
 
   CompanyProducts copyWith({
@@ -59,6 +65,9 @@ class CompanyProducts {
     int? status,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? synced,
+    DateTime? deletedAt,
+    DateTime? syncedAt,
   }) {
     return CompanyProducts(
       id: id ?? this.id,
@@ -76,6 +85,9 @@ class CompanyProducts {
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      synced: synced ?? this.synced,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
     );
   }
 
@@ -98,6 +110,9 @@ class CompanyProducts {
       'status': status,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
+      'synced': synced,
+      'deletedAt': deletedAt?.millisecondsSinceEpoch,
+      'syncedAt': syncedAt?.millisecondsSinceEpoch,
     };
   }
 
@@ -118,6 +133,9 @@ class CompanyProducts {
       status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
+      synced: ModelParsing.boolOrNull(map['synced']) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['deletedAt'] ?? map['deleted_at']),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['syncedAt'] ?? map['synced_at']),
     );
   }
 
@@ -127,7 +145,7 @@ class CompanyProducts {
 
   @override
   String toString() {
-    return 'CompanyProducts(id: $id, uuid: $uuid, companyUuid: $companyUuid, productUuid: $productUuid, price: $price, costPrice: $costPrice, description: $description, sku: $sku, barcode: $barcode, stock: $stock, reorderLevel: $reorderLevel, reorderQuantity: $reorderQuantity, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'CompanyProducts(id: $id, uuid: $uuid, companyUuid: $companyUuid, productUuid: $productUuid, price: $price, costPrice: $costPrice, description: $description, sku: $sku, barcode: $barcode, stock: $stock, reorderLevel: $reorderLevel, reorderQuantity: $reorderQuantity, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
   }
 
   @override
@@ -148,7 +166,10 @@ class CompanyProducts {
         other.reorderQuantity == reorderQuantity &&
         other.status == status &&
         other.createdAt == createdAt &&
-        other.updatedAt == updatedAt;
+        other.updatedAt == updatedAt &&
+        other.synced == synced &&
+        other.deletedAt == deletedAt &&
+        other.syncedAt == syncedAt;
   }
 
   @override
@@ -167,6 +188,9 @@ class CompanyProducts {
         reorderQuantity.hashCode ^
         status.hashCode ^
         createdAt.hashCode ^
-        updatedAt.hashCode;
+        updatedAt.hashCode ^
+        synced.hashCode ^
+        deletedAt.hashCode ^
+        syncedAt.hashCode;
   }
 }

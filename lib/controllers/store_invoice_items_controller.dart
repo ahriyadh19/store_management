@@ -22,7 +22,7 @@ class StoreInvoiceItemsController {
         return validationError;
       }
 
-      if (storeInvoiceItem == null) {
+      if (storeInvoiceItem == null || ControllerUtils.isSoftDeletedMap(storeInvoiceItem!.toMap())) {
         return ControllerUtils.notFound('Store invoice item');
       }
 
@@ -55,7 +55,7 @@ class StoreInvoiceItemsController {
         return validationError;
       }
 
-      if (storeInvoiceItem == null) {
+      if (storeInvoiceItem == null || ControllerUtils.isSoftDeletedMap(storeInvoiceItem!.toMap())) {
         return ControllerUtils.notFound('Store invoice item');
       }
 
@@ -75,12 +75,16 @@ class StoreInvoiceItemsController {
         return validationError;
       }
 
-      if (storeInvoiceItem == null) {
+      if (storeInvoiceItem == null || ControllerUtils.isSoftDeletedMap(storeInvoiceItem!.toMap())) {
         return ControllerUtils.notFound('Store invoice item');
       }
 
-      final deletedStoreInvoiceItem = storeInvoiceItem;
-      storeInvoiceItem = null;
+      final deletedStoreInvoiceItem = ControllerUtils.softDeleteModel(
+        model: storeInvoiceItem!,
+        toMap: (model) => model.toMap(),
+        fromMap: StoreInvoiceItem.fromMap,
+      );
+      storeInvoiceItem = deletedStoreInvoiceItem;
       return Response(statusCode: 200, title: 'Store Invoice Item Deleted', message: 'The store invoice item has been deleted successfully', data: deletedStoreInvoiceItem);
     } catch (error) {
       return _errorResponse(error);
@@ -94,7 +98,7 @@ class StoreInvoiceItemsController {
         return validationError;
       }
 
-      final storeInvoiceItems = storeInvoiceItem == null ? <StoreInvoiceItem>[] : <StoreInvoiceItem>[storeInvoiceItem!];
+      final storeInvoiceItems = storeInvoiceItem == null || ControllerUtils.isSoftDeletedMap(storeInvoiceItem!.toMap()) ? <StoreInvoiceItem>[] : <StoreInvoiceItem>[storeInvoiceItem!];
       return Response(statusCode: 200, title: 'Store Invoice Items Fetched', message: 'The store invoice items have been fetched successfully', data: storeInvoiceItems);
     } catch (error) {
       return _errorResponse(error);

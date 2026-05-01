@@ -1,5 +1,4 @@
 import 'package:store_management/controllers/controller_utils.dart';
-import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/models/payment_allocation.dart';
 import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
@@ -23,7 +22,7 @@ class PaymentAllocationsController {
         return validationError;
       }
 
-      if (paymentAllocation == null) {
+      if (paymentAllocation == null || ControllerUtils.isSoftDeletedMap(paymentAllocation!.toMap())) {
         return ControllerUtils.notFound('Payment allocation');
       }
 
@@ -40,16 +39,7 @@ class PaymentAllocationsController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      paymentAllocation = PaymentAllocation(
-        id: (request.data?['id'] as int?) ?? 0,
-        paymentVoucherUuid: request.data!['paymentVoucherUuid'] as String,
-        invoiceUuid: request.data!['invoiceUuid'] as String,
-        allocatedAmount: ModelParsing.decimalOrThrow(request.data!['allocatedAmount'], 'allocatedAmount'),
-        allocationDate: DateTime.fromMillisecondsSinceEpoch(request.data!['allocationDate'] as int),
-        status: request.data!['status'] as int,
-        createdAt: now,
-        updatedAt: now,
+      paymentAllocation = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: PaymentAllocation.fromMap,
       );
 
       return Response(statusCode: 201, title: 'Payment Allocation Added', message: 'The payment allocation has been added successfully', data: paymentAllocation);
@@ -65,18 +55,11 @@ class PaymentAllocationsController {
         return validationError;
       }
 
-      if (paymentAllocation == null) {
+      if (paymentAllocation == null || ControllerUtils.isSoftDeletedMap(paymentAllocation!.toMap())) {
         return ControllerUtils.notFound('Payment allocation');
       }
 
-      paymentAllocation = paymentAllocation?.copyWith(
-        id: request.data!['id'] as int,
-        paymentVoucherUuid: request.data!['paymentVoucherUuid'] as String,
-        invoiceUuid: request.data!['invoiceUuid'] as String,
-        allocatedAmount: ModelParsing.decimalOrThrow(request.data!['allocatedAmount'], 'allocatedAmount'),
-        allocationDate: DateTime.fromMillisecondsSinceEpoch(request.data!['allocationDate'] as int),
-        status: request.data!['status'] as int,
-        updatedAt: DateTime.now(),
+      paymentAllocation = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: paymentAllocation, toMap: (model) => model.toMap(), fromMap: PaymentAllocation.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Payment Allocation Updated', message: 'The payment allocation has been updated successfully', data: paymentAllocation);
@@ -92,12 +75,16 @@ class PaymentAllocationsController {
         return validationError;
       }
 
-      if (paymentAllocation == null) {
+      if (paymentAllocation == null || ControllerUtils.isSoftDeletedMap(paymentAllocation!.toMap())) {
         return ControllerUtils.notFound('Payment allocation');
       }
 
-      final deletedPaymentAllocation = paymentAllocation;
-      paymentAllocation = null;
+      final deletedPaymentAllocation = ControllerUtils.softDeleteModel(
+        model: paymentAllocation!,
+        toMap: (model) => model.toMap(),
+        fromMap: PaymentAllocation.fromMap,
+      );
+      paymentAllocation = deletedPaymentAllocation;
       return Response(statusCode: 200, title: 'Payment Allocation Deleted', message: 'The payment allocation has been deleted successfully', data: deletedPaymentAllocation);
     } catch (error) {
       return _errorResponse(error);
@@ -111,7 +98,7 @@ class PaymentAllocationsController {
         return validationError;
       }
 
-      final paymentAllocations = paymentAllocation == null ? <PaymentAllocation>[] : <PaymentAllocation>[paymentAllocation!];
+      final paymentAllocations = paymentAllocation == null || ControllerUtils.isSoftDeletedMap(paymentAllocation!.toMap()) ? <PaymentAllocation>[] : <PaymentAllocation>[paymentAllocation!];
       return Response(statusCode: 200, title: 'Payment Allocations Fetched', message: 'The payment allocations have been fetched successfully', data: paymentAllocations);
     } catch (error) {
       return _errorResponse(error);

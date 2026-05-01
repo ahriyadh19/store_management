@@ -22,7 +22,7 @@ class CompanyProductsController {
         return validationError;
       }
 
-      if (companyProduct == null) {
+      if (companyProduct == null || ControllerUtils.isSoftDeletedMap(companyProduct!.toMap())) {
         return ControllerUtils.notFound('Company product');
       }
 
@@ -55,7 +55,7 @@ class CompanyProductsController {
         return validationError;
       }
 
-      if (companyProduct == null) {
+      if (companyProduct == null || ControllerUtils.isSoftDeletedMap(companyProduct!.toMap())) {
         return ControllerUtils.notFound('Company product');
       }
 
@@ -75,12 +75,16 @@ class CompanyProductsController {
         return validationError;
       }
 
-      if (companyProduct == null) {
+      if (companyProduct == null || ControllerUtils.isSoftDeletedMap(companyProduct!.toMap())) {
         return ControllerUtils.notFound('Company product');
       }
 
-      final deletedProduct = companyProduct;
-      companyProduct = null;
+      final deletedProduct = ControllerUtils.softDeleteModel(
+        model: companyProduct!,
+        toMap: (model) => model.toMap(),
+        fromMap: CompanyProducts.fromMap,
+      );
+      companyProduct = deletedProduct;
       return Response(statusCode: 200, title: 'Product Deleted', message: 'The product has been deleted successfully', data: deletedProduct);
     } catch (error) {
       return _errorResponse(error);
@@ -94,12 +98,13 @@ class CompanyProductsController {
         return validationError;
       }
 
-      final products = companyProduct == null ? <CompanyProducts>[] : <CompanyProducts>[companyProduct!];
+      final products = companyProduct == null || ControllerUtils.isSoftDeletedMap(companyProduct!.toMap()) ? <CompanyProducts>[] : <CompanyProducts>[companyProduct!];
       return Response(statusCode: 200, title: 'Products Fetched', message: 'The products have been fetched successfully', data: products);
     } catch (error) {
       return _errorResponse(error);
     }
   }
+
 
   Response sell({required Request request}) {
     try {
@@ -108,13 +113,18 @@ class CompanyProductsController {
         return validationError;
       }
 
-      if (companyProduct == null) {
+      if (companyProduct == null || ControllerUtils.isSoftDeletedMap(companyProduct!.toMap())) {
         return ControllerUtils.notFound('Company product');
       }
 
       final int quantity = request.data!['quantity'] as int;
 
-      companyProduct = companyProduct?.copyWith(stock: companyProduct!.stock - quantity, updatedAt: DateTime.now());
+      companyProduct = ControllerUtils.hydrateModelFromRequest(
+        data: <String, dynamic>{...companyProduct!.toMap(), 'stock': companyProduct!.stock - quantity},
+        existingModel: companyProduct,
+        toMap: (model) => model.toMap(),
+        fromMap: CompanyProducts.fromMap,
+      );
       return Response(statusCode: 200, title: 'Product Sold', message: 'The product has been sold successfully', data: companyProduct);
     } catch (error) {
       return _errorResponse(error);
@@ -128,12 +138,17 @@ class CompanyProductsController {
         return validationError;
       }
 
-      if (companyProduct == null) {
+      if (companyProduct == null || ControllerUtils.isSoftDeletedMap(companyProduct!.toMap())) {
         return ControllerUtils.notFound('Company product');
       }
 
       final int quantity = request.data!['quantity'] as int;
-      companyProduct = companyProduct?.copyWith(stock: companyProduct!.stock + quantity, updatedAt: DateTime.now());
+      companyProduct = ControllerUtils.hydrateModelFromRequest(
+        data: <String, dynamic>{...companyProduct!.toMap(), 'stock': companyProduct!.stock + quantity},
+        existingModel: companyProduct,
+        toMap: (model) => model.toMap(),
+        fromMap: CompanyProducts.fromMap,
+      );
       return Response(statusCode: 200, title: 'Product Restocked', message: 'The product has been restocked successfully', data: companyProduct);
     } catch (error) {
       return _errorResponse(error);

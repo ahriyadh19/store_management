@@ -43,7 +43,10 @@ create table if not exists public.users (
     username text not null unique,
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
-    "updatedAt" bigint not null default public.now_millis()
+"updatedAt" bigint not null default public.now_millis (),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 comment on table public.users is 'Application user profiles linked to Supabase auth.users. Passwords stay in Supabase Auth and are not stored here.';
@@ -56,7 +59,10 @@ create table if not exists public.company (
     description text not null default '',
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
-    "updatedAt" bigint not null default public.now_millis()
+"updatedAt" bigint not null default public.now_millis (),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.products (
@@ -66,7 +72,10 @@ create table if not exists public.products (
     description text not null default '',
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
-    "updatedAt" bigint not null default public.now_millis()
+"updatedAt" bigint not null default public.now_millis (),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.categories (
@@ -78,7 +87,13 @@ create table if not exists public.categories (
     "parentUuid" uuid references public.categories (uuid) on delete set null,
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint categories_parent_not_self check ("parentUuid" is null or "parentUuid" <> uuid)
+constraint categories_parent_not_self check (
+    "parentUuid" is null
+    or "parentUuid" <> uuid
+),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.tags (
@@ -88,7 +103,10 @@ create table if not exists public.tags (
     description text not null default '',
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
-    "updatedAt" bigint not null default public.now_millis()
+"updatedAt" bigint not null default public.now_millis (),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.roles (
@@ -98,7 +116,10 @@ create table if not exists public.roles (
     description text not null default '',
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
-    "updatedAt" bigint not null default public.now_millis()
+"updatedAt" bigint not null default public.now_millis (),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.store (
@@ -108,7 +129,10 @@ create table if not exists public.store (
     description text not null default '',
     address text not null default '',
     phone text not null default '',
-    email text not null default ''
+email text not null default '',
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.client (
@@ -124,7 +148,10 @@ create table if not exists public.client (
     "currentCredit" numeric(12, 2) not null default 0 check ("currentCredit" >= 0),
     "availableCredit" numeric(12, 2) not null default 0 check ("availableCredit" >= 0),
     "createdAt" bigint not null default public.now_millis(),
-    "updatedAt" bigint not null default public.now_millis()
+"updatedAt" bigint not null default public.now_millis (),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.company_products (
@@ -143,7 +170,10 @@ create table if not exists public.company_products (
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint company_products_company_product_unique unique ("companyUuid", "productUuid")
+constraint company_products_company_product_unique unique ("companyUuid", "productUuid"),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.products_tags (
@@ -154,7 +184,10 @@ create table if not exists public.products_tags (
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint products_tags_product_tag_unique unique ("productUuid", "tagUuid")
+constraint products_tags_product_tag_unique unique ("productUuid", "tagUuid"),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.user_roles (
@@ -165,7 +198,10 @@ create table if not exists public.user_roles (
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint user_roles_user_role_unique unique ("userUuid", "roleUuid")
+constraint user_roles_user_role_unique unique ("userUuid", "roleUuid"),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.store_company (
@@ -176,7 +212,10 @@ create table if not exists public.store_company (
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint store_company_store_company_unique unique ("storeUuid", "companyUuid")
+constraint store_company_store_company_unique unique ("storeUuid", "companyUuid"),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.store_client (
@@ -187,7 +226,10 @@ create table if not exists public.store_client (
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint store_client_store_client_unique unique ("storeUuid", "clientUuid")
+constraint store_client_store_client_unique unique ("storeUuid", "clientUuid"),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.store_user (
@@ -199,7 +241,14 @@ create table if not exists public.store_user (
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint store_user_store_user_role_unique unique ("storeUuid", "userUuid", "userRoleUuid")
+constraint store_user_store_user_role_unique unique (
+    "storeUuid",
+    "userUuid",
+    "userRoleUuid"
+),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.store_invoice (
@@ -220,7 +269,10 @@ create table if not exists public.store_invoice (
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
     constraint store_invoice_store_client_fk foreign key ("storeUuid", "clientUuid") references public.store_client ("storeUuid", "clientUuid") on delete restrict,
-    constraint store_invoice_store_invoice_number_unique unique ("storeUuid", "invoiceNumber")
+constraint store_invoice_store_invoice_number_unique unique ("storeUuid", "invoiceNumber"),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.store_payment_voucher (
@@ -239,7 +291,10 @@ create table if not exists public.store_payment_voucher (
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
     constraint store_payment_voucher_store_client_fk foreign key ("storeUuid", "clientUuid") references public.store_client ("storeUuid", "clientUuid") on delete restrict,
-    constraint store_payment_voucher_store_voucher_number_unique unique ("storeUuid", "voucherNumber")
+constraint store_payment_voucher_store_voucher_number_unique unique ("storeUuid", "voucherNumber"),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.store_return (
@@ -257,7 +312,10 @@ create table if not exists public.store_return (
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
     constraint store_return_store_client_fk foreign key ("storeUuid", "clientUuid") references public.store_client ("storeUuid", "clientUuid") on delete restrict,
-    constraint store_return_store_return_number_unique unique ("storeUuid", "returnNumber")
+constraint store_return_store_return_number_unique unique ("storeUuid", "returnNumber"),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.store_financial_transaction (
@@ -277,7 +335,13 @@ create table if not exists public.store_financial_transaction (
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
     constraint store_financial_transaction_store_client_fk foreign key ("storeUuid", "clientUuid") references public.store_client ("storeUuid", "clientUuid") on delete restrict,
-    constraint store_financial_transaction_store_transaction_number_unique unique ("storeUuid", "transactionNumber")
+constraint store_financial_transaction_store_transaction_number_unique unique (
+    "storeUuid",
+    "transactionNumber"
+),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.store_invoice_item (
@@ -293,7 +357,10 @@ create table if not exists public.store_invoice_item (
     "lineTotal" numeric(12, 2) not null check ("lineTotal" >= 0),
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
-    "updatedAt" bigint not null default public.now_millis()
+"updatedAt" bigint not null default public.now_millis (),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.store_return_item (
@@ -309,7 +376,10 @@ create table if not exists public.store_return_item (
     reason text not null default '',
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
-    "updatedAt" bigint not null default public.now_millis()
+"updatedAt" bigint not null default public.now_millis (),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.inventory_movement (
@@ -326,7 +396,10 @@ create table if not exists public.inventory_movement (
     note text not null default '',
     "createdByUserUuid" uuid references public.users (uuid) on delete set null,
     "createdAt" bigint not null default public.now_millis(),
-    "updatedAt" bigint not null default public.now_millis()
+"updatedAt" bigint not null default public.now_millis (),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create table if not exists public.payment_allocation (
@@ -339,7 +412,13 @@ create table if not exists public.payment_allocation (
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint payment_allocation_payment_invoice_unique unique ("paymentVoucherUuid", "invoiceUuid")
+constraint payment_allocation_payment_invoice_unique unique (
+    "paymentVoucherUuid",
+    "invoiceUuid"
+),
+synced boolean not null default false,
+"deletedAt" bigint,
+"syncedAt" bigint
 );
 
 create index if not exists idx_users_auth_user_id on public.users (auth_user_id);

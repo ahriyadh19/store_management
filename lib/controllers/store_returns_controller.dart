@@ -22,7 +22,7 @@ class StoreReturnsController {
         return validationError;
       }
 
-      if (storeReturn == null) {
+      if (storeReturn == null || ControllerUtils.isSoftDeletedMap(storeReturn!.toMap())) {
         return ControllerUtils.notFound('Store return');
       }
 
@@ -55,7 +55,7 @@ class StoreReturnsController {
         return validationError;
       }
 
-      if (storeReturn == null) {
+      if (storeReturn == null || ControllerUtils.isSoftDeletedMap(storeReturn!.toMap())) {
         return ControllerUtils.notFound('Store return');
       }
 
@@ -75,12 +75,16 @@ class StoreReturnsController {
         return validationError;
       }
 
-      if (storeReturn == null) {
+      if (storeReturn == null || ControllerUtils.isSoftDeletedMap(storeReturn!.toMap())) {
         return ControllerUtils.notFound('Store return');
       }
 
-      final deletedReturn = storeReturn;
-      storeReturn = null;
+      final deletedReturn = ControllerUtils.softDeleteModel(
+        model: storeReturn!,
+        toMap: (model) => model.toMap(),
+        fromMap: StoreReturn.fromMap,
+      );
+      storeReturn = deletedReturn;
       return Response(statusCode: 200, title: 'Return Deleted', message: 'The return has been deleted successfully', data: deletedReturn);
     } catch (error) {
       return _errorResponse(error);
@@ -94,7 +98,7 @@ class StoreReturnsController {
         return validationError;
       }
 
-      final returns = storeReturn == null ? <StoreReturn>[] : <StoreReturn>[storeReturn!];
+      final returns = storeReturn == null || ControllerUtils.isSoftDeletedMap(storeReturn!.toMap()) ? <StoreReturn>[] : <StoreReturn>[storeReturn!];
       return Response(statusCode: 200, title: 'Returns Fetched', message: 'The returns have been fetched successfully', data: returns);
     } catch (error) {
       return _errorResponse(error);

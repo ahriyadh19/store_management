@@ -22,7 +22,7 @@ class StoreClientsController {
         return validationError;
       }
 
-      if (storeClient == null) {
+      if (storeClient == null || ControllerUtils.isSoftDeletedMap(storeClient!.toMap())) {
         return ControllerUtils.notFound('Store client');
       }
 
@@ -39,14 +39,7 @@ class StoreClientsController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      storeClient = StoreClient(
-        id: (request.data?['id'] as int?) ?? 0,
-        storeUuid: request.data!['storeUuid'] as String,
-        clientUuid: request.data!['clientUuid'] as String,
-        status: request.data!['status'] as int,
-        createdAt: now,
-        updatedAt: now,
+      storeClient = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: StoreClient.fromMap,
       );
 
       return Response(statusCode: 201, title: 'Store Client Added', message: 'The store client has been added successfully', data: storeClient);
@@ -62,16 +55,11 @@ class StoreClientsController {
         return validationError;
       }
 
-      if (storeClient == null) {
+      if (storeClient == null || ControllerUtils.isSoftDeletedMap(storeClient!.toMap())) {
         return ControllerUtils.notFound('Store client');
       }
 
-      storeClient = storeClient?.copyWith(
-        id: request.data!['id'] as int,
-        storeUuid: request.data!['storeUuid'] as String,
-        clientUuid: request.data!['clientUuid'] as String,
-        status: request.data!['status'] as int,
-        updatedAt: DateTime.now(),
+      storeClient = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: storeClient, toMap: (model) => model.toMap(), fromMap: StoreClient.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Store Client Updated', message: 'The store client has been updated successfully', data: storeClient);
@@ -87,12 +75,16 @@ class StoreClientsController {
         return validationError;
       }
 
-      if (storeClient == null) {
+      if (storeClient == null || ControllerUtils.isSoftDeletedMap(storeClient!.toMap())) {
         return ControllerUtils.notFound('Store client');
       }
 
-      final deletedStoreClient = storeClient;
-      storeClient = null;
+      final deletedStoreClient = ControllerUtils.softDeleteModel(
+        model: storeClient!,
+        toMap: (model) => model.toMap(),
+        fromMap: StoreClient.fromMap,
+      );
+      storeClient = deletedStoreClient;
       return Response(statusCode: 200, title: 'Store Client Deleted', message: 'The store client has been deleted successfully', data: deletedStoreClient);
     } catch (error) {
       return _errorResponse(error);
@@ -106,7 +98,7 @@ class StoreClientsController {
         return validationError;
       }
 
-      final storeClients = storeClient == null ? <StoreClient>[] : <StoreClient>[storeClient!];
+      final storeClients = storeClient == null || ControllerUtils.isSoftDeletedMap(storeClient!.toMap()) ? <StoreClient>[] : <StoreClient>[storeClient!];
       return Response(statusCode: 200, title: 'Store Clients Fetched', message: 'The store clients have been fetched successfully', data: storeClients);
     } catch (error) {
       return _errorResponse(error);

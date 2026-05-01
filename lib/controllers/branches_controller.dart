@@ -22,7 +22,7 @@ class BranchesController {
         return validationError;
       }
 
-      if (branch == null) {
+      if (branch == null || ControllerUtils.isSoftDeletedMap(branch!.toMap())) {
         return ControllerUtils.notFound('Branch');
       }
 
@@ -39,17 +39,7 @@ class BranchesController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      branch = Branch(
-        id: (request.data?['id'] as int?) ?? 0,
-        name: request.data!['name'] as String,
-        description: request.data!['description'] as String,
-        address: request.data!['address'] as String,
-        phone: request.data!['phone'] as String,
-        email: request.data!['email'] as String,
-        status: request.data!['status'] as int,
-        createdAt: now,
-        updatedAt: now,
+      branch = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: Branch.fromMap,
       );
 
       return Response(statusCode: 201, title: 'Branch Added', message: 'The branch has been added successfully', data: branch);
@@ -65,19 +55,11 @@ class BranchesController {
         return validationError;
       }
 
-      if (branch == null) {
+      if (branch == null || ControllerUtils.isSoftDeletedMap(branch!.toMap())) {
         return ControllerUtils.notFound('Branch');
       }
 
-      branch = branch?.copyWith(
-        id: request.data!['id'] as int,
-        name: request.data!['name'] as String,
-        description: request.data!['description'] as String,
-        address: request.data!['address'] as String,
-        phone: request.data!['phone'] as String,
-        email: request.data!['email'] as String,
-        status: request.data!['status'] as int,
-        updatedAt: DateTime.now(),
+      branch = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: branch, toMap: (model) => model.toMap(), fromMap: Branch.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Branch Updated', message: 'The branch has been updated successfully', data: branch);
@@ -93,12 +75,16 @@ class BranchesController {
         return validationError;
       }
 
-      if (branch == null) {
+      if (branch == null || ControllerUtils.isSoftDeletedMap(branch!.toMap())) {
         return ControllerUtils.notFound('Branch');
       }
 
-      final deletedBranch = branch;
-      branch = null;
+      final deletedBranch = ControllerUtils.softDeleteModel(
+        model: branch!,
+        toMap: (model) => model.toMap(),
+        fromMap: Branch.fromMap,
+      );
+      branch = deletedBranch;
       return Response(statusCode: 200, title: 'Branch Deleted', message: 'The branch has been deleted successfully', data: deletedBranch);
     } catch (error) {
       return _errorResponse(error);
@@ -112,7 +98,7 @@ class BranchesController {
         return validationError;
       }
 
-      final branches = branch == null ? <Branch>[] : <Branch>[branch!];
+      final branches = branch == null || ControllerUtils.isSoftDeletedMap(branch!.toMap()) ? <Branch>[] : <Branch>[branch!];
       return Response(statusCode: 200, title: 'Branches Fetched', message: 'The branches have been fetched successfully', data: branches);
     } catch (error) {
       return _errorResponse(error);

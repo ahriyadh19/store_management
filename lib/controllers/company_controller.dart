@@ -22,7 +22,7 @@ class CompanyController {
         return validationError;
       }
 
-      if (company == null) {
+      if (company == null || ControllerUtils.isSoftDeletedMap(company!.toMap())) {
         return ControllerUtils.notFound('Company');
       }
 
@@ -39,14 +39,7 @@ class CompanyController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      company = Company(
-        id: (request.data?['id'] as int?) ?? 0,
-        name: request.data!['name'] as String,
-        description: request.data!['description'] as String,
-        status: request.data!['status'] as int,
-        createdAt: now,
-        updatedAt: now,
+      company = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: Company.fromMap,
       );
 
       return Response(statusCode: 201, title: 'Company Added', message: 'The company has been added successfully', data: company);
@@ -62,16 +55,11 @@ class CompanyController {
         return validationError;
       }
 
-      if (company == null) {
+      if (company == null || ControllerUtils.isSoftDeletedMap(company!.toMap())) {
         return ControllerUtils.notFound('Company');
       }
 
-      company = company?.copyWith(
-        id: request.data!['id'] as int,
-        name: request.data!['name'] as String,
-        description: request.data!['description'] as String,
-        status: request.data!['status'] as int,
-        updatedAt: DateTime.now(),
+      company = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: company, toMap: (model) => model.toMap(), fromMap: Company.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Company Updated', message: 'The company has been updated successfully', data: company);
@@ -87,12 +75,16 @@ class CompanyController {
         return validationError;
       }
 
-      if (company == null) {
+      if (company == null || ControllerUtils.isSoftDeletedMap(company!.toMap())) {
         return ControllerUtils.notFound('Company');
       }
 
-      final deletedCompany = company;
-      company = null;
+      final deletedCompany = ControllerUtils.softDeleteModel(
+        model: company!,
+        toMap: (model) => model.toMap(),
+        fromMap: Company.fromMap,
+      );
+      company = deletedCompany;
       return Response(statusCode: 200, title: 'Company Deleted', message: 'The company has been deleted successfully', data: deletedCompany);
     } catch (error) {
       return _errorResponse(error);
@@ -106,7 +98,7 @@ class CompanyController {
         return validationError;
       }
 
-      final companies = company == null ? <Company>[] : <Company>[company!];
+      final companies = company == null || ControllerUtils.isSoftDeletedMap(company!.toMap()) ? <Company>[] : <Company>[company!];
       return Response(statusCode: 200, title: 'Companies Fetched', message: 'The companies have been fetched successfully', data: companies);
     } catch (error) {
       return _errorResponse(error);

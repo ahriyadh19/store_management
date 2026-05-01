@@ -22,7 +22,7 @@ class UserRolesController {
         return validationError;
       }
 
-      if (userRole == null) {
+      if (userRole == null || ControllerUtils.isSoftDeletedMap(userRole!.toMap())) {
         return ControllerUtils.notFound('User role');
       }
 
@@ -39,14 +39,7 @@ class UserRolesController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      userRole = UserRoles(
-        id: (request.data?['id'] as int?) ?? 0,
-        userUuid: request.data!['userUuid'] as String,
-        roleUuid: request.data!['roleUuid'] as String,
-        status: request.data!['status'] as int,
-        createdAt: now,
-        updatedAt: now,
+      userRole = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: UserRoles.fromMap,
       );
 
       return Response(statusCode: 201, title: 'User Role Added', message: 'The user role has been added successfully', data: userRole);
@@ -62,16 +55,11 @@ class UserRolesController {
         return validationError;
       }
 
-      if (userRole == null) {
+      if (userRole == null || ControllerUtils.isSoftDeletedMap(userRole!.toMap())) {
         return ControllerUtils.notFound('User role');
       }
 
-      userRole = userRole?.copyWith(
-        id: request.data!['id'] as int,
-        userUuid: request.data!['userUuid'] as String,
-        roleUuid: request.data!['roleUuid'] as String,
-        status: request.data!['status'] as int,
-        updatedAt: DateTime.now(),
+      userRole = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: userRole, toMap: (model) => model.toMap(), fromMap: UserRoles.fromMap,
       );
 
       return Response(statusCode: 200, title: 'User Role Updated', message: 'The user role has been updated successfully', data: userRole);
@@ -87,12 +75,16 @@ class UserRolesController {
         return validationError;
       }
 
-      if (userRole == null) {
+      if (userRole == null || ControllerUtils.isSoftDeletedMap(userRole!.toMap())) {
         return ControllerUtils.notFound('User role');
       }
 
-      final deletedUserRole = userRole;
-      userRole = null;
+      final deletedUserRole = ControllerUtils.softDeleteModel(
+        model: userRole!,
+        toMap: (model) => model.toMap(),
+        fromMap: UserRoles.fromMap,
+      );
+      userRole = deletedUserRole;
       return Response(statusCode: 200, title: 'User Role Deleted', message: 'The user role has been deleted successfully', data: deletedUserRole);
     } catch (error) {
       return _errorResponse(error);
@@ -106,7 +98,7 @@ class UserRolesController {
         return validationError;
       }
 
-      final userRoles = userRole == null ? <UserRoles>[] : <UserRoles>[userRole!];
+      final userRoles = userRole == null || ControllerUtils.isSoftDeletedMap(userRole!.toMap()) ? <UserRoles>[] : <UserRoles>[userRole!];
       return Response(statusCode: 200, title: 'User Roles Fetched', message: 'The user roles have been fetched successfully', data: userRoles);
     } catch (error) {
       return _errorResponse(error);

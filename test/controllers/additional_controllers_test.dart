@@ -362,10 +362,16 @@ void main() {
 
       controller.create(request: buildRequest(data: buildStoreClientData()));
       final deleteResponse = controller.delete(request: buildRequest(data: {'id': 3}));
+      final readAfterDelete = controller.read(request: buildRequest(data: {'id': 3}));
+      final allAfterDelete = controller.all(request: buildRequest());
 
       expect(deleteResponse.statusCode, 200);
       expect(deleteResponse.data?.clientUuid, '22222222-2222-4222-8222-222222222222');
-      expect(controller.storeClient, isNull);
+      expect(deleteResponse.data?.synced, isFalse);
+      expect(deleteResponse.data?.deletedAt, isNotNull);
+      expect(controller.storeClient?.deletedAt, isNotNull);
+      expect(readAfterDelete.statusCode, 404);
+      expect(allAfterDelete.data, isEmpty);
     });
 
     test('store companies controller creates and lists store companies', () {

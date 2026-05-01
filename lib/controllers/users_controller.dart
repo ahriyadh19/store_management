@@ -26,7 +26,7 @@ class UsersController {
         return validationError;
       }
 
-      if (user == null) {
+      if (user == null || ControllerUtils.isSoftDeletedMap(_userData(user!))) {
         return ControllerUtils.notFound('User');
       }
 
@@ -43,16 +43,7 @@ class UsersController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      user = User(
-        id: (request.data?['id'] as int?) ?? 0,
-        name: request.data!['name'] as String,
-        email: request.data!['email'] as String,
-        password: request.data!['password'] as String,
-        username: request.data!['username'] as String,
-        status: request.data!['status'] as int,
-        createdAt: now,
-        updatedAt: now,
+      user = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: User.fromMap,
       );
 
       return Response(statusCode: 201, title: 'User Added', message: 'The user has been added successfully', data: _userData(user!));
@@ -68,18 +59,11 @@ class UsersController {
         return validationError;
       }
 
-      if (user == null) {
+      if (user == null || ControllerUtils.isSoftDeletedMap(_userData(user!))) {
         return ControllerUtils.notFound('User');
       }
 
-      user = user?.copyWith(
-        id: request.data!['id'] as int,
-        name: request.data!['name'] as String,
-        email: request.data!['email'] as String,
-        password: request.data!['password'] as String,
-        username: request.data!['username'] as String,
-        status: request.data!['status'] as int,
-        updatedAt: DateTime.now(),
+      user = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: user, toMap: (model) => model.toMap(includePassword: true), fromMap: User.fromMap,
       );
 
       return Response(statusCode: 200, title: 'User Updated', message: 'The user has been updated successfully', data: _userData(user!));
@@ -95,13 +79,17 @@ class UsersController {
         return validationError;
       }
 
-      if (user == null) {
+      if (user == null || ControllerUtils.isSoftDeletedMap(_userData(user!))) {
         return ControllerUtils.notFound('User');
       }
 
-      final deletedUser = user;
-      user = null;
-      return Response(statusCode: 200, title: 'User Deleted', message: 'The user has been deleted successfully', data: _userData(deletedUser!));
+      final deletedUser = ControllerUtils.softDeleteModel(
+        model: user!,
+        toMap: (model) => model.toMap(includePassword: true),
+        fromMap: User.fromMap,
+      );
+      user = deletedUser;
+      return Response(statusCode: 200, title: 'User Deleted', message: 'The user has been deleted successfully', data: _userData(deletedUser));
     } catch (error) {
       return _errorResponse(error);
     }
@@ -114,7 +102,7 @@ class UsersController {
         return validationError;
       }
 
-      final users = user == null ? <Map<String, dynamic>>[] : <Map<String, dynamic>>[_userData(user!)];
+      final users = user == null || ControllerUtils.isSoftDeletedMap(_userData(user!)) ? <Map<String, dynamic>>[] : <Map<String, dynamic>>[_userData(user!)];
       return Response(statusCode: 200, title: 'Users Fetched', message: 'The users have been fetched successfully', data: users);
     } catch (error) {
       return _errorResponse(error);

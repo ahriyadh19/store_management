@@ -22,7 +22,7 @@ class StoreUsersController {
         return validationError;
       }
 
-      if (storeUser == null) {
+      if (storeUser == null || ControllerUtils.isSoftDeletedMap(storeUser!.toMap())) {
         return ControllerUtils.notFound('Store user');
       }
 
@@ -39,15 +39,7 @@ class StoreUsersController {
         return validationError;
       }
 
-      final now = DateTime.now();
-      storeUser = StoreUser(
-        id: (request.data?['id'] as int?) ?? 0,
-        storeUuid: request.data!['storeUuid'] as String,
-        userUuid: request.data!['userUuid'] as String,
-        userRoleUuid: request.data!['userRoleUuid'] as String,
-        status: request.data!['status'] as int,
-        createdAt: now,
-        updatedAt: now,
+      storeUser = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: StoreUser.fromMap,
       );
 
       return Response(statusCode: 201, title: 'Store User Added', message: 'The store user has been added successfully', data: storeUser);
@@ -63,17 +55,11 @@ class StoreUsersController {
         return validationError;
       }
 
-      if (storeUser == null) {
+      if (storeUser == null || ControllerUtils.isSoftDeletedMap(storeUser!.toMap())) {
         return ControllerUtils.notFound('Store user');
       }
 
-      storeUser = storeUser?.copyWith(
-        id: request.data!['id'] as int,
-        storeUuid: request.data!['storeUuid'] as String,
-        userUuid: request.data!['userUuid'] as String,
-        userRoleUuid: request.data!['userRoleUuid'] as String,
-        status: request.data!['status'] as int,
-        updatedAt: DateTime.now(),
+      storeUser = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: storeUser, toMap: (model) => model.toMap(), fromMap: StoreUser.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Store User Updated', message: 'The store user has been updated successfully', data: storeUser);
@@ -89,12 +75,16 @@ class StoreUsersController {
         return validationError;
       }
 
-      if (storeUser == null) {
+      if (storeUser == null || ControllerUtils.isSoftDeletedMap(storeUser!.toMap())) {
         return ControllerUtils.notFound('Store user');
       }
 
-      final deletedStoreUser = storeUser;
-      storeUser = null;
+      final deletedStoreUser = ControllerUtils.softDeleteModel(
+        model: storeUser!,
+        toMap: (model) => model.toMap(),
+        fromMap: StoreUser.fromMap,
+      );
+      storeUser = deletedStoreUser;
       return Response(statusCode: 200, title: 'Store User Deleted', message: 'The store user has been deleted successfully', data: deletedStoreUser);
     } catch (error) {
       return _errorResponse(error);
@@ -108,7 +98,7 @@ class StoreUsersController {
         return validationError;
       }
 
-      final storeUsers = storeUser == null ? <StoreUser>[] : <StoreUser>[storeUser!];
+      final storeUsers = storeUser == null || ControllerUtils.isSoftDeletedMap(storeUser!.toMap()) ? <StoreUser>[] : <StoreUser>[storeUser!];
       return Response(statusCode: 200, title: 'Store Users Fetched', message: 'The store users have been fetched successfully', data: storeUsers);
     } catch (error) {
       return _errorResponse(error);

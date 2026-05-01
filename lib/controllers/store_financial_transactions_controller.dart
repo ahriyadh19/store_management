@@ -22,7 +22,7 @@ class StoreFinancialTransactionsController {
         return validationError;
       }
 
-      if (transaction == null) {
+      if (transaction == null || ControllerUtils.isSoftDeletedMap(transaction!.toMap())) {
         return ControllerUtils.notFound('Store financial transaction');
       }
 
@@ -55,7 +55,7 @@ class StoreFinancialTransactionsController {
         return validationError;
       }
 
-      if (transaction == null) {
+      if (transaction == null || ControllerUtils.isSoftDeletedMap(transaction!.toMap())) {
         return ControllerUtils.notFound('Store financial transaction');
       }
 
@@ -75,12 +75,16 @@ class StoreFinancialTransactionsController {
         return validationError;
       }
 
-      if (transaction == null) {
+      if (transaction == null || ControllerUtils.isSoftDeletedMap(transaction!.toMap())) {
         return ControllerUtils.notFound('Store financial transaction');
       }
 
-      final deletedTransaction = transaction;
-      transaction = null;
+      final deletedTransaction = ControllerUtils.softDeleteModel(
+        model: transaction!,
+        toMap: (model) => model.toMap(),
+        fromMap: StoreFinancialTransaction.fromMap,
+      );
+      transaction = deletedTransaction;
       return Response(statusCode: 200, title: 'Financial Transaction Deleted', message: 'The financial transaction has been deleted successfully', data: deletedTransaction);
     } catch (error) {
       return _errorResponse(error);
@@ -94,7 +98,7 @@ class StoreFinancialTransactionsController {
         return validationError;
       }
 
-      final transactions = transaction == null ? <StoreFinancialTransaction>[] : <StoreFinancialTransaction>[transaction!];
+      final transactions = transaction == null || ControllerUtils.isSoftDeletedMap(transaction!.toMap()) ? <StoreFinancialTransaction>[] : <StoreFinancialTransaction>[transaction!];
       return Response(statusCode: 200, title: 'Financial Transactions Fetched', message: 'The financial transactions have been fetched successfully', data: transactions);
     } catch (error) {
       return _errorResponse(error);

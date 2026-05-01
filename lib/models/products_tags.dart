@@ -13,10 +13,13 @@ class ProductsTags {
   int status;
   DateTime createdAt;
   DateTime updatedAt;
-  ProductsTags({this.id = 0, String? uuid, required this.productUuid, required this.tagUuid, required this.status, required this.createdAt, required this.updatedAt})
+  bool synced;
+  DateTime? deletedAt;
+  DateTime? syncedAt;
+  ProductsTags({this.id = 0, String? uuid, required this.productUuid, required this.tagUuid, required this.status, required this.createdAt, required this.updatedAt, this.synced = false, this.deletedAt, this.syncedAt})
     : uuid = uuid ?? UUIDGenerator.generate();
 
-  ProductsTags copyWith({int? id, String? uuid, String? productUuid, String? tagUuid, int? status, DateTime? createdAt, DateTime? updatedAt}) {
+  ProductsTags copyWith({int? id, String? uuid, String? productUuid, String? tagUuid, int? status, DateTime? createdAt, DateTime? updatedAt, bool? synced, DateTime? deletedAt, DateTime? syncedAt}) {
     return ProductsTags(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
@@ -25,6 +28,9 @@ class ProductsTags {
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      synced: synced ?? this.synced,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
     );
   }
 
@@ -37,6 +43,9 @@ class ProductsTags {
       'status': status,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
+      'synced': synced,
+      'deletedAt': deletedAt?.millisecondsSinceEpoch,
+      'syncedAt': syncedAt?.millisecondsSinceEpoch,
     };
   }
 
@@ -49,6 +58,9 @@ class ProductsTags {
       status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'], 'updatedAt'),
+      synced: ModelParsing.boolOrNull(map['synced']) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['deletedAt'] ?? map['deleted_at']),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['syncedAt'] ?? map['synced_at']),
     );
   }
 
@@ -58,7 +70,7 @@ class ProductsTags {
 
   @override
   String toString() {
-    return 'ProductsTags(id: $id, uuid: $uuid, productUuid: $productUuid, tagUuid: $tagUuid, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'ProductsTags(id: $id, uuid: $uuid, productUuid: $productUuid, tagUuid: $tagUuid, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
   }
 
   @override
@@ -71,11 +83,14 @@ class ProductsTags {
         other.tagUuid == tagUuid &&
         other.status == status &&
         other.createdAt == createdAt &&
-        other.updatedAt == updatedAt;
+        other.updatedAt == updatedAt &&
+        other.synced == synced &&
+        other.deletedAt == deletedAt &&
+        other.syncedAt == syncedAt;
   }
 
   @override
   int get hashCode {
-    return id.hashCode ^ uuid.hashCode ^ productUuid.hashCode ^ tagUuid.hashCode ^ status.hashCode ^ createdAt.hashCode ^ updatedAt.hashCode;
+    return id.hashCode ^ uuid.hashCode ^ productUuid.hashCode ^ tagUuid.hashCode ^ status.hashCode ^ createdAt.hashCode ^ updatedAt.hashCode ^ synced.hashCode ^ deletedAt.hashCode ^ syncedAt.hashCode;
   }
 }
