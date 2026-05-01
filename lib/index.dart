@@ -206,7 +206,7 @@ class _IndexState extends State<Index> {
   }
 
   bool _handleBodyScrollNotification(ScrollNotification notification, bool stickyAppBar) {
-    if (stickyAppBar || notification.metrics.axis != Axis.vertical) {
+    if (stickyAppBar || notification.metrics.axis != Axis.vertical || notification.depth != 0) {
       return false;
     }
 
@@ -217,12 +217,26 @@ class _IndexState extends State<Index> {
       return false;
     }
 
+    if (notification is ScrollUpdateNotification) {
+      final scrollDelta = notification.scrollDelta ?? 0;
+      if (scrollDelta > 0 && _isAppBarVisible) {
+        setState(() {
+          _isAppBarVisible = false;
+        });
+      } else if (scrollDelta < 0 && !_isAppBarVisible) {
+        setState(() {
+          _isAppBarVisible = true;
+        });
+      }
+      return false;
+    }
+
     if (notification is UserScrollNotification) {
       if (notification.direction == ScrollDirection.reverse && _isAppBarVisible) {
         setState(() {
           _isAppBarVisible = false;
         });
-      } else if ((notification.direction == ScrollDirection.forward || notification.direction == ScrollDirection.idle) && !_isAppBarVisible) {
+      } else if (notification.direction == ScrollDirection.forward && !_isAppBarVisible) {
         setState(() {
           _isAppBarVisible = true;
         });
@@ -257,6 +271,7 @@ class _IndexState extends State<Index> {
                 ? const <Widget>[]
                 : [
                     IconButton(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
                       tooltip: context.l10n.settings,
                       icon: const Icon(Icons.settings_rounded),
                       onPressed: () {
@@ -264,6 +279,8 @@ class _IndexState extends State<Index> {
                       },
                     ),
                     IconButton(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      color: Theme.of(context).colorScheme.error,
                       tooltip: context.l10n.logout,
                       icon: const Icon(Icons.logout_rounded),
                       onPressed: () {

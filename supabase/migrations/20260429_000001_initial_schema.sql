@@ -43,8 +43,7 @@ create table if not exists public.users (
     username text not null unique,
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
-    "updatedAt" bigint not null default public.now_millis(),
-    constraint users_id_uuid_unique unique (id, uuid)
+    "updatedAt" bigint not null default public.now_millis()
 );
 
 comment on table public.users is 'Application user profiles linked to Supabase auth.users. Passwords stay in Supabase Auth and are not stored here.';
@@ -57,8 +56,7 @@ create table if not exists public.company (
     description text not null default '',
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
-    "updatedAt" bigint not null default public.now_millis(),
-    constraint company_id_uuid_unique unique (id, uuid)
+    "updatedAt" bigint not null default public.now_millis()
 );
 
 create table if not exists public.products (
@@ -68,8 +66,7 @@ create table if not exists public.products (
     description text not null default '',
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
-    "updatedAt" bigint not null default public.now_millis(),
-    constraint products_id_uuid_unique unique (id, uuid)
+    "updatedAt" bigint not null default public.now_millis()
 );
 
 create table if not exists public.categories (
@@ -78,11 +75,10 @@ create table if not exists public.categories (
     name text not null,
     description text not null default '',
     status integer not null default 1 check (status in (0, 1)),
-    "parentId" bigint references public.categories (id) on delete set null,
+    "parentUuid" uuid references public.categories (uuid) on delete set null,
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint categories_id_uuid_unique unique (id, uuid),
-    constraint categories_parent_not_self check ("parentId" is null or "parentId" <> id)
+    constraint categories_parent_not_self check ("parentUuid" is null or "parentUuid" <> uuid)
 );
 
 create table if not exists public.tags (
@@ -92,8 +88,7 @@ create table if not exists public.tags (
     description text not null default '',
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
-    "updatedAt" bigint not null default public.now_millis(),
-    constraint tags_id_uuid_unique unique (id, uuid)
+    "updatedAt" bigint not null default public.now_millis()
 );
 
 create table if not exists public.roles (
@@ -103,8 +98,7 @@ create table if not exists public.roles (
     description text not null default '',
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
-    "updatedAt" bigint not null default public.now_millis(),
-    constraint roles_id_uuid_unique unique (id, uuid)
+    "updatedAt" bigint not null default public.now_millis()
 );
 
 create table if not exists public.store (
@@ -114,8 +108,7 @@ create table if not exists public.store (
     description text not null default '',
     address text not null default '',
     phone text not null default '',
-    email text not null default '',
-    constraint store_id_uuid_unique unique (id, uuid)
+    email text not null default ''
 );
 
 create table if not exists public.client (
@@ -131,17 +124,14 @@ create table if not exists public.client (
     "currentCredit" numeric(12, 2) not null default 0 check ("currentCredit" >= 0),
     "availableCredit" numeric(12, 2) not null default 0 check ("availableCredit" >= 0),
     "createdAt" bigint not null default public.now_millis(),
-    "updatedAt" bigint not null default public.now_millis(),
-    constraint client_id_uuid_unique unique (id, uuid)
+    "updatedAt" bigint not null default public.now_millis()
 );
 
 create table if not exists public.company_products (
     id bigint generated always as identity primary key,
     uuid uuid not null default gen_random_uuid() unique,
-    "companyId" bigint not null,
-    "companyUuid" uuid not null,
-    "productId" bigint not null,
-    "productUuid" uuid not null,
+    "companyUuid" uuid not null references public.company (uuid) on delete cascade,
+    "productUuid" uuid not null references public.products (uuid) on delete cascade,
     price numeric(12, 2) not null check (price >= 0),
     "costPrice" numeric(12, 2) check ("costPrice" >= 0),
     sku text,
@@ -153,94 +143,70 @@ create table if not exists public.company_products (
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint company_products_company_fk foreign key ("companyId", "companyUuid") references public.company (id, uuid) on delete cascade,
-    constraint company_products_product_fk foreign key ("productId", "productUuid") references public.products (id, uuid) on delete cascade,
-    constraint company_products_company_product_unique unique ("companyId", "productId")
+    constraint company_products_company_product_unique unique ("companyUuid", "productUuid")
 );
 
 create table if not exists public.products_tags (
     id bigint generated always as identity primary key,
     uuid uuid not null default gen_random_uuid() unique,
-    "productId" bigint not null,
-    "productUuid" uuid not null,
-    "tagId" bigint not null,
-    "tagUuid" uuid not null,
+    "productUuid" uuid not null references public.products (uuid) on delete cascade,
+    "tagUuid" uuid not null references public.tags (uuid) on delete cascade,
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint products_tags_product_fk foreign key ("productId", "productUuid") references public.products (id, uuid) on delete cascade,
-    constraint products_tags_tag_fk foreign key ("tagId", "tagUuid") references public.tags (id, uuid) on delete cascade,
-    constraint products_tags_product_tag_unique unique ("productId", "tagId")
+    constraint products_tags_product_tag_unique unique ("productUuid", "tagUuid")
 );
 
 create table if not exists public.user_roles (
     id bigint generated always as identity primary key,
     uuid uuid not null default gen_random_uuid() unique,
-    "userId" bigint not null,
-    "userUuid" uuid not null,
-    "roleId" bigint not null,
-    "roleUuid" uuid not null,
+    "userUuid" uuid not null references public.users (uuid) on delete cascade,
+    "roleUuid" uuid not null references public.roles (uuid) on delete cascade,
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint user_roles_user_fk foreign key ("userId", "userUuid") references public.users (id, uuid) on delete cascade,
-    constraint user_roles_role_fk foreign key ("roleId", "roleUuid") references public.roles (id, uuid) on delete cascade,
-    constraint user_roles_user_role_unique unique ("userId", "roleId")
+    constraint user_roles_user_role_unique unique ("userUuid", "roleUuid")
 );
 
 create table if not exists public.store_company (
     id bigint generated always as identity primary key,
     uuid uuid not null default gen_random_uuid() unique,
-    "storeId" bigint not null,
-    "storeUuid" uuid not null,
-    "companyId" bigint not null,
-    "companyUuid" uuid not null,
+    "storeUuid" uuid not null references public.store (uuid) on delete cascade,
+    "companyUuid" uuid not null references public.company (uuid) on delete cascade,
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint store_company_store_fk foreign key ("storeId", "storeUuid") references public.store (id, uuid) on delete cascade,
-    constraint store_company_company_fk foreign key ("companyId", "companyUuid") references public.company (id, uuid) on delete cascade,
-    constraint store_company_store_company_unique unique ("storeId", "companyId")
+    constraint store_company_store_company_unique unique ("storeUuid", "companyUuid")
 );
 
 create table if not exists public.store_client (
     id bigint generated always as identity primary key,
     uuid uuid not null default gen_random_uuid() unique,
-    "storeId" bigint not null,
-    "storeUuid" uuid not null,
-    "clientId" bigint not null,
-    "clientUuid" uuid not null,
+    "storeUuid" uuid not null references public.store (uuid) on delete cascade,
+    "clientUuid" uuid not null references public.client (uuid) on delete cascade,
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint store_client_store_fk foreign key ("storeId", "storeUuid") references public.store (id, uuid) on delete cascade,
-    constraint store_client_client_fk foreign key ("clientId", "clientUuid") references public.client (id, uuid) on delete cascade,
-    constraint store_client_store_client_unique unique ("storeId", "clientId")
+    constraint store_client_store_client_unique unique ("storeUuid", "clientUuid")
 );
 
 create table if not exists public.store_user (
     id bigint generated always as identity primary key,
     uuid uuid not null default gen_random_uuid() unique,
-    "storeId" bigint not null,
-    "storeUuid" uuid not null,
-    "userId" bigint not null,
-    "userUuid" uuid not null,
-    "userRoleId" bigint not null references public.user_roles (id) on delete restrict,
+    "storeUuid" uuid not null references public.store (uuid) on delete cascade,
+    "userUuid" uuid not null references public.users (uuid) on delete cascade,
+    "userRoleUuid" uuid not null references public.user_roles (uuid) on delete restrict,
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint store_user_store_fk foreign key ("storeId", "storeUuid") references public.store (id, uuid) on delete cascade,
-    constraint store_user_user_fk foreign key ("userId", "userUuid") references public.users (id, uuid) on delete cascade,
-    constraint store_user_store_user_role_unique unique ("storeId", "userId", "userRoleId")
+    constraint store_user_store_user_role_unique unique ("storeUuid", "userUuid", "userRoleUuid")
 );
 
 create table if not exists public.store_invoice (
     id bigint generated always as identity primary key,
     uuid uuid not null default gen_random_uuid() unique,
-    "storeId" bigint not null,
-    "storeUuid" uuid not null,
-    "clientId" bigint not null,
-    "clientUuid" uuid not null,
+    "storeUuid" uuid not null references public.store (uuid) on delete cascade,
+    "clientUuid" uuid not null references public.client (uuid) on delete restrict,
     "invoiceNumber" text not null,
     "invoiceType" text not null default 'cash' check ("invoiceType" in ('cash', 'credit')),
     "itemCount" integer not null default 0 check ("itemCount" >= 0),
@@ -253,19 +219,15 @@ create table if not exists public.store_invoice (
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint store_invoice_store_fk foreign key ("storeId", "storeUuid") references public.store (id, uuid) on delete cascade,
-    constraint store_invoice_client_fk foreign key ("clientId", "clientUuid") references public.client (id, uuid) on delete restrict,
-    constraint store_invoice_store_client_fk foreign key ("storeId", "clientId") references public.store_client ("storeId", "clientId") on delete restrict,
-    constraint store_invoice_store_invoice_number_unique unique ("storeId", "invoiceNumber")
+    constraint store_invoice_store_client_fk foreign key ("storeUuid", "clientUuid") references public.store_client ("storeUuid", "clientUuid") on delete restrict,
+    constraint store_invoice_store_invoice_number_unique unique ("storeUuid", "invoiceNumber")
 );
 
 create table if not exists public.store_payment_voucher (
     id bigint generated always as identity primary key,
     uuid uuid not null default gen_random_uuid() unique,
-    "storeId" bigint not null,
-    "storeUuid" uuid not null,
-    "clientId" bigint not null,
-    "clientUuid" uuid not null,
+    "storeUuid" uuid not null references public.store (uuid) on delete cascade,
+    "clientUuid" uuid not null references public.client (uuid) on delete restrict,
     "voucherNumber" text not null,
     "payeeName" text not null,
     amount numeric(12, 2) not null default 0 check (amount >= 0),
@@ -276,19 +238,15 @@ create table if not exists public.store_payment_voucher (
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint store_payment_voucher_store_fk foreign key ("storeId", "storeUuid") references public.store (id, uuid) on delete cascade,
-    constraint store_payment_voucher_client_fk foreign key ("clientId", "clientUuid") references public.client (id, uuid) on delete restrict,
-    constraint store_payment_voucher_store_client_fk foreign key ("storeId", "clientId") references public.store_client ("storeId", "clientId") on delete restrict,
-    constraint store_payment_voucher_store_voucher_number_unique unique ("storeId", "voucherNumber")
+    constraint store_payment_voucher_store_client_fk foreign key ("storeUuid", "clientUuid") references public.store_client ("storeUuid", "clientUuid") on delete restrict,
+    constraint store_payment_voucher_store_voucher_number_unique unique ("storeUuid", "voucherNumber")
 );
 
 create table if not exists public.store_return (
     id bigint generated always as identity primary key,
     uuid uuid not null default gen_random_uuid() unique,
-    "storeId" bigint not null,
-    "storeUuid" uuid not null,
-    "clientId" bigint not null,
-    "clientUuid" uuid not null,
+    "storeUuid" uuid not null references public.store (uuid) on delete cascade,
+    "clientUuid" uuid not null references public.client (uuid) on delete restrict,
     "returnNumber" text not null,
     "returnType" text not null,
     "itemCount" integer not null default 1 check ("itemCount" > 0),
@@ -298,23 +256,18 @@ create table if not exists public.store_return (
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint store_return_store_fk foreign key ("storeId", "storeUuid") references public.store (id, uuid) on delete cascade,
-    constraint store_return_client_fk foreign key ("clientId", "clientUuid") references public.client (id, uuid) on delete restrict,
-    constraint store_return_store_client_fk foreign key ("storeId", "clientId") references public.store_client ("storeId", "clientId") on delete restrict,
-    constraint store_return_store_return_number_unique unique ("storeId", "returnNumber")
+    constraint store_return_store_client_fk foreign key ("storeUuid", "clientUuid") references public.store_client ("storeUuid", "clientUuid") on delete restrict,
+    constraint store_return_store_return_number_unique unique ("storeUuid", "returnNumber")
 );
 
 create table if not exists public.store_financial_transaction (
     id bigint generated always as identity primary key,
     uuid uuid not null default gen_random_uuid() unique,
-    "storeId" bigint not null,
-    "storeUuid" uuid not null,
-    "clientId" bigint not null,
-    "clientUuid" uuid not null,
+    "storeUuid" uuid not null references public.store (uuid) on delete cascade,
+    "clientUuid" uuid not null references public.client (uuid) on delete restrict,
     "transactionNumber" text not null,
     "transactionType" text not null,
     "sourceType" text not null,
-    "sourceId" bigint not null,
     "sourceUuid" uuid not null,
     amount numeric(12, 2) not null default 0 check (amount >= 0),
     "entryType" text not null,
@@ -323,21 +276,16 @@ create table if not exists public.store_financial_transaction (
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint store_financial_transaction_store_fk foreign key ("storeId", "storeUuid") references public.store (id, uuid) on delete cascade,
-    constraint store_financial_transaction_client_fk foreign key ("clientId", "clientUuid") references public.client (id, uuid) on delete restrict,
-    constraint store_financial_transaction_store_client_fk foreign key ("storeId", "clientId") references public.store_client ("storeId", "clientId") on delete restrict,
-    constraint store_financial_transaction_store_transaction_number_unique unique ("storeId", "transactionNumber")
+    constraint store_financial_transaction_store_client_fk foreign key ("storeUuid", "clientUuid") references public.store_client ("storeUuid", "clientUuid") on delete restrict,
+    constraint store_financial_transaction_store_transaction_number_unique unique ("storeUuid", "transactionNumber")
 );
 
 create table if not exists public.store_invoice_item (
     id bigint generated always as identity primary key,
     uuid uuid not null default gen_random_uuid() unique,
-    "invoiceId" bigint not null,
-    "invoiceUuid" uuid not null,
-    "companyProductId" bigint not null,
-    "companyProductUuid" uuid not null,
-    "productId" bigint not null,
-    "productUuid" uuid not null,
+    "invoiceUuid" uuid not null references public.store_invoice (uuid) on delete cascade,
+    "companyProductUuid" uuid not null references public.company_products (uuid) on delete restrict,
+    "productUuid" uuid not null references public.products (uuid) on delete restrict,
     quantity integer not null check (quantity > 0),
     "unitPrice" numeric(12, 2) not null check ("unitPrice" >= 0),
     "discountAmount" numeric(12, 2) not null default 0 check ("discountAmount" >= 0),
@@ -345,118 +293,96 @@ create table if not exists public.store_invoice_item (
     "lineTotal" numeric(12, 2) not null check ("lineTotal" >= 0),
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
-    "updatedAt" bigint not null default public.now_millis(),
-    constraint store_invoice_item_invoice_fk foreign key ("invoiceId", "invoiceUuid") references public.store_invoice (id, uuid) on delete cascade,
-    constraint store_invoice_item_company_product_fk foreign key ("companyProductId", "companyProductUuid") references public.company_products (id, uuid) on delete restrict,
-    constraint store_invoice_item_product_fk foreign key ("productId", "productUuid") references public.products (id, uuid) on delete restrict
+    "updatedAt" bigint not null default public.now_millis()
 );
 
 create table if not exists public.store_return_item (
     id bigint generated always as identity primary key,
     uuid uuid not null default gen_random_uuid() unique,
-    "returnId" bigint not null,
-    "returnUuid" uuid not null,
-    "invoiceItemId" bigint,
-    "invoiceItemUuid" uuid,
-    "companyProductId" bigint not null,
-    "companyProductUuid" uuid not null,
-    "productId" bigint not null,
-    "productUuid" uuid not null,
+    "returnUuid" uuid not null references public.store_return (uuid) on delete cascade,
+    "invoiceItemUuid" uuid references public.store_invoice_item (uuid) on delete set null,
+    "companyProductUuid" uuid not null references public.company_products (uuid) on delete restrict,
+    "productUuid" uuid not null references public.products (uuid) on delete restrict,
     quantity integer not null check (quantity > 0),
     "unitPrice" numeric(12, 2) not null check ("unitPrice" >= 0),
     "lineTotal" numeric(12, 2) not null check ("lineTotal" >= 0),
     reason text not null default '',
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
-    "updatedAt" bigint not null default public.now_millis(),
-    constraint store_return_item_return_fk foreign key ("returnId", "returnUuid") references public.store_return (id, uuid) on delete cascade,
-    constraint store_return_item_invoice_item_fk foreign key ("invoiceItemId", "invoiceItemUuid") references public.store_invoice_item (id, uuid) on delete set null,
-    constraint store_return_item_company_product_fk foreign key ("companyProductId", "companyProductUuid") references public.company_products (id, uuid) on delete restrict,
-    constraint store_return_item_product_fk foreign key ("productId", "productUuid") references public.products (id, uuid) on delete restrict
+    "updatedAt" bigint not null default public.now_millis()
 );
 
 create table if not exists public.inventory_movement (
     id bigint generated always as identity primary key,
     uuid uuid not null default gen_random_uuid() unique,
-    "companyProductId" bigint not null,
-    "companyProductUuid" uuid not null,
-    "productId" bigint not null,
-    "productUuid" uuid not null,
+    "companyProductUuid" uuid not null references public.company_products (uuid) on delete restrict,
+    "productUuid" uuid not null references public.products (uuid) on delete restrict,
     "movementType" text not null,
     "quantityDelta" integer not null check ("quantityDelta" <> 0),
     "balanceAfter" integer not null check ("balanceAfter" >= 0),
     "unitCost" numeric(12, 2) check ("unitCost" >= 0),
     "referenceType" text not null,
-    "referenceId" bigint,
     "referenceUuid" uuid,
     note text not null default '',
-    "createdByUserId" bigint,
-    "createdByUserUuid" uuid,
+    "createdByUserUuid" uuid references public.users (uuid) on delete set null,
     "createdAt" bigint not null default public.now_millis(),
-    "updatedAt" bigint not null default public.now_millis(),
-    constraint inventory_movement_company_product_fk foreign key ("companyProductId", "companyProductUuid") references public.company_products (id, uuid) on delete restrict,
-    constraint inventory_movement_product_fk foreign key ("productId", "productUuid") references public.products (id, uuid) on delete restrict,
-    constraint inventory_movement_user_fk foreign key ("createdByUserId", "createdByUserUuid") references public.users (id, uuid) on delete set null
+    "updatedAt" bigint not null default public.now_millis()
 );
 
 create table if not exists public.payment_allocation (
     id bigint generated always as identity primary key,
     uuid uuid not null default gen_random_uuid() unique,
-    "paymentVoucherId" bigint not null,
-    "paymentVoucherUuid" uuid not null,
-    "invoiceId" bigint not null,
-    "invoiceUuid" uuid not null,
+    "paymentVoucherUuid" uuid not null references public.store_payment_voucher (uuid) on delete cascade,
+    "invoiceUuid" uuid not null references public.store_invoice (uuid) on delete cascade,
     "allocatedAmount" numeric(12, 2) not null check ("allocatedAmount" > 0),
     "allocationDate" bigint not null,
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-    constraint payment_allocation_payment_voucher_fk foreign key ("paymentVoucherId", "paymentVoucherUuid") references public.store_payment_voucher (id, uuid) on delete cascade,
-    constraint payment_allocation_invoice_fk foreign key ("invoiceId", "invoiceUuid") references public.store_invoice (id, uuid) on delete cascade,
-    constraint payment_allocation_payment_invoice_unique unique ("paymentVoucherId", "invoiceId")
+    constraint payment_allocation_payment_invoice_unique unique ("paymentVoucherUuid", "invoiceUuid")
 );
 
 create index if not exists idx_users_auth_user_id on public.users (auth_user_id);
 create index if not exists idx_users_email on public.users (email);
 create index if not exists idx_company_status on public.company (status);
 create index if not exists idx_products_status on public.products (status);
-create index if not exists idx_categories_parent_id on public.categories ("parentId");
+create index if not exists idx_categories_parent_uuid on public.categories ("parentUuid");
 create index if not exists idx_tags_status on public.tags (status);
 create index if not exists idx_roles_status on public.roles (status);
 create index if not exists idx_client_status on public.client (status);
-create index if not exists idx_company_products_company_id on public.company_products ("companyId");
-create index if not exists idx_company_products_product_id on public.company_products ("productId");
-create index if not exists idx_products_tags_product_id on public.products_tags ("productId");
-create index if not exists idx_products_tags_tag_id on public.products_tags ("tagId");
-create index if not exists idx_user_roles_user_id on public.user_roles ("userId");
-create index if not exists idx_user_roles_role_id on public.user_roles ("roleId");
-create index if not exists idx_store_company_store_id on public.store_company ("storeId");
-create index if not exists idx_store_company_company_id on public.store_company ("companyId");
-create index if not exists idx_store_client_store_id on public.store_client ("storeId");
-create index if not exists idx_store_client_client_id on public.store_client ("clientId");
-create index if not exists idx_store_user_store_id on public.store_user ("storeId");
-create index if not exists idx_store_user_user_id on public.store_user ("userId");
-create index if not exists idx_store_user_user_role_id on public.store_user ("userRoleId");
-create index if not exists idx_store_invoice_store_id on public.store_invoice ("storeId");
-create index if not exists idx_store_invoice_client_id on public.store_invoice ("clientId");
+create index if not exists idx_company_products_company_uuid on public.company_products ("companyUuid");
+create index if not exists idx_company_products_product_uuid on public.company_products ("productUuid");
+create index if not exists idx_products_tags_product_uuid on public.products_tags ("productUuid");
+create index if not exists idx_products_tags_tag_uuid on public.products_tags ("tagUuid");
+create index if not exists idx_user_roles_user_uuid on public.user_roles ("userUuid");
+create index if not exists idx_user_roles_role_uuid on public.user_roles ("roleUuid");
+create index if not exists idx_store_company_store_uuid on public.store_company ("storeUuid");
+create index if not exists idx_store_company_company_uuid on public.store_company ("companyUuid");
+create index if not exists idx_store_client_store_uuid on public.store_client ("storeUuid");
+create index if not exists idx_store_client_client_uuid on public.store_client ("clientUuid");
+create index if not exists idx_store_user_store_uuid on public.store_user ("storeUuid");
+create index if not exists idx_store_user_user_uuid on public.store_user ("userUuid");
+create index if not exists idx_store_user_user_role_uuid on public.store_user ("userRoleUuid");
+create index if not exists idx_store_invoice_store_uuid on public.store_invoice ("storeUuid");
+create index if not exists idx_store_invoice_client_uuid on public.store_invoice ("clientUuid");
 create index if not exists idx_store_invoice_due_at on public.store_invoice ("dueAt");
-create index if not exists idx_store_payment_voucher_store_id on public.store_payment_voucher ("storeId");
-create index if not exists idx_store_payment_voucher_client_id on public.store_payment_voucher ("clientId");
+create index if not exists idx_store_payment_voucher_store_uuid on public.store_payment_voucher ("storeUuid");
+create index if not exists idx_store_payment_voucher_client_uuid on public.store_payment_voucher ("clientUuid");
 create index if not exists idx_store_payment_voucher_transaction_date on public.store_payment_voucher ("transactionDate");
-create index if not exists idx_store_return_store_id on public.store_return ("storeId");
-create index if not exists idx_store_return_client_id on public.store_return ("clientId");
+create index if not exists idx_store_return_store_uuid on public.store_return ("storeUuid");
+create index if not exists idx_store_return_client_uuid on public.store_return ("clientUuid");
 create index if not exists idx_store_return_transaction_date on public.store_return ("transactionDate");
-create index if not exists idx_store_financial_transaction_store_id on public.store_financial_transaction ("storeId");
-create index if not exists idx_store_financial_transaction_client_id on public.store_financial_transaction ("clientId");
-create index if not exists idx_store_financial_transaction_source on public.store_financial_transaction ("sourceType", "sourceId");
-create index if not exists idx_store_invoice_item_invoice_id on public.store_invoice_item ("invoiceId");
-create index if not exists idx_store_invoice_item_company_product_id on public.store_invoice_item ("companyProductId");
-create index if not exists idx_store_return_item_return_id on public.store_return_item ("returnId");
-create index if not exists idx_store_return_item_company_product_id on public.store_return_item ("companyProductId");
-create index if not exists idx_inventory_movement_company_product_id on public.inventory_movement ("companyProductId");
-create index if not exists idx_inventory_movement_reference on public.inventory_movement ("referenceType", "referenceId");
-create index if not exists idx_payment_allocation_payment_voucher_id on public.payment_allocation ("paymentVoucherId");
-create index if not exists idx_payment_allocation_invoice_id on public.payment_allocation ("invoiceId");
+create index if not exists idx_store_financial_transaction_store_uuid on public.store_financial_transaction ("storeUuid");
+create index if not exists idx_store_financial_transaction_client_uuid on public.store_financial_transaction ("clientUuid");
+create index if not exists idx_store_financial_transaction_source on public.store_financial_transaction ("sourceType", "sourceUuid");
+create index if not exists idx_store_invoice_item_invoice_uuid on public.store_invoice_item ("invoiceUuid");
+create index if not exists idx_store_invoice_item_company_product_uuid on public.store_invoice_item ("companyProductUuid");
+create index if not exists idx_store_return_item_return_uuid on public.store_return_item ("returnUuid");
+create index if not exists idx_store_return_item_company_product_uuid on public.store_return_item ("companyProductUuid");
+create index if not exists idx_inventory_movement_company_product_uuid on public.inventory_movement ("companyProductUuid");
+create index if not exists idx_inventory_movement_reference on public.inventory_movement ("referenceType", "referenceUuid");
+create index if not exists idx_payment_allocation_payment_voucher_uuid on public.payment_allocation ("paymentVoucherUuid");
+create index if not exists idx_payment_allocation_invoice_uuid on public.payment_allocation ("invoiceUuid");
 
 drop trigger if exists set_users_updated_at on public.users;
 create trigger set_users_updated_at before update on public.users for each row execute function public.set_updated_at();
