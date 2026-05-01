@@ -4,11 +4,10 @@ import 'package:store_management/controllers/auth_controller.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/localization/locale_controller.dart';
 import 'package:store_management/services/app_preferences_controller.dart';
-import 'package:store_management/views/components/language_switcher.dart';
 import 'package:store_management/views/index/index_page.dart';
 import 'package:store_management/views/index/index_page_registry.dart';
 
-Widget _buildIndexDrawer(BuildContext context, LocaleController localeController, AppPreferencesController appPreferencesController, {required IndexPage selectedPage, required ValueChanged<IndexPage> onSelectPage}) {
+Widget _buildIndexDrawer(BuildContext context, {required IndexPage selectedPage, required ValueChanged<IndexPage> onSelectPage}) {
   final l10n = context.l10n;
   final authState = context.watch<AuthController>().state;
   final user = authState.user;
@@ -71,49 +70,6 @@ Widget _buildIndexDrawer(BuildContext context, LocaleController localeController
                 padding: const EdgeInsets.only(bottom: 8),
                 child: _DrawerSectionCard(section: section, selectedPage: selectedPage, onSelectPage: onSelectPage),
               ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: colorScheme.outlineVariant),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l10n.settings, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 12),
-                  Text(l10n.language, style: theme.textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant)),
-                  const SizedBox(height: 8),
-                  LanguageSwitcher(localeController: localeController),
-                  const SizedBox(height: 12),
-                  Text(l10n.theme, style: theme.textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant)),
-                  const SizedBox(height: 4),
-                  _ThemeModeOptionTile(
-                    icon: Icons.brightness_auto_rounded,
-                    label: l10n.systemMode,
-                    value: ThemeMode.system,
-                    currentValue: appPreferencesController.themeMode,
-                    onSelected: appPreferencesController.setThemeMode,
-                  ),
-                  _ThemeModeOptionTile(icon: Icons.light_mode_rounded, label: l10n.lightMode, value: ThemeMode.light, currentValue: appPreferencesController.themeMode, onSelected: appPreferencesController.setThemeMode),
-                  _ThemeModeOptionTile(icon: Icons.dark_mode_rounded, label: l10n.darkMode, value: ThemeMode.dark, currentValue: appPreferencesController.themeMode, onSelected: appPreferencesController.setThemeMode),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            ListTile(
-              dense: true,
-              visualDensity: const VisualDensity(horizontal: -1, vertical: -2),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-              leading: const Icon(Icons.logout_rounded),
-              title: Text(l10n.logout),
-              onTap: () {
-                Navigator.of(context).maybePop();
-                context.read<AuthController>().add(const AuthSignedOut());
-              },
             ),
           ],
         ),
@@ -225,15 +181,59 @@ class _IndexState extends State<Index> {
     Navigator.of(context).maybePop();
   }
 
+  Future<void> _confirmSignOut() async {
+    final l10n = context.l10n;
+    final didConfirm = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(l10n.logoutQuestion),
+          content: Text(l10n.logoutWarning),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+            FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.logout)),
+          ],
+        );
+      },
+    );
+
+    if (didConfirm == true && mounted) {
+      context.read<AuthController>().add(const AuthSignedOut());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthController>().state;
-    final pageDefinitions = buildIndexPageDefinitions(context, authState);
+    final pageDefinitions = buildIndexPageDefinitions(context, authState, localeController: widget.localeController, appPreferencesController: widget.appPreferencesController);
     final selectedDefinition = pageDefinitions[_selectedPage]!;
 
     return Scaffold(
-      drawer: _buildIndexDrawer(context, widget.localeController, widget.appPreferencesController, selectedPage: _selectedPage, onSelectPage: _handlePageSelected),
-      appBar: AppBar(title: Text(selectedDefinition.title), centerTitle: true, elevation: 0, backgroundColor: Colors.transparent),
+      drawer: _buildIndexDrawer(context, selectedPage: _selectedPage, onSelectPage: _handlePageSelected),
+      appBar: AppBar(
+        title: Text(selectedDefinition.title),
+        centerTitle: true,
+        elevation: 4,
+        backgroundColor: Colors.transparent,
+        shadowColor: Colors.black.withValues(alpha: 0.12),
+        actions: [
+          IconButton(
+            tooltip: context.l10n.settings,
+            icon: const Icon(Icons.settings_rounded),
+            onPressed: () {
+              _handlePageSelected(IndexPage.settings);
+            },
+          ),
+          // Sign out
+          IconButton(
+            tooltip: context.l10n.logout,
+            icon: const Icon(Icons.logout_rounded),
+            onPressed: () {
+              _confirmSignOut();
+            },
+          ),
+        ],
+      ),
       body: selectedDefinition.bodyBuilder(context),
     );
   }
@@ -323,33 +323,6 @@ class _DrawerSectionCard extends StatelessWidget {
           }).toList(),
         ),
       ),
-    );
-  }
-}
-
-class _ThemeModeOptionTile extends StatelessWidget {
-  const _ThemeModeOptionTile({required this.icon, required this.label, required this.value, required this.currentValue, required this.onSelected});
-
-  final IconData icon;
-  final String label;
-  final ThemeMode value;
-  final ThemeMode currentValue;
-  final ValueChanged<ThemeMode> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final isSelected = value == currentValue;
-
-    return ListTile(
-      dense: true,
-      visualDensity: const VisualDensity(horizontal: -1, vertical: -2),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-      leading: Icon(icon, size: 20),
-      title: Text(label),
-      trailing: isSelected ? Icon(Icons.check_rounded, color: Theme.of(context).colorScheme.primary) : null,
-      selected: isSelected,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      onTap: () => onSelected(value),
     );
   }
 }

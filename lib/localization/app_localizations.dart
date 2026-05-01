@@ -139,6 +139,8 @@ class AppLocalizations {
     'reset': 'Reset',
     'close': 'Close',
     'cancel': 'Cancel',
+    'logoutQuestion': 'Sign out?',
+    'logoutWarning': 'You will need to sign in again to continue using the workspace.',
     'closeApplicationQuestion': 'Close application?',
     'closeApplicationWarning': 'Any unsaved data will be lost if you close the app now.',
     'closeAnyway': 'Close anyway',
@@ -301,6 +303,8 @@ class AppLocalizations {
     'reset': 'إعادة تعيين',
     'close': 'إغلاق',
     'cancel': 'إلغاء',
+    'logoutQuestion': 'تسجيل الخروج؟',
+    'logoutWarning': 'ستحتاج إلى تسجيل الدخول مرة أخرى لمتابعة استخدام مساحة العمل.',
     'closeApplicationQuestion': 'إغلاق التطبيق؟',
     'closeApplicationWarning': 'ستفقد أي بيانات غير محفوظة إذا أغلقت التطبيق الآن.',
     'closeAnyway': 'إغلاق على أي حال',
@@ -472,6 +476,8 @@ class AppLocalizations {
   String get reset => _text('reset');
   String get close => _text('close');
   String get cancel => _text('cancel');
+  String get logoutQuestion => _text('logoutQuestion');
+  String get logoutWarning => _text('logoutWarning');
   String get closeApplicationQuestion => _text('closeApplicationQuestion');
   String get closeApplicationWarning => _text('closeApplicationWarning');
   String get closeAnyway => _text('closeAnyway');

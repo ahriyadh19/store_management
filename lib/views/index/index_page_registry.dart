@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:store_management/controllers/auth_controller.dart';
 import 'package:store_management/localization/app_localizations.dart';
+import 'package:store_management/localization/locale_controller.dart';
+import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/views/index/dashboard_home_page.dart';
 import 'package:store_management/views/index/index_page.dart';
 import 'package:store_management/views/index/module_page_view.dart';
 import 'package:store_management/views/pages/main_module_pages.dart';
+import 'package:store_management/views/pages/settings_page.dart';
 
-Map<IndexPage, IndexPageDefinition> buildIndexPageDefinitions(BuildContext context, AuthState authState) {
+Map<IndexPage, IndexPageDefinition> buildIndexPageDefinitions(BuildContext context, AuthState authState, {required LocaleController localeController, required AppPreferencesController appPreferencesController}) {
   final l10n = context.l10n;
 
   return {
@@ -117,6 +120,10 @@ Map<IndexPage, IndexPageDefinition> buildIndexPageDefinitions(BuildContext conte
       icon: Icons.sync_alt_rounded,
       description: _t(l10n, 'Review operational and financial transactions in a single navigation area.', 'راجع العمليات التشغيلية والمالية في مساحة تنقل واحدة.'),
       highlights: _list(l10n, ['Transaction feed', 'Filters', 'Linked records'], ['سجل العمليات', 'الفلاتر', 'السجلات المرتبطة']),
+    ),
+    IndexPage.settings: IndexPageDefinition(
+      title: l10n.settings,
+      bodyBuilder: (_) => SettingsPage(localeController: localeController, appPreferencesController: appPreferencesController),
     ),
   };
 }

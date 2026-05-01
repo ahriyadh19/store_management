@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/views/components/model_form.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
@@ -24,8 +26,10 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   late final List<T> _records;
   late T _draftModel;
   late final TextEditingController _searchController;
+  late final FocusNode _gridFocusNode;
   final Map<String, double> _columnWidths = <String, double>{};
   bool _showCreateForm = false;
+  String? _selectedRecordKey;
   String? _sortColumnName;
   bool _sortAscending = true;
   int _currentPage = 0;
@@ -37,10 +41,12 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     _draftModel = widget.formDefinition.sampleModel;
     _records = <T>[widget.formDefinition.sampleModel, widget.formDefinition.buildModel(widget.formDefinition.toMap(widget.formDefinition.sampleModel))];
     _searchController = TextEditingController();
+    _gridFocusNode = FocusNode(debugLabel: '${widget.entityLabel}-grid-focus');
   }
 
   @override
   void dispose() {
+    _gridFocusNode.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -139,13 +145,12 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   Widget _buildTableCard(BuildContext context, BoxConstraints constraints) {
     final l10n = context.l10n;
     final isCompactLayout = constraints.maxWidth < 720;
-    final tableHorizontalInset = isCompactLayout ? 72.0 : 88.0;
     final rowHeight = isCompactLayout ? 72.0 : 60.0;
     final headerRowHeight = isCompactLayout ? 52.0 : 56.0;
     final visibleRecords = _paginatedRecords;
     final currentPage = _effectiveCurrentPage;
     final pageCount = _pageCount;
-    final availableTableWidth = math.max(constraints.maxWidth - tableHorizontalInset - 20, 280.0);
+    final availableTableWidth = math.max(constraints.maxWidth - 48, 280.0);
     final columns = _buildColumns(availableTableWidth, isCompactLayout: isCompactLayout);
     final dataSource = _CrudDataGridSource<T>(
       records: visibleRecords,
@@ -153,6 +158,8 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       toMap: widget.formDefinition.toMap,
       formatCellValue: _formatCellValue,
       isCompactLayout: isCompactLayout,
+      selectedRecordKey: _selectedRecordKey,
+      recordKeyBuilder: _recordIdentity,
       entityLabel: widget.entityLabel,
       l10n: l10n,
       onView: _openDetailsPage,
@@ -205,29 +212,74 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
                   width: double.infinity,
                   constraints: BoxConstraints(minHeight: 220, maxHeight: isCompactLayout ? 460 : 560),
                   color: Theme.of(context).colorScheme.surface,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minWidth: availableTableWidth),
-                    child: SfDataGrid(
-                      source: dataSource,
-                      columns: columns,
-                      footerFrozenColumnsCount: 1,
-                      allowColumnsResizing: true,
-                      onColumnResizeUpdate: (details) {
-                        if (details.column.columnName == _actionsColumnName) {
-                          return false;
-                        }
+                  child: ScrollConfiguration(
+                    behavior: const MaterialScrollBehavior().copyWith(
+                      dragDevices: <PointerDeviceKind>{PointerDeviceKind.touch, PointerDeviceKind.mouse, PointerDeviceKind.trackpad, PointerDeviceKind.stylus, PointerDeviceKind.unknown},
+                    ),
+                    child: Shortcuts(
+                      shortcuts: const <ShortcutActivator, Intent>{SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(), SingleActivator(LogicalKeyboardKey.space): ActivateIntent()},
+                      child: Actions(
+                        actions: <Type, Action<Intent>>{
+                          ActivateIntent: CallbackAction<ActivateIntent>(
+                            onInvoke: (intent) {
+                              _openSelectedRecord();
+                              return null;
+                            },
+                          ),
+                        },
+                        child: Focus(
+                          focusNode: _gridFocusNode,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(minWidth: availableTableWidth),
+                            child: SfDataGrid(
+                              source: dataSource,
+                              columns: columns,
+                              selectionMode: SelectionMode.single,
+                              navigationMode: GridNavigationMode.row,
+                              onCellTap: (details) {
+                                _gridFocusNode.requestFocus();
+                                final rowIndex = details.rowColumnIndex.rowIndex;
+                                if (rowIndex <= 0 || rowIndex - 1 >= visibleRecords.length) {
+                                  return;
+                                }
 
-                        setState(() {
-                          _columnWidths[details.column.columnName] = details.width;
-                        });
-                        return true;
-                      },
-                      columnResizeMode: ColumnResizeMode.onResizeEnd,
-                      columnWidthMode: ColumnWidthMode.none,
-                      gridLinesVisibility: GridLinesVisibility.horizontal,
-                      headerGridLinesVisibility: GridLinesVisibility.horizontal,
-                      rowHeight: rowHeight,
-                      headerRowHeight: headerRowHeight,
+                                setState(() {
+                                  _selectedRecordKey = _recordIdentity(visibleRecords[rowIndex - 1]);
+                                });
+                              },
+                              onCellDoubleTap: (details) {
+                                final rowIndex = details.rowColumnIndex.rowIndex;
+                                if (rowIndex <= 0 || rowIndex - 1 >= visibleRecords.length) {
+                                  return;
+                                }
+
+                                final record = visibleRecords[rowIndex - 1];
+                                setState(() {
+                                  _selectedRecordKey = _recordIdentity(record);
+                                });
+                                _openDetailsPage(record);
+                              },
+                              allowColumnsResizing: true,
+                              onColumnResizeUpdate: (details) {
+                                if (details.column.columnName == _actionsColumnName) {
+                                  return false;
+                                }
+
+                                setState(() {
+                                  _columnWidths[details.column.columnName] = details.width;
+                                });
+                                return true;
+                              },
+                              columnResizeMode: ColumnResizeMode.onResizeEnd,
+                              columnWidthMode: ColumnWidthMode.none,
+                              gridLinesVisibility: GridLinesVisibility.horizontal,
+                              headerGridLinesVisibility: GridLinesVisibility.horizontal,
+                              rowHeight: rowHeight,
+                              headerRowHeight: headerRowHeight,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -263,10 +315,11 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   Map<String, double> _resolvedColumnWidths(double tableWidth, {required bool isCompactLayout}) {
-    final defaultDataWidth = isCompactLayout ? 124.0 : 180.0;
     final defaultActionsWidth = isCompactLayout ? 132.0 : 156.0;
-    final widths = <String, double>{for (final field in _visibleFields) field.key: _columnWidths[field.key] ?? defaultDataWidth};
     final dataColumnCount = _visibleFields.length;
+    final minimumDataWidth = isCompactLayout ? 110.0 : 160.0;
+    final computedDataWidth = dataColumnCount == 0 ? minimumDataWidth : ((tableWidth - defaultActionsWidth) / dataColumnCount).clamp(minimumDataWidth, isCompactLayout ? 180.0 : 260.0);
+    final widths = <String, double>{for (final field in _visibleFields) field.key: _columnWidths[field.key] ?? computedDataWidth};
     if (dataColumnCount == 0) {
       widths[_actionsColumnName] = defaultActionsWidth;
       return widths;
@@ -280,7 +333,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
 
     final extraPerColumn = (tableWidth - totalWidth) / dataColumnCount;
     for (final field in _visibleFields) {
-      widths[field.key] = (widths[field.key] ?? defaultDataWidth) + extraPerColumn;
+      widths[field.key] = (widths[field.key] ?? computedDataWidth) + extraPerColumn;
     }
     widths[_actionsColumnName] = defaultActionsWidth;
     return widths;
@@ -424,7 +477,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     final totalRows = _sortedRecords.length;
     final start = totalRows == 0 ? 0 : currentPage * _rowsPerPage + 1;
     final end = totalRows == 0 ? 0 : math.min((currentPage + 1) * _rowsPerPage, totalRows);
-    final rowsPerPageOptions = isCompactLayout ? const <int>[5, 10, 15] : const <int>[10, 20, 30];
+    final rowsPerPageOptions = isCompactLayout ? const <int>[5, 10, 15] : const <int>[10, 25, 50, 100];
     final selectedRowsPerPage = rowsPerPageOptions.contains(_rowsPerPage) ? _rowsPerPage : rowsPerPageOptions.first;
 
     final footerChildren = <Widget>[
@@ -651,6 +704,45 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     return _records.indexWhere((item) => widget.formDefinition.toMap(item)['id'] == targetId);
   }
 
+  String _recordIdentity(T record) => _recordIdentityFromMap(widget.formDefinition.toMap(record));
+
+  String _recordIdentityFromMap(Map<String, dynamic> data) {
+    final uuid = data['uuid'];
+    if (uuid != null && uuid.toString().isNotEmpty) {
+      return 'uuid:$uuid';
+    }
+
+    final id = data['id'];
+    if (id != null && id.toString().isNotEmpty) {
+      return 'id:$id';
+    }
+
+    return data.toString();
+  }
+
+  T? get _selectedRecord {
+    final selectedRecordKey = _selectedRecordKey;
+    if (selectedRecordKey == null) {
+      return null;
+    }
+
+    for (final record in _sortedRecords) {
+      if (_recordIdentity(record) == selectedRecordKey) {
+        return record;
+      }
+    }
+    return null;
+  }
+
+  void _openSelectedRecord() {
+    final record = _selectedRecord;
+    if (record == null) {
+      return;
+    }
+
+    _openDetailsPage(record);
+  }
+
   void _showFeedback(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -689,6 +781,8 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
     required Map<String, dynamic> Function(T record) toMap,
     required String Function(Object? value) formatCellValue,
     required bool isCompactLayout,
+    required String? selectedRecordKey,
+    required String Function(T record) recordKeyBuilder,
     required String entityLabel,
     required AppLocalizations l10n,
     required void Function(T record) onView,
@@ -705,11 +799,12 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
                  DataGridCell<String>(columnName: actionsColumnName, value: ''),
                ],
              );
-             return _GridRowEntry<T>(record: record, row: row);
+             return _GridRowEntry<T>(record: record, row: row, recordKey: recordKeyBuilder(record));
            })
            .toList(growable: false),
        _formatCellValue = formatCellValue,
        _isCompactLayout = isCompactLayout,
+       _selectedRecordKey = selectedRecordKey,
        _entityLabel = entityLabel,
        _l10n = l10n,
        _onView = onView,
@@ -717,16 +812,20 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
        _onDelete = onDelete,
        _actionsColumnName = actionsColumnName,
        _errorColor = errorColor,
-       _recordByRow = <DataGridRow, T>{} {
+       _recordByRow = <DataGridRow, T>{},
+       _entryByRow = <DataGridRow, _GridRowEntry<T>>{} {
     for (final entry in _entries) {
       _recordByRow[entry.row] = entry.record;
+      _entryByRow[entry.row] = entry;
     }
   }
 
   final List<_GridRowEntry<T>> _entries;
   final Map<DataGridRow, T> _recordByRow;
+  final Map<DataGridRow, _GridRowEntry<T>> _entryByRow;
   final String Function(Object? value) _formatCellValue;
   final bool _isCompactLayout;
+  final String? _selectedRecordKey;
   final String _entityLabel;
   final AppLocalizations _l10n;
   final void Function(T record) _onView;
@@ -738,6 +837,7 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
   @override
   void dispose() {
     _recordByRow.clear();
+    _entryByRow.clear();
     super.dispose();
   }
 
@@ -747,11 +847,17 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {
     final record = _recordByRow[row];
+    final entry = _entryByRow[row];
     if (record == null) {
       return DataGridRowAdapter(cells: row.getCells().map((cell) => Text(_formatCellValue(cell.value))).toList(growable: false));
     }
 
     return DataGridRowAdapter(
+      color: _selectedRecordKey != null && entry?.recordKey == _selectedRecordKey
+          ? _l10n.isArabic
+                ? Colors.teal.withValues(alpha: 0.10)
+                : Colors.blue.withValues(alpha: 0.08)
+          : null,
       cells: row
           .getCells()
           .map((cell) {
@@ -814,10 +920,11 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
 }
 
 class _GridRowEntry<T extends Object> {
-  const _GridRowEntry({required this.record, required this.row});
+  const _GridRowEntry({required this.record, required this.row, required this.recordKey});
 
   final T record;
   final DataGridRow row;
+  final String recordKey;
 }
 
 enum _RowAction { view, edit, delete }

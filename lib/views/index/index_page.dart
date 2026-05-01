@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-enum IndexPage { dashboard, reports, stores, branches, products, categories, tags, invoices, returns, paymentVouchers, clients, companies, users, roles, inventory, transactions }
+enum IndexPage { dashboard, reports, stores, branches, products, categories, tags, invoices, returns, paymentVouchers, clients, companies, users, roles, inventory, transactions, settings }
 
 extension IndexPageStorage on IndexPage {
   String get storageKey => name;
