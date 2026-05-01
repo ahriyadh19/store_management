@@ -17,8 +17,8 @@ extension IndexPageStorage on IndexPage {
 }
 
 class IndexPageDefinition {
-  const IndexPageDefinition({required this.title, required this.body});
+  const IndexPageDefinition({required this.title, required this.bodyBuilder});
 
   final String title;
-  final Widget body;
+  final WidgetBuilder bodyBuilder;
 }

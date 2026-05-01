@@ -234,7 +234,7 @@ class _IndexState extends State<Index> {
     return Scaffold(
       drawer: _buildIndexDrawer(context, widget.localeController, widget.appPreferencesController, selectedPage: _selectedPage, onSelectPage: _handlePageSelected),
       appBar: AppBar(title: Text(selectedDefinition.title), centerTitle: true, elevation: 0, backgroundColor: Colors.transparent),
-      body: selectedDefinition.body,
+      body: selectedDefinition.bodyBuilder(context),
     );
   }
 }

@@ -12,7 +12,7 @@ Map<IndexPage, IndexPageDefinition> buildIndexPageDefinitions(BuildContext conte
   return {
     IndexPage.dashboard: IndexPageDefinition(
       title: l10n.dashboard,
-      body: DashboardHomePage(authState: authState),
+      bodyBuilder: (_) => DashboardHomePage(authState: authState),
     ),
     IndexPage.reports: _placeholderModulePage(
       title: l10n.reports,
@@ -132,13 +132,13 @@ List<String> _list(AppLocalizations l10n, List<String> english, List<String> ara
 IndexPageDefinition _modulePage({required IndexPage page, required String title, required IconData icon, required String description, List<String> highlights = const []}) {
   return IndexPageDefinition(
     title: title,
-    body: buildMainModulePage(page: page, title: title, description: description, icon: icon, highlights: highlights),
+    bodyBuilder: (_) => buildMainModulePage(page: page, title: title, description: description, icon: icon, highlights: highlights),
   );
 }
 
 IndexPageDefinition _placeholderModulePage({required String title, required IconData icon, required String description, List<String> highlights = const []}) {
   return IndexPageDefinition(
     title: title,
-    body: ModulePageView(title: title, icon: icon, description: description, highlights: highlights),
+    bodyBuilder: (_) => ModulePageView(title: title, icon: icon, description: description, highlights: highlights),
   );
 }
