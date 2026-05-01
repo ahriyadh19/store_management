@@ -24,8 +24,12 @@ const _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+  if (_isDesktopPlatform) {
     await windowManager.ensureInitialized();
+    windowManager.waitUntilReadyToShow(const WindowOptions(size: Size(1280, 720), center: true), () async {
+      await windowManager.show();
+      await windowManager.focus();
+    });
   }
 
   final localeController = await LocaleController.create();
@@ -46,8 +50,10 @@ Future<void> main() async {
   runApp(MyApp(localeController: localeController, appPreferencesController: appPreferencesController, localDatabase: localDatabase, startupError: startupError, startupStackTrace: startupStackTrace));
 }
 
+bool get _isDesktopPlatform => !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+
 FlutterAuthClientOptions _buildAuthOptions() {
-  if (!kIsWeb && (Platform.isLinux || Platform.isMacOS || Platform.isWindows)) {
+  if (_isDesktopPlatform) {
     return FlutterAuthClientOptions(
       localStorage: FileLocalStorage(storageKey: 'supabase.auth.token', appDirectoryName: 'store_management'),
       pkceAsyncStorage: FileGotrueAsyncStorage(appDirectoryName: 'store_management'),
@@ -68,7 +74,7 @@ Future<_SupabaseConfig> _loadSupabaseConfig() async {
     return const _SupabaseConfig(url: envUrl, anonKey: envAnonKey);
   }
 
-  if (!kIsWeb && (Platform.isLinux || Platform.isMacOS || Platform.isWindows)) {
+  if (_isDesktopPlatform) {
     final fileConfig = await _loadSupabaseConfigFromFile();
     if (fileConfig != null) {
       return fileConfig;
@@ -189,7 +195,14 @@ class _WindowCloseGuardState extends State<WindowCloseGuard> with WindowListener
   }
 
   Future<void> _configureWindowCloseHandling() async {
-    if (kIsWeb || !Platform.isWindows) {
+    if (!_isDesktopPlatform) {
+      return;
+    }
+
+    await windowManager.show();
+    await windowManager.focus();
+
+    if (!Platform.isWindows) {
       return;
     }
 
