@@ -145,6 +145,10 @@ class AppLocalizations {
     'delete': 'Delete',
     'actions': 'Actions',
     'rows': 'Rows',
+    'searchTable': 'Search table',
+    'searchTableHint': 'Search across the visible columns.',
+    'clearSearch': 'Clear search',
+    'noMatchingRecords': 'No records match the current search.',
     'noDataAvailable': 'No data available.',
     'dataTableTitle': '{title} Datatable',
     'recordsHeader': '{entity} records',
@@ -300,6 +304,10 @@ class AppLocalizations {
     'delete': 'حذف',
     'actions': 'الإجراءات',
     'rows': 'الصفوف',
+    'searchTable': 'بحث في الجدول',
+    'searchTableHint': 'ابحث في جميع الأعمدة الظاهرة.',
+    'clearSearch': 'مسح البحث',
+    'noMatchingRecords': 'لا توجد سجلات تطابق البحث الحالي.',
     'noDataAvailable': 'لا توجد بيانات.',
     'dataTableTitle': 'جدول {title}',
     'recordsHeader': 'سجلات {entity}',
@@ -464,6 +472,10 @@ class AppLocalizations {
   String get deleteLabel => _text('delete');
   String get actions => _text('actions');
   String get rows => _text('rows');
+  String get searchTable => _text('searchTable');
+  String get searchTableHint => _text('searchTableHint');
+  String get clearSearch => _text('clearSearch');
+  String get noMatchingRecords => _text('noMatchingRecords');
   String get noDataAvailable => _text('noDataAvailable');
   String dataTableTitle(String title) => _text('dataTableTitle', {'title': title});
   String recordsHeader(String entity) => _text('recordsHeader', {'entity': entity});

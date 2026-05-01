@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:syncfusion_localizations/syncfusion_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FlutterAuthClientOptions, Supabase;
 import 'package:store_management/controllers/auth_controller.dart';
 import 'package:store_management/index.dart';
@@ -133,7 +134,7 @@ class MyApp extends StatelessWidget {
               },
               locale: localeController.locale,
               supportedLocales: AppLocalizations.supportedLocales,
-              localizationsDelegates: const [AppLocalizations.delegate, GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
+              localizationsDelegates: const [AppLocalizations.delegate, SfGlobalLocalizations.delegate, GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
               localeResolutionCallback: (locale, supportedLocales) {
                 if (locale == null) {
                   return supportedLocales.first;
