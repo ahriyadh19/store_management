@@ -145,6 +145,7 @@ class AppLocalizations {
     'delete': 'Delete',
     'actions': 'Actions',
     'rows': 'Rows',
+    'rowsPerPage': 'Rows per page',
     'searchTable': 'Search table',
     'searchTableHint': 'Search across the visible columns.',
     'clearSearch': 'Clear search',
@@ -165,6 +166,8 @@ class AppLocalizations {
     'updatedEntitySuccessfully': 'Updated {entity} successfully.',
     'deletedEntitySuccessfully': 'Deleted {entity} successfully.',
     'viewEntity': 'View {entity}',
+    'previousPage': 'Previous page',
+    'nextPage': 'Next page',
     'addFieldRequired': '{field} is required',
     'validFieldRequired': 'Enter a valid {field}',
     'fieldMustBeInteger': '{field} must be an integer',
@@ -304,6 +307,7 @@ class AppLocalizations {
     'delete': 'حذف',
     'actions': 'الإجراءات',
     'rows': 'الصفوف',
+    'rowsPerPage': 'عدد الصفوف في الصفحة',
     'searchTable': 'بحث في الجدول',
     'searchTableHint': 'ابحث في جميع الأعمدة الظاهرة.',
     'clearSearch': 'مسح البحث',
@@ -324,6 +328,8 @@ class AppLocalizations {
     'updatedEntitySuccessfully': 'تم تحديث {entity} بنجاح.',
     'deletedEntitySuccessfully': 'تم حذف {entity} بنجاح.',
     'viewEntity': 'عرض {entity}',
+    'previousPage': 'الصفحة السابقة',
+    'nextPage': 'الصفحة التالية',
     'addFieldRequired': '{field} مطلوب',
     'validFieldRequired': 'أدخل {field} صالحًا',
     'fieldMustBeInteger': 'يجب أن يكون {field} عددًا صحيحًا',
@@ -472,6 +478,7 @@ class AppLocalizations {
   String get deleteLabel => _text('delete');
   String get actions => _text('actions');
   String get rows => _text('rows');
+  String get rowsPerPage => _text('rowsPerPage');
   String get searchTable => _text('searchTable');
   String get searchTableHint => _text('searchTableHint');
   String get clearSearch => _text('clearSearch');
@@ -492,6 +499,8 @@ class AppLocalizations {
   String updatedEntitySuccessfully(String entity) => _text('updatedEntitySuccessfully', {'entity': entity});
   String deletedEntitySuccessfully(String entity) => _text('deletedEntitySuccessfully', {'entity': entity});
   String viewEntity(String entity) => _text('viewEntity', {'entity': entity});
+  String get previousPage => _text('previousPage');
+  String get nextPage => _text('nextPage');
   String fieldRequired(String field) => _text('addFieldRequired', {'field': field});
   String validField(String field) => _text('validFieldRequired', {'field': field});
   String fieldMustBeInteger(String field) => _text('fieldMustBeInteger', {'field': field});

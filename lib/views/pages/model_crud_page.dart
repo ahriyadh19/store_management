@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/views/components/model_form.dart';
+import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 
 class ModelCrudPage<T extends Object> extends StatefulWidget {
   const ModelCrudPage({super.key, required this.title, required this.entityLabel, required this.description, required this.icon, required this.formDefinition, this.highlights = const <String>[]});
@@ -17,10 +20,16 @@ class ModelCrudPage<T extends Object> extends StatefulWidget {
 }
 
 class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
+  static const String _actionsColumnName = '__actions__';
   late final List<T> _records;
   late T _draftModel;
   late final TextEditingController _searchController;
+  final Map<String, double> _columnWidths = <String, double>{};
   bool _showCreateForm = false;
+  String? _sortColumnName;
+  bool _sortAscending = true;
+  int _currentPage = 0;
+  int _rowsPerPage = 10;
 
   @override
   void initState() {
@@ -129,9 +138,28 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
 
   Widget _buildTableCard(BuildContext context, BoxConstraints constraints) {
     final l10n = context.l10n;
-    final columns = _buildColumns();
-    final rows = _buildRows();
-    final tableMinWidth = constraints.maxWidth >= 960 ? constraints.maxWidth - 48 : 960.0;
+    final isCompactLayout = constraints.maxWidth < 720;
+    final tableHorizontalInset = isCompactLayout ? 72.0 : 88.0;
+    final rowHeight = isCompactLayout ? 72.0 : 60.0;
+    final headerRowHeight = isCompactLayout ? 52.0 : 56.0;
+    final visibleRecords = _paginatedRecords;
+    final currentPage = _effectiveCurrentPage;
+    final pageCount = _pageCount;
+    final availableTableWidth = math.max(constraints.maxWidth - tableHorizontalInset - 20, 280.0);
+    final columns = _buildColumns(availableTableWidth, isCompactLayout: isCompactLayout);
+    final dataSource = _CrudDataGridSource<T>(
+      records: visibleRecords,
+      visibleFields: _visibleFields,
+      toMap: widget.formDefinition.toMap,
+      formatCellValue: _formatCellValue,
+      entityLabel: widget.entityLabel,
+      l10n: l10n,
+      onView: _openDetailsPage,
+      onEdit: _showEditSheet,
+      onDelete: _confirmDelete,
+      actionsColumnName: _actionsColumnName,
+      errorColor: Theme.of(context).colorScheme.error,
+    );
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -173,47 +201,87 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
-                  constraints: BoxConstraints(minWidth: tableMinWidth, minHeight: 220, maxHeight: 520),
+                  width: double.infinity,
+                  constraints: BoxConstraints(minHeight: 220, maxHeight: isCompactLayout ? 460 : 560),
                   color: Theme.of(context).colorScheme.surface,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.vertical,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(minWidth: tableMinWidth),
-                        child: Theme(
-                          data: Theme.of(context).copyWith(dividerColor: Theme.of(context).colorScheme.outlineVariant),
-                          child: DataTable(
-                            headingRowHeight: 56,
-                            dataRowMinHeight: 64,
-                            dataRowMaxHeight: 72,
-                            columnSpacing: 24,
-                            headingRowColor: WidgetStateProperty.resolveWith((_) => Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35)),
-                            columns: columns,
-                            rows: rows,
-                          ),
-                        ),
-                      ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: availableTableWidth),
+                    child: SfDataGrid(
+                      source: dataSource,
+                      columns: columns,
+                      allowColumnsResizing: true,
+                      onColumnResizeUpdate: (details) {
+                        if (details.column.columnName == _actionsColumnName) {
+                          return false;
+                        }
+
+                        setState(() {
+                          _columnWidths[details.column.columnName] = details.width;
+                        });
+                        return true;
+                      },
+                      columnResizeMode: ColumnResizeMode.onResizeEnd,
+                      columnWidthMode: ColumnWidthMode.none,
+                      gridLinesVisibility: GridLinesVisibility.horizontal,
+                      headerGridLinesVisibility: GridLinesVisibility.horizontal,
+                      rowHeight: rowHeight,
+                      headerRowHeight: headerRowHeight,
                     ),
                   ),
                 ),
               ),
+            if (_records.isNotEmpty) ...[const SizedBox(height: 16), _buildTableFooter(context, isCompactLayout: isCompactLayout, currentPage: currentPage, pageCount: pageCount)],
           ],
         ),
       ),
     );
   }
 
-  List<DataColumn> _buildColumns() {
+  List<GridColumn> _buildColumns(double tableWidth, {required bool isCompactLayout}) {
+    final resolvedWidths = _resolvedColumnWidths(tableWidth, isCompactLayout: isCompactLayout);
+    final dataColumnMinimumWidth = isCompactLayout ? 110.0 : 160.0;
+    final actionsColumnMinimumWidth = isCompactLayout ? 132.0 : 156.0;
+    final actionsColumnWidth = isCompactLayout ? 132.0 : 156.0;
+
     return [
       for (final field in _visibleFields)
-        DataColumn(
-          label: _GridHeaderCell(label: field.label),
+        GridColumn(
+          columnName: field.key,
+          minimumWidth: dataColumnMinimumWidth,
+          width: resolvedWidths[field.key] ?? 180,
+          label: _GridHeaderCell(label: field.label, onTap: () => _handleSortChanged(field.key), sortDirection: _sortColumnName == field.key ? (_sortAscending ? AxisDirection.up : AxisDirection.down) : null),
         ),
-      DataColumn(
+      GridColumn(
+        columnName: _actionsColumnName,
+        minimumWidth: actionsColumnMinimumWidth,
+        width: actionsColumnWidth,
         label: _GridHeaderCell(label: context.l10n.actions),
       ),
     ];
+  }
+
+  Map<String, double> _resolvedColumnWidths(double tableWidth, {required bool isCompactLayout}) {
+    final defaultDataWidth = isCompactLayout ? 124.0 : 180.0;
+    final defaultActionsWidth = isCompactLayout ? 132.0 : 156.0;
+    final widths = <String, double>{for (final field in _visibleFields) field.key: _columnWidths[field.key] ?? defaultDataWidth};
+    final dataColumnCount = _visibleFields.length;
+    if (dataColumnCount == 0) {
+      widths[_actionsColumnName] = defaultActionsWidth;
+      return widths;
+    }
+
+    final totalWidth = widths.values.fold<double>(0, (sum, width) => sum + width) + defaultActionsWidth;
+    if (totalWidth >= tableWidth) {
+      widths[_actionsColumnName] = defaultActionsWidth;
+      return widths;
+    }
+
+    final extraPerColumn = (tableWidth - totalWidth) / dataColumnCount;
+    for (final field in _visibleFields) {
+      widths[field.key] = (widths[field.key] ?? defaultDataWidth) + extraPerColumn;
+    }
+    widths[_actionsColumnName] = defaultActionsWidth;
+    return widths;
   }
 
   List<ModelFormFieldDefinition> get _visibleFields {
@@ -251,49 +319,163 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
         .toList(growable: false);
   }
 
+  List<T> get _sortedRecords {
+    final records = List<T>.of(_filteredRecords);
+    final sortColumnName = _sortColumnName;
+    if (sortColumnName == null) {
+      return records;
+    }
+
+    records.sort((left, right) {
+      final leftValue = widget.formDefinition.toMap(left)[sortColumnName];
+      final rightValue = widget.formDefinition.toMap(right)[sortColumnName];
+      final result = _compareSortValues(leftValue, rightValue);
+      return _sortAscending ? result : -result;
+    });
+    return records;
+  }
+
+  int get _pageCount {
+    final totalRows = _sortedRecords.length;
+    if (totalRows == 0) {
+      return 1;
+    }
+    return (totalRows / _rowsPerPage).ceil();
+  }
+
+  int get _effectiveCurrentPage => math.min(_currentPage, _pageCount - 1);
+
+  List<T> get _paginatedRecords {
+    final sortedRecords = _sortedRecords;
+    if (sortedRecords.isEmpty) {
+      return <T>[];
+    }
+
+    final start = _effectiveCurrentPage * _rowsPerPage;
+    final end = math.min(start + _rowsPerPage, sortedRecords.length);
+    return sortedRecords.sublist(start, end);
+  }
+
   String get _summaryRowCountLabel {
     if (_searchQuery.isEmpty) {
-      return _filteredRecords.length.toString();
+      return _sortedRecords.length.toString();
     }
-    return '${_filteredRecords.length}/${_records.length}';
+    return '${_sortedRecords.length}/${_records.length}';
   }
 
   void _handleSearchChanged(String value) {
     setState(() {
+      _currentPage = 0;
     });
   }
 
-  List<DataRow> _buildRows() {
-    return _filteredRecords
-        .map((record) {
-          final data = widget.formDefinition.toMap(record);
-          return DataRow(
-            cells: [
-              for (final field in _visibleFields)
-                DataCell(
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 180),
-                    child: Text(_formatCellValue(data[field.key]), overflow: TextOverflow.ellipsis, maxLines: 2),
-                  ),
-                ),
-              DataCell(
-                Wrap(
-                  spacing: 4,
-                  children: [
-                    IconButton(tooltip: context.l10n.viewEntity(widget.entityLabel), onPressed: () => _openDetailsPage(record), icon: const Icon(Icons.visibility_outlined, size: 20)),
-                    IconButton(tooltip: context.l10n.editEntity(widget.entityLabel), onPressed: () => _showEditSheet(record), icon: const Icon(Icons.edit_outlined, size: 20)),
-                    IconButton(
-                      tooltip: context.l10n.deleteEntityQuestion(widget.entityLabel),
-                      onPressed: () => _confirmDelete(record),
-                      icon: Icon(Icons.delete_outline_rounded, size: 20, color: Theme.of(context).colorScheme.error),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        })
-        .toList(growable: false);
+  void _handleSortChanged(String columnName) {
+    setState(() {
+      if (_sortColumnName == columnName) {
+        _sortAscending = !_sortAscending;
+      } else {
+        _sortColumnName = columnName;
+        _sortAscending = true;
+      }
+      _currentPage = 0;
+    });
+  }
+
+  void _handleRowsPerPageChanged(int? value) {
+    if (value == null || value == _rowsPerPage) {
+      return;
+    }
+
+    setState(() {
+      _rowsPerPage = value;
+      _currentPage = 0;
+    });
+  }
+
+  int _compareSortValues(Object? left, Object? right) {
+    if (identical(left, right)) {
+      return 0;
+    }
+    if (left == null) {
+      return 1;
+    }
+    if (right == null) {
+      return -1;
+    }
+    if (left is num && right is num) {
+      return left.compareTo(right);
+    }
+    if (left is DateTime && right is DateTime) {
+      return left.compareTo(right);
+    }
+    if (left is bool && right is bool) {
+      return left == right ? 0 : (left ? 1 : -1);
+    }
+    if (left is Comparable<Object> && right is Comparable<Object> && left.runtimeType == right.runtimeType) {
+      return left.compareTo(right);
+    }
+
+    return _formatCellValue(left).toLowerCase().compareTo(_formatCellValue(right).toLowerCase());
+  }
+
+  Widget _buildTableFooter(BuildContext context, {required bool isCompactLayout, required int currentPage, required int pageCount}) {
+    final totalRows = _sortedRecords.length;
+    final start = totalRows == 0 ? 0 : currentPage * _rowsPerPage + 1;
+    final end = totalRows == 0 ? 0 : math.min((currentPage + 1) * _rowsPerPage, totalRows);
+    final rowsPerPageOptions = isCompactLayout ? const <int>[5, 10, 15] : const <int>[10, 20, 30];
+    final selectedRowsPerPage = rowsPerPageOptions.contains(_rowsPerPage) ? _rowsPerPage : rowsPerPageOptions.first;
+
+    final footerChildren = <Widget>[
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('${context.l10n.rowsPerPage}: ', style: Theme.of(context).textTheme.bodyMedium),
+          DropdownButton<int>(
+            value: selectedRowsPerPage,
+            onChanged: _handleRowsPerPageChanged,
+            items: rowsPerPageOptions.map((value) => DropdownMenuItem<int>(value: value, child: Text(value.toString()))).toList(growable: false),
+          ),
+        ],
+      ),
+      Text('$start-$end / $totalRows', style: Theme.of(context).textTheme.bodyMedium),
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: context.l10n.previousPage,
+            onPressed: currentPage > 0
+                ? () {
+                    setState(() {
+                      _currentPage = currentPage - 1;
+                    });
+                  }
+                : null,
+            icon: const Icon(Icons.chevron_left_rounded),
+          ),
+          Text('${currentPage + 1} / $pageCount', style: Theme.of(context).textTheme.bodyMedium),
+          IconButton(
+            tooltip: context.l10n.nextPage,
+            onPressed: currentPage < pageCount - 1
+                ? () {
+                    setState(() {
+                      _currentPage = currentPage + 1;
+                    });
+                  }
+                : null,
+            icon: const Icon(Icons.chevron_right_rounded),
+          ),
+        ],
+      ),
+    ];
+
+    if (isCompactLayout) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [Wrap(spacing: 12, runSpacing: 12, crossAxisAlignment: WrapCrossAlignment.center, children: footerChildren)],
+      );
+    }
+
+    return Row(children: [footerChildren[0], const Spacer(), footerChildren[1], const SizedBox(width: 12), footerChildren[2]]);
   }
 
   Widget _buildSearchField(BuildContext context) {
@@ -328,6 +510,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       _records.insert(0, model);
       _draftModel = widget.formDefinition.sampleModel;
       _showCreateForm = false;
+      _currentPage = 0;
     });
     _showFeedback(context.l10n.savedEntitySuccessfully(widget.entityLabel));
   }
@@ -382,6 +565,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
 
     setState(() {
       _records[index] = updatedModel;
+      _currentPage = _effectiveCurrentPage;
     });
     _showFeedback(context.l10n.updatedEntitySuccessfully(widget.entityLabel));
   }
@@ -441,6 +625,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
 
     setState(() {
       _records.removeAt(_indexOfRecord(record));
+      _currentPage = _effectiveCurrentPage;
     });
     _showFeedback(context.l10n.deletedEntitySuccessfully(widget.entityLabel));
   }
@@ -492,6 +677,92 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       return '${dateTime.year}-$month-$day';
     }
     return value.toString();
+  }
+}
+
+class _CrudDataGridSource<T extends Object> extends DataGridSource {
+  _CrudDataGridSource({
+    required List<T> records,
+    required List<ModelFormFieldDefinition> visibleFields,
+    required Map<String, dynamic> Function(T record) toMap,
+    required String Function(Object? value) formatCellValue,
+    required String entityLabel,
+    required AppLocalizations l10n,
+    required void Function(T record) onView,
+    required Future<void> Function(T record) onEdit,
+    required Future<void> Function(T record) onDelete,
+    required String actionsColumnName,
+    required Color errorColor,
+  }) : _records = records,
+       _formatCellValue = formatCellValue,
+       _entityLabel = entityLabel,
+       _l10n = l10n,
+       _onView = onView,
+       _onEdit = onEdit,
+       _onDelete = onDelete,
+       _actionsColumnName = actionsColumnName,
+       _errorColor = errorColor,
+       _rows = records
+           .map((record) {
+             final data = toMap(record);
+             return DataGridRow(
+               cells: [
+                 for (final field in visibleFields) DataGridCell<Object?>(columnName: field.key, value: data[field.key]),
+                 DataGridCell<String>(columnName: actionsColumnName, value: ''),
+               ],
+             );
+           })
+           .toList(growable: false);
+
+  final List<T> _records;
+  final List<DataGridRow> _rows;
+  final String Function(Object? value) _formatCellValue;
+  final String _entityLabel;
+  final AppLocalizations _l10n;
+  final void Function(T record) _onView;
+  final Future<void> Function(T record) _onEdit;
+  final Future<void> Function(T record) _onDelete;
+  final String _actionsColumnName;
+  final Color _errorColor;
+
+  @override
+  List<DataGridRow> get rows => _rows;
+
+  @override
+  DataGridRowAdapter buildRow(DataGridRow row) {
+    final index = _rows.indexOf(row);
+    final record = _records[index];
+
+    return DataGridRowAdapter(
+      cells: row
+          .getCells()
+          .map((cell) {
+            if (cell.columnName == _actionsColumnName) {
+              return Align(
+                alignment: Alignment.centerLeft,
+                child: Wrap(
+                  spacing: 4,
+                  children: [
+                    IconButton(tooltip: _l10n.viewEntity(_entityLabel), onPressed: () => _onView(record), icon: const Icon(Icons.visibility_outlined, size: 20)),
+                    IconButton(tooltip: _l10n.editEntity(_entityLabel), onPressed: () => _onEdit(record), icon: const Icon(Icons.edit_outlined, size: 20)),
+                    IconButton(
+                      tooltip: _l10n.deleteEntityQuestion(_entityLabel),
+                      onPressed: () => _onDelete(record),
+                      icon: Icon(Icons.delete_outline_rounded, size: 20, color: _errorColor),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return Container(
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Text(_formatCellValue(cell.value), overflow: TextOverflow.ellipsis, maxLines: 2),
+            );
+          })
+          .toList(growable: false),
+    );
   }
 }
 
@@ -655,17 +926,36 @@ class _ModelDetailsPage extends StatelessWidget {
 }
 
 class _GridHeaderCell extends StatelessWidget {
-  const _GridHeaderCell({required this.label});
+  const _GridHeaderCell({required this.label, this.onTap, this.sortDirection});
 
   final String label;
+  final VoidCallback? onTap;
+  final AxisDirection? sortDirection;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+    final icon = switch (sortDirection) {
+      AxisDirection.up => Icons.arrow_upward_rounded,
+      AxisDirection.down => Icons.arrow_downward_rounded,
+      _ => null,
+    };
+
+    return Material(
       color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
-      child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleSmall),
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleSmall),
+              ),
+              if (icon != null) ...[const SizedBox(width: 8), Icon(icon, size: 16)],
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
