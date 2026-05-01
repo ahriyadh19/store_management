@@ -42,6 +42,7 @@ The dashboard should expose only primary modules. Supporting records remain impo
 - Authenticated users are routed to the main shell.
 - Unauthenticated users are routed to the auth flow.
 - English and Arabic localization are built in.
+- On Linux desktop, email confirmation or recovery may complete in the browser, so the auth flow supports manual link handoff when needed.
 
 On Linux desktop, auth state is persisted with file-based local storage so sessions survive restarts.
 
@@ -253,17 +254,10 @@ Still to expand:
 - reporting and analytics flows
 - broader validation and controller test coverage
 
-## Development Notes
-
-- Models serialize timestamps as epoch milliseconds.
-- Precision-sensitive money fields are represented with `Decimal`.
-- Relation models consistently keep numeric ids and string UUIDs side by side.
-- Linux email confirmation may finish in the browser, so the auth flow includes a manual link-paste path.
-
 ## License
 
 This repository does not currently define a license.
 
-## Developer
+## Maintainer
 
 @ahriyadh19
