@@ -53,8 +53,8 @@ class ProductsTags {
     return ProductsTags(
       id: ModelParsing.intOrNull(map['id']) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
-      productUuid: ModelParsing.stringOrThrow(map['productUuid'], 'productUuid'),
-      tagUuid: ModelParsing.stringOrThrow(map['tagUuid'], 'tagUuid'),
+      productUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'productUuid'), 'productUuid'),
+      tagUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'tagUuid'), 'tagUuid'),
       status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'] ?? map['created_at'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'] ?? map['updated_at'], 'updatedAt'),

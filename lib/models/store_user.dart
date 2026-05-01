@@ -67,9 +67,9 @@ class StoreUser {
     return StoreUser(
       id: ModelParsing.intOrNull(map['id']) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
-      storeUuid: ModelParsing.stringOrThrow(map['storeUuid'], 'storeUuid'),
-      userUuid: ModelParsing.stringOrThrow(map['userUuid'], 'userUuid'),
-      userRoleUuid: ModelParsing.stringOrThrow(map['userRoleUuid'], 'userRoleUuid'),
+      storeUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'storeUuid'), 'storeUuid'),
+      userUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'userUuid'), 'userUuid'),
+      userRoleUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'userRoleUuid'), 'userRoleUuid'),
       status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'] ?? map['created_at'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'] ?? map['updated_at'], 'updatedAt'),

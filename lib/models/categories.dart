@@ -86,7 +86,7 @@ class Categories {
       name: ModelParsing.stringOrThrow(map['name'], 'name'),
       description: ModelParsing.stringOrThrow(map['description'], 'description'),
       status: ModelParsing.intOrThrow(map['status'], 'status'),
-      parentUuid: ModelParsing.stringOrNull(map['parentUuid']),
+      parentUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'parentUuid')),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'] ?? map['created_at'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'] ?? map['updated_at'], 'updatedAt'),
       synced: ModelParsing.boolOrNull(map['synced']) ?? false,

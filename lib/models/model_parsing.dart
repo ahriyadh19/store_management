@@ -3,6 +3,19 @@ import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/services/uuid.dart';
 
 class ModelParsing {
+  static dynamic value(Map<String, dynamic> map, String key) {
+    if (map.containsKey(key)) {
+      return map[key];
+    }
+
+    final snakeCaseKey = _camelToSnake(key);
+    if (snakeCaseKey != key && map.containsKey(snakeCaseKey)) {
+      return map[snakeCaseKey];
+    }
+
+    return null;
+  }
+
   static String? stringOrNull(dynamic value) {
     if (value == null) {
       return null;
@@ -203,6 +216,10 @@ class ModelParsing {
   }
 
   static T _enumFromString<T>(dynamic value, String fieldName, T Function(String value) parser) {
-    return parser(stringOrThrow(value, fieldName));
+    return parser(stringOrThrow(value, fieldName).trim().toLowerCase());
+  }
+
+  static String _camelToSnake(String value) {
+    return value.replaceAllMapped(RegExp(r'[A-Z]'), (match) => '_${match.group(0)!.toLowerCase()}');
   }
 }

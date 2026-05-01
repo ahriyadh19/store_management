@@ -54,8 +54,8 @@ class UserRoles {
     return UserRoles(
       id: ModelParsing.intOrNull(map['id']) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
-      userUuid: ModelParsing.stringOrThrow(map['userUuid'], 'userUuid'),
-      roleUuid: ModelParsing.stringOrThrow(map['roleUuid'], 'roleUuid'),
+      userUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'userUuid'), 'userUuid'),
+      roleUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'roleUuid'), 'roleUuid'),
       status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'] ?? map['created_at'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'] ?? map['updated_at'], 'updatedAt'),

@@ -551,6 +551,123 @@ void main() {
       expect(StoreUser.fromJson(storeUser.toJson()), equals(storeUser));
     });
 
+    test('snake_case transactional payloads hydrate correctly', () {
+      final invoice = StoreInvoice.fromMap({
+        'id': 1,
+        'uuid': 'invoice-uuid',
+        'store_uuid': '11111111-1111-4111-8111-111111111111',
+        'client_uuid': '22222222-2222-4222-8222-222222222222',
+        'invoice_number': 'INV-100',
+        'invoice_type': 'CREDIT',
+        'item_count': 3,
+        'total_amount': '120.50',
+        'paid_amount': '20.50',
+        'balance_amount': '100.00',
+        'notes': 'Snake case payload',
+        'issued_at': createdAt.millisecondsSinceEpoch,
+        'due_at': updatedAt.millisecondsSinceEpoch,
+        'status': 1,
+        'created_at': createdAt.millisecondsSinceEpoch,
+        'updated_at': updatedAt.millisecondsSinceEpoch,
+      });
+
+      final voucher = StorePaymentVoucher.fromMap({
+        'id': 1,
+        'uuid': 'voucher-uuid',
+        'store_uuid': '11111111-1111-4111-8111-111111111111',
+        'client_uuid': '22222222-2222-4222-8222-222222222222',
+        'voucher_number': 'PV-100',
+        'payee_name': 'Vendor',
+        'amount': '80.25',
+        'payment_method': 'BANK_TRANSFER',
+        'reference_number': 'REF-100',
+        'description': 'Snake case payment',
+        'transaction_date': createdAt.millisecondsSinceEpoch,
+        'status': 1,
+        'created_at': createdAt.millisecondsSinceEpoch,
+        'updated_at': updatedAt.millisecondsSinceEpoch,
+      });
+
+      expect(invoice.storeUuid, '11111111-1111-4111-8111-111111111111');
+      expect(invoice.clientUuid, '22222222-2222-4222-8222-222222222222');
+      expect(invoice.invoiceType, StoreInvoiceType.credit);
+      expect(invoice.itemCount, 3);
+      expect(invoice.totalAmount, money('120.50'));
+      expect(invoice.issuedAt, createdAt);
+
+      expect(voucher.paymentMethod, StorePaymentMethod.bankTransfer);
+      expect(voucher.transactionDate, createdAt);
+      expect(voucher.referenceNumber, 'REF-100');
+    });
+
+    test('snake_case relation payloads hydrate correctly', () {
+      final branchProduct = BranchProduct.fromMap({
+        'id': 1,
+        'uuid': 'branch-product-uuid',
+        'branch_uuid': '11111111-1111-4111-8111-111111111111',
+        'company_product_uuid': '22222222-2222-4222-8222-222222222222',
+        'product_uuid': '33333333-3333-4333-8333-333333333333',
+        'stock': 12,
+        'reserved_quantity': 2,
+        'reorder_level': 4,
+        'last_movement_at': updatedAt.millisecondsSinceEpoch,
+        'status': 1,
+        'created_at': createdAt.millisecondsSinceEpoch,
+        'updated_at': updatedAt.millisecondsSinceEpoch,
+      });
+
+      final userRole = UserRoles.fromMap({
+        'id': 1,
+        'uuid': 'user-role-uuid',
+        'user_uuid': '11111111-1111-4111-8111-111111111111',
+        'role_uuid': '22222222-2222-4222-8222-222222222222',
+        'status': 1,
+        'created_at': createdAt.millisecondsSinceEpoch,
+        'updated_at': updatedAt.millisecondsSinceEpoch,
+      });
+
+      expect(branchProduct.branchUuid, '11111111-1111-4111-8111-111111111111');
+      expect(branchProduct.companyProductUuid, '22222222-2222-4222-8222-222222222222');
+      expect(branchProduct.reservedQuantity, 2);
+      expect(branchProduct.reorderLevel, 4);
+      expect(branchProduct.lastMovementAt, updatedAt);
+
+      expect(userRole.userUuid, '11111111-1111-4111-8111-111111111111');
+      expect(userRole.roleUuid, '22222222-2222-4222-8222-222222222222');
+    });
+
+    test('snake_case inventory payloads hydrate enum and uuid aliases correctly', () {
+      final movement = InventoryMovement.fromMap({
+        'id': 1,
+        'uuid': 'movement-uuid',
+        'company_product_uuid': '11111111-1111-4111-8111-111111111111',
+        'product_uuid': '22222222-2222-4222-8222-222222222222',
+        'movement_type': 'TRANSFER',
+        'inventory_holder_type': 'BRANCH',
+        'inventory_holder_uuid': '33333333-3333-4333-8333-333333333333',
+        'quantity_delta': 6,
+        'balance_after': 18,
+        'unit_cost': '12.75',
+        'reference_type': 'INVOICE_ITEM',
+        'reference_uuid': '44444444-4444-4444-8444-444444444444',
+        'counterparty_holder_type': 'STORE',
+        'counterparty_holder_uuid': '55555555-5555-4555-8555-555555555555',
+        'transaction_uuid': '66666666-6666-4666-8666-666666666666',
+        'note': 'Transfer payload',
+        'created_by_user_uuid': '77777777-7777-4777-8777-777777777777',
+        'created_at': createdAt.millisecondsSinceEpoch,
+        'updated_at': updatedAt.millisecondsSinceEpoch,
+      });
+
+      expect(movement.companyProductUuid, '11111111-1111-4111-8111-111111111111');
+      expect(movement.movementType, InventoryMovementType.transfer);
+      expect(movement.inventoryHolderType, InventoryHolderType.branch);
+      expect(movement.referenceType, InventoryReferenceType.invoiceItem);
+      expect(movement.counterpartyHolderType, InventoryHolderType.store);
+      expect(movement.createdByUserUuid, '77777777-7777-4777-8777-777777777777');
+      expect(movement.unitCost, money('12.75'));
+    });
+
     test('legacy model maps generate uuid when missing', () {
       final company = Company.fromMap({'id': 1, 'name': 'Store Co', 'description': 'Main supplier', 'status': 1, 'createdAt': createdAt.millisecondsSinceEpoch, 'updatedAt': updatedAt.millisecondsSinceEpoch});
 

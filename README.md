@@ -1,51 +1,61 @@
 # Store Management
 
-Store Management is a Flutter application for store operations backed by Supabase. The current codebase already includes authentication, localization, a dashboard shell, domain models, validation classes, CRUD-style controllers, schema migrations, and focused model/controller tests.
+Store Management is a Flutter application for retail and branch operations, backed by Supabase and prepared for offline-first persistence on IO platforms. The codebase already includes authentication, localization, domain models, validation rules, CRUD-style controllers, database migrations, and focused regression tests.
 
-## Overview
+## What Exists Today
 
-The app is organized around primary operational modules plus supporting relation/detail records.
+The project is currently strongest in the application core:
 
-Primary modules:
+- authenticated app bootstrap and session recovery
+- localized auth flow and dashboard shell
+- structured domain models with tolerant parsing helpers
+- validation and controller layers for operational modules
+- Supabase schema migrations for primary and supporting records
+- ObjectBox bootstrap for local persistence preparation
+- focused model serialization and controller tests
+
+Feature screens are still catching up to the model and controller layers, so the repository is well positioned for continued UI, form, and repository work.
+
+## Core Modules
+
+Primary operational modules:
 
 - stores and branches
 - products, categories, and tags
 - clients and companies
 - users and roles
-- invoices, payment vouchers, returns, inventory, and transaction ledgers
+- invoices, payment vouchers, returns, inventory movements, and financial transactions
 
 Supporting records:
 
-- relation tables such as `store_branches`, `store_clients`, `store_companies`, `store_users`, and `user_roles`
-- pricing/link tables such as `company_products` and `products_tags`
-- transaction detail tables such as `store_invoice_items`, `store_return_items`, and `payment_allocations`
+- relation records such as `store_branches`, `store_clients`, `store_companies`, `store_users`, and `user_roles`
+- association records such as `company_products` and `products_tags`
+- detail records such as `store_invoice_items`, `store_return_items`, and `payment_allocations`
 
-The UI currently covers authentication and a dashboard-style landing screen. The model and controller layers are more complete than the feature screens, so the project is in a good state for continuing page, form, and persistence work.
+The dashboard should expose only primary modules. Supporting records remain important in the data model and controller layer, but they are intentionally not top-level navigation destinations because they depend on parent entities.
 
-The dashboard drawer should only surface the primary modules. Supporting relation/detail records remain part of the data model, controllers, validation, tests, and offline persistence, but they are intentionally hidden from top-level navigation because they depend on parent records.
+## Runtime Flow
 
-## Current App Flow
-
-- The app starts in `lib/main.dart`.
+- The app starts from `lib/main.dart`.
 - Supabase is initialized before the widget tree is rendered.
 - Authentication state is managed with `flutter_bloc`.
-- Authenticated users are routed to the main index screen.
+- Authenticated users are routed to the main shell.
 - Unauthenticated users are routed to the auth flow.
-- Localization is built in for English and Arabic.
+- English and Arabic localization are built in.
 
-On Linux desktop, Supabase auth uses file-based local storage so session state survives app restarts.
+On Linux desktop, auth state is persisted with file-based local storage so sessions survive restarts.
 
 ## Tech Stack
 
 - Flutter
 - Dart 3.11+
-- Supabase and `supabase_flutter`
+- Supabase with `supabase_flutter`
 - `flutter_bloc` for auth state management
-- `decimal` for precision-safe money fields
-- `shared_preferences` for persisted client settings such as locale
-- ObjectBox for local offline persistence bootstrap on IO platforms
+- `decimal` for money precision
+- `shared_preferences` for persisted client settings
+- ObjectBox for local storage bootstrap on Android, iOS, Linux, macOS, and Windows
 
-## Project Structure
+## Project Layout
 
 ```text
 lib/
@@ -62,71 +72,55 @@ supabase/
 test/
   controllers/
   models/
+tool/
 ```
 
-## Architecture Notes
+## Architecture Summary
 
-- `lib/models` contains entities, enum types, and parsing helpers.
-- `lib/controllers` contains auth state handling and CRUD-style business logic.
-- `lib/services` contains shared infrastructure such as auth repository and storage helpers.
-- `lib/validations` contains request validation rules by entity.
-- `lib/views` contains auth UI and reusable view components.
-- `lib/localization` contains the localization delegate and locale controller.
+- `lib/models` holds entities, enum types, and parsing helpers.
+- `lib/controllers` contains auth coordination and CRUD-oriented business logic.
+- `lib/services` contains shared infrastructure such as auth, storage, and local database bootstrap.
+- `lib/validations` contains request validation rules by model.
+- `lib/views` contains auth UI, dashboard wiring, and reusable presentation components.
+- `lib/localization` contains localization delegates and locale control.
 - `supabase/migrations` contains schema and database evolution scripts.
-- `test` contains focused model serialization and controller tests.
+- `test` contains focused regression coverage for models and controllers.
 
-## Implemented Modules
+## Data Model Conventions
 
-Top-level modules currently represented in the shell/dashboard are:
+The current model layer follows a few important rules:
 
-- stores and branches
-- products, categories, and tags
-- clients and companies
-- users and roles
-- store invoices
-- store payment vouchers
-- store returns
-- store financial transactions
-- inventory movements
+- persisted entities keep `@Id() int id = 0` for local ObjectBox identity
+- business and relation links are UUID-driven in Dart payloads and models
+- money fields use `Decimal` and serialize as strings for precision-safe round trips
+- timestamps are stored as epoch milliseconds in maps and payloads
+- sync-aware entities carry `synced`, `deletedAt`, and `syncedAt`
+- model deserialization accepts both camelCase and snake_case keys for backend compatibility
+- enum-backed fields parse case-insensitively to tolerate upstream payload variation
 
-Supporting controllers and models also exist for relation/detail records that should not appear as standalone drawer destinations:
+For financial records, the active Dart model uses UUID relations such as `storeUuid`, `clientUuid`, and `sourceUuid`. Numeric relation IDs are not part of the current Dart payload contract for those records.
 
-- store clients, store companies, store users, store branches, and user roles
-- company products and product tags
-- store invoice items, store return items, and payment allocations
+## Offline Persistence Status
 
-## Financial Data Model
+The repository is prepared for ObjectBox-backed local persistence on IO platforms.
 
-Financial records are scoped to both the store and the client. Each record carries both sides of the relationship:
+- `lib/services/local_database.dart` exposes the platform-safe database entry point.
+- `lib/services/local_database_objectbox.dart` initializes ObjectBox on supported IO targets.
+- `lib/services/local_database_stub.dart` provides a safe web stub.
+- `lib/models/offline_sync_record.dart` defines the local sync queue/cache record.
 
-- `storeId` and `storeUuid`
-- `clientId` and `clientUuid`
-
-This keeps invoices, vouchers, returns, and ledger entries attached to a specific client within a specific store rather than being generic store-level transactions.
-
-Money values use `Decimal` in Dart to avoid precision loss, and relation-heavy models use UUID-only relation links while keeping entity-local primary `id` fields where needed.
-
-## Offline Persistence Prep
-
-The app is now prepared for ObjectBox-based offline storage on IO platforms.
-
-- `lib/services/local_database.dart` exposes a platform-safe local database entry point.
-- `lib/services/local_database_objectbox.dart` initializes the ObjectBox store on Android, iOS, Linux, macOS, and Windows.
-- `lib/services/local_database_stub.dart` keeps web builds safe by exposing a no-op implementation.
-- `lib/models/offline_sync_record.dart` provides a generic local sync record entity keyed by `modelType + uuid` for caching serialized domain records.
-
-This is an infrastructure/bootstrap step. It does not yet replace Supabase reads and writes with repository-backed offline sync flows.
+This is infrastructure readiness, not a complete offline sync workflow yet. Supabase remains the active remote source of truth.
 
 ## Database
 
-Supabase schema changes currently live in:
+Supabase schema changes currently live under:
 
 - `supabase/migrations/20260429_000001_initial_schema.sql`
 
-The schema includes:
+The migration set covers:
 
-- base entity tables
-- relationship tables
+- primary entity tables
+- relation and association tables
 - financial and transaction-detail tables
 - indexes and update triggers
 - row-level security policies
@@ -135,11 +129,11 @@ The schema includes:
 ## Requirements
 
 - Flutter SDK
-- Dart SDK compatible with the version constraint in `pubspec.yaml`
-- A Supabase project with URL and anon key
-- A Flutter-capable IDE such as VS Code or Android Studio
+- Dart SDK compatible with `pubspec.yaml`
+- a Supabase project URL and anon key
+- a Flutter-capable IDE such as VS Code or Android Studio
 
-Check the local toolchain:
+Verify the local toolchain:
 
 ```bash
 flutter doctor
@@ -155,14 +149,14 @@ flutter pub get
 
 Provide Supabase configuration in one of these ways:
 
-1. Pass `--dart-define` values directly.
-2. Pass `--dart-define-from-file=.env.local.json`.
-3. On Linux, macOS, or Windows desktop, you can also create a local `.env.local.json` file in the project root and let the app read it directly.
+1. Pass values with `--dart-define`.
+2. Pass values with `--dart-define-from-file=.env.local.json`.
+3. On Linux, macOS, or Windows desktop only, place `.env.local.json` in the project root and let the app read it directly.
 
 Optional auth redirect configuration:
 
-- Set `AUTH_REDIRECT_TO` when you want email confirmation and password reset links to redirect to a specific URL across platforms.
-- On web, the app falls back to the current page URL when `AUTH_REDIRECT_TO` is not provided.
+- set `AUTH_REDIRECT_TO` when confirmation or recovery links should redirect to a fixed callback URL
+- on web, the current page URL is used when `AUTH_REDIRECT_TO` is not supplied
 
 Example `.env.local.json`:
 
@@ -174,19 +168,17 @@ Example `.env.local.json`:
 }
 ```
 
-If no valid configuration is available, the app throws a startup error during Supabase initialization.
+If configuration is missing or invalid, the app fails during startup while initializing Supabase.
 
-On Android and iOS, the app cannot read `.env.local.json` from your project root at runtime, so mobile launches must use `--dart-define` or `--dart-define-from-file`.
+On Android and iOS, the app cannot read `.env.local.json` from the workspace root at runtime, so mobile builds must receive config through `--dart-define` or `--dart-define-from-file`.
 
-## Running The App
+## Running
 
-Run with a local config file:
+Run with a config file:
 
 ```bash
 flutter run --dart-define-from-file=.env.local.json
 ```
-
-If you launch from VS Code, use a `launch.json` profile that passes `--dart-define-from-file=.env.local.json` so Android and iOS builds receive the values automatically.
 
 Run with inline defines:
 
@@ -196,17 +188,19 @@ flutter run \
   --dart-define=SUPABASE_ANON_KEY=your-anon-key
 ```
 
-For web, prefer `--dart-define` or `--dart-define-from-file`; web builds do not use the local file fallback.
+For web, prefer `--dart-define` or `--dart-define-from-file`. The desktop-only local file fallback does not apply to web builds.
+
+If you launch from VS Code, use a `launch.json` profile that passes the same defines so mobile and desktop runs behave consistently.
 
 ## Useful Commands
 
-Fetch packages:
+Install packages:
 
 ```bash
 flutter pub get
 ```
 
-Analyze the project:
+Analyze the codebase:
 
 ```bash
 flutter analyze
@@ -218,18 +212,18 @@ Run all tests:
 flutter test
 ```
 
-Regenerate ObjectBox code after changing ObjectBox entities:
-
-```bash
-dart run build_runner build --delete-conflicting-outputs
-```
-
 Run focused tests:
 
 ```bash
 flutter test test/models/model_serialization_test.dart
 flutter test test/controllers/company_products_controller_test.dart
 flutter test test/controllers/store_invoices_controller_test.dart
+```
+
+Regenerate ObjectBox code after changing ObjectBox entities:
+
+```bash
+dart run build_runner build --delete-conflicting-outputs
 ```
 
 Build common targets:
@@ -244,20 +238,18 @@ flutter build linux
 
 Implemented:
 
-- Supabase authentication bootstrap
-- auth state handling with BLoC
+- authentication bootstrap and session-driven auth state handling
 - localized auth flow and dashboard shell
-- domain model layer with tolerant parsing helpers
-- request validation layer
-- CRUD-style controller layer
-- Supabase schema migrations for the core domain and transaction detail tables
-- store-client-linked financial records
-- focused model and controller tests
+- tolerant, tested domain model serialization
+- validation and CRUD-style controller layers
+- Supabase migrations for primary, relation, and transaction records
+- offline persistence bootstrap for IO platforms
 
 Still to expand:
 
-- dedicated feature screens beyond auth and the current dashboard shell
-- richer persistence wiring between controllers and Supabase data access
+- dedicated feature pages beyond the current shell and auth flow
+- repository-style persistence wiring between controllers, Supabase, and local sync
+- broader end-to-end flows for inventory, finance, and admin operations
 - reporting and analytics flows
 - broader validation and controller test coverage
 
