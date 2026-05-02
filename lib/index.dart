@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -176,8 +177,11 @@ class _IndexState extends State<Index> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    final initialPage = IndexPageStorage.fromStorageKey(widget.appPreferencesController.lastIndexPageKey);
-    _openPageInTab(initialPage, pinned: initialPage == IndexPage.dashboard, savePreference: false);
+    final restored = _restoreWorkspaceTabsFromPreferences();
+    if (!restored) {
+      final initialPage = IndexPageStorage.fromStorageKey(widget.appPreferencesController.lastIndexPageKey);
+      _openPageInTab(initialPage, pinned: initialPage == IndexPage.dashboard, savePreference: false);
+    }
     _connectionStatusController = ConnectionStatusController(localDatabase: context.read<LocalDatabase?>());
     _connectionStatusController.start();
   }
@@ -217,6 +221,7 @@ class _IndexState extends State<Index> with WidgetsBindingObserver {
     if (savePreference) {
       widget.appPreferencesController.saveLastIndexPageKey(page.storageKey);
     }
+    _persistWorkspaceTabsState();
     _scrollTabsToEndSoon();
   }
 
@@ -240,6 +245,7 @@ class _IndexState extends State<Index> with WidgetsBindingObserver {
     if (savePreference) {
       widget.appPreferencesController.saveLastIndexPageKey(tab.page.storageKey);
     }
+    _persistWorkspaceTabsState();
   }
 
   void _handleDrawerPageOpened(IndexPage page) {
@@ -277,6 +283,49 @@ class _IndexState extends State<Index> with WidgetsBindingObserver {
     if (activeTab != null) {
       widget.appPreferencesController.saveLastIndexPageKey(activeTab.page.storageKey);
     }
+    _persistWorkspaceTabsState();
+  }
+
+  void _requestCloseTab(String tabId) async {
+    _WorkspaceTab? tab;
+    for (final candidate in _tabs) {
+      if (candidate.id == tabId) {
+        tab = candidate;
+        break;
+      }
+    }
+
+    if (tab == null || tab.pinned || !mounted) {
+      return;
+    }
+
+    final authState = context.read<AuthController>().state;
+    final pageDefinitions = buildIndexPageDefinitions(context, authState, localeController: widget.localeController, appPreferencesController: widget.appPreferencesController);
+    final l10n = context.l10n;
+    final tabTitle = pageDefinitions[tab.page]?.title ?? tab.page.name;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final shouldClose = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(l10n.closeTabQuestion),
+          content: Text(l10n.closeTabWarning(tabTitle)),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: colorScheme.error, foregroundColor: colorScheme.onError),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.closeTabAction),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldClose == true && mounted) {
+      _closeTab(tabId);
+    }
   }
 
   void _toggleTabPin(String tabId) {
@@ -289,6 +338,7 @@ class _IndexState extends State<Index> with WidgetsBindingObserver {
       final tab = _tabs[index];
       _tabs[index] = tab.copyWith(pinned: !tab.pinned);
     });
+    _persistWorkspaceTabsState();
   }
 
   void _reorderTabs(int oldIndex, int newIndex) {
@@ -303,26 +353,117 @@ class _IndexState extends State<Index> with WidgetsBindingObserver {
       final tab = _tabs.removeAt(oldIndex);
       _tabs.insert(newIndex, tab);
     });
+    _persistWorkspaceTabsState();
+  }
+
+  void _moveTabById(String tabId, int delta) {
+    final index = _tabs.indexWhere((tab) => tab.id == tabId);
+    if (index == -1) {
+      return;
+    }
+
+    final targetIndex = (index + delta).clamp(0, _tabs.length - 1);
+    if (targetIndex == index) {
+      return;
+    }
+
+    setState(() {
+      final tab = _tabs.removeAt(index);
+      _tabs.insert(targetIndex, tab);
+    });
+    _persistWorkspaceTabsState();
   }
 
   void _closeAllUnpinnedTabs() {
-    final active = _activeTab;
+    IndexPage? persistedPage;
+
     setState(() {
       _tabs.removeWhere((tab) => !tab.pinned);
       if (_tabs.isEmpty) {
         final fallbackId = 'tab_${_nextTabSeed++}';
         _tabs.add(_WorkspaceTab(id: fallbackId, page: IndexPage.dashboard, pinned: true, group: _groupForPage(IndexPage.dashboard)));
         _activeTabId = fallbackId;
-        return;
-      }
-      if (_activeTabId == null || !_tabs.any((tab) => tab.id == _activeTabId)) {
-        _activeTabId = (_tabs.firstWhere((tab) => tab.pinned, orElse: () => _tabs.first)).id;
+        persistedPage = IndexPage.dashboard;
+      } else {
+        final hasCurrentActive = _activeTabId != null && _tabs.any((tab) => tab.id == _activeTabId);
+        if (!hasCurrentActive) {
+          _activeTabId = _tabs.first.id;
+        }
+
+        final activeTab = _tabs.firstWhere((tab) => tab.id == _activeTabId, orElse: () => _tabs.first);
+        persistedPage = activeTab.page;
       }
     });
 
-    final persistedPage = _activeTab?.page ?? active?.page;
     if (persistedPage != null) {
-      widget.appPreferencesController.saveLastIndexPageKey(persistedPage.storageKey);
+      widget.appPreferencesController.saveLastIndexPageKey(persistedPage!.storageKey);
+    }
+    _persistWorkspaceTabsState();
+  }
+
+  Future<void> _confirmCloseAllUnpinnedTabs(Map<IndexPage, IndexPageDefinition> pageDefinitions) async {
+    final unpinnedTabs = _tabs.where((tab) => !tab.pinned).toList(growable: false);
+    if (unpinnedTabs.isEmpty || !mounted) {
+      return;
+    }
+
+    final tabNames = unpinnedTabs.map((tab) => pageDefinitions[tab.page]?.title ?? tab.page.name).toList(growable: false);
+    final listHeight = math.min(220.0, math.max(72.0, tabNames.length * 30.0));
+    final shouldClose = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
+        final l10n = context.l10n;
+
+        return AlertDialog(
+          title: Text(l10n.dangerCloseAllUnpinnedTabsQuestion),
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 280, minWidth: 320),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.dangerCloseAllUnpinnedTabsWarning, style: theme.textTheme.bodyMedium),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: listHeight,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (final tabName in tabNames)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Row(
+                              children: [
+                                Icon(Icons.close_rounded, size: 15, color: colorScheme.error),
+                                const SizedBox(width: 6),
+                                Expanded(child: Text(tabName, overflow: TextOverflow.ellipsis)),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: colorScheme.error, foregroundColor: colorScheme.onError),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.closeAll),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldClose == true && mounted) {
+      _closeAllUnpinnedTabs();
     }
   }
 
@@ -358,6 +499,80 @@ class _IndexState extends State<Index> with WidgetsBindingObserver {
     if (activeTab != null) {
       widget.appPreferencesController.saveLastIndexPageKey(activeTab.page.storageKey);
     }
+    _persistWorkspaceTabsState();
+  }
+
+  bool _restoreWorkspaceTabsFromPreferences() {
+    final rawState = widget.appPreferencesController.workspaceTabsState;
+    if (rawState.isEmpty) {
+      return false;
+    }
+
+    try {
+      final decoded = json.decode(rawState);
+      if (decoded is! Map<String, dynamic>) {
+        return false;
+      }
+
+      final decodedTabs = decoded['tabs'];
+      if (decodedTabs is! List) {
+        return false;
+      }
+
+      final restoredTabs = <_WorkspaceTab>[];
+      _nextTabSeed = 1;
+      for (final item in decodedTabs) {
+        if (item is! Map<String, dynamic>) {
+          continue;
+        }
+
+        final page = IndexPageStorage.fromStorageKey(item['page'] as String?);
+        final pinned = item['pinned'] == true;
+        restoredTabs.add(_WorkspaceTab(id: 'tab_${_nextTabSeed++}', page: page, pinned: pinned, group: _groupForPage(page)));
+      }
+
+      if (restoredTabs.isEmpty) {
+        return false;
+      }
+
+      var activeIndex = 0;
+      final rawActiveIndex = decoded['activeIndex'];
+      if (rawActiveIndex is int) {
+        activeIndex = rawActiveIndex;
+      }
+      activeIndex = activeIndex.clamp(0, restoredTabs.length - 1);
+
+      _tabs
+        ..clear()
+        ..addAll(restoredTabs);
+      _activeTabId = _tabs[activeIndex].id;
+      _isAppBarVisible = true;
+      widget.appPreferencesController.saveLastIndexPageKey(_tabs[activeIndex].page.storageKey);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void _persistWorkspaceTabsState() {
+    if (_tabs.isEmpty) {
+      widget.appPreferencesController.saveWorkspaceTabsState('');
+      return;
+    }
+
+    var activeIndex = _tabs.indexWhere((tab) => tab.id == _activeTabId);
+    if (activeIndex == -1) {
+      activeIndex = 0;
+    }
+
+    final payload = <String, dynamic>{
+      'activeIndex': activeIndex,
+      'tabs': [
+        for (final tab in _tabs) <String, dynamic>{'page': tab.page.storageKey, 'pinned': tab.pinned},
+      ],
+    };
+
+    widget.appPreferencesController.saveWorkspaceTabsState(json.encode(payload));
   }
 
   void _scrollTabsToEndSoon() {
@@ -368,6 +583,21 @@ class _IndexState extends State<Index> with WidgetsBindingObserver {
 
       _tabScrollController.animateTo(_tabScrollController.position.maxScrollExtent, duration: const Duration(milliseconds: 180), curve: Curves.easeOut);
     });
+  }
+
+  void _recoverWorkspaceWithDashboard() {
+    if (_tabs.isEmpty) {
+      _openPageInTab(IndexPage.dashboard, pinned: true);
+      return;
+    }
+
+    final dashboardTab = _tabs.where((tab) => tab.page == IndexPage.dashboard).toList(growable: false);
+    if (dashboardTab.isNotEmpty) {
+      _activateTab(dashboardTab.first.id);
+      return;
+    }
+
+    _openPageInTab(IndexPage.dashboard, pinned: true);
   }
 
   Future<void> _confirmSignOut() async {
@@ -495,11 +725,13 @@ class _IndexState extends State<Index> with WidgetsBindingObserver {
                 pageDefinitions: pageDefinitions,
                 scrollController: _tabScrollController,
                 onActivateTab: _activateTab,
-                onCloseTab: _closeTab,
+                onCloseTab: _requestCloseTab,
                 onTogglePin: _toggleTabPin,
                 onReorderTabs: _reorderTabs,
+                onMoveTab: _moveTabById,
                 onCloseTabsToRight: _closeTabsToRight,
-                onCloseAllUnpinned: _closeAllUnpinnedTabs,
+                onCloseAllUnpinned: () => _confirmCloseAllUnpinnedTabs(pageDefinitions),
+                onRecoverDashboard: _recoverWorkspaceWithDashboard,
               ),
               Expanded(
                 child: NotificationListener<ScrollNotification>(
@@ -659,8 +891,10 @@ class _WorkspaceTabBar extends StatelessWidget {
     required this.onCloseTab,
     required this.onTogglePin,
     required this.onReorderTabs,
+    required this.onMoveTab,
     required this.onCloseTabsToRight,
     required this.onCloseAllUnpinned,
+    required this.onRecoverDashboard,
   });
 
   final List<_WorkspaceTab> tabs;
@@ -671,8 +905,10 @@ class _WorkspaceTabBar extends StatelessWidget {
   final ValueChanged<String> onCloseTab;
   final ValueChanged<String> onTogglePin;
   final void Function(int oldIndex, int newIndex) onReorderTabs;
+  final void Function(String tabId, int delta) onMoveTab;
   final ValueChanged<String> onCloseTabsToRight;
-  final VoidCallback onCloseAllUnpinned;
+  final Future<void> Function() onCloseAllUnpinned;
+  final VoidCallback onRecoverDashboard;
 
   @override
   Widget build(BuildContext context) {
@@ -748,7 +984,17 @@ class _WorkspaceTabBar extends StatelessWidget {
               ],
             ),
           ),
-          _TabsOverflowMenu(tabs: tabs, activeTabId: activeTabId, pageDefinitions: pageDefinitions, onActivateTab: onActivateTab, onCloseTab: onCloseTab, onCloseAllUnpinned: onCloseAllUnpinned),
+          _TabsOverflowMenu(
+            tabs: tabs,
+            activeTabId: activeTabId,
+            pageDefinitions: pageDefinitions,
+            onActivateTab: onActivateTab,
+            onCloseTab: onCloseTab,
+            onTogglePin: onTogglePin,
+            onMoveTab: onMoveTab,
+            onCloseAllUnpinned: onCloseAllUnpinned,
+            onRecoverDashboard: onRecoverDashboard,
+          ),
         ],
       ),
     );
@@ -779,6 +1025,7 @@ class _WorkspaceTabTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final groupColor = _groupColor(colorScheme, tab.group);
@@ -799,9 +1046,9 @@ class _WorkspaceTabTile extends StatelessWidget {
           }
         },
         itemBuilder: (context) => [
-          PopupMenuItem<String>(value: 'pin', child: Text(tab.pinned ? 'Unpin tab' : 'Pin tab')),
-          const PopupMenuItem<String>(value: 'close-right', child: Text('Close tabs to the right')),
-          if (onClose != null) const PopupMenuItem<String>(value: 'close', child: Text('Close tab')),
+          PopupMenuItem<String>(value: 'pin', child: Text(tab.pinned ? l10n.unpinTab : l10n.pinTab)),
+          PopupMenuItem<String>(value: 'close-right', child: Text(l10n.closeTabsToRight)),
+          if (onClose != null) PopupMenuItem<String>(value: 'close', child: Text(l10n.closeTabAction)),
         ],
         child: InkWell(
           onTap: onActivate,
@@ -833,14 +1080,22 @@ class _WorkspaceTabTile extends StatelessWidget {
                     style: theme.textTheme.labelLarge?.copyWith(fontWeight: active ? FontWeight.w800 : FontWeight.w600),
                   ),
                 ),
-                if (tab.pinned) ...[Icon(Icons.push_pin_rounded, size: 16, color: colorScheme.primary), const SizedBox(width: 6)],
+                InkWell(
+                  onTap: onTogglePin,
+                  borderRadius: BorderRadius.circular(10),
+                  child: Padding(
+                    padding: const EdgeInsets.all(2),
+                    child: Icon(tab.pinned ? Icons.push_pin_rounded : Icons.push_pin_outlined, size: 16, color: tab.pinned ? colorScheme.primary : colorScheme.onSurfaceVariant),
+                  ),
+                ),
+                const SizedBox(width: 6),
                 if (onClose != null)
                   InkWell(
                     onTap: onClose,
                     borderRadius: BorderRadius.circular(10),
                     child: Padding(
                       padding: const EdgeInsets.all(2),
-                      child: Icon(Icons.close_rounded, size: 16, color: colorScheme.onSurfaceVariant),
+                      child: Icon(Icons.close_rounded, size: 16, color: colorScheme.error),
                     ),
                   )
                 else
@@ -857,63 +1112,162 @@ class _WorkspaceTabTile extends StatelessWidget {
 }
 
 class _TabsOverflowMenu extends StatelessWidget {
-  const _TabsOverflowMenu({required this.tabs, required this.activeTabId, required this.pageDefinitions, required this.onActivateTab, required this.onCloseTab, required this.onCloseAllUnpinned});
+  const _TabsOverflowMenu({
+    required this.tabs,
+    required this.activeTabId,
+    required this.pageDefinitions,
+    required this.onActivateTab,
+    required this.onCloseTab,
+    required this.onTogglePin,
+    required this.onMoveTab,
+    required this.onCloseAllUnpinned,
+    required this.onRecoverDashboard,
+  });
 
   final List<_WorkspaceTab> tabs;
   final String? activeTabId;
   final Map<IndexPage, IndexPageDefinition> pageDefinitions;
   final ValueChanged<String> onActivateTab;
   final ValueChanged<String> onCloseTab;
-  final VoidCallback onCloseAllUnpinned;
+  final ValueChanged<String> onTogglePin;
+  final void Function(String tabId, int delta) onMoveTab;
+  final Future<void> Function() onCloseAllUnpinned;
+  final VoidCallback onRecoverDashboard;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
+    final hasUnpinnedTabs = tabs.any((tab) => !tab.pinned);
+
     return PopupMenuButton<String>(
-      tooltip: 'Tabs overview',
+      tooltip: l10n.openTabsTooltip('${tabs.length}'),
+      constraints: const BoxConstraints(minWidth: 320, maxWidth: 420, maxHeight: 440),
       onSelected: (value) {
         if (value == 'close-unpinned') {
-          onCloseAllUnpinned();
+          Future<void>.microtask(onCloseAllUnpinned);
+          return;
+        }
+
+        if (value == 'recover-dashboard') {
+          onRecoverDashboard();
           return;
         }
 
         if (value.startsWith('open:')) {
-          final tabId = value.substring(5);
-          onActivateTab(tabId);
+          onActivateTab(value.substring(5));
+          return;
+        }
+
+        if (value.startsWith('pin:')) {
+          onTogglePin(value.substring(4));
           return;
         }
 
         if (value.startsWith('close:')) {
-          final tabId = value.substring(6);
-          onCloseTab(tabId);
+          onCloseTab(value.substring(6));
         }
       },
       itemBuilder: (context) {
-        final entries = <PopupMenuEntry<String>>[const PopupMenuItem<String>(value: 'close-unpinned', child: Text('Close all unpinned tabs')), const PopupMenuDivider()];
+        final entries = <PopupMenuEntry<String>>[];
 
-        for (final tab in tabs) {
-          final isActive = tab.id == activeTabId;
-          final title = pageDefinitions[tab.page]?.title ?? tab.page.name;
+        if (hasUnpinnedTabs) {
           entries.add(
             PopupMenuItem<String>(
-              value: 'open:${tab.id}',
+              value: 'close-unpinned',
               child: Row(
                 children: [
-                  Icon(isActive ? Icons.radio_button_checked_rounded : Icons.radio_button_unchecked_rounded, size: 16),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text(title, overflow: TextOverflow.ellipsis)),
-                  if (tab.pinned) const Padding(padding: EdgeInsetsDirectional.only(start: 8), child: Icon(Icons.push_pin_rounded, size: 14)),
+                  Icon(Icons.warning_amber_rounded, size: 16, color: colorScheme.error),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.closeAllUnpinnedTabs,
+                    style: TextStyle(color: colorScheme.error, fontWeight: FontWeight.w600),
+                  ),
                 ],
               ),
             ),
           );
-          if (!tab.pinned) {
-            entries.add(
-              PopupMenuItem<String>(
-                value: 'close:${tab.id}',
-                child: const Row(children: [Icon(Icons.close_rounded, size: 15), SizedBox(width: 10), Text('Close')]),
+          entries.add(const PopupMenuDivider());
+        }
+
+        if (tabs.isEmpty) {
+          entries.add(
+            PopupMenuItem<String>(
+              value: 'recover-dashboard',
+              child: Row(children: [const Icon(Icons.dashboard_rounded, size: 16), const SizedBox(width: 10), Text(l10n.openDashboard)]),
+            ),
+          );
+          return entries;
+        }
+
+        for (final tab in tabs) {
+          final tabIndex = tabs.indexOf(tab);
+          final isActive = tab.id == activeTabId;
+          final title = pageDefinitions[tab.page]?.title ?? tab.page.name;
+          entries.add(
+            PopupMenuItem<String>(
+              enabled: false,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        Future<void>.microtask(() => onActivateTab(tab.id));
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                        child: Text(
+                          title,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontWeight: isActive ? FontWeight.w700 : FontWeight.w500, color: isActive ? colorScheme.primary : null),
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: l10n.moveTabLeft,
+                    visualDensity: VisualDensity.compact,
+                    onPressed: tabIndex == 0 ? null : () => onMoveTab(tab.id, -1),
+                    icon: Icon(Icons.chevron_left_rounded, size: 20, color: tabIndex == 0 ? colorScheme.onSurface.withValues(alpha: 0.32) : colorScheme.onSurface),
+                  ),
+                  IconButton(
+                    tooltip: l10n.moveTabRight,
+                    visualDensity: VisualDensity.compact,
+                    onPressed: tabIndex == tabs.length - 1 ? null : () => onMoveTab(tab.id, 1),
+                    icon: Icon(Icons.chevron_right_rounded, size: 20, color: tabIndex == tabs.length - 1 ? colorScheme.onSurface.withValues(alpha: 0.32) : colorScheme.onSurface),
+                  ),
+                  IconButton(
+                    tooltip: tab.pinned ? l10n.unpinTab : l10n.pinTab,
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Future<void>.microtask(() => onTogglePin(tab.id));
+                    },
+                    style: IconButton.styleFrom(backgroundColor: colorScheme.primaryContainer.withValues(alpha: 0.45), padding: const EdgeInsets.all(6)),
+                    icon: Icon(tab.pinned ? Icons.push_pin_rounded : Icons.push_pin_outlined, size: 20, color: tab.pinned ? colorScheme.primary : colorScheme.onSurfaceVariant),
+                  ),
+                  IconButton(
+                    tooltip: l10n.closeTabAction,
+                    visualDensity: VisualDensity.compact,
+                    onPressed: tab.pinned
+                        ? null
+                        : () {
+                            Navigator.of(context).pop();
+                            Future<void>.microtask(() => onCloseTab(tab.id));
+                          },
+                    style: IconButton.styleFrom(
+                      backgroundColor: colorScheme.errorContainer.withValues(alpha: tab.pinned ? 0.12 : 0.45),
+                      padding: const EdgeInsets.all(6),
+                    ),
+                    icon: Icon(Icons.close_rounded, size: 20, color: tab.pinned ? colorScheme.onSurface.withValues(alpha: 0.32) : colorScheme.error),
+                  ),
+                ],
               ),
-            );
-          }
+            ),
+          );
         }
 
         return entries;
@@ -921,7 +1275,7 @@ class _TabsOverflowMenu extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.only(right: 6),
         child: Tooltip(
-          message: 'Open tabs (${tabs.length})',
+          message: l10n.openTabsTooltip('${tabs.length}'),
           child: Chip(avatar: const Icon(Icons.tab_rounded, size: 16), label: Text('${tabs.length}'), visualDensity: VisualDensity.compact),
         ),
       ),

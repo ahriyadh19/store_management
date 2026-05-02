@@ -165,6 +165,20 @@ class AppLocalizations {
     'reset': 'Reset',
     'close': 'Close',
     'cancel': 'Cancel',
+    'closeTabQuestion': 'Close tab?',
+    'closeTabWarning': '"{tab}" will be closed and data in this tab may be unsaved.',
+    'closeTabAction': 'Close tab',
+    'dangerCloseAllUnpinnedTabsQuestion': 'Danger: Close all unpinned tabs?',
+    'dangerCloseAllUnpinnedTabsWarning': 'These pages will be closed:',
+    'closeAll': 'Close all',
+    'pinTab': 'Pin tab',
+    'unpinTab': 'Unpin tab',
+    'closeTabsToRight': 'Close tabs to the right',
+    'openTabsTooltip': 'Open tabs ({count})',
+    'openDashboard': 'Open dashboard',
+    'closeAllUnpinnedTabs': 'Close all unpinned tabs',
+    'moveTabLeft': 'Move tab left',
+    'moveTabRight': 'Move tab right',
     'logoutQuestion': 'Sign out?',
     'logoutWarning': 'You will need to sign in again to continue using the workspace.',
     'closeApplicationQuestion': 'Close application?',
@@ -355,6 +369,20 @@ class AppLocalizations {
     'reset': 'إعادة تعيين',
     'close': 'إغلاق',
     'cancel': 'إلغاء',
+    'closeTabQuestion': 'إغلاق علامة التبويب؟',
+    'closeTabWarning': 'سيتم إغلاق "{tab}" وقد تكون بيانات هذه العلامة غير محفوظة.',
+    'closeTabAction': 'إغلاق علامة التبويب',
+    'dangerCloseAllUnpinnedTabsQuestion': 'تحذير: إغلاق جميع علامات التبويب غير المثبتة؟',
+    'dangerCloseAllUnpinnedTabsWarning': 'سيتم إغلاق الصفحات التالية:',
+    'closeAll': 'إغلاق الكل',
+    'pinTab': 'تثبيت علامة التبويب',
+    'unpinTab': 'إلغاء تثبيت علامة التبويب',
+    'closeTabsToRight': 'إغلاق علامات التبويب إلى اليمين',
+    'openTabsTooltip': 'علامات التبويب المفتوحة ({count})',
+    'openDashboard': 'فتح لوحة التحكم',
+    'closeAllUnpinnedTabs': 'إغلاق جميع علامات التبويب غير المثبتة',
+    'moveTabLeft': 'نقل علامة التبويب لليسار',
+    'moveTabRight': 'نقل علامة التبويب لليمين',
     'logoutQuestion': 'تسجيل الخروج؟',
     'logoutWarning': 'ستحتاج إلى تسجيل الدخول مرة أخرى لمتابعة استخدام مساحة العمل.',
     'closeApplicationQuestion': 'إغلاق التطبيق؟',
@@ -555,6 +583,20 @@ class AppLocalizations {
   String get reset => _text('reset');
   String get close => _text('close');
   String get cancel => _text('cancel');
+  String get closeTabQuestion => _text('closeTabQuestion');
+  String closeTabWarning(String tab) => _text('closeTabWarning', {'tab': tab});
+  String get closeTabAction => _text('closeTabAction');
+  String get dangerCloseAllUnpinnedTabsQuestion => _text('dangerCloseAllUnpinnedTabsQuestion');
+  String get dangerCloseAllUnpinnedTabsWarning => _text('dangerCloseAllUnpinnedTabsWarning');
+  String get closeAll => _text('closeAll');
+  String get pinTab => _text('pinTab');
+  String get unpinTab => _text('unpinTab');
+  String get closeTabsToRight => _text('closeTabsToRight');
+  String openTabsTooltip(String count) => _text('openTabsTooltip', {'count': count});
+  String get openDashboard => _text('openDashboard');
+  String get closeAllUnpinnedTabs => _text('closeAllUnpinnedTabs');
+  String get moveTabLeft => _text('moveTabLeft');
+  String get moveTabRight => _text('moveTabRight');
   String get logoutQuestion => _text('logoutQuestion');
   String get logoutWarning => _text('logoutWarning');
   String get closeApplicationQuestion => _text('closeApplicationQuestion');
