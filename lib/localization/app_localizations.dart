@@ -179,6 +179,15 @@ class AppLocalizations {
     'closeAllUnpinnedTabs': 'Close all unpinned tabs',
     'moveTabLeft': 'Move tab left',
     'moveTabRight': 'Move tab right',
+    'expandAll': 'Expand all',
+    'collapseAll': 'Collapse all',
+    'startupConfigurationError': 'Startup configuration error',
+    'stackTrace': 'Stack trace',
+    'startupRecoveryProvideKeys': 'Provide SUPABASE_URL and SUPABASE_ANON_KEY at launch time.',
+    'recommendedLabel': 'Recommended:',
+    'startupRecoveryMobile': 'On mobile, the app cannot read .env.local.json directly from the project root at runtime.',
+    'startupRecoveryMobileHint': 'Use the VS Code launch profile "store_management (env)" or pass --dart-define/--dart-define-from-file manually.',
+    'startupRecoveryDesktop': 'On desktop, keeping .env.local.json in the project root also works as a runtime fallback.',
     'logoutQuestion': 'Sign out?',
     'logoutWarning': 'You will need to sign in again to continue using the workspace.',
     'closeApplicationQuestion': 'Close application?',
@@ -383,6 +392,15 @@ class AppLocalizations {
     'closeAllUnpinnedTabs': 'إغلاق جميع علامات التبويب غير المثبتة',
     'moveTabLeft': 'نقل علامة التبويب لليسار',
     'moveTabRight': 'نقل علامة التبويب لليمين',
+    'expandAll': 'توسيع الكل',
+    'collapseAll': 'طي الكل',
+    'startupConfigurationError': 'خطأ في إعدادات التشغيل',
+    'stackTrace': 'تتبّع المكدس',
+    'startupRecoveryProvideKeys': 'وفّر SUPABASE_URL و SUPABASE_ANON_KEY عند التشغيل.',
+    'recommendedLabel': 'الموصى به:',
+    'startupRecoveryMobile': 'على الهاتف المحمول، لا يمكن للتطبيق قراءة .env.local.json مباشرة من جذر المشروع أثناء التشغيل.',
+    'startupRecoveryMobileHint': 'استخدم ملف التشغيل في VS Code "store_management (env)" أو مرر --dart-define/--dart-define-from-file يدويًا.',
+    'startupRecoveryDesktop': 'على سطح المكتب، يمكن أيضًا استخدام .env.local.json من جذر المشروع كخيار احتياطي أثناء التشغيل.',
     'logoutQuestion': 'تسجيل الخروج؟',
     'logoutWarning': 'ستحتاج إلى تسجيل الدخول مرة أخرى لمتابعة استخدام مساحة العمل.',
     'closeApplicationQuestion': 'إغلاق التطبيق؟',
@@ -597,6 +615,15 @@ class AppLocalizations {
   String get closeAllUnpinnedTabs => _text('closeAllUnpinnedTabs');
   String get moveTabLeft => _text('moveTabLeft');
   String get moveTabRight => _text('moveTabRight');
+  String get expandAll => _text('expandAll');
+  String get collapseAll => _text('collapseAll');
+  String get startupConfigurationError => _text('startupConfigurationError');
+  String get stackTraceLabel => _text('stackTrace');
+  String get startupRecoveryProvideKeys => _text('startupRecoveryProvideKeys');
+  String get recommendedLabel => _text('recommendedLabel');
+  String get startupRecoveryMobile => _text('startupRecoveryMobile');
+  String get startupRecoveryMobileHint => _text('startupRecoveryMobileHint');
+  String get startupRecoveryDesktop => _text('startupRecoveryDesktop');
   String get logoutQuestion => _text('logoutQuestion');
   String get logoutWarning => _text('logoutWarning');
   String get closeApplicationQuestion => _text('closeApplicationQuestion');

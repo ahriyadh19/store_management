@@ -13,7 +13,15 @@ import 'package:store_management/services/local_database.dart';
 import 'package:store_management/views/index/index_page.dart';
 import 'package:store_management/views/index/index_page_registry.dart';
 
-Widget _buildIndexDrawer(BuildContext context, {required IndexPage activePage, required ValueChanged<IndexPage> onOpenPage}) {
+Widget _buildIndexDrawer(
+  BuildContext context, {
+  required IndexPage activePage,
+  required ValueChanged<IndexPage> onOpenPage,
+  required Set<_DrawerSectionKey> expandedSections,
+  required VoidCallback onExpandAll,
+  required VoidCallback onCollapseAll,
+  required void Function(_DrawerSectionKey key, bool expanded) onSectionExpansionChanged,
+}) {
   final l10n = context.l10n;
   final authState = context.watch<AuthController>().state;
   final user = authState.user;
@@ -71,10 +79,28 @@ Widget _buildIndexDrawer(BuildContext context, {required IndexPage activePage, r
               ),
             ),
             const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(onPressed: onExpandAll, icon: const Icon(Icons.unfold_more_rounded, size: 18), label: Text(l10n.expandAll)),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(onPressed: onCollapseAll, icon: const Icon(Icons.unfold_less_rounded, size: 18), label: Text(l10n.collapseAll)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             ...drawerSections.map(
               (section) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: _DrawerSectionCard(section: section, activePage: activePage, onOpenPage: onOpenPage),
+                child: _DrawerSectionCard(
+                  section: section,
+                  activePage: activePage,
+                  expanded: expandedSections.contains(section.key),
+                  onOpenPage: onOpenPage,
+                  onExpansionChanged: (expanded) => onSectionExpansionChanged(section.key, expanded),
+                ),
               ),
             ),
           ],
@@ -168,6 +194,7 @@ class Index extends StatefulWidget {
 class _IndexState extends State<Index> with WidgetsBindingObserver {
   final List<_WorkspaceTab> _tabs = <_WorkspaceTab>[];
   final ScrollController _tabScrollController = ScrollController();
+  final Set<_DrawerSectionKey> _expandedDrawerSections = <_DrawerSectionKey>{};
   String? _activeTabId;
   int _nextTabSeed = 1;
   late final ConnectionStatusController _connectionStatusController;
@@ -177,6 +204,7 @@ class _IndexState extends State<Index> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _expandedDrawerSections.add(_drawerSectionForPage(IndexPageStorage.fromStorageKey(widget.appPreferencesController.lastIndexPageKey)));
     final restored = _restoreWorkspaceTabsFromPreferences();
     if (!restored) {
       final initialPage = IndexPageStorage.fromStorageKey(widget.appPreferencesController.lastIndexPageKey);
@@ -249,8 +277,33 @@ class _IndexState extends State<Index> with WidgetsBindingObserver {
   }
 
   void _handleDrawerPageOpened(IndexPage page) {
+    _expandedDrawerSections.add(_drawerSectionForPage(page));
     _openPageInTab(page);
     Navigator.of(context).maybePop();
+  }
+
+  void _setDrawerSectionExpanded(_DrawerSectionKey key, bool expanded) {
+    setState(() {
+      if (expanded) {
+        _expandedDrawerSections.add(key);
+      } else {
+        _expandedDrawerSections.remove(key);
+      }
+    });
+  }
+
+  void _expandAllDrawerSections() {
+    setState(() {
+      _expandedDrawerSections
+        ..clear()
+        ..addAll(_DrawerSectionKey.values);
+    });
+  }
+
+  void _collapseAllDrawerSections() {
+    setState(() {
+      _expandedDrawerSections.clear();
+    });
   }
 
   void _closeTab(String tabId) {
@@ -679,7 +732,15 @@ class _IndexState extends State<Index> with WidgetsBindingObserver {
         final effectiveToolbarHeight = stickyAppBar || _isAppBarVisible ? kToolbarHeight : 0.0;
 
         return Scaffold(
-          drawer: _buildIndexDrawer(context, activePage: activeTab.page, onOpenPage: _handleDrawerPageOpened),
+          drawer: _buildIndexDrawer(
+            context,
+            activePage: activeTab.page,
+            onOpenPage: _handleDrawerPageOpened,
+            expandedSections: _expandedDrawerSections,
+            onExpandAll: _expandAllDrawerSections,
+            onCollapseAll: _collapseAllDrawerSections,
+            onSectionExpansionChanged: _setDrawerSectionExpanded,
+          ),
           appBar: AppBar(
             toolbarHeight: effectiveToolbarHeight,
             title: effectiveToolbarHeight == 0 ? null : Text(selectedDefinition.title),
@@ -784,11 +845,13 @@ class _DrawerItem {
 }
 
 class _DrawerSectionCard extends StatelessWidget {
-  const _DrawerSectionCard({required this.section, required this.activePage, required this.onOpenPage});
+  const _DrawerSectionCard({required this.section, required this.activePage, required this.expanded, required this.onOpenPage, required this.onExpansionChanged});
 
   final _DrawerSection section;
   final IndexPage activePage;
+  final bool expanded;
   final ValueChanged<IndexPage> onOpenPage;
+  final ValueChanged<bool> onExpansionChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -805,7 +868,9 @@ class _DrawerSectionCard extends StatelessWidget {
       child: Theme(
         data: theme.copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          initiallyExpanded: hasActiveItem,
+          key: ValueKey<String>('drawer-section-${section.key.name}-$expanded'),
+          initiallyExpanded: expanded || hasActiveItem,
+          onExpansionChanged: onExpansionChanged,
           dense: true,
           tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
           childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
@@ -835,6 +900,33 @@ class _DrawerSectionCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+_DrawerSectionKey _drawerSectionForPage(IndexPage page) {
+  switch (page) {
+    case IndexPage.dashboard:
+    case IndexPage.reports:
+    case IndexPage.stores:
+    case IndexPage.branches:
+      return _DrawerSectionKey.overview;
+    case IndexPage.products:
+    case IndexPage.categories:
+    case IndexPage.tags:
+      return _DrawerSectionKey.catalog;
+    case IndexPage.invoices:
+    case IndexPage.returns:
+    case IndexPage.paymentVouchers:
+      return _DrawerSectionKey.sales;
+    case IndexPage.clients:
+    case IndexPage.suppliers:
+    case IndexPage.users:
+    case IndexPage.roles:
+      return _DrawerSectionKey.people;
+    case IndexPage.inventory:
+    case IndexPage.transactions:
+    case IndexPage.settings:
+      return _DrawerSectionKey.operations;
   }
 }
 

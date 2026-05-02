@@ -186,6 +186,7 @@ class StartupErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return Scaffold(
       body: Center(
@@ -200,14 +201,14 @@ class StartupErrorView extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Startup configuration error', style: theme.textTheme.headlineSmall),
+                    Text(l10n.startupConfigurationError, style: theme.textTheme.headlineSmall),
                     const SizedBox(height: 12),
                     Text(error.toString(), style: theme.textTheme.bodyLarge),
                     const SizedBox(height: 16),
-                    Text(_startupRecoverySteps(), style: theme.textTheme.bodyMedium),
+                    Text(_startupRecoverySteps(l10n), style: theme.textTheme.bodyMedium),
                     if (kDebugMode && stackTrace != null) ...[
                       const SizedBox(height: 16),
-                      Text('Stack trace', style: theme.textTheme.titleMedium),
+                      Text(l10n.stackTraceLabel, style: theme.textTheme.titleMedium),
                       const SizedBox(height: 8),
                       SelectableText(stackTrace.toString(), style: theme.textTheme.bodySmall?.copyWith(fontFamily: 'monospace')),
                     ],
@@ -221,20 +222,20 @@ class StartupErrorView extends StatelessWidget {
     );
   }
 
-  String _startupRecoverySteps() {
+  String _startupRecoverySteps(AppLocalizations l10n) {
     final buffer = StringBuffer()
-      ..writeln('Provide SUPABASE_URL and SUPABASE_ANON_KEY at launch time.')
+      ..writeln(l10n.startupRecoveryProvideKeys)
       ..writeln()
-      ..writeln('Recommended:')
+      ..writeln(l10n.recommendedLabel)
       ..writeln('flutter run --dart-define-from-file=.env.local.json')
       ..writeln();
 
     if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
       buffer
-        ..writeln('On mobile, the app cannot read .env.local.json directly from the project root at runtime.')
-        ..writeln('Use the VS Code launch profile "store_management (env)" or pass --dart-define/--dart-define-from-file manually.');
+        ..writeln(l10n.startupRecoveryMobile)
+        ..writeln(l10n.startupRecoveryMobileHint);
     } else if (!kIsWeb && (Platform.isLinux || Platform.isMacOS || Platform.isWindows)) {
-      buffer.writeln('On desktop, keeping .env.local.json in the project root also works as a runtime fallback.');
+      buffer.writeln(l10n.startupRecoveryDesktop);
     }
 
     return buffer.toString().trimRight();
