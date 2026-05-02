@@ -43,6 +43,27 @@ The dashboard should expose only primary modules. Supporting records remain impo
 - Unauthenticated users are routed to the auth flow.
 - English and Arabic localization are built in.
 - On Linux desktop, email confirmation or recovery may complete in the browser, so the auth flow supports manual link handoff when needed.
+- The main AppBar shows always-visible live connection indicators for Supabase and ObjectBox.
+
+### Live Connection Indicators
+
+The main shell AppBar includes two right-side indicators:
+
+- cloud indicator for Supabase connectivity
+- database indicator for ObjectBox local database availability
+
+Each indicator has three real-time states:
+
+- green: active/successful
+- yellow: processing/checking
+- red: failed/disconnected
+
+Behavior details:
+
+- checks start during shell initialization
+- checks continue on a periodic timer
+- checks refresh when the app resumes from background
+- indicator tooltips are localized (English and Arabic)
 
 On Linux desktop, auth state is persisted with file-based local storage so sessions survive restarts.
 
@@ -212,6 +233,8 @@ Run all tests:
 ```bash
 flutter test
 ```
+
+Note: in this Linux environment, `flutter test` currently fails before test execution with a Dart VM crash while building a native asset (`objective_c`). This appears to be a toolchain/runtime issue rather than a project assertion/test failure.
 
 Run focused tests:
 
