@@ -5,6 +5,8 @@ import 'package:store_management/controllers/auth_controller.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/localization/locale_controller.dart';
 import 'package:store_management/services/app_preferences_controller.dart';
+import 'package:store_management/services/connection_status_controller.dart';
+import 'package:store_management/services/local_database.dart';
 import 'package:store_management/views/index/index_page.dart';
 import 'package:store_management/views/index/index_page_registry.dart';
 
@@ -160,14 +162,32 @@ class Index extends StatefulWidget {
   State<Index> createState() => _IndexState();
 }
 
-class _IndexState extends State<Index> {
+class _IndexState extends State<Index> with WidgetsBindingObserver {
   late IndexPage _selectedPage;
+  late final ConnectionStatusController _connectionStatusController;
   bool _isAppBarVisible = true;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _selectedPage = IndexPageStorage.fromStorageKey(widget.appPreferencesController.lastIndexPageKey);
+    _connectionStatusController = ConnectionStatusController(localDatabase: context.read<LocalDatabase?>());
+    _connectionStatusController.start();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _connectionStatusController.refresh();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _connectionStatusController.dispose();
+    super.dispose();
   }
 
   void _handlePageSelected(IndexPage page) {
@@ -270,6 +290,14 @@ class _IndexState extends State<Index> {
             actions: effectiveToolbarHeight == 0
                 ? const <Widget>[]
                 : [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: _ConnectionIndicators(controller: _connectionStatusController),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: VerticalDivider(width: 2, thickness: 3, indent: 12, endIndent: 12, color: Theme.of(context).dividerColor),
+                    ),
                     IconButton(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       tooltip: context.l10n.settings,
@@ -379,6 +407,73 @@ class _DrawerSectionCard extends StatelessWidget {
             );
           }).toList(),
         ),
+      ),
+    );
+  }
+}
+
+class _ConnectionIndicators extends StatelessWidget {
+  const _ConnectionIndicators({required this.controller});
+
+  final ConnectionStatusController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, child) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _ConnectionIndicatorDot(label: context.l10n.connectionSupabase, status: controller.supabaseState, icon: Icons.cloud_rounded),
+            const SizedBox(width: 8),
+            _ConnectionIndicatorDot(label: context.l10n.connectionObjectBox, status: controller.objectBoxState, icon: Icons.storage_rounded),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ConnectionIndicatorDot extends StatelessWidget {
+  const _ConnectionIndicatorDot({required this.label, required this.status, required this.icon});
+
+  final String label;
+  final ConnectionIndicatorState status;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final color = switch (status) {
+      ConnectionIndicatorState.active => Colors.green,
+      ConnectionIndicatorState.processing => Colors.amber,
+      ConnectionIndicatorState.failed => Colors.red,
+    };
+
+    final description = switch (status) {
+      ConnectionIndicatorState.active => l10n.connectionStatusConnected,
+      ConnectionIndicatorState.processing => l10n.connectionStatusChecking,
+      ConnectionIndicatorState.failed => l10n.connectionStatusDisconnected,
+    };
+
+    return Tooltip(
+      message: l10n.connectionStatusTooltip(label, description),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon),
+          const SizedBox(width: 4),
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.black.withValues(alpha: 0.25), width: 0.75),
+            ),
+          ),
+        ],
       ),
     );
   }

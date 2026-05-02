@@ -145,6 +145,12 @@ class AppLocalizations {
     'storageOnlineOnlyDescription': 'Always store data online so it stays available from anywhere.',
     'storageLocalOnly': 'Store local',
     'storageLocalOnlyDescription': 'Store data only on this device. Shared data will not be available everywhere.',
+    'connectionSupabase': 'Supabase',
+    'connectionObjectBox': 'ObjectBox',
+    'connectionStatusConnected': 'Connected',
+    'connectionStatusChecking': 'Checking',
+    'connectionStatusDisconnected': 'Disconnected',
+    'connectionStatusTooltip': '{source}: {status}',
     'recommended': 'Recommended',
     'darkMode': 'Dark mode',
     'lightMode': 'Light mode',
@@ -329,6 +335,12 @@ class AppLocalizations {
     'storageOnlineOnlyDescription': 'احفظ البيانات دائمًا عبر الإنترنت لتبقى متاحة من أي مكان.',
     'storageLocalOnly': 'تخزين محلي',
     'storageLocalOnlyDescription': 'احفظ البيانات على هذا الجهاز فقط. لن تكون البيانات المشتركة متاحة في كل مكان.',
+    'connectionSupabase': 'Supabase',
+    'connectionObjectBox': 'ObjectBox',
+    'connectionStatusConnected': 'متصل',
+    'connectionStatusChecking': 'جارٍ التحقق',
+    'connectionStatusDisconnected': 'غير متصل',
+    'connectionStatusTooltip': '{source}: {status}',
     'recommended': 'موصى به',
     'darkMode': 'الوضع الداكن',
     'lightMode': 'الوضع الفاتح',
@@ -523,6 +535,12 @@ class AppLocalizations {
   String get storageOnlineOnlyDescription => _text('storageOnlineOnlyDescription');
   String get storageLocalOnly => _text('storageLocalOnly');
   String get storageLocalOnlyDescription => _text('storageLocalOnlyDescription');
+  String get connectionSupabase => _text('connectionSupabase');
+  String get connectionObjectBox => _text('connectionObjectBox');
+  String get connectionStatusConnected => _text('connectionStatusConnected');
+  String get connectionStatusChecking => _text('connectionStatusChecking');
+  String get connectionStatusDisconnected => _text('connectionStatusDisconnected');
+  String connectionStatusTooltip(String source, String status) => _text('connectionStatusTooltip', {'source': source, 'status': status});
   String get recommended => _text('recommended');
   String get darkMode => _text('darkMode');
   String get lightMode => _text('lightMode');
