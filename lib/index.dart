@@ -381,7 +381,7 @@ class _IndexState extends State<Index> with WidgetsBindingObserver {
       _tabs.removeWhere((tab) => !tab.pinned);
       if (_tabs.isEmpty) {
         final fallbackId = 'tab_${_nextTabSeed++}';
-        _tabs.add(_WorkspaceTab(id: fallbackId, page: IndexPage.dashboard, pinned: true, group: _groupForPage(IndexPage.dashboard)));
+        _tabs.add(_WorkspaceTab(id: fallbackId, page: IndexPage.dashboard, pinned: false, group: _groupForPage(IndexPage.dashboard)));
         _activeTabId = fallbackId;
         persistedPage = IndexPage.dashboard;
       } else {
