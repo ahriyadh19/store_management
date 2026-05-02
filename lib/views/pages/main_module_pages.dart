@@ -3,7 +3,7 @@ import 'package:store_management/views/index/index_page.dart';
 import 'package:store_management/views/pages/branches_page.dart';
 import 'package:store_management/views/pages/categories_page.dart';
 import 'package:store_management/views/pages/clients_page.dart';
-import 'package:store_management/views/pages/companies_page.dart';
+import 'package:store_management/views/pages/suppliers_page.dart';
 import 'package:store_management/views/pages/inventory_page.dart';
 import 'package:store_management/views/pages/invoices_page.dart';
 import 'package:store_management/views/pages/payment_vouchers_page.dart';
@@ -41,8 +41,8 @@ Widget buildMainModulePage({
       return PaymentVouchersPage(title: title, description: description, icon: icon, highlights: highlights);
     case IndexPage.clients:
       return ClientsPage(title: title, description: description, icon: icon, highlights: highlights);
-    case IndexPage.companies:
-      return CompaniesPage(title: title, description: description, icon: icon, highlights: highlights);
+    case IndexPage.suppliers:
+      return SuppliersPage(title: title, description: description, icon: icon, highlights: highlights);
     case IndexPage.users:
       return UsersPage(title: title, description: description, icon: icon, highlights: highlights);
     case IndexPage.roles:

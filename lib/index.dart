@@ -118,7 +118,7 @@ List<_DrawerSection> _buildDrawerSections(AppLocalizations l10n) {
       icon: Icons.groups_rounded,
       items: [
         _DrawerItem(page: IndexPage.clients, label: l10n.clients, icon: Icons.support_agent_rounded),
-        _DrawerItem(page: IndexPage.companies, label: l10n.companies, icon: Icons.apartment_rounded),
+        _DrawerItem(page: IndexPage.suppliers, label: l10n.suppliers, icon: Icons.apartment_rounded),
         _DrawerItem(page: IndexPage.users, label: l10n.users, icon: Icons.person_outline_rounded),
         _DrawerItem(page: IndexPage.roles, label: l10n.roles, icon: Icons.admin_panel_settings_rounded),
       ],

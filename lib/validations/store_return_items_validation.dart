@@ -50,9 +50,9 @@ class StoreReturnItemsValidation {
       return invoiceItemUuidError;
     }
 
-    final companyProductUuidError = ValidationUtils.validateRequiredUuid(request, 'companyProductUuid', 'Company product uuid reference must be a valid UUID');
-    if (companyProductUuidError != null) {
-      return companyProductUuidError;
+    final supplierProductUuidError = ValidationUtils.validateRequiredUuid(request, 'supplierProductUuid', 'Supplier product uuid reference must be a valid UUID');
+    if (supplierProductUuidError != null) {
+      return supplierProductUuidError;
     }
 
     final productUuidError = ValidationUtils.validateRequiredUuid(request, 'productUuid', 'Product uuid reference must be a valid UUID');

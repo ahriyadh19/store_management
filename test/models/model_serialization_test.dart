@@ -4,8 +4,8 @@ import 'package:store_management/models/branch.dart';
 import 'package:store_management/models/branch_product.dart';
 import 'package:store_management/models/categories.dart';
 import 'package:store_management/models/client.dart';
-import 'package:store_management/models/company.dart';
-import 'package:store_management/models/company_products.dart';
+import 'package:store_management/models/supplier.dart';
+import 'package:store_management/models/supplier_products.dart';
 import 'package:store_management/models/inventory_movement.dart';
 import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/models/offline_sync_record.dart';
@@ -17,7 +17,7 @@ import 'package:store_management/models/status_info.dart';
 import 'package:store_management/models/store.dart';
 import 'package:store_management/models/store_branches.dart';
 import 'package:store_management/models/store_client.dart';
-import 'package:store_management/models/store_company.dart';
+import 'package:store_management/models/store_supplier.dart';
 import 'package:store_management/models/store_financial_transaction.dart';
 import 'package:store_management/models/store_invoice.dart';
 import 'package:store_management/models/store_invoice_item.dart';
@@ -39,7 +39,7 @@ void main() {
     test('detail models generate uuid automatically', () {
       final invoiceItem = StoreInvoiceItem(
         invoiceUuid: '11111111-1111-4111-8111-111111111111',
-        companyProductUuid: '22222222-2222-4222-8222-222222222222',
+        supplierProductUuid: '22222222-2222-4222-8222-222222222222',
         productUuid: '33333333-3333-4333-8333-333333333333',
         quantity: 2,
         unitPrice: money('20'),
@@ -53,7 +53,7 @@ void main() {
 
       final returnItem = StoreReturnItem(
         returnUuid: '11111111-1111-4111-8111-111111111111',
-        companyProductUuid: '22222222-2222-4222-8222-222222222222',
+        supplierProductUuid: '22222222-2222-4222-8222-222222222222',
         productUuid: '33333333-3333-4333-8333-333333333333',
         quantity: 1,
         unitPrice: money('20'),
@@ -65,7 +65,7 @@ void main() {
       );
 
       final movement = InventoryMovement(
-        companyProductUuid: '22222222-2222-4222-8222-222222222222',
+        supplierProductUuid: '22222222-2222-4222-8222-222222222222',
         productUuid: '33333333-3333-4333-8333-333333333333',
         movementType: InventoryMovementType.sale,
         quantityDelta: -2,
@@ -95,10 +95,10 @@ void main() {
 
   group('model serialization', () {
     test('nullable fields can be explicitly cleared via copyWith', () {
-      final companyProduct = CompanyProducts(
+      final supplierProduct = SupplierProducts(
         id: 1,
-        uuid: 'company-product-uuid',
-        companyUuid: '11111111-1111-4111-8111-111111111111',
+        uuid: 'supplier-product-uuid',
+        supplierUuid: '11111111-1111-4111-8111-111111111111',
         productUuid: '22222222-2222-4222-8222-222222222222',
         price: money('15.50'),
         costPrice: money('10.25'),
@@ -118,7 +118,7 @@ void main() {
         uuid: 'return-item-uuid',
         returnUuid: '11111111-1111-4111-8111-111111111111',
         invoiceItemUuid: '22222222-2222-4222-8222-222222222222',
-        companyProductUuid: '33333333-3333-4333-8333-333333333333',
+        supplierProductUuid: '33333333-3333-4333-8333-333333333333',
         productUuid: '44444444-4444-4444-8444-444444444444',
         quantity: 1,
         unitPrice: money('10'),
@@ -132,7 +132,7 @@ void main() {
       final movement = InventoryMovement(
         id: 1,
         uuid: 'movement-uuid',
-        companyProductUuid: '11111111-1111-4111-8111-111111111111',
+        supplierProductUuid: '11111111-1111-4111-8111-111111111111',
         productUuid: '22222222-2222-4222-8222-222222222222',
         movementType: InventoryMovementType.adjustment,
         quantityDelta: 1,
@@ -150,7 +150,7 @@ void main() {
         id: 1,
         uuid: 'branch-product-uuid',
         branchUuid: '55555555-5555-4555-8555-555555555555',
-        companyProductUuid: '66666666-6666-4666-8666-666666666666',
+        supplierProductUuid: '66666666-6666-4666-8666-666666666666',
         productUuid: '77777777-7777-4777-8777-777777777777',
         stock: 16,
         reservedQuantity: 3,
@@ -161,11 +161,11 @@ void main() {
         updatedAt: updatedAt,
       ).copyWith(reorderLevel: null, lastMovementAt: null);
 
-      expect(companyProduct.costPrice, isNull);
-      expect(companyProduct.sku, isNull);
-      expect(companyProduct.barcode, isNull);
-      expect(companyProduct.reorderLevel, isNull);
-      expect(companyProduct.reorderQuantity, isNull);
+      expect(supplierProduct.costPrice, isNull);
+      expect(supplierProduct.sku, isNull);
+      expect(supplierProduct.barcode, isNull);
+      expect(supplierProduct.reorderLevel, isNull);
+      expect(supplierProduct.reorderQuantity, isNull);
       expect(returnItem.invoiceItemUuid, isNull);
       expect(movement.unitCost, isNull);
       expect(movement.referenceUuid, isNull);
@@ -174,12 +174,12 @@ void main() {
       expect(branchProduct.lastMovementAt, isNull);
     });
 
-    test('Company round-trips through map and json', () {
-      final company = Company(id: 1, uuid: 'company-uuid', name: 'Store Co', description: 'Main supplier', status: 1, createdAt: createdAt, updatedAt: updatedAt);
+    test('Supplier round-trips through map and json', () {
+      final supplier = Supplier(id: 1, uuid: 'supplier-uuid', name: 'Store Co', description: 'Main supplier', status: 1, createdAt: createdAt, updatedAt: updatedAt);
 
-      expect(Company.fromMap(company.toMap()), equals(company));
-      expect(Company.fromJson(company.toJson()), equals(company));
-      expect(company.status, 1);
+      expect(Supplier.fromMap(supplier.toMap()), equals(supplier));
+      expect(Supplier.fromJson(supplier.toJson()), equals(supplier));
+      expect(supplier.status, 1);
     });
 
     test('Product round-trips through map and json', () {
@@ -220,11 +220,11 @@ void main() {
       expect(UserRoles.fromJson(userRole.toJson()), equals(userRole));
     });
 
-    test('CompanyProducts round-trips through map and json', () {
-      final companyProduct = CompanyProducts(
+    test('SupplierProducts round-trips through map and json', () {
+      final supplierProduct = SupplierProducts(
         id: 1,
-        uuid: 'company-product-uuid',
-        companyUuid: '11111111-1111-4111-8111-111111111111',
+        uuid: 'supplier-product-uuid',
+        supplierUuid: '11111111-1111-4111-8111-111111111111',
         productUuid: '22222222-2222-4222-8222-222222222222',
         price: money('15.50'),
         costPrice: money('10.25'),
@@ -239,16 +239,16 @@ void main() {
         updatedAt: updatedAt,
       );
 
-      expect(CompanyProducts.fromMap(companyProduct.toMap()), equals(companyProduct));
-      expect(CompanyProducts.fromJson(companyProduct.toJson()), equals(companyProduct));
-      expect(companyProduct.isLowStock, isFalse);
+      expect(SupplierProducts.fromMap(supplierProduct.toMap()), equals(supplierProduct));
+      expect(SupplierProducts.fromJson(supplierProduct.toJson()), equals(supplierProduct));
+      expect(supplierProduct.isLowStock, isFalse);
     });
 
-    test('CompanyProducts accepts integer price values from raw maps', () {
-      final companyProduct = CompanyProducts.fromMap({
+    test('SupplierProducts accepts integer price values from raw maps', () {
+      final supplierProduct = SupplierProducts.fromMap({
         'id': 1,
         'uuid': 'client-uuid',
-        'companyUuid': '11111111-1111-4111-8111-111111111111',
+        'supplierUuid': '11111111-1111-4111-8111-111111111111',
         'productUuid': '22222222-2222-4222-8222-222222222222',
         'price': 15,
         'description': 'Retail price',
@@ -258,22 +258,22 @@ void main() {
         'updatedAt': updatedAt.millisecondsSinceEpoch,
       });
 
-      expect(companyProduct.price, money('15'));
+      expect(supplierProduct.price, money('15'));
     });
 
-    test('StoreCompany round-trips through map and json', () {
-      final storeCompany = StoreCompany(
+    test('StoreSupplier round-trips through map and json', () {
+      final storeSupplier = StoreSupplier(
         id: 1,
-        uuid: 'store-company-uuid',
+        uuid: 'store-supplier-uuid',
         storeUuid: '11111111-1111-4111-8111-111111111111',
-        companyUuid: '22222222-2222-4222-8222-222222222222',
+        supplierUuid: '22222222-2222-4222-8222-222222222222',
         status: 1,
         createdAt: createdAt,
         updatedAt: updatedAt,
       );
 
-      expect(StoreCompany.fromMap(storeCompany.toMap()), equals(storeCompany));
-      expect(StoreCompany.fromJson(storeCompany.toJson()), equals(storeCompany));
+      expect(StoreSupplier.fromMap(storeSupplier.toMap()), equals(storeSupplier));
+      expect(StoreSupplier.fromJson(storeSupplier.toJson()), equals(storeSupplier));
     });
 
     test('Store and StoreClient round-trip through map and json', () {
@@ -328,7 +328,7 @@ void main() {
         id: 1,
         uuid: 'branch-product-uuid',
         branchUuid: '11111111-1111-4111-8111-111111111111',
-        companyProductUuid: '22222222-2222-4222-8222-222222222222',
+        supplierProductUuid: '22222222-2222-4222-8222-222222222222',
         productUuid: '33333333-3333-4333-8333-333333333333',
         stock: 12,
         reservedQuantity: 2,
@@ -390,7 +390,7 @@ void main() {
         id: 1,
         uuid: 'invoice-item-uuid',
         invoiceUuid: '11111111-1111-4111-8111-111111111111',
-        companyProductUuid: '22222222-2222-4222-8222-222222222222',
+        supplierProductUuid: '22222222-2222-4222-8222-222222222222',
         productUuid: '33333333-3333-4333-8333-333333333333',
         quantity: 2,
         unitPrice: money('20'),
@@ -464,7 +464,7 @@ void main() {
         uuid: 'return-item-uuid',
         returnUuid: '11111111-1111-4111-8111-111111111111',
         invoiceItemUuid: '22222222-2222-4222-8222-222222222222',
-        companyProductUuid: '33333333-3333-4333-8333-333333333333',
+        supplierProductUuid: '33333333-3333-4333-8333-333333333333',
         productUuid: '44444444-4444-4444-8444-444444444444',
         quantity: 1,
         unitPrice: money('20'),
@@ -502,7 +502,7 @@ void main() {
       final movement = InventoryMovement(
         id: 1,
         uuid: 'movement-uuid',
-        companyProductUuid: '22222222-2222-4222-8222-222222222222',
+        supplierProductUuid: '22222222-2222-4222-8222-222222222222',
         productUuid: '33333333-3333-4333-8333-333333333333',
         movementType: InventoryMovementType.transfer,
         inventoryHolderType: InventoryHolderType.branch,
@@ -605,7 +605,7 @@ void main() {
         'id': 1,
         'uuid': 'branch-product-uuid',
         'branch_uuid': '11111111-1111-4111-8111-111111111111',
-        'company_product_uuid': '22222222-2222-4222-8222-222222222222',
+        'supplier_product_uuid': '22222222-2222-4222-8222-222222222222',
         'product_uuid': '33333333-3333-4333-8333-333333333333',
         'stock': 12,
         'reserved_quantity': 2,
@@ -627,7 +627,7 @@ void main() {
       });
 
       expect(branchProduct.branchUuid, '11111111-1111-4111-8111-111111111111');
-      expect(branchProduct.companyProductUuid, '22222222-2222-4222-8222-222222222222');
+      expect(branchProduct.supplierProductUuid, '22222222-2222-4222-8222-222222222222');
       expect(branchProduct.reservedQuantity, 2);
       expect(branchProduct.reorderLevel, 4);
       expect(branchProduct.lastMovementAt, updatedAt);
@@ -640,7 +640,7 @@ void main() {
       final movement = InventoryMovement.fromMap({
         'id': 1,
         'uuid': 'movement-uuid',
-        'company_product_uuid': '11111111-1111-4111-8111-111111111111',
+        'supplier_product_uuid': '11111111-1111-4111-8111-111111111111',
         'product_uuid': '22222222-2222-4222-8222-222222222222',
         'movement_type': 'TRANSFER',
         'inventory_holder_type': 'BRANCH',
@@ -659,7 +659,7 @@ void main() {
         'updated_at': updatedAt.millisecondsSinceEpoch,
       });
 
-      expect(movement.companyProductUuid, '11111111-1111-4111-8111-111111111111');
+      expect(movement.supplierProductUuid, '11111111-1111-4111-8111-111111111111');
       expect(movement.movementType, InventoryMovementType.transfer);
       expect(movement.inventoryHolderType, InventoryHolderType.branch);
       expect(movement.referenceType, InventoryReferenceType.invoiceItem);
@@ -669,9 +669,9 @@ void main() {
     });
 
     test('legacy model maps generate uuid when missing', () {
-      final company = Company.fromMap({'id': 1, 'name': 'Store Co', 'description': 'Main supplier', 'status': 1, 'createdAt': createdAt.millisecondsSinceEpoch, 'updatedAt': updatedAt.millisecondsSinceEpoch});
+      final supplier = Supplier.fromMap({'id': 1, 'name': 'Store Co', 'description': 'Main supplier', 'status': 1, 'createdAt': createdAt.millisecondsSinceEpoch, 'updatedAt': updatedAt.millisecondsSinceEpoch});
 
-      expect(company.uuid, isNotEmpty);
+      expect(supplier.uuid, isNotEmpty);
     });
 
     test('Client accepts integer credit values from raw maps', () {

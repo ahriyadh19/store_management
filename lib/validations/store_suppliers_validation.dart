@@ -2,14 +2,14 @@ import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
 import 'package:store_management/validations/validation_utils.dart';
 
-class StoreCompaniesValidation {
+class StoreSuppliersValidation {
   static Response? validateRead(Request request) {
     final metadataError = ValidationUtils.validateRequestMetadata(request);
     if (metadataError != null) {
       return metadataError;
     }
 
-    return ValidationUtils.validateRequiredInt(request, 'id', 'Store company id is required');
+    return ValidationUtils.validateRequiredInt(request, 'id', 'Store supplier id is required');
   }
 
   static Response? validateCreate(Request request) => _validateCreateOrUpdate(request, requireId: false);
@@ -22,7 +22,7 @@ class StoreCompaniesValidation {
       return metadataError;
     }
 
-    return ValidationUtils.validateRequiredInt(request, 'id', 'Store company id is required');
+    return ValidationUtils.validateRequiredInt(request, 'id', 'Store supplier id is required');
   }
 
   static Response? validateAll(Request request) => ValidationUtils.validateRequestMetadata(request);
@@ -34,7 +34,7 @@ class StoreCompaniesValidation {
     }
 
     if (requireId) {
-      final idError = ValidationUtils.validateRequiredInt(request, 'id', 'Store company id is required');
+      final idError = ValidationUtils.validateRequiredInt(request, 'id', 'Store supplier id is required');
       if (idError != null) {
         return idError;
       }
@@ -45,9 +45,9 @@ class StoreCompaniesValidation {
       return storeUuidError;
     }
 
-    final companyUuidError = ValidationUtils.validateRequiredUuid(request, 'companyUuid', 'Company uuid reference must be a valid UUID');
-    if (companyUuidError != null) {
-      return companyUuidError;
+    final supplierUuidError = ValidationUtils.validateRequiredUuid(request, 'supplierUuid', 'Supplier uuid reference must be a valid UUID');
+    if (supplierUuidError != null) {
+      return supplierUuidError;
     }
 
     return ValidationUtils.validateStatus(request);

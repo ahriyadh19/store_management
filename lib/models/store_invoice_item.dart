@@ -10,7 +10,7 @@ class StoreInvoiceItem {
   int id = 0;
   String uuid;
   String invoiceUuid;
-  String companyProductUuid;
+  String supplierProductUuid;
   String productUuid;
   int quantity;
   Decimal unitPrice;
@@ -28,7 +28,7 @@ class StoreInvoiceItem {
     this.id = 0,
     String? uuid,
     required this.invoiceUuid,
-    required this.companyProductUuid,
+    required this.supplierProductUuid,
     required this.productUuid,
     required this.quantity,
     required this.unitPrice,
@@ -47,7 +47,7 @@ class StoreInvoiceItem {
     int? id,
     String? uuid,
     String? invoiceUuid,
-    String? companyProductUuid,
+    String? supplierProductUuid,
     String? productUuid,
     int? quantity,
     Decimal? unitPrice,
@@ -65,7 +65,7 @@ class StoreInvoiceItem {
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
       invoiceUuid: invoiceUuid ?? this.invoiceUuid,
-      companyProductUuid: companyProductUuid ?? this.companyProductUuid,
+      supplierProductUuid: supplierProductUuid ?? this.supplierProductUuid,
       productUuid: productUuid ?? this.productUuid,
       quantity: quantity ?? this.quantity,
       unitPrice: unitPrice ?? this.unitPrice,
@@ -86,7 +86,7 @@ class StoreInvoiceItem {
       'id': id,
       'uuid': uuid,
       'invoiceUuid': invoiceUuid,
-      'companyProductUuid': companyProductUuid,
+      'supplierProductUuid': supplierProductUuid,
       'productUuid': productUuid,
       'quantity': quantity,
       'unitPrice': unitPrice.toString(),
@@ -107,7 +107,7 @@ class StoreInvoiceItem {
       id: ModelParsing.intOrNull(map['id']) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
       invoiceUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'invoiceUuid'), 'invoiceUuid'),
-      companyProductUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'companyProductUuid'), 'companyProductUuid'),
+      supplierProductUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'supplierProductUuid'), 'supplierProductUuid'),
       productUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'productUuid'), 'productUuid'),
       quantity: ModelParsing.intOrThrow(map['quantity'], 'quantity'),
       unitPrice: ModelParsing.decimalOrThrow(ModelParsing.value(map, 'unitPrice'), 'unitPrice'),
@@ -129,7 +129,7 @@ class StoreInvoiceItem {
 
   @override
   String toString() {
-    return 'StoreInvoiceItem(id: $id, uuid: $uuid, invoiceUuid: $invoiceUuid, companyProductUuid: $companyProductUuid, productUuid: $productUuid, quantity: $quantity, unitPrice: $unitPrice, discountAmount: $discountAmount, taxAmount: $taxAmount, lineTotal: $lineTotal, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
+    return 'StoreInvoiceItem(id: $id, uuid: $uuid, invoiceUuid: $invoiceUuid, supplierProductUuid: $supplierProductUuid, productUuid: $productUuid, quantity: $quantity, unitPrice: $unitPrice, discountAmount: $discountAmount, taxAmount: $taxAmount, lineTotal: $lineTotal, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
   }
 
   @override
@@ -139,7 +139,7 @@ class StoreInvoiceItem {
     return other.id == id &&
         other.uuid == uuid &&
         other.invoiceUuid == invoiceUuid &&
-        other.companyProductUuid == companyProductUuid &&
+        other.supplierProductUuid == supplierProductUuid &&
         other.productUuid == productUuid &&
         other.quantity == quantity &&
         other.unitPrice == unitPrice &&
@@ -159,7 +159,7 @@ class StoreInvoiceItem {
     return id.hashCode ^
         uuid.hashCode ^
         invoiceUuid.hashCode ^
-        companyProductUuid.hashCode ^
+        supplierProductUuid.hashCode ^
         productUuid.hashCode ^
         quantity.hashCode ^
         unitPrice.hashCode ^

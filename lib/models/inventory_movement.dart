@@ -12,7 +12,7 @@ class InventoryMovement {
   @Id()
   int id = 0;
   String uuid;
-  String companyProductUuid;
+  String supplierProductUuid;
   String productUuid;
   InventoryMovementType movementType;
   InventoryHolderType? inventoryHolderType;
@@ -36,7 +36,7 @@ class InventoryMovement {
   InventoryMovement({
     this.id = 0,
     String? uuid,
-    required this.companyProductUuid,
+    required this.supplierProductUuid,
     required this.productUuid,
     required this.movementType,
     this.inventoryHolderType,
@@ -61,7 +61,7 @@ class InventoryMovement {
   InventoryMovement copyWith({
     int? id,
     String? uuid,
-    String? companyProductUuid,
+    String? supplierProductUuid,
     String? productUuid,
     InventoryMovementType? movementType,
     Object? inventoryHolderType = _unset,
@@ -85,7 +85,7 @@ class InventoryMovement {
     return InventoryMovement(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
-      companyProductUuid: companyProductUuid ?? this.companyProductUuid,
+      supplierProductUuid: supplierProductUuid ?? this.supplierProductUuid,
       productUuid: productUuid ?? this.productUuid,
       movementType: movementType ?? this.movementType,
       inventoryHolderType: identical(inventoryHolderType, _unset) ? this.inventoryHolderType : inventoryHolderType as InventoryHolderType?,
@@ -112,7 +112,7 @@ class InventoryMovement {
     return <String, dynamic>{
       'id': id,
       'uuid': uuid,
-      'companyProductUuid': companyProductUuid,
+      'supplierProductUuid': supplierProductUuid,
       'productUuid': productUuid,
       'movementType': movementType.value,
       'inventoryHolderType': inventoryHolderType?.value,
@@ -139,7 +139,7 @@ class InventoryMovement {
     return InventoryMovement(
       id: ModelParsing.intOrNull(map['id']) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
-      companyProductUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'companyProductUuid'), 'companyProductUuid'),
+      supplierProductUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'supplierProductUuid'), 'supplierProductUuid'),
       productUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'productUuid'), 'productUuid'),
       movementType: ModelParsing.inventoryMovementTypeFromValue(ModelParsing.value(map, 'movementType'), 'movementType'),
       inventoryHolderType: ModelParsing.value(map, 'inventoryHolderType') == null ? null : ModelParsing.inventoryHolderTypeFromValue(ModelParsing.value(map, 'inventoryHolderType'), 'inventoryHolderType'),
@@ -168,7 +168,7 @@ class InventoryMovement {
 
   @override
   String toString() {
-    return 'InventoryMovement(id: $id, uuid: $uuid, companyProductUuid: $companyProductUuid, productUuid: $productUuid, movementType: $movementType, inventoryHolderType: $inventoryHolderType, inventoryHolderUuid: $inventoryHolderUuid, quantityDelta: $quantityDelta, balanceAfter: $balanceAfter, unitCost: $unitCost, referenceType: $referenceType, referenceUuid: $referenceUuid, counterpartyHolderType: $counterpartyHolderType, counterpartyHolderUuid: $counterpartyHolderUuid, transactionUuid: $transactionUuid, note: $note, createdByUserUuid: $createdByUserUuid, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
+    return 'InventoryMovement(id: $id, uuid: $uuid, supplierProductUuid: $supplierProductUuid, productUuid: $productUuid, movementType: $movementType, inventoryHolderType: $inventoryHolderType, inventoryHolderUuid: $inventoryHolderUuid, quantityDelta: $quantityDelta, balanceAfter: $balanceAfter, unitCost: $unitCost, referenceType: $referenceType, referenceUuid: $referenceUuid, counterpartyHolderType: $counterpartyHolderType, counterpartyHolderUuid: $counterpartyHolderUuid, transactionUuid: $transactionUuid, note: $note, createdByUserUuid: $createdByUserUuid, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
   }
 
   @override
@@ -177,7 +177,7 @@ class InventoryMovement {
 
     return other.id == id &&
         other.uuid == uuid &&
-        other.companyProductUuid == companyProductUuid &&
+        other.supplierProductUuid == supplierProductUuid &&
         other.productUuid == productUuid &&
         other.movementType == movementType &&
         other.inventoryHolderType == inventoryHolderType &&
@@ -203,7 +203,7 @@ class InventoryMovement {
   int get hashCode {
     return id.hashCode ^
         uuid.hashCode ^
-        companyProductUuid.hashCode ^
+        supplierProductUuid.hashCode ^
         productUuid.hashCode ^
         movementType.hashCode ^
         inventoryHolderType.hashCode ^

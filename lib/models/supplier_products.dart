@@ -5,13 +5,14 @@ import 'package:decimal/decimal.dart';
 import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/objectbox.g.dart';
 import 'package:store_management/services/uuid.dart';
-class CompanyProducts {
+
+class SupplierProducts {
   static const Object _unset = Object();
 
   @Id()
   int id = 0;
   String uuid;
-  String companyUuid;
+  String supplierUuid;
   String productUuid;
   Decimal price;
   Decimal? costPrice;
@@ -28,10 +29,10 @@ class CompanyProducts {
   DateTime? deletedAt;
   DateTime? syncedAt;
 
-  CompanyProducts({
+  SupplierProducts({
     String? uuid,
     this.id = 0,
-    required this.companyUuid,
+    required this.supplierUuid,
     required this.productUuid,
     required this.price,
     this.costPrice,
@@ -49,10 +50,10 @@ class CompanyProducts {
     this.syncedAt,
   }) : uuid = uuid ?? UUIDGenerator.generate();
 
-  CompanyProducts copyWith({
+  SupplierProducts copyWith({
     int? id,
     String? uuid,
-    String? companyUuid,
+    String? supplierUuid,
     String? productUuid,
     Decimal? price,
     Object? costPrice = _unset,
@@ -69,10 +70,10 @@ class CompanyProducts {
     DateTime? deletedAt,
     DateTime? syncedAt,
   }) {
-    return CompanyProducts(
+    return SupplierProducts(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
-      companyUuid: companyUuid ?? this.companyUuid,
+      supplierUuid: supplierUuid ?? this.supplierUuid,
       productUuid: productUuid ?? this.productUuid,
       price: price ?? this.price,
       costPrice: identical(costPrice, _unset) ? this.costPrice : costPrice as Decimal?,
@@ -97,7 +98,7 @@ class CompanyProducts {
     return <String, dynamic>{
       'id': id,
       'uuid': uuid,
-      'companyUuid': companyUuid,
+      'supplierUuid': supplierUuid,
       'productUuid': productUuid,
       'price': price.toString(),
       'costPrice': costPrice?.toString(),
@@ -116,11 +117,11 @@ class CompanyProducts {
     };
   }
 
-  factory CompanyProducts.fromMap(Map<String, dynamic> map) {
-    return CompanyProducts(
+  factory SupplierProducts.fromMap(Map<String, dynamic> map) {
+    return SupplierProducts(
       id: ModelParsing.intOrNull(map['id']) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
-      companyUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'companyUuid'), 'companyUuid'),
+      supplierUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'supplierUuid'), 'supplierUuid'),
       productUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'productUuid'), 'productUuid'),
       price: ModelParsing.decimalOrThrow(map['price'], 'price'),
       costPrice: ModelParsing.decimalOrNull(ModelParsing.value(map, 'costPrice')),
@@ -141,27 +142,26 @@ class CompanyProducts {
 
   String toJson() => json.encode(toMap());
 
-  factory CompanyProducts.fromJson(String source) => CompanyProducts.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory SupplierProducts.fromJson(String source) => SupplierProducts.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
-    return 'CompanyProducts(id: $id, uuid: $uuid, companyUuid: $companyUuid, productUuid: $productUuid, price: $price, costPrice: $costPrice, description: $description, sku: $sku, barcode: $barcode, stock: $stock, reorderLevel: $reorderLevel, reorderQuantity: $reorderQuantity, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
+    return 'SupplierProducts(id: $id, uuid: $uuid, supplierUuid: $supplierUuid, productUuid: $productUuid, price: $price, costPrice: $costPrice, description: $description, sku: $sku, barcode: $barcode, stock: $stock, reorderLevel: $reorderLevel, reorderQuantity: $reorderQuantity, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
   }
 
   @override
-  bool operator ==(covariant CompanyProducts other) {
+  bool operator ==(covariant SupplierProducts other) {
     if (identical(this, other)) return true;
 
     return other.id == id &&
         other.uuid == uuid &&
-        other.companyUuid == companyUuid &&
+        other.supplierUuid == supplierUuid &&
         other.productUuid == productUuid &&
         other.price == price &&
         other.costPrice == costPrice &&
         other.description == description &&
         other.sku == sku &&
         other.barcode == barcode &&
-        other.stock == stock &&
         other.reorderLevel == reorderLevel &&
         other.reorderQuantity == reorderQuantity &&
         other.status == status &&
@@ -176,7 +176,7 @@ class CompanyProducts {
   int get hashCode {
     return id.hashCode ^
         uuid.hashCode ^
-        companyUuid.hashCode ^
+        supplierUuid.hashCode ^
         productUuid.hashCode ^
         price.hashCode ^
         costPrice.hashCode ^

@@ -86,16 +86,16 @@ void main() {
     };
   }
 
-  Map<String, dynamic> buildStoreCompanyData({
+  Map<String, dynamic> buildStoreSupplierData({
     int id = 4,
     String storeUuid = '11111111-1111-4111-8111-111111111111',
-    String companyUuid = '33333333-3333-4333-8333-333333333333',
+    String supplierUuid = '33333333-3333-4333-8333-333333333333',
     int status = 1,
   }) {
     return {
       'id': id,
       'storeUuid': storeUuid,
-      'companyUuid': companyUuid,
+      'supplierUuid': supplierUuid,
       'status': status,
     };
   }
@@ -225,7 +225,7 @@ void main() {
   Map<String, dynamic> buildStoreInvoiceItemData({
     int id = 7,
     String invoiceUuid = '77777777-7777-4777-8777-777777777777',
-    String companyProductUuid = '88888888-8888-4888-8888-888888888888',
+    String supplierProductUuid = '88888888-8888-4888-8888-888888888888',
     String productUuid = '99999999-9999-4999-8999-999999999999',
     int quantity = 3,
     num unitPrice = 40,
@@ -237,7 +237,7 @@ void main() {
     return {
       'id': id,
       'invoiceUuid': invoiceUuid,
-      'companyProductUuid': companyProductUuid,
+      'supplierProductUuid': supplierProductUuid,
       'productUuid': productUuid,
       'quantity': quantity,
       'unitPrice': unitPrice,
@@ -252,7 +252,7 @@ void main() {
     int id = 8,
     String returnUuid = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
     String? invoiceItemUuid,
-    String companyProductUuid = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    String supplierProductUuid = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
     String productUuid = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
     int quantity = 2,
     num unitPrice = 40,
@@ -264,7 +264,7 @@ void main() {
       'id': id,
       'returnUuid': returnUuid,
       'invoiceItemUuid': invoiceItemUuid,
-      'companyProductUuid': companyProductUuid,
+      'supplierProductUuid': supplierProductUuid,
       'productUuid': productUuid,
       'quantity': quantity,
       'unitPrice': unitPrice,
@@ -276,7 +276,7 @@ void main() {
 
   Map<String, dynamic> buildInventoryMovementData({
     int id = 9,
-    String companyProductUuid = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+    String supplierProductUuid = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
     String productUuid = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
     String movementType = 'sale',
     String? inventoryHolderType,
@@ -294,7 +294,7 @@ void main() {
   }) {
     return {
       'id': id,
-      'companyProductUuid': companyProductUuid,
+      'supplierProductUuid': supplierProductUuid,
       'productUuid': productUuid,
       'movementType': movementType,
       'inventoryHolderType': inventoryHolderType,
@@ -384,25 +384,25 @@ void main() {
       expect(allAfterDelete.data, isEmpty);
     });
 
-    test('store companies controller creates and lists store companies', () {
-      final controller = StoreCompaniesController();
+    test('store suppliers controller creates and lists store suppliers', () {
+      final controller = StoreSuppliersController();
 
-      final createResponse = controller.create(request: buildRequest(data: buildStoreCompanyData()));
+      final createResponse = controller.create(request: buildRequest(data: buildStoreSupplierData()));
       final allResponse = controller.all(request: buildRequest());
 
       expect(createResponse.statusCode, 201);
-      expect(createResponse.data?.companyUuid, '33333333-3333-4333-8333-333333333333');
+      expect(createResponse.data?.supplierUuid, '33333333-3333-4333-8333-333333333333');
       expect(allResponse.statusCode, 200);
       expect(allResponse.data, hasLength(1));
     });
 
-    test('store companies controller returns not found when missing record', () {
-      final controller = StoreCompaniesController();
+    test('store suppliers controller returns not found when missing record', () {
+      final controller = StoreSuppliersController();
 
       final response = controller.read(request: buildRequest(data: {'id': 4}));
 
       expect(response.statusCode, 404);
-      expect(response.message, 'Store company was not found');
+      expect(response.message, 'Store supplier was not found');
     });
 
     test('store users controller creates and lists store users', () {

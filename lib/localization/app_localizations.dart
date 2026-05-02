@@ -50,13 +50,13 @@ class AppLocalizations {
     'products': 'Products',
     'customers': 'Customers',
     'clients': 'Clients',
-    'companies': 'Companies',
+    'suppliers': 'Suppliers',
     'stores': 'Stores',
     'branches': 'Branches',
     'storeBranches': 'Store branches',
     'categories': 'Categories',
     'tags': 'Tags',
-    'companyProducts': 'Company products',
+    'supplierProducts': 'Supplier products',
     'invoices': 'Invoices',
     'invoiceItems': 'Invoice items',
     'returns': 'Returns',
@@ -67,7 +67,7 @@ class AppLocalizations {
     'storeUsers': 'Store users',
     'roles': 'Roles',
     'userRoles': 'User roles',
-    'storeCompanies': 'Store companies',
+    'storeSuppliers': 'Store suppliers',
     'inventory': 'Inventory',
     'transactions': 'Transactions',
     'overview': 'Overview',
@@ -87,7 +87,7 @@ class AppLocalizations {
     'connectedWorkspace': 'Your workspace now surfaces the full product, sales, people, and operations stack from one compact control center.',
     'signedInAs': 'Signed in as',
     'readyToManage': 'Ready to manage',
-    'catalogSummary': 'Keep products, categories, tags, and company-specific inventory organized from one place.',
+    'catalogSummary': 'Keep products, categories, tags, and supplier-specific inventory organized from one place.',
     'salesSummary': 'Track invoices, returns, and payment workflows without digging through separate screens.',
     'peopleSummary': 'Manage customers, clients, users, and role assignments as one connected team layer.',
     'operationsSummary': 'Monitor stock movement, financial activity, stores, and reporting from the same dashboard.',
@@ -227,13 +227,13 @@ class AppLocalizations {
     'products': 'المنتجات',
     'customers': 'العملاء',
     'clients': 'العملاء المحتملون',
-    'companies': 'الشركات',
+    'suppliers': 'الموردون',
     'stores': 'المتاجر',
     'branches': 'الفروع',
     'storeBranches': 'فروع المتاجر',
     'categories': 'الفئات',
     'tags': 'الوسوم',
-    'companyProducts': 'منتجات الشركة',
+    'supplierProducts': 'منتجات المورد',
     'invoices': 'الفواتير',
     'invoiceItems': 'عناصر الفاتورة',
     'returns': 'المرتجعات',
@@ -244,7 +244,7 @@ class AppLocalizations {
     'storeUsers': 'مستخدمو المتجر',
     'roles': 'الأدوار',
     'userRoles': 'أدوار المستخدمين',
-    'storeCompanies': 'شركات المتجر',
+    'storeSuppliers': 'موردو المتجر',
     'inventory': 'المخزون',
     'transactions': 'المعاملات',
     'overview': 'نظرة عامة',
@@ -421,13 +421,13 @@ class AppLocalizations {
   String get products => _text('products');
   String get customers => _text('customers');
   String get clients => _text('clients');
-  String get companies => _text('companies');
+  String get suppliers => _text('suppliers');
   String get stores => _text('stores');
   String get branches => _text('branches');
   String get storeBranches => _text('storeBranches');
   String get categories => _text('categories');
   String get tags => _text('tags');
-  String get companyProducts => _text('companyProducts');
+  String get supplierProducts => _text('supplierProducts');
   String get invoices => _text('invoices');
   String get invoiceItems => _text('invoiceItems');
   String get returns => _text('returns');
@@ -438,7 +438,7 @@ class AppLocalizations {
   String get storeUsers => _text('storeUsers');
   String get roles => _text('roles');
   String get userRoles => _text('userRoles');
-  String get storeCompanies => _text('storeCompanies');
+  String get storeSuppliers => _text('storeSuppliers');
   String get inventory => _text('inventory');
   String get transactions => _text('transactions');
   String get overview => _text('overview');

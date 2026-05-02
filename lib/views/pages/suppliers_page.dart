@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:store_management/localization/app_localizations.dart';
-import 'package:store_management/models/company.dart';
+import 'package:store_management/models/supplier.dart';
 import 'package:store_management/views/pages/model_crud_page.dart';
 import 'package:store_management/views/pages/model_module_pages.dart';
 
-class CompaniesPage extends StatelessWidget {
-  const CompaniesPage({
+class SuppliersPage extends StatelessWidget {
+  const SuppliersPage({
     super.key,
     required this.title,
     required this.description,
@@ -21,13 +21,13 @@ class CompaniesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return ModelCrudPage<Company>(
+    return ModelCrudPage<Supplier>(
       title: title,
-      entityLabel: companyEntityLabel(l10n),
+      entityLabel: supplierEntityLabel(l10n),
       description: description,
       icon: icon,
       highlights: highlights,
-      formDefinition: companyFormDefinition(l10n),
+      formDefinition: supplierFormDefinition(l10n),
     );
   }
 }

@@ -22,14 +22,14 @@ Primary operational modules:
 
 - stores and branches
 - products, categories, and tags
-- clients and companies
+- clients and suppliers
 - users and roles
 - invoices, payment vouchers, returns, inventory movements, and financial transactions
 
 Supporting records:
 
-- relation records such as `store_branches`, `store_clients`, `store_companies`, `store_users`, and `user_roles`
-- association records such as `company_products` and `products_tags`
+- relation records such as `store_branches`, `store_clients`, `store_suppliers`, `store_users`, and `user_roles`
+- association records such as `supplier_products` and `products_tags`
 - detail records such as `store_invoice_items`, `store_return_items`, and `payment_allocations`
 
 The dashboard should expose only primary modules. Supporting records remain important in the data model and controller layer, but they are intentionally not top-level navigation destinations because they depend on parent entities.
@@ -217,7 +217,7 @@ Run focused tests:
 
 ```bash
 flutter test test/models/model_serialization_test.dart
-flutter test test/controllers/company_products_controller_test.dart
+flutter test test/controllers/supplier_products_controller_test.dart
 flutter test test/controllers/store_invoices_controller_test.dart
 ```
 

@@ -13,7 +13,7 @@ class StoreReturnItem {
   String uuid;
   String returnUuid;
   String? invoiceItemUuid;
-  String companyProductUuid;
+  String supplierProductUuid;
   String productUuid;
   int quantity;
   Decimal unitPrice;
@@ -31,7 +31,7 @@ class StoreReturnItem {
     String? uuid,
     required this.returnUuid,
     this.invoiceItemUuid,
-    required this.companyProductUuid,
+    required this.supplierProductUuid,
     required this.productUuid,
     required this.quantity,
     required this.unitPrice,
@@ -50,7 +50,7 @@ class StoreReturnItem {
     String? uuid,
     String? returnUuid,
     Object? invoiceItemUuid = _unset,
-    String? companyProductUuid,
+    String? supplierProductUuid,
     String? productUuid,
     int? quantity,
     Decimal? unitPrice,
@@ -68,7 +68,7 @@ class StoreReturnItem {
       uuid: uuid ?? this.uuid,
       returnUuid: returnUuid ?? this.returnUuid,
       invoiceItemUuid: identical(invoiceItemUuid, _unset) ? this.invoiceItemUuid : invoiceItemUuid as String?,
-      companyProductUuid: companyProductUuid ?? this.companyProductUuid,
+      supplierProductUuid: supplierProductUuid ?? this.supplierProductUuid,
       productUuid: productUuid ?? this.productUuid,
       quantity: quantity ?? this.quantity,
       unitPrice: unitPrice ?? this.unitPrice,
@@ -89,7 +89,7 @@ class StoreReturnItem {
       'uuid': uuid,
       'returnUuid': returnUuid,
       'invoiceItemUuid': invoiceItemUuid,
-      'companyProductUuid': companyProductUuid,
+      'supplierProductUuid': supplierProductUuid,
       'productUuid': productUuid,
       'quantity': quantity,
       'unitPrice': unitPrice.toString(),
@@ -110,7 +110,7 @@ class StoreReturnItem {
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
       returnUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'returnUuid'), 'returnUuid'),
       invoiceItemUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'invoiceItemUuid')),
-      companyProductUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'companyProductUuid'), 'companyProductUuid'),
+      supplierProductUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'supplierProductUuid'), 'supplierProductUuid'),
       productUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'productUuid'), 'productUuid'),
       quantity: ModelParsing.intOrThrow(map['quantity'], 'quantity'),
       unitPrice: ModelParsing.decimalOrThrow(ModelParsing.value(map, 'unitPrice'), 'unitPrice'),
@@ -131,7 +131,7 @@ class StoreReturnItem {
 
   @override
   String toString() {
-    return 'StoreReturnItem(id: $id, uuid: $uuid, returnUuid: $returnUuid, invoiceItemUuid: $invoiceItemUuid, companyProductUuid: $companyProductUuid, productUuid: $productUuid, quantity: $quantity, unitPrice: $unitPrice, lineTotal: $lineTotal, reason: $reason, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
+    return 'StoreReturnItem(id: $id, uuid: $uuid, returnUuid: $returnUuid, invoiceItemUuid: $invoiceItemUuid, supplierProductUuid: $supplierProductUuid, productUuid: $productUuid, quantity: $quantity, unitPrice: $unitPrice, lineTotal: $lineTotal, reason: $reason, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
   }
 
   @override
@@ -142,7 +142,7 @@ class StoreReturnItem {
         other.uuid == uuid &&
         other.returnUuid == returnUuid &&
         other.invoiceItemUuid == invoiceItemUuid &&
-        other.companyProductUuid == companyProductUuid &&
+        other.supplierProductUuid == supplierProductUuid &&
         other.productUuid == productUuid &&
         other.quantity == quantity &&
         other.unitPrice == unitPrice &&
@@ -162,7 +162,7 @@ class StoreReturnItem {
         uuid.hashCode ^
         returnUuid.hashCode ^
         invoiceItemUuid.hashCode ^
-        companyProductUuid.hashCode ^
+        supplierProductUuid.hashCode ^
         productUuid.hashCode ^
         quantity.hashCode ^
         unitPrice.hashCode ^

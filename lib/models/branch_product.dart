@@ -12,7 +12,7 @@ class BranchProduct {
 	int id = 0;
 	String uuid;
 	String branchUuid;
-	String companyProductUuid;
+	String supplierProductUuid;
 	String productUuid;
 	int stock;
 	int reservedQuantity;
@@ -29,7 +29,7 @@ class BranchProduct {
 		this.id = 0,
 		String? uuid,
 		required this.branchUuid,
-		required this.companyProductUuid,
+		required this.supplierProductUuid,
 		required this.productUuid,
 		required this.stock,
 		this.reservedQuantity = 0,
@@ -47,7 +47,7 @@ class BranchProduct {
 		int? id,
 		String? uuid,
 		String? branchUuid,
-		String? companyProductUuid,
+		String? supplierProductUuid,
 		String? productUuid,
 		int? stock,
 		int? reservedQuantity,
@@ -64,7 +64,7 @@ class BranchProduct {
 			id: id ?? this.id,
 			uuid: uuid ?? this.uuid,
 			branchUuid: branchUuid ?? this.branchUuid,
-			companyProductUuid: companyProductUuid ?? this.companyProductUuid,
+			supplierProductUuid: supplierProductUuid ?? this.supplierProductUuid,
 			productUuid: productUuid ?? this.productUuid,
 			stock: stock ?? this.stock,
 			reservedQuantity: reservedQuantity ?? this.reservedQuantity,
@@ -88,7 +88,7 @@ class BranchProduct {
 			'id': id,
 			'uuid': uuid,
 			'branchUuid': branchUuid,
-			'companyProductUuid': companyProductUuid,
+			'supplierProductUuid': supplierProductUuid,
 			'productUuid': productUuid,
 			'stock': stock,
 			'reservedQuantity': reservedQuantity,
@@ -108,7 +108,7 @@ class BranchProduct {
 			id: ModelParsing.intOrNull(map['id']) ?? 0,
 			uuid: ModelParsing.uuidOrGenerate(map['uuid']),
       branchUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'branchUuid'), 'branchUuid'),
-      companyProductUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'companyProductUuid'), 'companyProductUuid'),
+      supplierProductUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'supplierProductUuid'), 'supplierProductUuid'),
       productUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'productUuid'), 'productUuid'),
 			stock: ModelParsing.intOrThrow(map['stock'], 'stock'),
       reservedQuantity: ModelParsing.intOrNull(ModelParsing.value(map, 'reservedQuantity')) ?? 0,
@@ -129,7 +129,7 @@ class BranchProduct {
 
 	@override
 	String toString() {
-		return 'BranchProduct(id: $id, uuid: $uuid, branchUuid: $branchUuid, companyProductUuid: $companyProductUuid, productUuid: $productUuid, stock: $stock, reservedQuantity: $reservedQuantity, reorderLevel: $reorderLevel, lastMovementAt: $lastMovementAt, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
+		return 'BranchProduct(id: $id, uuid: $uuid, branchUuid: $branchUuid, supplierProductUuid: $supplierProductUuid, productUuid: $productUuid, stock: $stock, reservedQuantity: $reservedQuantity, reorderLevel: $reorderLevel, lastMovementAt: $lastMovementAt, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
 	}
 
 	@override
@@ -139,7 +139,7 @@ class BranchProduct {
 		return other.id == id &&
 				other.uuid == uuid &&
 				other.branchUuid == branchUuid &&
-				other.companyProductUuid == companyProductUuid &&
+				other.supplierProductUuid == supplierProductUuid &&
 				other.productUuid == productUuid &&
 				other.stock == stock &&
 				other.reservedQuantity == reservedQuantity &&
@@ -158,7 +158,7 @@ class BranchProduct {
 		return id.hashCode ^
 				uuid.hashCode ^
 				branchUuid.hashCode ^
-				companyProductUuid.hashCode ^
+				supplierProductUuid.hashCode ^
 				productUuid.hashCode ^
 				stock.hashCode ^
 				reservedQuantity.hashCode ^

@@ -4,12 +4,13 @@ import 'dart:convert';
 import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/objectbox.g.dart';
 import 'package:store_management/services/uuid.dart';
-class StoreCompany {
+
+class StoreSupplier {
   @Id()
   int id = 0;
   String uuid;
   String storeUuid;
-  String companyUuid;
+  String supplierUuid;
   int status;
   DateTime createdAt;
   DateTime updatedAt;
@@ -17,23 +18,25 @@ class StoreCompany {
   DateTime? deletedAt;
   DateTime? syncedAt;
 
-  StoreCompany({
+  StoreSupplier({
     this.id = 0,
     String? uuid,
     required this.storeUuid,
-    required this.companyUuid,
+    required this.supplierUuid,
     required this.status,
     required this.createdAt,
     required this.updatedAt,
-    this.synced = false, this.deletedAt, this.syncedAt,
+    this.synced = false,
+    this.deletedAt,
+    this.syncedAt,
   }) : uuid = uuid ?? UUIDGenerator.generate();
 
-  StoreCompany copyWith({int? id, String? uuid, String? storeUuid, String? companyUuid, int? status, DateTime? createdAt, DateTime? updatedAt, bool? synced, DateTime? deletedAt, DateTime? syncedAt}) {
-    return StoreCompany(
+  StoreSupplier copyWith({int? id, String? uuid, String? storeUuid, String? supplierUuid, int? status, DateTime? createdAt, DateTime? updatedAt, bool? synced, DateTime? deletedAt, DateTime? syncedAt}) {
+    return StoreSupplier(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
       storeUuid: storeUuid ?? this.storeUuid,
-      companyUuid: companyUuid ?? this.companyUuid,
+      supplierUuid: supplierUuid ?? this.supplierUuid,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -48,7 +51,7 @@ class StoreCompany {
       'id': id,
       'uuid': uuid,
       'storeUuid': storeUuid,
-      'companyUuid': companyUuid,
+      'supplierUuid': supplierUuid,
       'status': status,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
@@ -58,12 +61,12 @@ class StoreCompany {
     };
   }
 
-  factory StoreCompany.fromMap(Map<String, dynamic> map) {
-    return StoreCompany(
+  factory StoreSupplier.fromMap(Map<String, dynamic> map) {
+    return StoreSupplier(
       id: ModelParsing.intOrNull(map['id']) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
       storeUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'storeUuid'), 'storeUuid'),
-      companyUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'companyUuid'), 'companyUuid'),
+      supplierUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'supplierUuid'), 'supplierUuid'),
       status: ModelParsing.intOrThrow(map['status'], 'status'),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'] ?? map['created_at'], 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'] ?? map['updated_at'], 'updatedAt'),
@@ -75,21 +78,21 @@ class StoreCompany {
 
   String toJson() => json.encode(toMap());
 
-  factory StoreCompany.fromJson(String source) => StoreCompany.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory StoreSupplier.fromJson(String source) => StoreSupplier.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
-    return 'StoreCompany(id: $id, uuid: $uuid, storeUuid: $storeUuid, companyUuid: $companyUuid, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
+    return 'StoreSupplier(id: $id, uuid: $uuid, storeUuid: $storeUuid, supplierUuid: $supplierUuid, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
   }
 
   @override
-  bool operator ==(covariant StoreCompany other) {
+  bool operator ==(covariant StoreSupplier other) {
     if (identical(this, other)) return true;
 
     return other.id == id &&
         other.uuid == uuid &&
         other.storeUuid == storeUuid &&
-        other.companyUuid == companyUuid &&
+        other.supplierUuid == supplierUuid &&
         other.status == status &&
         other.createdAt == createdAt &&
         other.updatedAt == updatedAt &&
@@ -100,9 +103,6 @@ class StoreCompany {
 
   @override
   int get hashCode {
-    return id.hashCode ^ uuid.hashCode ^ storeUuid.hashCode ^ companyUuid.hashCode ^ status.hashCode ^ createdAt.hashCode ^ updatedAt.hashCode ^
-        synced.hashCode ^
-        deletedAt.hashCode ^
-        syncedAt.hashCode;
+    return id.hashCode ^ uuid.hashCode ^ storeUuid.hashCode ^ supplierUuid.hashCode ^ status.hashCode ^ createdAt.hashCode ^ updatedAt.hashCode ^ synced.hashCode ^ deletedAt.hashCode ^ syncedAt.hashCode;
   }
 }

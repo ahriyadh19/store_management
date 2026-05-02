@@ -86,12 +86,12 @@ Map<IndexPage, IndexPageDefinition> buildIndexPageDefinitions(BuildContext conte
       description: _t(l10n, 'Maintain client profiles used across invoicing, reporting, and communication.', 'حافظ على ملفات العملاء المستخدمة عبر الفوترة والتقارير والتواصل.'),
       highlights: _list(l10n, ['Client table', 'Credit info', 'Activity history'], ['جدول العملاء', 'معلومات الائتمان', 'سجل النشاط']),
     ),
-    IndexPage.companies: _modulePage(
-      page: IndexPage.companies,
-      title: l10n.companies,
+    IndexPage.suppliers: _modulePage(
+      page: IndexPage.suppliers,
+      title: l10n.suppliers,
       icon: Icons.apartment_rounded,
-      description: _t(l10n, 'Store company records and connect them to products, branches, and operations.', 'احفظ سجلات الشركات واربطها بالمنتجات والفروع والعمليات.'),
-      highlights: _list(l10n, ['Company list', 'Contacts', 'Relationships'], ['قائمة الشركات', 'جهات الاتصال', 'العلاقات']),
+      description: _t(l10n, 'Store supplier records and connect them to products, branches, and operations.', 'احفظ سجلات الموردين واربطها بالمنتجات والفروع والعمليات.'),
+      highlights: _list(l10n, ['Supplier list', 'Contacts', 'Relationships'], ['قائمة الموردين', 'جهات الاتصال', 'العلاقات']),
     ),
     IndexPage.users: _modulePage(
       page: IndexPage.users,

@@ -5,7 +5,7 @@ import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/objectbox.g.dart';
 import 'package:store_management/services/uuid.dart';
 
-class Company {
+class Supplier {
   @Id()
   int id = 0;
   String uuid;
@@ -18,11 +18,11 @@ class Company {
   DateTime? deletedAt;
   DateTime? syncedAt;
 
-  Company({this.id = 0, String? uuid, required this.name, required this.description, required this.status, required this.createdAt, required this.updatedAt, this.synced = false, this.deletedAt, this.syncedAt})
+  Supplier({this.id = 0, String? uuid, required this.name, required this.description, required this.status, required this.createdAt, required this.updatedAt, this.synced = false, this.deletedAt, this.syncedAt})
     : uuid = uuid ?? UUIDGenerator.generate();
 
-  Company copyWith({int? id, String? uuid, String? name, String? description, int? status, DateTime? createdAt, DateTime? updatedAt, bool? synced, DateTime? deletedAt, DateTime? syncedAt}) {
-    return Company(
+  Supplier copyWith({int? id, String? uuid, String? name, String? description, int? status, DateTime? createdAt, DateTime? updatedAt, bool? synced, DateTime? deletedAt, DateTime? syncedAt}) {
+    return Supplier(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
       name: name ?? this.name,
@@ -51,8 +51,8 @@ class Company {
     };
   }
 
-  factory Company.fromMap(Map<String, dynamic> map) {
-    return Company(
+  factory Supplier.fromMap(Map<String, dynamic> map) {
+    return Supplier(
       id: ModelParsing.intOrNull(map['id']) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(map['uuid']),
       name: ModelParsing.stringOrThrow(map['name'], 'name'),
@@ -68,15 +68,15 @@ class Company {
 
   String toJson() => json.encode(toMap());
 
-  factory Company.fromJson(String source) => Company.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory Supplier.fromJson(String source) => Supplier.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
-    return 'Company(id: $id, uuid: $uuid, name: $name, description: $description, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
+    return 'Supplier(id: $id, uuid: $uuid, name: $name, description: $description, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
   }
 
   @override
-  bool operator ==(covariant Company other) {
+  bool operator ==(covariant Supplier other) {
     if (identical(this, other)) return true;
 
     return other.id == id &&

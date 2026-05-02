@@ -29,12 +29,12 @@ void main() {
     expect(find.text('Menu'), findsWidgets);
     expect(find.text('Products'), findsOneWidget);
     expect(find.text('Store branches'), findsNothing);
-    expect(find.text('Company products'), findsNothing);
+    expect(find.text('Supplier products'), findsNothing);
     expect(find.text('Invoice items'), findsNothing);
     expect(find.text('Return items'), findsNothing);
     expect(find.text('Payment allocations'), findsNothing);
     expect(find.text('Customers'), findsNothing);
-    expect(find.text('Store companies'), findsNothing);
+    expect(find.text('Store suppliers'), findsNothing);
     expect(find.text('Store users'), findsNothing);
     expect(find.text('User roles'), findsNothing);
   });

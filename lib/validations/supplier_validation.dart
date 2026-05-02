@@ -2,14 +2,13 @@ import 'package:store_management/services/request.dart';
 import 'package:store_management/services/response.dart';
 import 'package:store_management/validations/validation_utils.dart';
 
-class CompanyValidation {
+class SupplierValidation {
   static Response? validateRead(Request request) {
     final metadataError = ValidationUtils.validateRequestMetadata(request);
     if (metadataError != null) {
       return metadataError;
     }
-
-    return ValidationUtils.validateRequiredInt(request, 'id', 'Company id is required');
+    return ValidationUtils.validateRequiredInt(request, 'id', 'Supplier id is required');
   }
 
   static Response? validateCreate(Request request) {
@@ -25,8 +24,7 @@ class CompanyValidation {
     if (metadataError != null) {
       return metadataError;
     }
-
-    return ValidationUtils.validateRequiredInt(request, 'id', 'Company id is required');
+    return ValidationUtils.validateRequiredInt(request, 'id', 'Supplier id is required');
   }
 
   static Response? validateAll(Request request) {
@@ -38,24 +36,20 @@ class CompanyValidation {
     if (metadataError != null) {
       return metadataError;
     }
-
     if (requireId) {
-      final idError = ValidationUtils.validateRequiredInt(request, 'id', 'Company id is required');
+      final idError = ValidationUtils.validateRequiredInt(request, 'id', 'Supplier id is required');
       if (idError != null) {
         return idError;
       }
     }
-
-    final nameError = ValidationUtils.validateRequiredString(request, 'name', 'Company name is required');
+    final nameError = ValidationUtils.validateRequiredString(request, 'name', 'Supplier name is required');
     if (nameError != null) {
       return nameError;
     }
-
-    final descriptionError = ValidationUtils.validateRequiredString(request, 'description', 'Company description is required');
+    final descriptionError = ValidationUtils.validateRequiredString(request, 'description', 'Supplier description is required');
     if (descriptionError != null) {
       return descriptionError;
     }
-
     return ValidationUtils.validateStatus(request);
   }
 }

@@ -52,7 +52,7 @@ synced boolean not null default false,
 comment on table public.users is 'Application user profiles linked to Supabase auth.users. Passwords stay in Supabase Auth and are not stored here.';
 comment on column public.users.auth_user_id is 'Reference to auth.users.id for authenticated users.';
 
-create table if not exists public.company (
+create table if not exists public.supplier (
     id bigint generated always as identity primary key,
     uuid uuid not null default gen_random_uuid() unique,
     name text not null,
@@ -154,10 +154,10 @@ synced boolean not null default false,
 "syncedAt" bigint
 );
 
-create table if not exists public.company_products (
+create table if not exists public.supplier_products (
     id bigint generated always as identity primary key,
     uuid uuid not null default gen_random_uuid() unique,
-    "companyUuid" uuid not null references public.company (uuid) on delete cascade,
+    "supplierUuid" uuid not null references public.supplier (uuid) on delete cascade,
     "productUuid" uuid not null references public.products (uuid) on delete cascade,
     price numeric(12, 2) not null check (price >= 0),
     "costPrice" numeric(12, 2) check ("costPrice" >= 0),
@@ -170,7 +170,7 @@ create table if not exists public.company_products (
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-constraint company_products_company_product_unique unique ("companyUuid", "productUuid"),
+constraint supplier_products_supplier_product_unique unique ("supplierUuid", "productUuid"),
 synced boolean not null default false,
 "deletedAt" bigint,
 "syncedAt" bigint
@@ -204,15 +204,15 @@ synced boolean not null default false,
 "syncedAt" bigint
 );
 
-create table if not exists public.store_company (
+create table if not exists public.store_supplier (
     id bigint generated always as identity primary key,
     uuid uuid not null default gen_random_uuid() unique,
     "storeUuid" uuid not null references public.store (uuid) on delete cascade,
-    "companyUuid" uuid not null references public.company (uuid) on delete cascade,
+    "supplierUuid" uuid not null references public.supplier (uuid) on delete cascade,
     status integer not null default 1 check (status in (0, 1)),
     "createdAt" bigint not null default public.now_millis(),
     "updatedAt" bigint not null default public.now_millis(),
-constraint store_company_store_company_unique unique ("storeUuid", "companyUuid"),
+constraint store_supplier_store_supplier_unique unique ("storeUuid", "supplierUuid"),
 synced boolean not null default false,
 "deletedAt" bigint,
 "syncedAt" bigint
@@ -348,7 +348,7 @@ create table if not exists public.store_invoice_item (
     id bigint generated always as identity primary key,
     uuid uuid not null default gen_random_uuid() unique,
     "invoiceUuid" uuid not null references public.store_invoice (uuid) on delete cascade,
-    "companyProductUuid" uuid not null references public.company_products (uuid) on delete restrict,
+    "supplierProductUuid" uuid not null references public.supplier_products (uuid) on delete restrict,
     "productUuid" uuid not null references public.products (uuid) on delete restrict,
     quantity integer not null check (quantity > 0),
     "unitPrice" numeric(12, 2) not null check ("unitPrice" >= 0),
@@ -368,7 +368,7 @@ create table if not exists public.store_return_item (
     uuid uuid not null default gen_random_uuid() unique,
     "returnUuid" uuid not null references public.store_return (uuid) on delete cascade,
     "invoiceItemUuid" uuid references public.store_invoice_item (uuid) on delete set null,
-    "companyProductUuid" uuid not null references public.company_products (uuid) on delete restrict,
+    "supplierProductUuid" uuid not null references public.supplier_products (uuid) on delete restrict,
     "productUuid" uuid not null references public.products (uuid) on delete restrict,
     quantity integer not null check (quantity > 0),
     "unitPrice" numeric(12, 2) not null check ("unitPrice" >= 0),
@@ -385,7 +385,7 @@ synced boolean not null default false,
 create table if not exists public.inventory_movement (
     id bigint generated always as identity primary key,
     uuid uuid not null default gen_random_uuid() unique,
-    "companyProductUuid" uuid not null references public.company_products (uuid) on delete restrict,
+    "supplierProductUuid" uuid not null references public.supplier_products (uuid) on delete restrict,
     "productUuid" uuid not null references public.products (uuid) on delete restrict,
     "movementType" text not null,
     "quantityDelta" integer not null check ("quantityDelta" <> 0),
@@ -423,20 +423,20 @@ synced boolean not null default false,
 
 create index if not exists idx_users_auth_user_id on public.users (auth_user_id);
 create index if not exists idx_users_email on public.users (email);
-create index if not exists idx_company_status on public.company (status);
+create index if not exists idx_supplier_status on public.supplier (status);
 create index if not exists idx_products_status on public.products (status);
 create index if not exists idx_categories_parent_uuid on public.categories ("parentUuid");
 create index if not exists idx_tags_status on public.tags (status);
 create index if not exists idx_roles_status on public.roles (status);
 create index if not exists idx_client_status on public.client (status);
-create index if not exists idx_company_products_company_uuid on public.company_products ("companyUuid");
-create index if not exists idx_company_products_product_uuid on public.company_products ("productUuid");
+create index if not exists idx_supplier_products_supplier_uuid on public.supplier_products ("supplierUuid");
+create index if not exists idx_supplier_products_product_uuid on public.supplier_products ("productUuid");
 create index if not exists idx_products_tags_product_uuid on public.products_tags ("productUuid");
 create index if not exists idx_products_tags_tag_uuid on public.products_tags ("tagUuid");
 create index if not exists idx_user_roles_user_uuid on public.user_roles ("userUuid");
 create index if not exists idx_user_roles_role_uuid on public.user_roles ("roleUuid");
-create index if not exists idx_store_company_store_uuid on public.store_company ("storeUuid");
-create index if not exists idx_store_company_company_uuid on public.store_company ("companyUuid");
+create index if not exists idx_store_supplier_store_uuid on public.store_supplier ("storeUuid");
+create index if not exists idx_store_supplier_supplier_uuid on public.store_supplier ("supplierUuid");
 create index if not exists idx_store_client_store_uuid on public.store_client ("storeUuid");
 create index if not exists idx_store_client_client_uuid on public.store_client ("clientUuid");
 create index if not exists idx_store_user_store_uuid on public.store_user ("storeUuid");
@@ -455,10 +455,10 @@ create index if not exists idx_store_financial_transaction_store_uuid on public.
 create index if not exists idx_store_financial_transaction_client_uuid on public.store_financial_transaction ("clientUuid");
 create index if not exists idx_store_financial_transaction_source on public.store_financial_transaction ("sourceType", "sourceUuid");
 create index if not exists idx_store_invoice_item_invoice_uuid on public.store_invoice_item ("invoiceUuid");
-create index if not exists idx_store_invoice_item_company_product_uuid on public.store_invoice_item ("companyProductUuid");
+create index if not exists idx_store_invoice_item_supplier_product_uuid on public.store_invoice_item ("supplierProductUuid");
 create index if not exists idx_store_return_item_return_uuid on public.store_return_item ("returnUuid");
-create index if not exists idx_store_return_item_company_product_uuid on public.store_return_item ("companyProductUuid");
-create index if not exists idx_inventory_movement_company_product_uuid on public.inventory_movement ("companyProductUuid");
+create index if not exists idx_store_return_item_supplier_product_uuid on public.store_return_item ("supplierProductUuid");
+create index if not exists idx_inventory_movement_supplier_product_uuid on public.inventory_movement ("supplierProductUuid");
 create index if not exists idx_inventory_movement_reference on public.inventory_movement ("referenceType", "referenceUuid");
 create index if not exists idx_payment_allocation_payment_voucher_uuid on public.payment_allocation ("paymentVoucherUuid");
 create index if not exists idx_payment_allocation_invoice_uuid on public.payment_allocation ("invoiceUuid");
@@ -466,8 +466,8 @@ create index if not exists idx_payment_allocation_invoice_uuid on public.payment
 drop trigger if exists set_users_updated_at on public.users;
 create trigger set_users_updated_at before update on public.users for each row execute function public.set_updated_at();
 
-drop trigger if exists set_company_updated_at on public.company;
-create trigger set_company_updated_at before update on public.company for each row execute function public.set_updated_at();
+drop trigger if exists set_supplier_updated_at on public.supplier;
+create trigger set_supplier_updated_at before update on public.supplier for each row execute function public.set_updated_at();
 
 drop trigger if exists set_products_updated_at on public.products;
 create trigger set_products_updated_at before update on public.products for each row execute function public.set_updated_at();
@@ -484,8 +484,8 @@ create trigger set_roles_updated_at before update on public.roles for each row e
 drop trigger if exists set_client_updated_at on public.client;
 create trigger set_client_updated_at before update on public.client for each row execute function public.set_updated_at();
 
-drop trigger if exists set_company_products_updated_at on public.company_products;
-create trigger set_company_products_updated_at before update on public.company_products for each row execute function public.set_updated_at();
+drop trigger if exists set_supplier_products_updated_at on public.supplier_products;
+create trigger set_supplier_products_updated_at before update on public.supplier_products for each row execute function public.set_updated_at();
 
 drop trigger if exists set_products_tags_updated_at on public.products_tags;
 create trigger set_products_tags_updated_at before update on public.products_tags for each row execute function public.set_updated_at();
@@ -493,8 +493,8 @@ create trigger set_products_tags_updated_at before update on public.products_tag
 drop trigger if exists set_user_roles_updated_at on public.user_roles;
 create trigger set_user_roles_updated_at before update on public.user_roles for each row execute function public.set_updated_at();
 
-drop trigger if exists set_store_company_updated_at on public.store_company;
-create trigger set_store_company_updated_at before update on public.store_company for each row execute function public.set_updated_at();
+drop trigger if exists set_store_supplier_updated_at on public.store_supplier;
+create trigger set_store_supplier_updated_at before update on public.store_supplier for each row execute function public.set_updated_at();
 
 drop trigger if exists set_store_client_updated_at on public.store_client;
 create trigger set_store_client_updated_at before update on public.store_client for each row execute function public.set_updated_at();
@@ -568,17 +568,17 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users for each row execute function public.handle_new_auth_user();
 
 alter table public.users enable row level security;
-alter table public.company enable row level security;
+alter table public.supplier enable row level security;
 alter table public.products enable row level security;
 alter table public.categories enable row level security;
 alter table public.tags enable row level security;
 alter table public.roles enable row level security;
 alter table public.store enable row level security;
 alter table public.client enable row level security;
-alter table public.company_products enable row level security;
+alter table public.supplier_products enable row level security;
 alter table public.products_tags enable row level security;
 alter table public.user_roles enable row level security;
-alter table public.store_company enable row level security;
+alter table public.store_supplier enable row level security;
 alter table public.store_client enable row level security;
 alter table public.store_user enable row level security;
 alter table public.store_invoice enable row level security;
@@ -599,8 +599,8 @@ create policy users_insert_own_profile on public.users for insert to authenticat
 drop policy if exists users_update_own_profile on public.users;
 create policy users_update_own_profile on public.users for update to authenticated using (auth.uid() = auth_user_id) with check (auth.uid() = auth_user_id);
 
-drop policy if exists company_authenticated_all on public.company;
-create policy company_authenticated_all on public.company for all to authenticated using (true) with check (true);
+drop policy if exists supplier_authenticated_all on public.supplier;
+create policy supplier_authenticated_all on public.supplier for all to authenticated using (true) with check (true);
 
 drop policy if exists products_authenticated_all on public.products;
 create policy products_authenticated_all on public.products for all to authenticated using (true) with check (true);
@@ -620,8 +620,8 @@ create policy store_authenticated_all on public.store for all to authenticated u
 drop policy if exists client_authenticated_all on public.client;
 create policy client_authenticated_all on public.client for all to authenticated using (true) with check (true);
 
-drop policy if exists company_products_authenticated_all on public.company_products;
-create policy company_products_authenticated_all on public.company_products for all to authenticated using (true) with check (true);
+drop policy if exists supplier_products_authenticated_all on public.supplier_products;
+create policy supplier_products_authenticated_all on public.supplier_products for all to authenticated using (true) with check (true);
 
 drop policy if exists products_tags_authenticated_all on public.products_tags;
 create policy products_tags_authenticated_all on public.products_tags for all to authenticated using (true) with check (true);
@@ -629,8 +629,8 @@ create policy products_tags_authenticated_all on public.products_tags for all to
 drop policy if exists user_roles_authenticated_all on public.user_roles;
 create policy user_roles_authenticated_all on public.user_roles for all to authenticated using (true) with check (true);
 
-drop policy if exists store_company_authenticated_all on public.store_company;
-create policy store_company_authenticated_all on public.store_company for all to authenticated using (true) with check (true);
+drop policy if exists store_supplier_authenticated_all on public.store_supplier;
+create policy store_supplier_authenticated_all on public.store_supplier for all to authenticated using (true) with check (true);
 
 drop policy if exists store_client_authenticated_all on public.store_client;
 create policy store_client_authenticated_all on public.store_client for all to authenticated using (true) with check (true);
