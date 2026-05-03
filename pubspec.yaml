@@ -38,7 +38,6 @@ dependencies:
   cupertino_icons: ^1.0.8
   decimal: ^3.2.4
   flutter_bloc: ^9.1.1
-  flutter_secure_storage: ^9.2.4
   google_fonts: ^6.3.1
   objectbox: ^5.3.1
   objectbox_flutter_libs: ^5.3.1
