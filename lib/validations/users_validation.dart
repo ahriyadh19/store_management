@@ -61,15 +61,6 @@ class UsersValidation {
       return usernameError;
     }
 
-    final passwordError = ValidationUtils.validateRequiredString(request, 'password', 'Password is required');
-    if (passwordError != null) {
-      return passwordError;
-    }
-
-    if ((request.data!['password'] as String).trim().length < 6) {
-      return ValidationUtils.badRequest('Password must be at least 6 characters long');
-    }
-
     return ValidationUtils.validateStatus(request);
   }
 }

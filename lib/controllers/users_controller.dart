@@ -19,6 +19,12 @@ class UsersController {
     return value.toMap();
   }
 
+  Map<String, dynamic> _sanitizeUserRequestData(Map<String, dynamic> data) {
+    final sanitized = Map<String, dynamic>.from(data);
+    sanitized.remove('password');
+    return sanitized;
+  }
+
   Response read({required Request request}) {
     try {
       final validationError = UsersValidation.validateRead(request);
@@ -43,7 +49,7 @@ class UsersController {
         return validationError;
       }
 
-      user = ControllerUtils.hydrateModelFromRequest(data: request.data!, fromMap: User.fromMap,
+      user = ControllerUtils.hydrateModelFromRequest(data: _sanitizeUserRequestData(request.data!), fromMap: User.fromMap,
       );
 
       return Response(statusCode: 201, title: 'User Added', message: 'The user has been added successfully', data: _userData(user!));
@@ -63,7 +69,7 @@ class UsersController {
         return ControllerUtils.notFound('User');
       }
 
-      user = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: user, toMap: (model) => model.toMap(includePassword: true), fromMap: User.fromMap,
+      user = ControllerUtils.hydrateModelFromRequest(data: _sanitizeUserRequestData(request.data!), existingModel: user, toMap: (model) => model.toMap(), fromMap: User.fromMap,
       );
 
       return Response(statusCode: 200, title: 'User Updated', message: 'The user has been updated successfully', data: _userData(user!));
@@ -85,7 +91,7 @@ class UsersController {
 
       final deletedUser = ControllerUtils.softDeleteModel(
         model: user!,
-        toMap: (model) => model.toMap(includePassword: true),
+        toMap: (model) => model.toMap(),
         fromMap: User.fromMap,
       );
       user = deletedUser;

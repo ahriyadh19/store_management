@@ -117,7 +117,6 @@ class AppPreferencesController extends ChangeNotifier {
     }
 
     _lastIndexPageKey = trimmedValue;
-    notifyListeners();
     await _preferences?.setString(_lastIndexPageStorageKey, trimmedValue);
   }
 

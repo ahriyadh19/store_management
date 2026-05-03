@@ -7,14 +7,24 @@ import 'package:store_management/services/local_database.dart';
 enum ConnectionIndicatorState { processing, active, failed }
 
 class ConnectionStatusController extends ChangeNotifier {
-  ConnectionStatusController({required LocalDatabase? localDatabase, SupabaseClient? supabaseClient, Duration pollInterval = const Duration(seconds: 8)})
+  ConnectionStatusController({
+    required LocalDatabase? localDatabase,
+    SupabaseClient? supabaseClient,
+    Duration healthyPollInterval = const Duration(seconds: 30),
+    Duration recoveryPollInterval = const Duration(seconds: 8),
+    Duration requestTimeout = const Duration(seconds: 3),
+  })
     : _localDatabase = localDatabase,
-      _supabaseClient = supabaseClient ?? Supabase.instance.client,
-      _pollInterval = pollInterval;
+       _supabaseClient = supabaseClient,
+       _healthyPollInterval = healthyPollInterval,
+       _recoveryPollInterval = recoveryPollInterval,
+       _requestTimeout = requestTimeout;
 
   final LocalDatabase? _localDatabase;
-  final SupabaseClient _supabaseClient;
-  final Duration _pollInterval;
+  SupabaseClient? _supabaseClient;
+  final Duration _healthyPollInterval;
+  final Duration _recoveryPollInterval;
+  final Duration _requestTimeout;
 
   Timer? _timer;
   bool _started = false;
@@ -34,9 +44,6 @@ class ConnectionStatusController extends ChangeNotifier {
     _started = true;
     _setStates(supabase: ConnectionIndicatorState.processing, objectBox: ConnectionIndicatorState.processing);
     unawaited(_runChecks());
-    _timer = Timer.periodic(_pollInterval, (_) {
-      unawaited(_runChecks());
-    });
   }
 
   Future<void> refresh() => _runChecks(showProcessing: true);
@@ -47,23 +54,30 @@ class ConnectionStatusController extends ChangeNotifier {
     }
 
     _isChecking = true;
+    _timer?.cancel();
 
     if (showProcessing) {
       _setStates(supabase: ConnectionIndicatorState.processing, objectBox: ConnectionIndicatorState.processing);
     }
 
-    final results = await Future.wait<ConnectionIndicatorState>([
-      _checkSupabaseConnection(),
-      _checkObjectBoxConnection(),
-    ]);
+    try {
+      final results = await Future.wait<ConnectionIndicatorState>([_checkSupabaseConnection(), _checkObjectBoxConnection()]);
 
-    _setStates(supabase: results[0], objectBox: results[1]);
-    _isChecking = false;
+      _setStates(supabase: results[0], objectBox: results[1]);
+    } finally {
+      _isChecking = false;
+      _scheduleNextCheck();
+    }
   }
 
   Future<ConnectionIndicatorState> _checkSupabaseConnection() async {
+    final supabaseClient = _resolveSupabaseClient();
+    if (supabaseClient == null) {
+      return ConnectionIndicatorState.failed;
+    }
+
     try {
-      await _supabaseClient.from('users').select('id').limit(1).maybeSingle();
+      await supabaseClient.from('users').select('id').limit(1).maybeSingle().timeout(_requestTimeout);
       return ConnectionIndicatorState.active;
     } on PostgrestException catch (error) {
       if (_looksLikeConnectivityFailure(error.message)) {
@@ -107,6 +121,35 @@ class ConnectionStatusController extends ChangeNotifier {
         normalized.contains('dns');
   }
 
+  SupabaseClient? _resolveSupabaseClient() {
+    final existingClient = _supabaseClient;
+    if (existingClient != null) {
+      return existingClient;
+    }
+
+    try {
+      final resolvedClient = Supabase.instance.client;
+      _supabaseClient = resolvedClient;
+      return resolvedClient;
+    } on AssertionError {
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _scheduleNextCheck() {
+    if (!_started) {
+      return;
+    }
+
+    final isHealthy = _supabaseState == ConnectionIndicatorState.active && _objectBoxState == ConnectionIndicatorState.active;
+    final nextInterval = isHealthy ? _healthyPollInterval : _recoveryPollInterval;
+    _timer = Timer(nextInterval, () {
+      unawaited(_runChecks());
+    });
+  }
+
   void _setStates({required ConnectionIndicatorState supabase, required ConnectionIndicatorState objectBox}) {
     final didChange = _supabaseState != supabase || _objectBoxState != objectBox;
     _supabaseState = supabase;
@@ -119,6 +162,7 @@ class ConnectionStatusController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _started = false;
     _timer?.cancel();
     super.dispose();
   }

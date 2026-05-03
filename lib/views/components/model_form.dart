@@ -133,36 +133,50 @@ class _ModelFormState extends State<ModelForm> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var index = 0; index < widget.definition.length; index++) ...[
-            _buildField(context, widget.definition[index]),
-            if (index < widget.definition.length - 1) const SizedBox(height: 16),
-          ],
-          const SizedBox(height: 24),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            alignment: WrapAlignment.end,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useTwoColumns = constraints.maxWidth >= 720;
+        final halfWidth = useTwoColumns ? (constraints.maxWidth - 16) / 2 : constraints.maxWidth;
+
+        return Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (widget.onCancel != null)
-                OutlinedButton(
-                  onPressed: widget.onCancel,
-                  child: Text(widget.cancelLabel ?? l10n.cancel),
-                ),
-              FilledButton.icon(
-                onPressed: _handleSubmit,
-                icon: const Icon(Icons.save_rounded),
-                label: Text(widget.submitLabel),
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: [
+                  for (final field in widget.definition)
+                    SizedBox(
+                      width: _fieldUsesFullWidth(field, useTwoColumns: useTwoColumns) ? constraints.maxWidth : halfWidth,
+                      child: _buildField(context, field),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                alignment: WrapAlignment.end,
+                children: [
+                  if (widget.onCancel != null) OutlinedButton(onPressed: widget.onCancel, child: Text(widget.cancelLabel ?? l10n.cancel)),
+                  FilledButton.icon(onPressed: _handleSubmit, icon: const Icon(Icons.save_rounded), label: Text(widget.submitLabel)),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  bool _fieldUsesFullWidth(ModelFormFieldDefinition field, {required bool useTwoColumns}) {
+    if (!useTwoColumns) {
+      return true;
+    }
+
+    return field.type == ModelFormFieldType.multiline;
   }
 
   Widget _buildField(BuildContext context, ModelFormFieldDefinition field) {

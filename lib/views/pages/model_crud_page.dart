@@ -55,6 +55,8 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final showTableSection = !_showCreateForm || constraints.maxHeight >= 840;
+
         return ListView(
           padding: const EdgeInsets.all(24),
           children: [
@@ -62,8 +64,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
             const SizedBox(height: 24),
             _buildCreateFormToggle(context),
             if (_showCreateForm) ...[const SizedBox(height: 16), _buildCreateFormCard(context)],
-            const SizedBox(height: 24),
-            _buildTableCard(context, constraints),
+            if (showTableSection) ...[const SizedBox(height: 24), _buildTableCard(context, constraints)],
           ],
         );
       },
@@ -112,31 +113,38 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
 
   Widget _buildCreateFormCard(BuildContext context) {
     final l10n = context.l10n;
+    final maxHeight = MediaQuery.of(context).size.height * 0.8;
     return Card(
       clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.saveEntity(widget.entityLabel), style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 8),
-            Text(l10n.addEntityToTable(widget.entityLabel), style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(height: 24),
-            ModelForm(
-              key: ValueKey('${widget.entityLabel}-create-${widget.formDefinition.toMap(_draftModel)}'),
-              definition: widget.formDefinition.fields,
-              initialData: widget.formDefinition.toMap(_draftModel),
-              submitLabel: l10n.saveEntity(widget.entityLabel),
-              cancelLabel: l10n.reset,
-              onCancel: () {
-                setState(() {
-                  _draftModel = widget.formDefinition.sampleModel;
-                });
-              },
-              onSubmit: _handleCreateSubmit,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxHeight),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: SingleChildScrollView(
+            physics: AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.saveEntity(widget.entityLabel), style: Theme.of(context).textTheme.headlineSmall),
+                const SizedBox(height: 8),
+                Text(l10n.addEntityToTable(widget.entityLabel), style: Theme.of(context).textTheme.bodyMedium),
+                const SizedBox(height: 24),
+                ModelForm(
+                  key: ValueKey('${widget.entityLabel}-create-${widget.formDefinition.toMap(_draftModel)}'),
+                  definition: widget.formDefinition.fields,
+                  initialData: widget.formDefinition.toMap(_draftModel),
+                  submitLabel: l10n.saveEntity(widget.entityLabel),
+                  cancelLabel: l10n.reset,
+                  onCancel: () {
+                    setState(() {
+                      _draftModel = widget.formDefinition.sampleModel;
+                    });
+                  },
+                  onSubmit: _handleCreateSubmit,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -484,7 +492,8 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('${context.l10n.rowsPerPage}: ', style: Theme.of(context).textTheme.bodyMedium),
+          Text('${context.l10n.rowsPerPage}:', style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(width: 8),
           DropdownButton<int>(
             value: selectedRowsPerPage,
             onChanged: _handleRowsPerPageChanged,

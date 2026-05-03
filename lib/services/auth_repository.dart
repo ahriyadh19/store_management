@@ -56,7 +56,13 @@ abstract class AuthRepository {
 class SupabaseAuthRepository implements AuthRepository {
   SupabaseAuthRepository({SupabaseClient? client}) : _client = client ?? Supabase.instance.client;
 
+  static const Duration _profileCacheTtl = Duration(seconds: 10);
+  static const String _profileSelectColumns = 'id,name,email,username,uuid,status,created_at,updated_at,synced,deleted_at,synced_at';
+
   final SupabaseClient _client;
+  _CachedUserProfile? _cachedProfile;
+  Future<User?>? _profileLoadInFlight;
+  String? _profileLoadAuthUserId;
 
   GoTrueClient get _authClient => _client.auth;
 
@@ -250,6 +256,7 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() {
+    _clearProfileCache();
     return _authClient.signOut();
   }
 
@@ -258,9 +265,36 @@ class SupabaseAuthRepository implements AuthRepository {
       return _buildFallbackUser(email: fallbackEmail, name: fallbackName, username: fallbackUsername);
     }
 
+    final cachedProfile = _cachedProfile;
+    if (cachedProfile != null && cachedProfile.authUserId == authUserId && !cachedProfile.isExpired) {
+      return cachedProfile.user;
+    }
+
+    if (_profileLoadInFlight != null && _profileLoadAuthUserId == authUserId) {
+      return _profileLoadInFlight!;
+    }
+
+    final loadFuture = _loadAndCacheUserProfile(authUserId: authUserId, fallbackEmail: fallbackEmail, fallbackName: fallbackName, fallbackUsername: fallbackUsername);
+    _profileLoadAuthUserId = authUserId;
+    _profileLoadInFlight = loadFuture;
+
+    try {
+      return await loadFuture;
+    } finally {
+      if (identical(_profileLoadInFlight, loadFuture)) {
+        _profileLoadInFlight = null;
+        _profileLoadAuthUserId = null;
+      }
+    }
+  }
+
+  Future<User?> _loadAndCacheUserProfile({required String authUserId, required String? fallbackEmail, String? fallbackName, String? fallbackUsername}) async {
+    User? profile;
+
     for (var attempt = 0; attempt < 3; attempt++) {
-      final profile = await _fetchProfile(authUserId);
+      profile = await _fetchProfile(authUserId);
       if (profile != null) {
+        _cachedProfile = _CachedUserProfile(authUserId: authUserId, user: profile, expiresAt: DateTime.now().add(_profileCacheTtl));
         return profile;
       }
 
@@ -269,11 +303,13 @@ class SupabaseAuthRepository implements AuthRepository {
       }
     }
 
-    return _buildFallbackUser(email: fallbackEmail, name: fallbackName, username: fallbackUsername);
+    final fallbackUser = _buildFallbackUser(email: fallbackEmail, name: fallbackName, username: fallbackUsername);
+    _cachedProfile = _CachedUserProfile(authUserId: authUserId, user: fallbackUser, expiresAt: DateTime.now().add(_profileCacheTtl));
+    return fallbackUser;
   }
 
   Future<User?> _fetchProfile(String authUserId) async {
-    final row = await _client.from('users').select().eq('auth_user_id', authUserId).maybeSingle();
+    final row = await _client.from('users').select(_profileSelectColumns).eq('auth_user_id', authUserId).maybeSingle();
 
     if (row == null) {
       return null;
@@ -284,6 +320,12 @@ class SupabaseAuthRepository implements AuthRepository {
 
   Future<void> _upsertProfile({required String authUserId, required String email, required String name, required String username}) {
     return _client.from('users').upsert({'auth_user_id': authUserId, 'email': email, 'name': name.trim(), 'username': _normalizeUsername(username), 'status': 1}, onConflict: 'auth_user_id');
+  }
+
+  void _clearProfileCache() {
+    _cachedProfile = null;
+    _profileLoadInFlight = null;
+    _profileLoadAuthUserId = null;
   }
 
   User? _buildFallbackUser({required String? email, String? name, String? username}) {
@@ -395,6 +437,16 @@ class SupabaseAuthRepository implements AuthRepository {
         return null;
     }
   }
+}
+
+class _CachedUserProfile {
+  const _CachedUserProfile({required this.authUserId, required this.user, required this.expiresAt});
+
+  final String authUserId;
+  final User? user;
+  final DateTime expiresAt;
+
+  bool get isExpired => DateTime.now().isAfter(expiresAt);
 }
 
 class FakeAuthRepository implements AuthRepository {
