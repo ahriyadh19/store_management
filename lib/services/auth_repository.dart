@@ -57,7 +57,8 @@ class SupabaseAuthRepository implements AuthRepository {
   SupabaseAuthRepository({SupabaseClient? client}) : _client = client ?? Supabase.instance.client;
 
   static const Duration _profileCacheTtl = Duration(seconds: 10);
-  static const String _profileSelectColumns = 'id,name,email,username,uuid,status,created_at,updated_at,synced,deleted_at,synced_at';
+  static const String _profileSelectColumns = 'id,name,email,username,uuid,status,createdAt,updatedAt,synced,deletedAt,syncedAt';
+  static const String _legacyProfileSelectColumns = 'id,name,email,username,uuid,status,created_at,updated_at,synced,deleted_at,synced_at';
 
   final SupabaseClient _client;
   _CachedUserProfile? _cachedProfile;
@@ -156,7 +157,12 @@ class SupabaseAuthRepository implements AuthRepository {
       password: password,
     );
 
-    final user = await _loadUserProfile(authUserId: response.user?.id, fallbackEmail: response.user?.email ?? email, fallbackName: response.user?.userMetadata?['name'] as String?);
+    final user = await _loadUserProfileSafely(
+      authUserId: response.user?.id,
+      fallbackEmail: response.user?.email ?? email,
+      fallbackName: response.user?.userMetadata?['name'] as String?,
+      fallbackUsername: response.user?.userMetadata?['username'] as String?,
+    );
 
     return AuthActionResult(status: AuthActionStatus.authenticated, user: user, email: user?.email ?? response.user?.email ?? email, messageKey: AppMessageKey.signedInSuccessfully);
   }
@@ -174,7 +180,7 @@ class SupabaseAuthRepository implements AuthRepository {
       await _upsertProfile(authUserId: response.user!.id, email: response.user?.email ?? email, name: name, username: normalizedUsername);
     }
 
-    final user = await _loadUserProfile(authUserId: response.user?.id, fallbackEmail: response.user?.email ?? email, fallbackName: name, fallbackUsername: normalizedUsername);
+    final user = await _loadUserProfileSafely(authUserId: response.user?.id, fallbackEmail: response.user?.email ?? email, fallbackName: name, fallbackUsername: normalizedUsername);
 
     final hasSession = response.session != null;
 
@@ -213,7 +219,12 @@ class SupabaseAuthRepository implements AuthRepository {
     );
 
     final currentUser = _authClient.currentUser;
-    final user = await _loadUserProfile(authUserId: currentUser?.id, fallbackEmail: currentUser?.email ?? trimmedEmail);
+    final user = await _loadUserProfileSafely(
+      authUserId: currentUser?.id,
+      fallbackEmail: currentUser?.email ?? trimmedEmail,
+      fallbackName: currentUser?.userMetadata?['name'] as String?,
+      fallbackUsername: currentUser?.userMetadata?['username'] as String?,
+    );
 
     if (_authClient.currentSession == null) {
       return AuthActionResult(status: AuthActionStatus.confirmEmail, email: user?.email ?? currentUser?.email ?? trimmedEmail, user: user, messageKey: AppMessageKey.emailConfirmedSignIn);
@@ -244,7 +255,12 @@ class SupabaseAuthRepository implements AuthRepository {
     await _authClient.updateUser(UserAttributes(password: trimmedPassword));
 
     final currentUser = _authClient.currentUser;
-    final user = await _loadUserProfile(authUserId: currentUser?.id, fallbackEmail: currentUser?.email ?? trimmedEmail);
+    final user = await _loadUserProfileSafely(
+      authUserId: currentUser?.id,
+      fallbackEmail: currentUser?.email ?? trimmedEmail,
+      fallbackName: currentUser?.userMetadata?['name'] as String?,
+      fallbackUsername: currentUser?.userMetadata?['username'] as String?,
+    );
 
     return AuthActionResult(status: AuthActionStatus.authenticated, email: user?.email ?? currentUser?.email ?? trimmedEmail, user: user, messageKey: AppMessageKey.passwordUpdatedSuccessfully);
   }
@@ -288,6 +304,15 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
+  Future<User?> _loadUserProfileSafely({required String? authUserId, required String? fallbackEmail, String? fallbackName, String? fallbackUsername}) async {
+    try {
+      return await _loadUserProfile(authUserId: authUserId, fallbackEmail: fallbackEmail, fallbackName: fallbackName, fallbackUsername: fallbackUsername);
+    } catch (error) {
+      debugPrint('Auth profile load failed: $error');
+      return _buildFallbackUser(email: fallbackEmail, name: fallbackName, username: fallbackUsername);
+    }
+  }
+
   Future<User?> _loadAndCacheUserProfile({required String authUserId, required String? fallbackEmail, String? fallbackName, String? fallbackUsername}) async {
     User? profile;
 
@@ -309,17 +334,48 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   Future<User?> _fetchProfile(String authUserId) async {
-    final row = await _client.from('users').select(_profileSelectColumns).eq('auth_user_id', authUserId).maybeSingle();
+    try {
+      final row = await _client.from('users').select(_profileSelectColumns).eq('auth_user_id', authUserId).maybeSingle();
 
-    if (row == null) {
+      if (row == null) {
+        return null;
+      }
+
+      return User.fromMap(Map<String, dynamic>.from(row));
+    } catch (error) {
+      if (_isMissingColumnError(error)) {
+        try {
+          final row = await _client.from('users').select(_legacyProfileSelectColumns).eq('auth_user_id', authUserId).maybeSingle();
+
+          if (row == null) {
+            return null;
+          }
+
+          return User.fromMap(Map<String, dynamic>.from(row));
+        } catch (legacyError) {
+          debugPrint('Auth profile legacy query failed: $legacyError');
+          return null;
+        }
+      }
+
+      // Authentication should not fail when the profile table is unavailable or restricted.
+      debugPrint('Auth profile query failed: $error');
       return null;
     }
-
-    return User.fromMap(Map<String, dynamic>.from(row));
   }
 
-  Future<void> _upsertProfile({required String authUserId, required String email, required String name, required String username}) {
-    return _client.from('users').upsert({'auth_user_id': authUserId, 'email': email, 'name': name.trim(), 'username': _normalizeUsername(username), 'status': 1}, onConflict: 'auth_user_id');
+  bool _isMissingColumnError(Object error) {
+    final text = error.toString();
+    return text.contains('"code":"42703"') || text.contains('column') && text.contains('does not exist');
+  }
+
+  Future<void> _upsertProfile({required String authUserId, required String email, required String name, required String username}) async {
+    try {
+      await _client.from('users').upsert({'auth_user_id': authUserId, 'email': email, 'name': name.trim(), 'username': _normalizeUsername(username), 'status': 1}, onConflict: 'auth_user_id');
+    } catch (error) {
+      // Profile syncing is best-effort and must not block auth flow.
+      debugPrint('Auth profile upsert failed: $error');
+    }
   }
 
   void _clearProfileCache() {

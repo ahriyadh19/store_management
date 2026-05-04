@@ -51,16 +51,16 @@ class Store {
 
   factory Store.fromMap(Map<String, dynamic> map) {
     return Store(
-      id: ModelParsing.intOrNull(map['id']) ?? 0,
-      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
-      name: ModelParsing.stringOrThrow(map['name'], 'name'),
-      description: ModelParsing.stringOrThrow(map['description'], 'description'),
-      address: ModelParsing.stringOrThrow(map['address'], 'address'),
-      phone: ModelParsing.stringOrThrow(map['phone'], 'phone'),
-      email: ModelParsing.stringOrThrow(map['email'], 'email'),
-      synced: ModelParsing.boolOrNull(map['synced']) ?? false,
-      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['deletedAt'] ?? map['deleted_at']),
-      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['syncedAt'] ?? map['synced_at']),
+      id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,
+      uuid: ModelParsing.uuidOrGenerate(ModelParsing.value(map, 'uuid')),
+      name: ModelParsing.stringOrNull(ModelParsing.value(map, 'name')) ?? '',
+      description: ModelParsing.stringOrNull(ModelParsing.value(map, 'description')) ?? '',
+      address: ModelParsing.stringOrNull(ModelParsing.value(map, 'address')) ?? '',
+      phone: ModelParsing.stringOrNull(ModelParsing.value(map, 'phone')) ?? '',
+      email: ModelParsing.stringOrNull(ModelParsing.value(map, 'email')) ?? '',
+      synced: ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'deletedAt')),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'syncedAt')),
     );
   }
 
@@ -94,3 +94,4 @@ class Store {
     return id.hashCode ^ uuid.hashCode ^ name.hashCode ^ description.hashCode ^ address.hashCode ^ phone.hashCode ^ email.hashCode ^ synced.hashCode ^ deletedAt.hashCode ^ syncedAt.hashCode;
   }
 }
+

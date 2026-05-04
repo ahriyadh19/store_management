@@ -104,22 +104,22 @@ class Client {
 
   factory Client.fromMap(Map<String, dynamic> map) {
     return Client(
-      id: ModelParsing.intOrNull(map['id']) ?? 0,
-      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
-      name: ModelParsing.stringOrThrow(map['name'], 'name'),
-      description: ModelParsing.stringOrThrow(map['description'], 'description'),
-      email: ModelParsing.stringOrThrow(map['email'], 'email'),
-      phone: ModelParsing.stringOrThrow(map['phone'], 'phone'),
-      address: ModelParsing.stringOrThrow(map['address'], 'address'),
-      status: ModelParsing.intOrThrow(map['status'], 'status'),
-      creditLimit: ModelParsing.decimalOrThrow(map['creditLimit'], 'creditLimit'),
-      currentCredit: ModelParsing.decimalOrThrow(map['currentCredit'], 'currentCredit'),
-      availableCredit: ModelParsing.decimalOrThrow(map['availableCredit'], 'availableCredit'),
-      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'] ?? map['created_at'], 'createdAt'),
-      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'] ?? map['updated_at'], 'updatedAt'),
-      synced: ModelParsing.boolOrNull(map['synced']) ?? false,
-      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['deletedAt'] ?? map['deleted_at']),
-      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['syncedAt'] ?? map['synced_at']),
+      id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,
+      uuid: ModelParsing.uuidOrGenerate(ModelParsing.value(map, 'uuid')),
+      name: ModelParsing.stringOrThrow(ModelParsing.value(map, 'name'), 'name'),
+      description: ModelParsing.stringOrThrow(ModelParsing.value(map, 'description'), 'description'),
+      email: ModelParsing.stringOrThrow(ModelParsing.value(map, 'email'), 'email'),
+      phone: ModelParsing.stringOrThrow(ModelParsing.value(map, 'phone'), 'phone'),
+      address: ModelParsing.stringOrThrow(ModelParsing.value(map, 'address'), 'address'),
+      status: ModelParsing.intOrThrow(ModelParsing.value(map, 'status'), 'status'),
+      creditLimit: ModelParsing.decimalOrThrow(ModelParsing.value(map, 'creditLimit'), 'creditLimit'),
+      currentCredit: ModelParsing.decimalOrThrow(ModelParsing.value(map, 'currentCredit'), 'currentCredit'),
+      availableCredit: ModelParsing.decimalOrThrow(ModelParsing.value(map, 'availableCredit'), 'availableCredit'),
+      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'createdAt'), 'createdAt'),
+      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'updatedAt'), 'updatedAt'),
+      synced: ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'deletedAt')),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'syncedAt')),
     );
   }
 
@@ -174,3 +174,4 @@ class Client {
         syncedAt.hashCode;
   }
 }
+

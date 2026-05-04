@@ -1,6 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:store_management/models/model_parsing.dart';
+
 class StatusInfo {
 
   final String name;
@@ -46,11 +48,11 @@ class StatusInfo {
 
   factory StatusInfo.fromMap(Map<String, dynamic> map) {
     return StatusInfo(
-      name: map['name'] as String,
-      bgColor: map['bgColor'] as String,
-      textColor: map['textColor'] as String,
-      borderColor: map['borderColor'] as String,
-      icon: map['icon'] as String,
+      name: ModelParsing.stringOrThrow(ModelParsing.value(map, 'name'), 'name'),
+      bgColor: ModelParsing.stringOrThrow(ModelParsing.value(map, 'bgColor'), 'bgColor'),
+      textColor: ModelParsing.stringOrThrow(ModelParsing.value(map, 'textColor'), 'textColor'),
+      borderColor: ModelParsing.stringOrThrow(ModelParsing.value(map, 'borderColor'), 'borderColor'),
+      icon: ModelParsing.stringOrThrow(ModelParsing.value(map, 'icon'), 'icon'),
     );
   }
 

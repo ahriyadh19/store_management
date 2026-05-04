@@ -65,17 +65,17 @@ class StoreUser {
 
   factory StoreUser.fromMap(Map<String, dynamic> map) {
     return StoreUser(
-      id: ModelParsing.intOrNull(map['id']) ?? 0,
-      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
+      id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,
+      uuid: ModelParsing.uuidOrGenerate(ModelParsing.value(map, 'uuid')),
       storeUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'storeUuid'), 'storeUuid'),
       userUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'userUuid'), 'userUuid'),
       userRoleUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'userRoleUuid'), 'userRoleUuid'),
-      status: ModelParsing.intOrThrow(map['status'], 'status'),
-      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'] ?? map['created_at'], 'createdAt'),
-      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'] ?? map['updated_at'], 'updatedAt'),
-      synced: ModelParsing.boolOrNull(map['synced']) ?? false,
-      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['deletedAt'] ?? map['deleted_at']),
-      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['syncedAt'] ?? map['synced_at']),
+      status: ModelParsing.intOrThrow(ModelParsing.value(map, 'status'), 'status'),
+      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'createdAt'), 'createdAt'),
+      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'updatedAt'), 'updatedAt'),
+      synced: ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'deletedAt')),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'syncedAt')),
     );
   }
 
@@ -120,3 +120,4 @@ class StoreUser {
         syncedAt.hashCode;
   }
 }
+

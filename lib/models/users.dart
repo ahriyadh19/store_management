@@ -70,19 +70,24 @@ class User {
   }
 
   factory User.fromMap(Map<String, dynamic> map) {
+    final email = ModelParsing.stringOrNull(ModelParsing.value(map, 'email')) ?? '';
+    final username = ModelParsing.stringOrNull(ModelParsing.value(map, 'username')) ?? (email.contains('@') ? email.split('@').first : 'user');
+    final name = ModelParsing.stringOrNull(ModelParsing.value(map, 'name')) ?? username;
+    final nowMillis = DateTime.now().millisecondsSinceEpoch;
+
     return User(
-      id: ModelParsing.intOrNull(map['id']) ?? 0,
-      name: ModelParsing.stringOrThrow(map['name'], 'name'),
-      email: ModelParsing.stringOrThrow(map['email'], 'email'),
-      password: ModelParsing.stringOrNull(map['password']) ?? '',
-      username: ModelParsing.stringOrThrow(map['username'], 'username'),
-      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
-      status: ModelParsing.intOrThrow(map['status'], 'status'),
-      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'] ?? map['created_at'], 'createdAt'),
-      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'] ?? map['updated_at'], 'updatedAt'),
-      synced: ModelParsing.boolOrNull(map['synced']) ?? false,
-      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['deletedAt'] ?? map['deleted_at']),
-      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['syncedAt'] ?? map['synced_at']),
+      id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,
+      name: name,
+      email: email,
+      password: ModelParsing.stringOrNull(ModelParsing.value(map, 'password')) ?? '',
+      username: username,
+      uuid: ModelParsing.uuidOrGenerate(ModelParsing.value(map, 'uuid')),
+      status: ModelParsing.intOrNull(ModelParsing.value(map, 'status')) ?? 1,
+      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'createdAt') ?? nowMillis, 'createdAt'),
+      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'updatedAt') ?? nowMillis, 'updatedAt'),
+      synced: ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'deletedAt')),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'syncedAt')),
     );
   }
 
@@ -129,3 +134,4 @@ class User {
         syncedAt.hashCode;
   }
 }
+

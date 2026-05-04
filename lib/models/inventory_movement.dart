@@ -137,8 +137,8 @@ class InventoryMovement {
 
   factory InventoryMovement.fromMap(Map<String, dynamic> map) {
     return InventoryMovement(
-      id: ModelParsing.intOrNull(map['id']) ?? 0,
-      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
+      id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,
+      uuid: ModelParsing.uuidOrGenerate(ModelParsing.value(map, 'uuid')),
       supplierProductUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'supplierProductUuid'), 'supplierProductUuid'),
       productUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'productUuid'), 'productUuid'),
       movementType: ModelParsing.inventoryMovementTypeFromValue(ModelParsing.value(map, 'movementType'), 'movementType'),
@@ -152,13 +152,13 @@ class InventoryMovement {
       counterpartyHolderType: ModelParsing.value(map, 'counterpartyHolderType') == null ? null : ModelParsing.inventoryHolderTypeFromValue(ModelParsing.value(map, 'counterpartyHolderType'), 'counterpartyHolderType'),
       counterpartyHolderUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'counterpartyHolderUuid')),
       transactionUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'transactionUuid')),
-      note: ModelParsing.stringOrThrow(map['note'], 'note'),
+      note: ModelParsing.stringOrThrow(ModelParsing.value(map, 'note'), 'note'),
       createdByUserUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'createdByUserUuid')),
-      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'] ?? map['created_at'], 'createdAt'),
-      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'] ?? map['updated_at'], 'updatedAt'),
-      synced: ModelParsing.boolOrNull(map['synced']) ?? false,
-      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['deletedAt'] ?? map['deleted_at']),
-      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['syncedAt'] ?? map['synced_at']),
+      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'createdAt'), 'createdAt'),
+      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'updatedAt'), 'updatedAt'),
+      synced: ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'deletedAt')),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'syncedAt')),
     );
   }
 

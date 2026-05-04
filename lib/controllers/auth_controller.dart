@@ -169,7 +169,7 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
     final name = event.name.trim();
     final username = event.username.trim();
 		final email = event.email.trim();
-		final password = event.password.trim();
+    final password = event.password;
 
     if (state.screen == AuthScreen.signUp && name.isEmpty) {
       emit(state.copyWith(status: AuthStatus.failure, messageKey: AppMessageKey.nameRequired));
@@ -186,7 +186,7 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
       return;
     }
 
-		if (email.isEmpty || password.isEmpty) {
+    if (email.isEmpty || password.isEmpty) {
 			emit(
 				state.copyWith(
 					status: AuthStatus.failure,
@@ -315,7 +315,7 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
   Future<void> _onPasswordResetCompleted(AuthPasswordResetCompleted event, Emitter<AuthState> emit) async {
     final email = event.email.trim();
     final resetLink = event.resetLink.trim();
-    final password = event.password.trim();
+    final password = event.password;
 
     if (email.isEmpty || !email.contains('@')) {
       emit(state.copyWith(status: AuthStatus.failure, messageKey: AppMessageKey.validEmailRequired));

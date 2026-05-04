@@ -81,17 +81,17 @@ class Categories {
 
   factory Categories.fromMap(Map<String, dynamic> map) {
     return Categories(
-      id: ModelParsing.intOrNull(map['id']) ?? 0,
-      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
-      name: ModelParsing.stringOrThrow(map['name'], 'name'),
-      description: ModelParsing.stringOrThrow(map['description'], 'description'),
-      status: ModelParsing.intOrThrow(map['status'], 'status'),
+      id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,
+      uuid: ModelParsing.uuidOrGenerate(ModelParsing.value(map, 'uuid')),
+      name: ModelParsing.stringOrThrow(ModelParsing.value(map, 'name'), 'name'),
+      description: ModelParsing.stringOrThrow(ModelParsing.value(map, 'description'), 'description'),
+      status: ModelParsing.intOrThrow(ModelParsing.value(map, 'status'), 'status'),
       parentUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'parentUuid')),
-      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'] ?? map['created_at'], 'createdAt'),
-      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'] ?? map['updated_at'], 'updatedAt'),
-      synced: ModelParsing.boolOrNull(map['synced']) ?? false,
-      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['deletedAt'] ?? map['deleted_at']),
-      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['syncedAt'] ?? map['synced_at']),
+      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'createdAt'), 'createdAt'),
+      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'updatedAt'), 'updatedAt'),
+      synced: ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'deletedAt')),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'syncedAt')),
     );
   }
 
@@ -126,3 +126,4 @@ class Categories {
     return id.hashCode ^ uuid.hashCode ^ name.hashCode ^ description.hashCode ^ status.hashCode ^ parentUuid.hashCode ^ createdAt.hashCode ^ updatedAt.hashCode ^ synced.hashCode ^ deletedAt.hashCode ^ syncedAt.hashCode;
   }
 }
+

@@ -106,22 +106,22 @@ class StoreReturnItem {
 
   factory StoreReturnItem.fromMap(Map<String, dynamic> map) {
     return StoreReturnItem(
-      id: ModelParsing.intOrNull(map['id']) ?? 0,
-      uuid: ModelParsing.uuidOrGenerate(map['uuid']),
+      id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,
+      uuid: ModelParsing.uuidOrGenerate(ModelParsing.value(map, 'uuid')),
       returnUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'returnUuid'), 'returnUuid'),
       invoiceItemUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'invoiceItemUuid')),
       supplierProductUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'supplierProductUuid'), 'supplierProductUuid'),
       productUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'productUuid'), 'productUuid'),
-      quantity: ModelParsing.intOrThrow(map['quantity'], 'quantity'),
+      quantity: ModelParsing.intOrThrow(ModelParsing.value(map, 'quantity'), 'quantity'),
       unitPrice: ModelParsing.decimalOrThrow(ModelParsing.value(map, 'unitPrice'), 'unitPrice'),
       lineTotal: ModelParsing.decimalOrThrow(ModelParsing.value(map, 'lineTotal'), 'lineTotal'),
-      reason: ModelParsing.stringOrThrow(map['reason'], 'reason'),
-      status: ModelParsing.intOrThrow(map['status'], 'status'),
-      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['createdAt'] ?? map['created_at'], 'createdAt'),
-      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(map['updatedAt'] ?? map['updated_at'], 'updatedAt'),
-      synced: ModelParsing.boolOrNull(map['synced']) ?? false,
-      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['deletedAt'] ?? map['deleted_at']),
-      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(map['syncedAt'] ?? map['synced_at']),
+      reason: ModelParsing.stringOrThrow(ModelParsing.value(map, 'reason'), 'reason'),
+      status: ModelParsing.intOrThrow(ModelParsing.value(map, 'status'), 'status'),
+      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'createdAt'), 'createdAt'),
+      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'updatedAt'), 'updatedAt'),
+      synced: ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'deletedAt')),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'syncedAt')),
     );
   }
 
