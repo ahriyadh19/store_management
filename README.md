@@ -138,12 +138,16 @@ This is infrastructure readiness, not a complete offline sync workflow yet. Supa
 Supabase schema changes currently live under:
 
 - `supabase/migrations/20260429_000001_initial_schema.sql`
+- `supabase/migrations/20260501_000002_add_sync_metadata_columns.sql` (compatibility no-op)
 
 The migration set covers:
 
 - primary entity tables
+- branch and branch-association tables
 - relation and association tables
 - financial and transaction-detail tables
+- enum-aligned check constraints
+- sync-oriented partial indexes for unsynced active rows
 - indexes and update triggers
 - row-level security policies
 - authenticated access rules
