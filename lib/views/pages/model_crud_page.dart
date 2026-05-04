@@ -51,7 +51,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   void initState() {
     super.initState();
     _draftModel = widget.formDefinition.sampleModel;
-    _records = <T>[widget.formDefinition.sampleModel, widget.formDefinition.buildModel(widget.formDefinition.toMap(widget.formDefinition.sampleModel))];
+    _records = _isServerBacked ? <T>[] : <T>[widget.formDefinition.sampleModel, widget.formDefinition.buildModel(widget.formDefinition.toMap(widget.formDefinition.sampleModel))];
     _viewState = _computeSynchronousViewState(records: _records, searchQuery: '');
     _searchController = TextEditingController();
     _gridFocusNode = FocusNode(debugLabel: '${widget.entityLabel}-grid-focus');
@@ -764,7 +764,44 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   void _handleCreateSubmit(Map<String, dynamic> values) {
+    unawaited(_performCreate(values));
+  }
+
+  Future<void> _performCreate(Map<String, dynamic> values) async {
     final model = widget.formDefinition.buildModel(values);
+    final createDelegate = widget.formDefinition.createDelegate;
+
+    if (_isServerBacked && createDelegate != null) {
+      setState(() {
+        _isLoading = true;
+      });
+      try {
+        await createDelegate(model);
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          _draftModel = widget.formDefinition.sampleModel;
+          _showCreateForm = false;
+          _currentPage = 0;
+        });
+        await _refreshViewState(immediateSearch: true);
+        if (!mounted) {
+          return;
+        }
+        _showFeedback(context.l10n.savedEntitySuccessfully(widget.entityLabel));
+      } catch (error) {
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          _isLoading = false;
+        });
+        _showError(error);
+      }
+      return;
+    }
+
     setState(() {
       _records.insert(0, model);
       _recordsVersion++;
@@ -772,7 +809,10 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       _showCreateForm = false;
       _currentPage = 0;
     });
-    unawaited(_refreshViewState(immediateSearch: true));
+    await _refreshViewState(immediateSearch: true);
+    if (!mounted) {
+      return;
+    }
     _showFeedback(context.l10n.savedEntitySuccessfully(widget.entityLabel));
   }
 
@@ -816,6 +856,33 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     }
 
     if (!mounted) {
+      return;
+    }
+
+    final updateDelegate = widget.formDefinition.updateDelegate;
+    if (_isServerBacked && updateDelegate != null) {
+      setState(() {
+        _isLoading = true;
+      });
+      try {
+        await updateDelegate(updatedModel);
+        if (!mounted) {
+          return;
+        }
+        await _refreshViewState(immediateSearch: true);
+        if (!mounted) {
+          return;
+        }
+        _showFeedback(context.l10n.updatedEntitySuccessfully(widget.entityLabel));
+      } catch (error) {
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          _isLoading = false;
+        });
+        _showError(error);
+      }
       return;
     }
 
@@ -886,6 +953,33 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       return;
     }
 
+    final deleteDelegate = widget.formDefinition.deleteDelegate;
+    if (_isServerBacked && deleteDelegate != null) {
+      setState(() {
+        _isLoading = true;
+      });
+      try {
+        await deleteDelegate(record);
+        if (!mounted) {
+          return;
+        }
+        await _refreshViewState(immediateSearch: true);
+        if (!mounted) {
+          return;
+        }
+        _showFeedback(context.l10n.deletedEntitySuccessfully(widget.entityLabel));
+      } catch (error) {
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          _isLoading = false;
+        });
+        _showError(error);
+      }
+      return;
+    }
+
     final index = _indexOfRecord(record);
     if (index == -1) {
       return;
@@ -898,6 +992,12 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     });
     unawaited(_refreshViewState(immediateSearch: true));
     _showFeedback(context.l10n.deletedEntitySuccessfully(widget.entityLabel));
+  }
+
+  void _showError(Object error) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(error.toString()), backgroundColor: Theme.of(context).colorScheme.error));
   }
 
   void _openDetailsPage(T record) {

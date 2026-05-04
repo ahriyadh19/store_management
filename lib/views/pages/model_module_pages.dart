@@ -16,7 +16,10 @@ import 'package:store_management/models/store_return.dart';
 import 'package:store_management/models/tags.dart';
 import 'package:store_management/models/users.dart';
 import 'package:store_management/views/components/model_form.dart';
-ModelFormDefinition<Store> storeFormDefinition(AppLocalizations l10n) => ModelFormDefinition<Store>(
+import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
+
+ModelFormDefinition<Store> storeFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Store>(
+  tableName: 'store',
   fields: [
     _textField('name', _t(l10n, 'Store name', 'اسم المتجر'), required: true),
     _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
@@ -35,7 +38,8 @@ ModelFormDefinition<Store> storeFormDefinition(AppLocalizations l10n) => ModelFo
   ),
 );
 
-ModelFormDefinition<Branch> branchFormDefinition(AppLocalizations l10n) => ModelFormDefinition<Branch>(
+ModelFormDefinition<Branch> branchFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Branch>(
+  tableName: 'branch',
   fields: [
     _textField('name', _t(l10n, 'Branch name', 'اسم الفرع'), required: true),
     _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
@@ -58,7 +62,8 @@ ModelFormDefinition<Branch> branchFormDefinition(AppLocalizations l10n) => Model
   ),
 );
 
-ModelFormDefinition<Product> productFormDefinition(AppLocalizations l10n) => ModelFormDefinition<Product>(
+ModelFormDefinition<Product> productFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Product>(
+  tableName: 'products',
   fields: [
     _textField('name', _t(l10n, 'Product name', 'اسم المنتج'), required: true),
     _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
@@ -75,7 +80,8 @@ ModelFormDefinition<Product> productFormDefinition(AppLocalizations l10n) => Mod
   ),
 );
 
-ModelFormDefinition<Categories> categoryFormDefinition(AppLocalizations l10n) => ModelFormDefinition<Categories>(
+ModelFormDefinition<Categories> categoryFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Categories>(
+  tableName: 'category',
   fields: [
     _textField('name', _t(l10n, 'Category name', 'اسم الفئة'), required: true),
     _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
@@ -94,7 +100,8 @@ ModelFormDefinition<Categories> categoryFormDefinition(AppLocalizations l10n) =>
   ),
 );
 
-ModelFormDefinition<Tags> tagFormDefinition(AppLocalizations l10n) => ModelFormDefinition<Tags>(
+ModelFormDefinition<Tags> tagFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Tags>(
+  tableName: 'tags',
   fields: [
     _textField('name', _t(l10n, 'Tag name', 'اسم الوسم'), required: true),
     _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
@@ -111,7 +118,8 @@ ModelFormDefinition<Tags> tagFormDefinition(AppLocalizations l10n) => ModelFormD
   ),
 );
 
-ModelFormDefinition<Client> clientFormDefinition(AppLocalizations l10n) => ModelFormDefinition<Client>(
+ModelFormDefinition<Client> clientFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Client>(
+  tableName: 'client',
   fields: [
     _textField('name', _t(l10n, 'Client name', 'اسم العميل'), required: true),
     _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
@@ -140,7 +148,8 @@ ModelFormDefinition<Client> clientFormDefinition(AppLocalizations l10n) => Model
   ),
 );
 
-ModelFormDefinition<Supplier> supplierFormDefinition(AppLocalizations l10n) => ModelFormDefinition<Supplier>(
+ModelFormDefinition<Supplier> supplierFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Supplier>(
+  tableName: 'supplier',
   fields: [
     _textField('name', _t(l10n, 'Supplier name', 'اسم الشركة'), required: true),
     _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
@@ -157,7 +166,8 @@ ModelFormDefinition<Supplier> supplierFormDefinition(AppLocalizations l10n) => M
   ),
 );
 
-ModelFormDefinition<User> userFormDefinition(AppLocalizations l10n) => ModelFormDefinition<User>(
+ModelFormDefinition<User> userFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<User>(
+  tableName: 'users',
   fields: [
     _textField('name', _t(l10n, 'Full name', 'الاسم الكامل'), required: true),
     _textField('username', _t(l10n, 'Username', 'اسم المستخدم'), required: true),
@@ -176,7 +186,8 @@ ModelFormDefinition<User> userFormDefinition(AppLocalizations l10n) => ModelForm
   ),
 );
 
-ModelFormDefinition<Roles> roleFormDefinition(AppLocalizations l10n) => ModelFormDefinition<Roles>(
+ModelFormDefinition<Roles> roleFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Roles>(
+  tableName: 'roles',
   fields: [
     _textField('name', _t(l10n, 'Role name', 'اسم الدور'), required: true),
     _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
@@ -193,7 +204,8 @@ ModelFormDefinition<Roles> roleFormDefinition(AppLocalizations l10n) => ModelFor
   ),
 );
 
-ModelFormDefinition<StoreInvoice> invoiceFormDefinition(AppLocalizations l10n) => ModelFormDefinition<StoreInvoice>(
+ModelFormDefinition<StoreInvoice> invoiceFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreInvoice>(
+  tableName: 'store_invoice',
   fields: [
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
     _textField('clientUuid', _t(l10n, 'Client UUID', 'معرّف العميل UUID'), required: true),
@@ -228,7 +240,8 @@ ModelFormDefinition<StoreInvoice> invoiceFormDefinition(AppLocalizations l10n) =
   ),
 );
 
-ModelFormDefinition<StoreReturn> returnFormDefinition(AppLocalizations l10n) => ModelFormDefinition<StoreReturn>(
+ModelFormDefinition<StoreReturn> returnFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreReturn>(
+  tableName: 'store_return',
   fields: [
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
     _textField('clientUuid', _t(l10n, 'Client UUID', 'معرّف العميل UUID'), required: true),
@@ -257,7 +270,8 @@ ModelFormDefinition<StoreReturn> returnFormDefinition(AppLocalizations l10n) => 
   ),
 );
 
-ModelFormDefinition<StorePaymentVoucher> paymentVoucherFormDefinition(AppLocalizations l10n) => ModelFormDefinition<StorePaymentVoucher>(
+ModelFormDefinition<StorePaymentVoucher> paymentVoucherFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StorePaymentVoucher>(
+  tableName: 'store_payment_voucher',
   fields: [
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
     _textField('clientUuid', _t(l10n, 'Client UUID', 'معرّف العميل UUID'), required: true),
@@ -288,7 +302,8 @@ ModelFormDefinition<StorePaymentVoucher> paymentVoucherFormDefinition(AppLocaliz
   ),
 );
 
-ModelFormDefinition<InventoryMovement> inventoryMovementFormDefinition(AppLocalizations l10n) => ModelFormDefinition<InventoryMovement>(
+ModelFormDefinition<InventoryMovement> inventoryMovementFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<InventoryMovement>(
+  tableName: 'inventory_movement',
   fields: [
     _textField('supplierProductUuid', _t(l10n, 'Supplier product UUID', 'معرّف منتج الشركة UUID'), required: true),
     _textField('productUuid', _t(l10n, 'Product UUID', 'معرّف المنتج UUID'), required: true),
@@ -319,7 +334,8 @@ ModelFormDefinition<InventoryMovement> inventoryMovementFormDefinition(AppLocali
   ),
 );
 
-ModelFormDefinition<StoreFinancialTransaction> transactionFormDefinition(AppLocalizations l10n) => ModelFormDefinition<StoreFinancialTransaction>(
+ModelFormDefinition<StoreFinancialTransaction> transactionFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreFinancialTransaction>(
+  tableName: 'store_financial_transaction',
   fields: [
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
     _textField('clientUuid', _t(l10n, 'Client UUID', 'معرّف العميل UUID'), required: true),
@@ -351,6 +367,153 @@ ModelFormDefinition<StoreFinancialTransaction> transactionFormDefinition(AppLoca
     updatedAt: _updatedAt,
   ),
 );
+
+ModelFormDefinition<T> _serverBackedDefinition<T extends Object>({
+  required String tableName,
+  required List<ModelFormFieldDefinition> fields,
+  required T Function(Map<String, dynamic> map) fromMap,
+  required Map<String, dynamic> Function(T model) toMap,
+  required T sampleModel,
+}) {
+  return ModelFormDefinition<T>(
+    fields: fields,
+    fromMap: fromMap,
+    toMap: toMap,
+    sampleModel: sampleModel,
+    queryDelegate: _supabaseQueryDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap),
+    createDelegate: _supabaseCreateDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap),
+    updateDelegate: _supabaseUpdateDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap),
+    deleteDelegate: _supabaseDeleteDelegate(tableName: tableName, toMap: toMap),
+  );
+}
+
+ModelQueryDelegate<T> _supabaseQueryDelegate<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) {
+  return (request) async {
+    final client = Supabase.instance.client;
+    final response = await client.from(tableName).select();
+    final rows = (response as List<dynamic>).map((row) => Map<String, dynamic>.from(row as Map)).toList(growable: false);
+
+    final records = <T>[];
+    for (final row in rows) {
+      try {
+        final deletedAt = row['deletedAt'] ?? row['deleted_at'];
+        if (deletedAt != null) {
+          continue;
+        }
+        records.add(fromMap(Map<String, dynamic>.from(row)));
+      } catch (_) {
+        // Skip malformed rows so one bad record does not break the full list.
+      }
+    }
+
+    final overallCount = records.length;
+    final normalizedQuery = request.searchQuery.trim().toLowerCase();
+    final filtered = normalizedQuery.isEmpty
+        ? List<T>.from(records)
+        : records
+              .where((record) {
+                final data = toMap(record);
+                return data.values.any((value) => (value?.toString().toLowerCase() ?? '').contains(normalizedQuery));
+              })
+              .toList(growable: false);
+
+    final sortColumnName = request.sortColumnName;
+    if (sortColumnName != null && sortColumnName.isNotEmpty) {
+      filtered.sort((left, right) {
+        final leftValue = toMap(left)[sortColumnName];
+        final rightValue = toMap(right)[sortColumnName];
+        final compareResult = _compareSupabaseValues(leftValue, rightValue);
+        return request.sortAscending ? compareResult : -compareResult;
+      });
+    }
+
+    final totalCount = filtered.length;
+    final pageSize = request.pageSize <= 0 ? 10 : request.pageSize;
+    final pageIndex = request.pageIndex < 0 ? 0 : request.pageIndex;
+    final start = (pageIndex * pageSize).clamp(0, totalCount);
+    final end = (start + pageSize).clamp(0, totalCount);
+    final paged = filtered.sublist(start, end);
+
+    return ModelQueryResult<T>(records: paged, totalCount: totalCount, overallCount: overallCount);
+  };
+}
+
+ModelCreateDelegate<T> _supabaseCreateDelegate<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) {
+  return (model) async {
+    final client = Supabase.instance.client;
+    final payload = Map<String, dynamic>.from(toMap(model))
+      ..remove('id')
+      ..removeWhere((key, value) => value == null);
+
+    final inserted = await client.from(tableName).insert(payload).select().single();
+    return fromMap(Map<String, dynamic>.from(inserted));
+  };
+}
+
+ModelUpdateDelegate<T> _supabaseUpdateDelegate<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) {
+  return (model) async {
+    final client = Supabase.instance.client;
+    final payload = Map<String, dynamic>.from(toMap(model))..removeWhere((key, value) => value == null);
+
+    final updatedAt = DateTime.now().millisecondsSinceEpoch;
+    payload['updatedAt'] = updatedAt;
+    payload['updated_at'] = updatedAt;
+
+    final uuid = payload['uuid'];
+    final id = payload['id'];
+
+    dynamic query = client.from(tableName).update(payload);
+    if (uuid != null && uuid.toString().isNotEmpty) {
+      query = query.eq('uuid', uuid);
+    } else if (id != null) {
+      query = query.eq('id', id);
+    }
+
+    final updated = await query.select().maybeSingle();
+    if (updated == null) {
+      return model;
+    }
+    return fromMap(Map<String, dynamic>.from(updated));
+  };
+}
+
+ModelDeleteDelegate<T> _supabaseDeleteDelegate<T extends Object>({required String tableName, required Map<String, dynamic> Function(T model) toMap}) {
+  return (model) async {
+    final client = Supabase.instance.client;
+    final data = toMap(model);
+    final uuid = data['uuid'];
+    final id = data['id'];
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    dynamic query = client.from(tableName).update({'deletedAt': now, 'updatedAt': now});
+    if (uuid != null && uuid.toString().isNotEmpty) {
+      query = query.eq('uuid', uuid);
+    } else if (id != null) {
+      query = query.eq('id', id);
+    }
+
+    await query;
+  };
+}
+
+int _compareSupabaseValues(Object? left, Object? right) {
+  if (identical(left, right)) {
+    return 0;
+  }
+  if (left == null) {
+    return 1;
+  }
+  if (right == null) {
+    return -1;
+  }
+  if (left is num && right is num) {
+    return left.compareTo(right);
+  }
+  if (left is bool && right is bool) {
+    return left == right ? 0 : (left ? 1 : -1);
+  }
+  return left.toString().toLowerCase().compareTo(right.toString().toLowerCase());
+}
 
 ModelFormFieldDefinition _textField(
   String key,
@@ -573,3 +736,4 @@ String transactionEntityLabel(AppLocalizations l10n) => _t(l10n, 'Transaction', 
 final DateTime _createdAt = DateTime(2024, 4, 20, 9, 0);
 final DateTime _updatedAt = DateTime(2024, 4, 21, 14, 30);
 final DateTime _transactionAt = DateTime(2024, 4, 26, 11, 45);
+
