@@ -1015,6 +1015,16 @@ class _WorkspaceTabBar extends StatelessWidget {
       ),
       child: Row(
         children: [
+          IconButton(
+            icon: const Icon(Icons.chevron_left_rounded),
+            tooltip: 'Scroll left',
+            onPressed: () {
+              if (scrollController.hasClients) {
+                final newOffset = (scrollController.offset - 180).clamp(0.0, scrollController.position.maxScrollExtent);
+                scrollController.animateTo(newOffset, duration: const Duration(milliseconds: 180), curve: Curves.easeOut);
+              }
+            },
+          ),
           Expanded(
             child: Stack(
               fit: StackFit.expand,
@@ -1075,6 +1085,16 @@ class _WorkspaceTabBar extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.chevron_right_rounded),
+            tooltip: 'Scroll right',
+            onPressed: () {
+              if (scrollController.hasClients) {
+                final newOffset = (scrollController.offset + 180).clamp(0.0, scrollController.position.maxScrollExtent);
+                scrollController.animateTo(newOffset, duration: const Duration(milliseconds: 180), curve: Curves.easeOut);
+              }
+            },
           ),
           _TabsOverflowMenu(
             tabs: tabs,
