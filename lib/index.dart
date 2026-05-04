@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:store_management/controllers/auth_controller.dart';
 import 'package:store_management/localization/app_localizations.dart';
@@ -12,6 +15,7 @@ import 'package:store_management/services/connection_status_controller.dart';
 import 'package:store_management/services/local_database.dart';
 import 'package:store_management/views/index/index_page.dart';
 import 'package:store_management/views/index/index_page_registry.dart';
+import 'package:window_manager/window_manager.dart';
 
 Widget _buildIndexDrawer(
   BuildContext context, {
@@ -191,7 +195,34 @@ class Index extends StatefulWidget {
   State<Index> createState() => _IndexState();
 }
 
-class _IndexState extends State<Index> with WidgetsBindingObserver {
+class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListener {
+  bool get _isDesktopPlatform => !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+
+  Future<bool> _confirmAppExit() async {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final shouldExit = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.closeApplicationQuestion),
+        content: Text(l10n.closeApplicationWarning),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: colorScheme.error, foregroundColor: colorScheme.onError),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.closeAnyway),
+          ),
+        ],
+      ),
+    );
+    return shouldExit == true;
+  }
+
+  Future<bool> _onWillPop() async {
+    return _confirmAppExit();
+  }
   final List<_WorkspaceTab> _tabs = <_WorkspaceTab>[];
   final ScrollController _tabScrollController = ScrollController();
   final Set<_DrawerSectionKey> _expandedDrawerSections = <_DrawerSectionKey>{};
@@ -204,6 +235,10 @@ class _IndexState extends State<Index> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    if (_isDesktopPlatform) {
+      windowManager.addListener(this);
+      windowManager.setPreventClose(true);
+    }
     _expandedDrawerSections.add(_drawerSectionForPage(IndexPageStorage.fromStorageKey(widget.appPreferencesController.lastIndexPageKey)));
     final restored = _restoreWorkspaceTabsFromPreferences();
     if (!restored) {
@@ -223,10 +258,26 @@ class _IndexState extends State<Index> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    if (_isDesktopPlatform) {
+      windowManager.removeListener(this);
+    }
     WidgetsBinding.instance.removeObserver(this);
     _tabScrollController.dispose();
     _connectionStatusController.dispose();
     super.dispose();
+  }
+
+  @override
+  Future<void> onWindowClose() async {
+    if (!_isDesktopPlatform || !mounted) {
+      return;
+    }
+
+    final shouldExit = await _confirmAppExit();
+    if (shouldExit) {
+      await windowManager.setPreventClose(false);
+      await windowManager.destroy();
+    }
   }
 
   _WorkspaceTab? get _activeTab {
@@ -454,71 +505,6 @@ class _IndexState extends State<Index> with WidgetsBindingObserver {
     _persistWorkspaceTabsState();
   }
 
-  Future<void> _confirmCloseAllUnpinnedTabs(Map<IndexPage, IndexPageDefinition> pageDefinitions) async {
-    final unpinnedTabs = _tabs.where((tab) => !tab.pinned).toList(growable: false);
-    if (unpinnedTabs.isEmpty || !mounted) {
-      return;
-    }
-
-    final tabNames = unpinnedTabs.map((tab) => pageDefinitions[tab.page]?.title ?? tab.page.name).toList(growable: false);
-    final listHeight = math.min(220.0, math.max(72.0, tabNames.length * 30.0));
-    final shouldClose = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        final theme = Theme.of(context);
-        final colorScheme = theme.colorScheme;
-        final l10n = context.l10n;
-
-        return AlertDialog(
-          title: Text(l10n.dangerCloseAllUnpinnedTabsQuestion),
-          content: ConstrainedBox(
-            constraints: const BoxConstraints(maxHeight: 280, minWidth: 320),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(l10n.dangerCloseAllUnpinnedTabsWarning, style: theme.textTheme.bodyMedium),
-                const SizedBox(height: 10),
-                SizedBox(
-                  height: listHeight,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        for (final tabName in tabNames)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 2),
-                            child: Row(
-                              children: [
-                                Icon(Icons.close_rounded, size: 15, color: colorScheme.error),
-                                const SizedBox(width: 6),
-                                Expanded(child: Text(tabName, overflow: TextOverflow.ellipsis)),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
-            FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: colorScheme.error, foregroundColor: colorScheme.onError),
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(l10n.closeAll),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (shouldClose == true && mounted) {
-      _closeAllUnpinnedTabs();
-    }
-  }
 
   void _closeTabsToRight(String tabId) {
     final index = _tabs.indexWhere((tab) => tab.id == tabId);
@@ -674,139 +660,113 @@ class _IndexState extends State<Index> with WidgetsBindingObserver {
     }
   }
 
-  bool _handleBodyScrollNotification(ScrollNotification notification, bool stickyAppBar) {
-    if (stickyAppBar || notification.metrics.axis != Axis.vertical || notification.depth != 0) {
-      return false;
-    }
-
-    if (notification.metrics.pixels <= 0 && !_isAppBarVisible) {
-      setState(() {
-        _isAppBarVisible = true;
-      });
-      return false;
-    }
-
-    if (notification is ScrollUpdateNotification) {
-      final scrollDelta = notification.scrollDelta ?? 0;
-      if (scrollDelta > 0 && _isAppBarVisible) {
-        setState(() {
-          _isAppBarVisible = false;
-        });
-      } else if (scrollDelta < 0 && !_isAppBarVisible) {
-        setState(() {
-          _isAppBarVisible = true;
-        });
-      }
-      return false;
-    }
-
-    if (notification is UserScrollNotification) {
-      if (notification.direction == ScrollDirection.reverse && _isAppBarVisible) {
-        setState(() {
-          _isAppBarVisible = false;
-        });
-      } else if (notification.direction == ScrollDirection.forward && !_isAppBarVisible) {
-        setState(() {
-          _isAppBarVisible = true;
-        });
-      }
-    }
-
-    return false;
-  }
 
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthController>().state;
     final pageDefinitions = buildIndexPageDefinitions(context, authState, localeController: widget.localeController, appPreferencesController: widget.appPreferencesController);
-    final activeTab = _activeTab;
-    if (activeTab == null) {
-      return const SizedBox.shrink();
-    }
-    final selectedDefinition = pageDefinitions[activeTab.page]!;
+    final activeTab = _tabs.isNotEmpty ? _tabs.firstWhere((tab) => tab.id == _activeTabId, orElse: () => _tabs.first) : null;
+    final selectedDefinition = activeTab != null ? pageDefinitions[activeTab.page] : null;
 
-    return AnimatedBuilder(
-      animation: widget.appPreferencesController,
-      builder: (context, child) {
-        final stickyAppBar = widget.appPreferencesController.stickyAppBar;
-        final effectiveToolbarHeight = stickyAppBar || _isAppBarVisible ? kToolbarHeight : 0.0;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) {
+          return;
+        }
 
-        return Scaffold(
-          drawer: _buildIndexDrawer(
-            context,
-            activePage: activeTab.page,
-            onOpenPage: _handleDrawerPageOpened,
-            expandedSections: _expandedDrawerSections,
-            onExpandAll: _expandAllDrawerSections,
-            onCollapseAll: _collapseAllDrawerSections,
-            onSectionExpansionChanged: _setDrawerSectionExpanded,
-          ),
-          appBar: AppBar(
-            toolbarHeight: effectiveToolbarHeight,
-            title: effectiveToolbarHeight == 0 ? null : Text(selectedDefinition.title),
-            centerTitle: true,
-            elevation: 4,
-            backgroundColor: Colors.transparent,
-            shadowColor: Colors.black.withValues(alpha: 0.12),
-            actions: effectiveToolbarHeight == 0
-                ? const <Widget>[]
-                : [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: _ConnectionIndicators(controller: _connectionStatusController),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: VerticalDivider(width: 2, thickness: 3, indent: 12, endIndent: 12, color: Theme.of(context).dividerColor),
-                    ),
-                    IconButton(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      tooltip: context.l10n.settings,
-                      icon: const Icon(Icons.settings_rounded),
-                      onPressed: () {
-                        _openPageInTab(IndexPage.settings, pinned: true);
-                      },
-                    ),
-                    IconButton(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      color: Theme.of(context).colorScheme.error,
-                      tooltip: context.l10n.logout,
-                      icon: const Icon(Icons.logout_rounded),
-                      onPressed: () {
-                        _confirmSignOut();
-                      },
-                    ),
-                  ],
-          ),
-          body: Column(
-            children: [
-              _WorkspaceTabBar(
-                tabs: _tabs,
-                activeTabId: _activeTabId,
-                pageDefinitions: pageDefinitions,
-                scrollController: _tabScrollController,
-                onActivateTab: _activateTab,
-                onCloseTab: _requestCloseTab,
-                onTogglePin: _toggleTabPin,
-                onReorderTabs: _reorderTabs,
-                onMoveTab: _moveTabById,
-                onCloseTabsToRight: _closeTabsToRight,
-                onCloseAllUnpinned: () => _confirmCloseAllUnpinnedTabs(pageDefinitions),
-                onRecoverDashboard: _recoverWorkspaceWithDashboard,
-              ),
-              Expanded(
-                child: NotificationListener<ScrollNotification>(
-                  onNotification: (notification) => _handleBodyScrollNotification(notification, stickyAppBar),
-                  child: IndexedStack(
-                    index: _tabs.indexWhere((tab) => tab.id == _activeTabId).clamp(0, _tabs.length - 1),
-                    children: [for (final tab in _tabs) KeyedSubtree(key: ValueKey<String>('body_${tab.id}'), child: pageDefinitions[tab.page]!.bodyBuilder(context))],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
+        final shouldExit = await _onWillPop();
+        if (!mounted || !context.mounted || !shouldExit) {
+          return;
+        }
+
+        if (_isDesktopPlatform) {
+          await windowManager.setPreventClose(false);
+          await windowManager.destroy();
+          return;
+        }
+
+        final popped = await Navigator.of(context).maybePop();
+        if (!popped && !kIsWeb) {
+          await SystemNavigator.pop();
+        }
       },
+      child: AnimatedBuilder(
+        animation: widget.appPreferencesController,
+        builder: (context, child) {
+          final stickyAppBar = widget.appPreferencesController.stickyAppBar;
+          final effectiveToolbarHeight = stickyAppBar || _isAppBarVisible ? kToolbarHeight : 0.0;
+
+          return Scaffold(
+            drawer: _buildIndexDrawer(
+              context,
+              activePage: activeTab != null ? activeTab.page : IndexPage.dashboard,
+              onOpenPage: _handleDrawerPageOpened,
+              expandedSections: _expandedDrawerSections,
+              onExpandAll: _expandAllDrawerSections,
+              onCollapseAll: _collapseAllDrawerSections,
+              onSectionExpansionChanged: _setDrawerSectionExpanded,
+            ),
+            appBar: AppBar(
+              toolbarHeight: effectiveToolbarHeight,
+              title: effectiveToolbarHeight == 0 || selectedDefinition == null ? null : Text(selectedDefinition.title),
+              centerTitle: true,
+              elevation: 4,
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.black.withValues(alpha: 0.12),
+              actions: effectiveToolbarHeight == 0
+                  ? const <Widget>[]
+                  : [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: _ConnectionIndicators(controller: _connectionStatusController),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: VerticalDivider(width: 2, thickness: 3, indent: 12, endIndent: 12, color: Theme.of(context).dividerColor),
+                      ),
+                      IconButton(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        tooltip: context.l10n.settings,
+                        icon: const Icon(Icons.settings_rounded),
+                        onPressed: () {
+                          _openPageInTab(IndexPage.settings, pinned: true);
+                        },
+                      ),
+                      IconButton(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        color: Theme.of(context).colorScheme.error,
+                        tooltip: context.l10n.logout,
+                        icon: const Icon(Icons.logout_rounded),
+                        onPressed: () {
+                          _confirmSignOut();
+                        },
+                      ),
+                    ],
+            ),
+            body: Column(
+              children: [
+                _WorkspaceTabBar(
+                  tabs: _tabs,
+                  activeTabId: _activeTabId,
+                  pageDefinitions: pageDefinitions,
+                  scrollController: _tabScrollController,
+                  onActivateTab: _activateTab,
+                  onCloseTab: _requestCloseTab,
+                  onTogglePin: _toggleTabPin,
+                  onReorderTabs: _reorderTabs,
+                  onMoveTab: _moveTabById,
+                  onCloseTabsToRight: _closeTabsToRight,
+                  onCloseAllUnpinned: () async => _closeAllUnpinnedTabs(),
+                  onRecoverDashboard: _recoverWorkspaceWithDashboard,
+                ),
+                Expanded(
+                  child: selectedDefinition != null ? selectedDefinition.bodyBuilder(context) : const SizedBox.shrink()),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

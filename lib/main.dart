@@ -16,12 +16,16 @@ import 'package:store_management/services/auth_repository.dart';
 import 'package:store_management/services/local_database.dart';
 import 'package:store_management/services/supabase_auth_storage.dart';
 import 'package:store_management/views/auth_view.dart';
+import 'package:window_manager/window_manager.dart';
 
 const _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 const _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (_isDesktopPlatform) {
+    await windowManager.ensureInitialized();
+  }
 
   final localeController = await LocaleController.create();
   final appPreferencesController = await AppPreferencesController.create();
