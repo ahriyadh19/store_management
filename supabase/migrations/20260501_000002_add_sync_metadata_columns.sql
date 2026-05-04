@@ -1,7 +1,3 @@
--- This migration is intentionally left as a no-op.
---
--- Sync metadata columns (synced, deletedAt, syncedAt) were merged directly into
--- the comprehensive schema file:
+-- Compatibility migration intentionally kept as a no-op.
+-- Complete schema and sync metadata are consolidated in:
 --   supabase/migrations/20260429_000001_initial_schema.sql
---
--- Keeping this file avoids breaking migration order in existing environments.

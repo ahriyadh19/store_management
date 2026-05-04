@@ -78,20 +78,23 @@ create table if not exists public.products (
   "syncedAt" bigint
 );
 
-create table if not exists public.categories (
+create table if not exists public.category (
   id bigint generated always as identity primary key,
   uuid uuid not null default gen_random_uuid() unique,
   name text not null,
   description text not null default '',
   status integer not null default 1 check (status in (0, 1)),
-  "parentUuid" uuid references public.categories (uuid) on delete set null,
+  "parentUuid" uuid references public.category (uuid) on delete set null,
   "createdAt" bigint not null default public.now_millis(),
   "updatedAt" bigint not null default public.now_millis(),
   synced boolean not null default false,
   "deletedAt" bigint,
   "syncedAt" bigint,
-  constraint categories_parent_not_self check ("parentUuid" is null or "parentUuid" <> uuid)
+  constraint category_parent_not_self check ("parentUuid" is null or "parentUuid" <> uuid)
 );
+
+create or replace view public.categories as
+select * from public.category;
 
 create table if not exists public.tags (
   id bigint generated always as identity primary key,
@@ -467,7 +470,7 @@ create index if not exists idx_users_auth_user_id on public.users (auth_user_id)
 create index if not exists idx_users_email on public.users (email);
 create index if not exists idx_supplier_status on public.supplier (status);
 create index if not exists idx_products_status on public.products (status);
-create index if not exists idx_categories_parent_uuid on public.categories ("parentUuid");
+create index if not exists idx_category_parent_uuid on public.category ("parentUuid");
 create index if not exists idx_tags_status on public.tags (status);
 create index if not exists idx_roles_status on public.roles (status);
 create index if not exists idx_branch_status on public.branch (status);
@@ -517,7 +520,7 @@ create index if not exists idx_payment_allocation_invoice_uuid on public.payment
 create index if not exists idx_users_active_unsynced on public.users ("updatedAt") where "deletedAt" is null and synced = false;
 create index if not exists idx_supplier_active_unsynced on public.supplier ("updatedAt") where "deletedAt" is null and synced = false;
 create index if not exists idx_products_active_unsynced on public.products ("updatedAt") where "deletedAt" is null and synced = false;
-create index if not exists idx_categories_active_unsynced on public.categories ("updatedAt") where "deletedAt" is null and synced = false;
+create index if not exists idx_category_active_unsynced on public.category ("updatedAt") where "deletedAt" is null and synced = false;
 create index if not exists idx_tags_active_unsynced on public.tags ("updatedAt") where "deletedAt" is null and synced = false;
 create index if not exists idx_roles_active_unsynced on public.roles ("updatedAt") where "deletedAt" is null and synced = false;
 create index if not exists idx_branch_active_unsynced on public.branch ("updatedAt") where "deletedAt" is null and synced = false;
@@ -543,7 +546,7 @@ declare
     'users',
     'supplier',
     'products',
-    'categories',
+    'category',
     'tags',
     'roles',
     'branch',
@@ -630,7 +633,7 @@ declare
   target_tables text[] := array[
     'supplier',
     'products',
-    'categories',
+    'category',
     'tags',
     'roles',
     'store',
