@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -23,29 +25,42 @@ class ModelCrudPage<T extends Object> extends StatefulWidget {
 
 class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   static const String _actionsColumnName = '__actions__';
+  static const Duration _searchDebounceDuration = Duration(milliseconds: 280);
+  static const int _isolateThreshold = 180;
   late final List<T> _records;
   late T _draftModel;
   late final TextEditingController _searchController;
   late final FocusNode _gridFocusNode;
   final Map<String, double> _columnWidths = <String, double>{};
+  Timer? _searchDebounce;
   bool _showCreateForm = false;
+  bool _isLoading = false;
   String? _selectedRecordKey;
   String? _sortColumnName;
+  String _effectiveSearchQuery = '';
   bool _sortAscending = true;
   int _currentPage = 0;
   int _rowsPerPage = 10;
+  int _recordsVersion = 0;
+  int _queryEpoch = 0;
+  int _cachedSnapshotsVersion = -1;
+  List<_RecordSnapshot<T>>? _cachedRecordSnapshots;
+  late _CachedCrudViewState<T> _viewState;
 
   @override
   void initState() {
     super.initState();
     _draftModel = widget.formDefinition.sampleModel;
     _records = <T>[widget.formDefinition.sampleModel, widget.formDefinition.buildModel(widget.formDefinition.toMap(widget.formDefinition.sampleModel))];
+    _viewState = _computeSynchronousViewState(records: _records, searchQuery: '');
     _searchController = TextEditingController();
     _gridFocusNode = FocusNode(debugLabel: '${widget.entityLabel}-grid-focus');
+    unawaited(_refreshViewState(immediateSearch: true));
   }
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _gridFocusNode.dispose();
     _searchController.dispose();
     super.dispose();
@@ -156,6 +171,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     final rowHeight = isCompactLayout ? 72.0 : 60.0;
     final headerRowHeight = isCompactLayout ? 52.0 : 56.0;
     final visibleRecords = _paginatedRecords;
+    final visibleRecordKeys = _viewState.paginatedRecordKeys;
     final currentPage = _effectiveCurrentPage;
     final pageCount = _pageCount;
     final availableTableWidth = math.max(constraints.maxWidth - 48, 280.0);
@@ -201,12 +217,13 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
               ],
             ),
             const SizedBox(height: 20),
-            if (_records.isNotEmpty) ...[
+            if (_viewState.sortedRecords.isNotEmpty || _isServerBacked) ...[
               _buildSearchField(context),
-              if (_searchQuery.isNotEmpty && _filteredRecords.isEmpty) ...[const SizedBox(height: 12), Text(l10n.noMatchingRecords, style: Theme.of(context).textTheme.bodyMedium)],
+              if (_effectiveSearchQuery.isNotEmpty && _filteredRecords.isEmpty && !_isLoading) ...[const SizedBox(height: 12), Text(l10n.noMatchingRecords, style: Theme.of(context).textTheme.bodyMedium)],
               const SizedBox(height: 20),
             ],
-            if (_records.isEmpty)
+            if (_isLoading) ...[const LinearProgressIndicator(minHeight: 2), const SizedBox(height: 12)],
+            if (_viewState.sortedRecords.isEmpty && !_isLoading)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -252,7 +269,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
                                 }
 
                                 setState(() {
-                                  _selectedRecordKey = _recordIdentity(visibleRecords[rowIndex - 1]);
+                                  _selectedRecordKey = visibleRecordKeys[rowIndex - 1];
                                 });
                               },
                               onCellDoubleTap: (details) {
@@ -263,7 +280,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
 
                                 final record = visibleRecords[rowIndex - 1];
                                 setState(() {
-                                  _selectedRecordKey = _recordIdentity(record);
+                                  _selectedRecordKey = visibleRecordKeys[rowIndex - 1];
                                 });
                                 _openDetailsPage(record);
                               },
@@ -292,7 +309,10 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
                   ),
                 ),
               ),
-            if (_records.isNotEmpty) ...[const SizedBox(height: 16), _buildTableFooter(context, isCompactLayout: isCompactLayout, currentPage: currentPage, pageCount: pageCount)],
+            if ((_viewState.sortedRecords.isNotEmpty || _isServerBacked) && !_isLoading) ...[
+              const SizedBox(height: 16),
+              _buildTableFooter(context, isCompactLayout: isCompactLayout, currentPage: currentPage, pageCount: pageCount),
+            ],
           ],
         ),
       ),
@@ -357,79 +377,250 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
 
   String get _searchQuery => _searchController.text.trim();
 
+  bool get _isServerBacked => widget.formDefinition.queryDelegate != null;
+
   List<T> get _filteredRecords {
-    if (_searchQuery.isEmpty) {
-      return _records;
-    }
-
-    final normalizedQuery = _searchQuery.toLowerCase();
-    return _records
-        .where((record) {
-          final data = widget.formDefinition.toMap(record);
-          for (final field in _visibleFields) {
-            final formattedValue = _formatCellValue(data[field.key]).toLowerCase();
-            if (formattedValue.contains(normalizedQuery)) {
-              return true;
-            }
-
-            final rawValue = data[field.key]?.toString().toLowerCase() ?? '';
-            if (rawValue.contains(normalizedQuery)) {
-              return true;
-            }
-          }
-          return false;
-        })
-        .toList(growable: false);
-  }
-
-  List<T> get _sortedRecords {
-    final records = List<T>.of(_filteredRecords);
-    final sortColumnName = _sortColumnName;
-    if (sortColumnName == null) {
-      return records;
-    }
-
-    records.sort((left, right) {
-      final leftValue = widget.formDefinition.toMap(left)[sortColumnName];
-      final rightValue = widget.formDefinition.toMap(right)[sortColumnName];
-      final result = _compareSortValues(leftValue, rightValue);
-      return _sortAscending ? result : -result;
-    });
-    return records;
+    return _viewState.filteredRecords;
   }
 
   int get _pageCount {
-    final totalRows = _sortedRecords.length;
-    if (totalRows == 0) {
-      return 1;
-    }
-    return (totalRows / _rowsPerPage).ceil();
+    return _viewState.pageCount;
   }
 
-  int get _effectiveCurrentPage => math.min(_currentPage, _pageCount - 1);
+  int get _effectiveCurrentPage => _viewState.effectiveCurrentPage;
 
   List<T> get _paginatedRecords {
-    final sortedRecords = _sortedRecords;
-    if (sortedRecords.isEmpty) {
-      return <T>[];
-    }
-
-    final start = _effectiveCurrentPage * _rowsPerPage;
-    final end = math.min(start + _rowsPerPage, sortedRecords.length);
-    return sortedRecords.sublist(start, end);
+    return _viewState.paginatedRecords;
   }
 
   String get _summaryRowCountLabel {
-    if (_searchQuery.isEmpty) {
-      return _sortedRecords.length.toString();
+    return _viewState.summaryRowCountLabel;
+  }
+
+  Future<void> _refreshViewState({bool immediateSearch = false}) async {
+    final query = _searchQuery;
+
+    if (!immediateSearch) {
+      _searchDebounce?.cancel();
+      _searchDebounce = Timer(_searchDebounceDuration, () {
+        unawaited(_applyQueryAndRefresh(query));
+      });
+      return;
     }
-    return '${_sortedRecords.length}/${_records.length}';
+
+    await _applyQueryAndRefresh(query);
+  }
+
+  Future<void> _applyQueryAndRefresh(String searchQuery) async {
+    final requestEpoch = ++_queryEpoch;
+    final normalizedSearchQuery = searchQuery.trim();
+
+    if (mounted) {
+      setState(() {
+        _effectiveSearchQuery = normalizedSearchQuery;
+        _isLoading = true;
+      });
+    }
+
+    try {
+      final nextViewState = _isServerBacked ? await _computeServerViewState(searchQuery: normalizedSearchQuery) : await _computeLocalViewState(searchQuery: normalizedSearchQuery);
+
+      if (!mounted || requestEpoch != _queryEpoch) {
+        return;
+      }
+
+      setState(() {
+        _viewState = nextViewState;
+        _currentPage = _viewState.effectiveCurrentPage;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted || requestEpoch != _queryEpoch) {
+        return;
+      }
+
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<_CachedCrudViewState<T>> _computeServerViewState({required String searchQuery}) async {
+    final queryDelegate = widget.formDefinition.queryDelegate;
+    if (queryDelegate == null) {
+      return _computeSynchronousViewState(records: _records, searchQuery: searchQuery);
+    }
+
+    final result = await queryDelegate(ModelQueryRequest(searchQuery: searchQuery, sortColumnName: _sortColumnName, sortAscending: _sortAscending, pageIndex: _currentPage, pageSize: _rowsPerPage));
+
+    final records = result.records;
+    final pageCount = result.totalCount == 0 ? 1 : (result.totalCount / _rowsPerPage).ceil();
+    final effectiveCurrentPage = math.min(_currentPage, pageCount - 1);
+    final recordByKey = <String, T>{};
+    final indexByRecordKey = <String, int>{};
+    final paginatedRecordKeys = <String>[];
+
+    for (var index = 0; index < records.length; index++) {
+      final data = widget.formDefinition.toMap(records[index]);
+      final recordKey = _recordIdentityFromMap(data);
+      recordByKey[recordKey] = records[index];
+      indexByRecordKey[recordKey] = index;
+      paginatedRecordKeys.add(recordKey);
+    }
+
+    final overallCount = result.overallCount;
+    final summaryRowCountLabel = overallCount == null || searchQuery.isEmpty ? result.totalCount.toString() : '${result.totalCount}/$overallCount';
+
+    return _CachedCrudViewState<T>(
+      filteredRecords: List<T>.unmodifiable(records),
+      sortedRecords: List<T>.unmodifiable(records),
+      paginatedRecords: List<T>.unmodifiable(records),
+      paginatedRecordKeys: List<String>.unmodifiable(paginatedRecordKeys),
+      recordByKey: Map<String, T>.unmodifiable(recordByKey),
+      indexByRecordKey: Map<String, int>.unmodifiable(indexByRecordKey),
+      totalRowCount: result.totalCount,
+      pageCount: pageCount,
+      effectiveCurrentPage: effectiveCurrentPage,
+      summaryRowCountLabel: summaryRowCountLabel,
+    );
+  }
+
+  Future<_CachedCrudViewState<T>> _computeLocalViewState({required String searchQuery}) async {
+    final snapshots = _recordSnapshots;
+    if (snapshots.length < _isolateThreshold) {
+      return _computeSynchronousViewState(records: _records, searchQuery: searchQuery);
+    }
+
+    final payload = <String, Object?>{
+      'searchQuery': searchQuery.toLowerCase(),
+      'sortAscending': _sortAscending,
+      'sortColumnName': _sortColumnName,
+      'pageIndex': _currentPage,
+      'pageSize': _rowsPerPage,
+      'entries': snapshots
+          .map((snapshot) => <String, Object?>{'index': snapshot.index, 'recordKey': snapshot.recordKey, 'searchBlob': snapshot.searchBlob, 'sortValue': _toIsolateSortValue(snapshot.data[_sortColumnName])})
+          .toList(growable: false),
+    };
+
+    final isolateResult = await compute(_runLocalQueryInIsolate, payload);
+    final filteredIndexes = List<int>.from(isolateResult['filteredIndexes'] as List<Object?>);
+    final sortedIndexes = List<int>.from(isolateResult['sortedIndexes'] as List<Object?>);
+    final paginatedIndexes = List<int>.from(isolateResult['paginatedIndexes'] as List<Object?>);
+    final pageCount = isolateResult['pageCount'] as int;
+    final effectiveCurrentPage = isolateResult['effectiveCurrentPage'] as int;
+
+    final snapshotByIndex = <int, _RecordSnapshot<T>>{for (final snapshot in snapshots) snapshot.index: snapshot};
+    final filteredRecords = filteredIndexes.map((index) => snapshotByIndex[index]!.record).toList(growable: false);
+    final sortedRecords = sortedIndexes.map((index) => snapshotByIndex[index]!.record).toList(growable: false);
+    final paginatedRecords = paginatedIndexes.map((index) => snapshotByIndex[index]!.record).toList(growable: false);
+    final paginatedRecordKeys = paginatedIndexes.map((index) => snapshotByIndex[index]!.recordKey).toList(growable: false);
+    final recordByKey = <String, T>{for (final index in sortedIndexes) snapshotByIndex[index]!.recordKey: snapshotByIndex[index]!.record};
+    final indexByRecordKey = <String, int>{for (final snapshot in snapshots) snapshot.recordKey: snapshot.index};
+    final summaryRowCountLabel = searchQuery.isEmpty ? sortedIndexes.length.toString() : '${sortedIndexes.length}/${_records.length}';
+
+    return _CachedCrudViewState<T>(
+      filteredRecords: List<T>.unmodifiable(filteredRecords),
+      sortedRecords: List<T>.unmodifiable(sortedRecords),
+      paginatedRecords: List<T>.unmodifiable(paginatedRecords),
+      paginatedRecordKeys: List<String>.unmodifiable(paginatedRecordKeys),
+      recordByKey: Map<String, T>.unmodifiable(recordByKey),
+      indexByRecordKey: Map<String, int>.unmodifiable(indexByRecordKey),
+      totalRowCount: sortedIndexes.length,
+      pageCount: pageCount,
+      effectiveCurrentPage: effectiveCurrentPage,
+      summaryRowCountLabel: summaryRowCountLabel,
+    );
+  }
+
+  _CachedCrudViewState<T> _computeSynchronousViewState({required List<T> records, required String searchQuery}) {
+    final normalizedSearchQuery = searchQuery.toLowerCase();
+    final snapshots = _recordSnapshots;
+    final filteredSnapshots = searchQuery.isEmpty ? snapshots : snapshots.where((snapshot) => snapshot.searchBlob.contains(normalizedSearchQuery)).toList(growable: false);
+
+    final sortedSnapshots = List<_RecordSnapshot<T>>.of(filteredSnapshots);
+    final sortColumnName = _sortColumnName;
+    if (sortColumnName != null) {
+      sortedSnapshots.sort((left, right) {
+        final leftValue = left.data[sortColumnName];
+        final rightValue = right.data[sortColumnName];
+        final result = _compareSortValues(leftValue, rightValue);
+        return _sortAscending ? result : -result;
+      });
+    }
+
+    final totalRows = sortedSnapshots.length;
+    final pageCount = totalRows == 0 ? 1 : (totalRows / _rowsPerPage).ceil();
+    final effectiveCurrentPage = math.min(_currentPage, pageCount - 1);
+    final paginatedSnapshots = totalRows == 0 ? <_RecordSnapshot<T>>[] : sortedSnapshots.sublist(effectiveCurrentPage * _rowsPerPage, math.min((effectiveCurrentPage + 1) * _rowsPerPage, totalRows));
+
+    final filteredRecords = filteredSnapshots.map((snapshot) => snapshot.record).toList(growable: false);
+    final sortedRecords = sortedSnapshots.map((snapshot) => snapshot.record).toList(growable: false);
+    final paginatedRecords = paginatedSnapshots.map((snapshot) => snapshot.record).toList(growable: false);
+    final paginatedRecordKeys = paginatedSnapshots.map((snapshot) => snapshot.recordKey).toList(growable: false);
+    final recordByKey = <String, T>{for (final snapshot in sortedSnapshots) snapshot.recordKey: snapshot.record};
+    final indexByRecordKey = <String, int>{for (final snapshot in snapshots) snapshot.recordKey: snapshot.index};
+    final summaryRowCountLabel = searchQuery.isEmpty ? totalRows.toString() : '$totalRows/${records.length}';
+
+    return _CachedCrudViewState<T>(
+      filteredRecords: List<T>.unmodifiable(filteredRecords),
+      sortedRecords: List<T>.unmodifiable(sortedRecords),
+      paginatedRecords: List<T>.unmodifiable(paginatedRecords),
+      paginatedRecordKeys: List<String>.unmodifiable(paginatedRecordKeys),
+      recordByKey: Map<String, T>.unmodifiable(recordByKey),
+      indexByRecordKey: Map<String, int>.unmodifiable(indexByRecordKey),
+      totalRowCount: totalRows,
+      pageCount: pageCount,
+      effectiveCurrentPage: effectiveCurrentPage,
+      summaryRowCountLabel: summaryRowCountLabel,
+    );
+  }
+
+  List<_RecordSnapshot<T>> get _recordSnapshots {
+    final cached = _cachedRecordSnapshots;
+    if (cached != null && _cachedSnapshotsVersion == _recordsVersion) {
+      return cached;
+    }
+
+    final visibleFields = _visibleFields;
+    final snapshots = <_RecordSnapshot<T>>[];
+    for (var index = 0; index < _records.length; index++) {
+      final record = _records[index];
+      final data = widget.formDefinition.toMap(record);
+      final searchBuffer = StringBuffer();
+      for (final field in visibleFields) {
+        final value = data[field.key];
+        searchBuffer
+          ..write(' ')
+          ..write(_formatCellValue(value).toLowerCase())
+          ..write(' ')
+          ..write(value?.toString().toLowerCase() ?? '');
+      }
+
+      snapshots.add(_RecordSnapshot<T>(index: index, record: record, data: data, recordKey: _recordIdentityFromMap(data), searchBlob: searchBuffer.toString()));
+    }
+
+    _cachedRecordSnapshots = snapshots;
+    _cachedSnapshotsVersion = _recordsVersion;
+    return snapshots;
+  }
+
+  Object? _toIsolateSortValue(Object? value) {
+    if (value == null || value is num || value is bool || value is String) {
+      return value;
+    }
+
+    if (value is DateTime) {
+      return value.millisecondsSinceEpoch;
+    }
+
+    return value.toString();
   }
 
   void _handleSearchChanged(String value) {
     setState(() {
       _currentPage = 0;
     });
+    unawaited(_refreshViewState());
   }
 
   void _handleSortChanged(String columnName) {
@@ -442,6 +633,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       }
       _currentPage = 0;
     });
+    unawaited(_refreshViewState(immediateSearch: true));
   }
 
   void _handleRowsPerPageChanged(int? value) {
@@ -453,6 +645,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       _rowsPerPage = value;
       _currentPage = 0;
     });
+    unawaited(_refreshViewState(immediateSearch: true));
   }
 
   int _compareSortValues(Object? left, Object? right) {
@@ -482,7 +675,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   Widget _buildTableFooter(BuildContext context, {required bool isCompactLayout, required int currentPage, required int pageCount}) {
-    final totalRows = _sortedRecords.length;
+    final totalRows = _viewState.totalRowCount;
     final start = totalRows == 0 ? 0 : currentPage * _rowsPerPage + 1;
     final end = totalRows == 0 ? 0 : math.min((currentPage + 1) * _rowsPerPage, totalRows);
     final rowsPerPageOptions = isCompactLayout ? const <int>[5, 10, 15] : const <int>[10, 25, 50, 100];
@@ -512,6 +705,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
                     setState(() {
                       _currentPage = currentPage - 1;
                     });
+                    unawaited(_refreshViewState(immediateSearch: true));
                   }
                 : null,
             icon: const Icon(Icons.chevron_left_rounded),
@@ -524,6 +718,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
                     setState(() {
                       _currentPage = currentPage + 1;
                     });
+                    unawaited(_refreshViewState(immediateSearch: true));
                   }
                 : null,
             icon: const Icon(Icons.chevron_right_rounded),
@@ -572,10 +767,12 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     final model = widget.formDefinition.buildModel(values);
     setState(() {
       _records.insert(0, model);
+      _recordsVersion++;
       _draftModel = widget.formDefinition.sampleModel;
       _showCreateForm = false;
       _currentPage = 0;
     });
+    unawaited(_refreshViewState(immediateSearch: true));
     _showFeedback(context.l10n.savedEntitySuccessfully(widget.entityLabel));
   }
 
@@ -629,8 +826,10 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
 
     setState(() {
       _records[index] = updatedModel;
+      _recordsVersion++;
       _currentPage = _effectiveCurrentPage;
     });
+    unawaited(_refreshViewState(immediateSearch: true));
     _showFeedback(context.l10n.updatedEntitySuccessfully(widget.entityLabel));
   }
 
@@ -687,10 +886,17 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       return;
     }
 
+    final index = _indexOfRecord(record);
+    if (index == -1) {
+      return;
+    }
+
     setState(() {
-      _records.removeAt(_indexOfRecord(record));
+      _records.removeAt(index);
+      _recordsVersion++;
       _currentPage = _effectiveCurrentPage;
     });
+    unawaited(_refreshViewState(immediateSearch: true));
     _showFeedback(context.l10n.deletedEntitySuccessfully(widget.entityLabel));
   }
 
@@ -703,14 +909,8 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   int _indexOfRecord(T record) {
-    final target = widget.formDefinition.toMap(record);
-    final targetUuid = target['uuid'];
-    if (targetUuid != null) {
-      return _records.indexWhere((item) => widget.formDefinition.toMap(item)['uuid'] == targetUuid);
-    }
-
-    final targetId = target['id'];
-    return _records.indexWhere((item) => widget.formDefinition.toMap(item)['id'] == targetId);
+    final targetKey = _recordIdentity(record);
+    return _viewState.indexByRecordKey[targetKey] ?? -1;
   }
 
   String _recordIdentity(T record) => _recordIdentityFromMap(widget.formDefinition.toMap(record));
@@ -735,12 +935,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       return null;
     }
 
-    for (final record in _sortedRecords) {
-      if (_recordIdentity(record) == selectedRecordKey) {
-        return record;
-      }
-    }
-    return null;
+    return _viewState.recordByKey[selectedRecordKey];
   }
 
   void _openSelectedRecord() {
@@ -781,6 +976,98 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     }
     return value.toString();
   }
+}
+
+class _CachedCrudViewState<T extends Object> {
+  const _CachedCrudViewState({
+    required this.filteredRecords,
+    required this.sortedRecords,
+    required this.paginatedRecords,
+    required this.paginatedRecordKeys,
+    required this.recordByKey,
+    required this.indexByRecordKey,
+    required this.totalRowCount,
+    required this.pageCount,
+    required this.effectiveCurrentPage,
+    required this.summaryRowCountLabel,
+  });
+
+  final List<T> filteredRecords;
+  final List<T> sortedRecords;
+  final List<T> paginatedRecords;
+  final List<String> paginatedRecordKeys;
+  final Map<String, T> recordByKey;
+  final Map<String, int> indexByRecordKey;
+  final int totalRowCount;
+  final int pageCount;
+  final int effectiveCurrentPage;
+  final String summaryRowCountLabel;
+}
+
+class _RecordSnapshot<T extends Object> {
+  const _RecordSnapshot({required this.index, required this.record, required this.data, required this.recordKey, required this.searchBlob});
+
+  final int index;
+  final T record;
+  final Map<String, dynamic> data;
+  final String recordKey;
+  final String searchBlob;
+}
+
+Map<String, Object> _runLocalQueryInIsolate(Map<String, Object?> payload) {
+  final normalizedSearchQuery = (payload['searchQuery'] as String?) ?? '';
+  final sortAscending = payload['sortAscending'] as bool? ?? true;
+  final sortColumnName = payload['sortColumnName'] as String?;
+  final pageIndex = payload['pageIndex'] as int? ?? 0;
+  final pageSize = payload['pageSize'] as int? ?? 10;
+  final rawEntries = List<Map<String, Object?>>.from(payload['entries'] as List<Object?>);
+
+  final filteredEntries = normalizedSearchQuery.isEmpty ? rawEntries : rawEntries.where((entry) => ((entry['searchBlob'] as String?) ?? '').contains(normalizedSearchQuery)).toList(growable: false);
+
+  final sortedEntries = List<Map<String, Object?>>.of(filteredEntries);
+  if (sortColumnName != null) {
+    sortedEntries.sort((left, right) {
+      final leftValue = left['sortValue'];
+      final rightValue = right['sortValue'];
+      final result = _compareIsolateSortValues(leftValue, rightValue);
+      return sortAscending ? result : -result;
+    });
+  }
+
+  final totalRows = sortedEntries.length;
+  final pageCount = totalRows == 0 ? 1 : (totalRows / pageSize).ceil();
+  final effectiveCurrentPage = math.min(pageIndex, pageCount - 1);
+  final start = effectiveCurrentPage * pageSize;
+  final end = math.min(start + pageSize, totalRows);
+  final paginatedEntries = totalRows == 0 ? const <Map<String, Object?>>[] : sortedEntries.sublist(start, end);
+
+  return <String, Object>{
+    'filteredIndexes': filteredEntries.map((entry) => entry['index'] as int).toList(growable: false),
+    'sortedIndexes': sortedEntries.map((entry) => entry['index'] as int).toList(growable: false),
+    'paginatedIndexes': paginatedEntries.map((entry) => entry['index'] as int).toList(growable: false),
+    'pageCount': pageCount,
+    'effectiveCurrentPage': effectiveCurrentPage,
+  };
+}
+
+int _compareIsolateSortValues(Object? left, Object? right) {
+  if (identical(left, right)) {
+    return 0;
+  }
+  if (left == null) {
+    return 1;
+  }
+  if (right == null) {
+    return -1;
+  }
+  if (left is num && right is num) {
+    return left.compareTo(right);
+  }
+  if (left is bool && right is bool) {
+    return left == right ? 0 : (left ? 1 : -1);
+  }
+
+  return left.toString().toLowerCase().compareTo(right.toString().toLowerCase());
 }
 
 class _CrudDataGridSource<T extends Object> extends DataGridSource {
@@ -830,6 +1117,7 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
   }
 
   final List<_GridRowEntry<T>> _entries;
+  late final List<DataGridRow> _rows = _entries.map((entry) => entry.row).toList(growable: false);
   final Map<DataGridRow, T> _recordByRow;
   final Map<DataGridRow, _GridRowEntry<T>> _entryByRow;
   final String Function(Object? value) _formatCellValue;
@@ -851,7 +1139,7 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
   }
 
   @override
-  List<DataGridRow> get rows => _entries.map((entry) => entry.row).toList(growable: false);
+  List<DataGridRow> get rows => _rows;
 
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {

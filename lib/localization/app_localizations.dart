@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 enum AppMessageKey {
+  authOperationFailed,
   nameRequired,
   usernameRequired,
   usernameInvalid,
@@ -225,6 +226,7 @@ class AppLocalizations {
     'fieldMustBeNumber': '{field} must be a number',
     'fieldMustUseDateTimeFormat': '{field} must use YYYY-MM-DD or YYYY-MM-DD HH:MM',
     'nameRequired': 'Name is required.',
+    'authOperationFailed': 'Authentication failed. Please try again.',
     'usernameRequired': 'Username is required.',
     'usernameInvalid': 'Username can use letters, numbers, and underscores only.',
     'emailAndPasswordRequired': 'Email and password are required.',
@@ -438,6 +440,7 @@ class AppLocalizations {
     'fieldMustBeNumber': 'يجب أن يكون {field} رقمًا',
     'fieldMustUseDateTimeFormat': 'يجب أن يستخدم {field} التنسيق YYYY-MM-DD أو YYYY-MM-DD HH:MM',
     'nameRequired': 'الاسم مطلوب.',
+    'authOperationFailed': 'فشلت المصادقة. يرجى المحاولة مرة أخرى.',
     'usernameRequired': 'اسم المستخدم مطلوب.',
     'usernameInvalid': 'يمكن أن يحتوي اسم المستخدم على أحرف وأرقام وشرطة سفلية فقط.',
     'emailAndPasswordRequired': 'البريد الإلكتروني وكلمة المرور مطلوبان.',
@@ -663,6 +666,8 @@ class AppLocalizations {
 
   String message(AppMessageKey key, {String? email}) {
     switch (key) {
+      case AppMessageKey.authOperationFailed:
+        return _text('authOperationFailed');
       case AppMessageKey.nameRequired:
         return _text('nameRequired');
       case AppMessageKey.usernameRequired:

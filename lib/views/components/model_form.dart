@@ -38,18 +38,40 @@ class ModelFormFieldDefinition {
   final String? Function(String? value)? validator;
 }
 
+class ModelQueryRequest {
+  const ModelQueryRequest({required this.searchQuery, required this.sortColumnName, required this.sortAscending, required this.pageIndex, required this.pageSize});
+
+  final String searchQuery;
+  final String? sortColumnName;
+  final bool sortAscending;
+  final int pageIndex;
+  final int pageSize;
+}
+
+class ModelQueryResult<T extends Object> {
+  const ModelQueryResult({required this.records, required this.totalCount, this.overallCount});
+
+  final List<T> records;
+  final int totalCount;
+  final int? overallCount;
+}
+
+typedef ModelQueryDelegate<T extends Object> = Future<ModelQueryResult<T>> Function(ModelQueryRequest request);
+
 class ModelFormDefinition<T extends Object> {
   const ModelFormDefinition({
     required this.fields,
     required this.fromMap,
     required this.toMap,
     required this.sampleModel,
+    this.queryDelegate,
   });
 
   final List<ModelFormFieldDefinition> fields;
   final T Function(Map<String, dynamic> map) fromMap;
   final Map<String, dynamic> Function(T model) toMap;
   final T sampleModel;
+  final ModelQueryDelegate<T>? queryDelegate;
 
   T buildModel(Map<String, dynamic> values, {T? existingModel}) {
     final now = DateTime.now().millisecondsSinceEpoch;

@@ -38,7 +38,9 @@ void main() {
     expect(find.text('Hide create'), findsOneWidget);
     await tester.enterText(find.byType(TextFormField).first, 'Warehouse Rice 50kg');
     final saveButton = find.widgetWithText(FilledButton, 'Save Product');
+    await tester.dragUntilVisible(saveButton, find.byType(ListView).first, const Offset(0, -220));
     await tester.ensureVisible(saveButton);
+    await tester.pump();
     await tester.tap(saveButton);
     await tester.pumpAndSettle();
 

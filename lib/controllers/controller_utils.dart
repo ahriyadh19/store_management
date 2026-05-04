@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:store_management/services/response.dart';
 
 class ControllerUtils {
   static Response errorResponse(Object error) {
-    return Response(statusCode: 500, title: 'Internal Server Error', message: error.toString());
+    final message = kDebugMode ? error.toString() : 'An unexpected error occurred. Please try again.';
+    return Response(statusCode: 500, title: 'Internal Server Error', message: message);
   }
 
   static Response notFound(String entityName) {

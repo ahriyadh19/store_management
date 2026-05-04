@@ -103,8 +103,7 @@ class ConnectionStatusController extends ChangeNotifier {
     }
 
     try {
-      database.getRecordsForType(LocalDatabase.branchModelType);
-      return ConnectionIndicatorState.active;
+      return database.ping() ? ConnectionIndicatorState.active : ConnectionIndicatorState.failed;
     } catch (_) {
       return ConnectionIndicatorState.failed;
     }

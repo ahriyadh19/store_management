@@ -381,7 +381,7 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
       return _parseMessageKey(message.substring('AuthException('.length, message.length - 1));
 		}
 
-    return _parseMessageKey(message);
+    return _parseMessageKey(message) ?? AppMessageKey.authOperationFailed;
   }
 
   AppMessageKey? _parseMessageKey(String raw) {

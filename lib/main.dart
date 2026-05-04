@@ -187,6 +187,7 @@ class StartupErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
+    final displayMessage = kDebugMode ? error.toString() : l10n.startupRecoveryProvideKeys;
 
     return Scaffold(
       body: Center(
@@ -203,7 +204,7 @@ class StartupErrorView extends StatelessWidget {
                   children: [
                     Text(l10n.startupConfigurationError, style: theme.textTheme.headlineSmall),
                     const SizedBox(height: 12),
-                    Text(error.toString(), style: theme.textTheme.bodyLarge),
+                    Text(displayMessage, style: theme.textTheme.bodyLarge),
                     const SizedBox(height: 16),
                     Text(_startupRecoverySteps(l10n), style: theme.textTheme.bodyMedium),
                     if (kDebugMode && stackTrace != null) ...[

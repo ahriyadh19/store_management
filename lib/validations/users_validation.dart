@@ -56,7 +56,7 @@ class UsersValidation {
       return emailError;
     }
 
-    final usernameError = ValidationUtils.validateRequiredString(request, 'username', 'Username is required');
+    final usernameError = ValidationUtils.validateUsername(request);
     if (usernameError != null) {
       return usernameError;
     }

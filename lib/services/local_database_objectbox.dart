@@ -136,6 +136,16 @@ class LocalDatabase {
     return offlineSyncRecords.removeAll();
   }
 
+  bool ping() {
+    final query = offlineSyncRecords.query().build();
+    try {
+      query.findFirst();
+      return true;
+    } finally {
+      query.close();
+    }
+  }
+
   Future<void> close() async {
     store.close();
   }
