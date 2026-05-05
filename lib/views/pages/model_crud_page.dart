@@ -79,8 +79,8 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
             _ModuleHeader(title: widget.title, description: widget.description, icon: widget.icon, highlights: widget.highlights),
             const SizedBox(height: 24),
             _buildCreateFormToggle(context),
-            if (_showCreateForm) ...[const SizedBox(height: 16), _buildCreateFormCard(context)],
-            if (showTableSection) ...[const SizedBox(height: 24), _buildTableCard(context, constraints)],
+            if (_showCreateForm) ...[const SizedBox(height: 10), _buildCreateFormCard(context)],
+            if (showTableSection) ...[const SizedBox(height: 10), _buildTableCard(context, constraints)],
           ],
         );
       },
@@ -175,7 +175,9 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     final visibleRecordKeys = _viewState.paginatedRecordKeys;
     final currentPage = _effectiveCurrentPage;
     final pageCount = _pageCount;
-    final availableTableWidth = math.max(constraints.maxWidth - 48, 280.0);
+    const listHorizontalPadding = 52.0;
+    const cardHorizontalPadding = 52.0;
+    final availableTableWidth = math.max(constraints.maxWidth - listHorizontalPadding - cardHorizontalPadding, 280.0);
     final columns = _buildColumns(availableTableWidth, isCompactLayout: isCompactLayout);
     final dataSource = _CrudDataGridSource<T>(
       records: visibleRecords,
@@ -270,6 +272,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
                             child: SfDataGrid(
                               source: dataSource,
                               columns: columns,
+                              frozenRowsCount: 1,
                               selectionMode: SelectionMode.single,
                               navigationMode: GridNavigationMode.row,
                               onCellTap: (details) {
