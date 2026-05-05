@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/services/app_preferences_controller.dart';
+import 'package:store_management/services/status.dart';
 import 'package:store_management/views/components/model_form.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 
@@ -1276,6 +1277,10 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
               return _buildActionCell(record);
             }
 
+            if (cell.columnName == 'status') {
+              return _buildStatusCell(cell.value);
+            }
+
             return Container(
               alignment: Alignment.centerLeft,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -1284,6 +1289,60 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
           })
           .toList(growable: false),
     );
+  }
+
+  Widget _buildStatusCell(Object? value) {
+    final statusCode = _statusCodeFromValue(value);
+    if (statusCode == null) {
+      return Container(
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Text(_formatCellValue(value), overflow: TextOverflow.ellipsis, maxLines: 2),
+      );
+    }
+
+    final icon = statusIconFor(statusCode);
+    final label = statusLabelFor(statusCode, isArabic: _l10n.isArabic);
+    final textColor = statusTextColorFor(statusCode);
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: statusBackgroundColorFor(statusCode),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: statusBorderColorFor(statusCode)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: textColor, size: 15),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  style: TextStyle(color: textColor, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  int? _statusCodeFromValue(Object? value) {
+    if (value is int) {
+      return value;
+    }
+    if (value is String) {
+      return int.tryParse(value);
+    }
+    return null;
   }
 
   Widget _buildActionCell(T record) {
