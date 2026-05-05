@@ -21,7 +21,13 @@ class AppPreferencesController extends ChangeNotifier {
        _workspaceTabsState = initialWorkspaceTabsState,
        _stickyAppBar = initialStickyAppBar,
        _storagePreference = initialStoragePreference,
-      _preferences = preferences;
+      _preferences = preferences {
+    _current = this;
+  }
+
+  static AppPreferencesController? _current;
+
+  static AppPreferencesController? get current => _current;
 
   static const _themeModeStorageKey = 'app.themeMode';
   static const _lastEmailStorageKey = 'auth.lastEmail';
@@ -61,7 +67,7 @@ class AppPreferencesController extends ChangeNotifier {
     final storagePreference = _storagePreferenceFromStorage(preferences.getString(_storagePreferenceStorageKey));
     final hydratedRecentEmails = recentEmails.isNotEmpty ? recentEmails : (lastEmail.isNotEmpty ? <String>[lastEmail] : const <String>[]);
 
-    return AppPreferencesController(
+    final controller = AppPreferencesController(
       initialThemeMode: _themeModeFromStorage(themeMode),
       initialLastEmail: hydratedRecentEmails.isNotEmpty ? hydratedRecentEmails.first : lastEmail,
       initialRecentEmails: hydratedRecentEmails,
@@ -71,6 +77,9 @@ class AppPreferencesController extends ChangeNotifier {
       initialStoragePreference: storagePreference,
       preferences: preferences,
     );
+
+    _current = controller;
+    return controller;
   }
 
   Future<void> setThemeMode(ThemeMode value) async {

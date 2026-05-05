@@ -195,6 +195,7 @@ class Index extends StatefulWidget {
 }
 
 class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListener {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool get _isDesktopPlatform => !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
 
   Future<bool> _confirmAppExit() async {
@@ -329,7 +330,7 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
   void _handleDrawerPageOpened(IndexPage page) {
     _expandedDrawerSections.add(_drawerSectionForPage(page));
     _openPageInTab(page);
-    Navigator.of(context).maybePop();
+    _scaffoldKey.currentState?.closeDrawer();
   }
 
   void _setDrawerSectionExpanded(_DrawerSectionKey key, bool expanded) {
@@ -697,6 +698,7 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
           final effectiveToolbarHeight = stickyAppBar || _isAppBarVisible ? kToolbarHeight : 0.0;
 
           return Scaffold(
+            key: _scaffoldKey,
             drawer: _buildIndexDrawer(
               context,
               activePage: activeTab != null ? activeTab.page : IndexPage.dashboard,

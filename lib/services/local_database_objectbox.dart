@@ -12,13 +12,19 @@ class LocalDatabase {
 
   LocalDatabase._(this.store) : offlineSyncRecords = obx.Box<OfflineSyncRecord>(store);
 
+  static LocalDatabase? _current;
+
+  static LocalDatabase? get current => _current;
+
   final obx.Store store;
   final obx.Box<OfflineSyncRecord> offlineSyncRecords;
 
   static Future<LocalDatabase> create() async {
     final appDirectory = await getApplicationDocumentsDirectory();
     final store = await openStore(directory: p.join(appDirectory.path, 'objectbox'));
-    return LocalDatabase._(store);
+    final database = LocalDatabase._(store);
+    _current = database;
+    return database;
   }
 
   bool get isAvailable => true;

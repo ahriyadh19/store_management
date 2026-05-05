@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:decimal/decimal.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/models/branch.dart';
@@ -15,6 +17,9 @@ import 'package:store_management/models/store_payment_voucher.dart';
 import 'package:store_management/models/store_return.dart';
 import 'package:store_management/models/tags.dart';
 import 'package:store_management/models/users.dart';
+import 'package:store_management/models/offline_sync_record.dart';
+import 'package:store_management/services/app_preferences_controller.dart';
+import 'package:store_management/services/local_database.dart';
 import 'package:store_management/views/components/model_form.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
@@ -375,15 +380,85 @@ ModelFormDefinition<T> _serverBackedDefinition<T extends Object>({
   required Map<String, dynamic> Function(T model) toMap,
   required T sampleModel,
 }) {
+  final supabaseQuery = _supabaseQueryDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap);
+  final supabaseCreate = _supabaseCreateDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap);
+  final supabaseUpdate = _supabaseUpdateDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap);
+  final supabaseDelete = _supabaseDeleteDelegate(tableName: tableName, toMap: toMap);
+  final localQuery = _localQueryDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap);
+  final localCreate = _localCreateDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap);
+  final localUpdate = _localUpdateDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap);
+  final localDelete = _localDeleteDelegate(tableName: tableName, toMap: toMap);
+
   return ModelFormDefinition<T>(
     fields: fields,
     fromMap: fromMap,
     toMap: toMap,
     sampleModel: sampleModel,
-    queryDelegate: _supabaseQueryDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap),
-    createDelegate: _supabaseCreateDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap),
-    updateDelegate: _supabaseUpdateDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap),
-    deleteDelegate: _supabaseDeleteDelegate(tableName: tableName, toMap: toMap),
+    queryDelegate: (request) async {
+      switch (_storagePreferenceOrDefault()) {
+        case StoragePreference.onlineOnly:
+          return supabaseQuery(request);
+        case StoragePreference.localOnly:
+          return localQuery(request);
+        case StoragePreference.hybrid:
+          try {
+            return await supabaseQuery(request);
+          } catch (_) {
+            return localQuery(request);
+          }
+      }
+    },
+    createDelegate: (model) async {
+      switch (_storagePreferenceOrDefault()) {
+        case StoragePreference.onlineOnly:
+          return supabaseCreate(model);
+        case StoragePreference.localOnly:
+          return localCreate(model, syncState: OfflineSyncState.pendingUpsert);
+        case StoragePreference.hybrid:
+          try {
+            final created = await supabaseCreate(model);
+            await localCreate(created, syncState: OfflineSyncState.synced);
+            return created;
+          } catch (_) {
+            return localCreate(model, syncState: OfflineSyncState.pendingUpsert);
+          }
+      }
+    },
+    updateDelegate: (model) async {
+      switch (_storagePreferenceOrDefault()) {
+        case StoragePreference.onlineOnly:
+          return supabaseUpdate(model);
+        case StoragePreference.localOnly:
+          return localUpdate(model, syncState: OfflineSyncState.pendingUpsert);
+        case StoragePreference.hybrid:
+          try {
+            final updated = await supabaseUpdate(model);
+            await localUpdate(updated, syncState: OfflineSyncState.synced);
+            return updated;
+          } catch (_) {
+            return localUpdate(model, syncState: OfflineSyncState.pendingUpsert);
+          }
+      }
+    },
+    deleteDelegate: (model) async {
+      switch (_storagePreferenceOrDefault()) {
+        case StoragePreference.onlineOnly:
+          await supabaseDelete(model);
+          return;
+        case StoragePreference.localOnly:
+          await localDelete(model, syncState: OfflineSyncState.pendingDelete);
+          return;
+        case StoragePreference.hybrid:
+          try {
+            await supabaseDelete(model);
+            await localDelete(model, syncState: OfflineSyncState.synced);
+            return;
+          } catch (_) {
+            await localDelete(model, syncState: OfflineSyncState.pendingDelete);
+            return;
+          }
+      }
+    },
   );
 }
 
@@ -494,6 +569,177 @@ ModelDeleteDelegate<T> _supabaseDeleteDelegate<T extends Object>({required Strin
 
     await query;
   };
+}
+
+ModelQueryDelegate<T> _localQueryDelegate<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) {
+  return (request) async {
+    final database = _requireLocalDatabase();
+    final records = <T>[];
+
+    for (final record in database.getRecordsForType(tableName)) {
+      if (record.isDeleted) {
+        continue;
+      }
+
+      try {
+        final payload = Map<String, dynamic>.from(jsonDecode(record.payloadJson) as Map);
+        final deletedAt = payload['deletedAt'] ?? payload['deleted_at'];
+        if (deletedAt != null) {
+          continue;
+        }
+        records.add(fromMap(payload));
+      } catch (_) {
+        // Ignore malformed cached records.
+      }
+    }
+
+    return _buildQueryResult(records: records, request: request, toMap: toMap);
+  };
+}
+
+Future<T> Function(T model, {int syncState}) _localCreateDelegate<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) {
+  return (model, {int syncState = OfflineSyncState.pendingUpsert}) async {
+    final database = _requireLocalDatabase();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final payload = Map<String, dynamic>.from(toMap(model))
+      ..remove('id')
+      ..removeWhere((key, value) => value == null);
+
+    payload['createdAt'] ??= now;
+    payload['updatedAt'] = now;
+    payload['deletedAt'] = null;
+
+    final recordUuid = _recordUuidFromPayload(payload, fallback: 'local-$now');
+    database.putRecord(
+      modelType: tableName,
+      recordUuid: recordUuid,
+      payloadJson: jsonEncode(payload),
+      updatedAtMillis: _updatedAtMillisFromPayload(payload, fallback: now),
+      syncState: syncState,
+      isDeleted: false,
+    );
+
+    return fromMap(payload);
+  };
+}
+
+Future<T> Function(T model, {int syncState}) _localUpdateDelegate<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) {
+  return (model, {int syncState = OfflineSyncState.pendingUpsert}) async {
+    final database = _requireLocalDatabase();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final payload = Map<String, dynamic>.from(toMap(model))..removeWhere((key, value) => value == null);
+
+    payload['updatedAt'] = now;
+    payload['deletedAt'] = null;
+
+    final recordUuid = _recordUuidFromPayload(payload, fallback: 'local-$now');
+    database.putRecord(
+      modelType: tableName,
+      recordUuid: recordUuid,
+      payloadJson: jsonEncode(payload),
+      updatedAtMillis: _updatedAtMillisFromPayload(payload, fallback: now),
+      syncState: syncState,
+      isDeleted: false,
+    );
+
+    return fromMap(payload);
+  };
+}
+
+Future<void> Function(T model, {int syncState}) _localDeleteDelegate<T extends Object>({required String tableName, required Map<String, dynamic> Function(T model) toMap}) {
+  return (model, {int syncState = OfflineSyncState.pendingDelete}) async {
+    final database = _requireLocalDatabase();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final payload = Map<String, dynamic>.from(toMap(model))
+      ..removeWhere((key, value) => value == null)
+      ..['deletedAt'] = now
+      ..['updatedAt'] = now;
+
+    final recordUuid = _recordUuidFromPayload(payload, fallback: 'local-$now');
+    database.putRecord(
+      modelType: tableName,
+      recordUuid: recordUuid,
+      payloadJson: jsonEncode(payload),
+      updatedAtMillis: now,
+      syncState: syncState,
+      isDeleted: true,
+    );
+  };
+}
+
+ModelQueryResult<T> _buildQueryResult<T extends Object>({required List<T> records, required ModelQueryRequest request, required Map<String, dynamic> Function(T model) toMap}) {
+  final overallCount = records.length;
+  final normalizedQuery = request.searchQuery.trim().toLowerCase();
+  final filtered = normalizedQuery.isEmpty
+      ? List<T>.from(records)
+      : records
+            .where((record) {
+              final data = toMap(record);
+              return data.values.any((value) => (value?.toString().toLowerCase() ?? '').contains(normalizedQuery));
+            })
+            .toList(growable: false);
+
+  final sortColumnName = request.sortColumnName;
+  if (sortColumnName != null && sortColumnName.isNotEmpty) {
+    filtered.sort((left, right) {
+      final leftValue = toMap(left)[sortColumnName];
+      final rightValue = toMap(right)[sortColumnName];
+      final compareResult = _compareSupabaseValues(leftValue, rightValue);
+      return request.sortAscending ? compareResult : -compareResult;
+    });
+  }
+
+  final totalCount = filtered.length;
+  final pageSize = request.pageSize <= 0 ? 10 : request.pageSize;
+  final pageIndex = request.pageIndex < 0 ? 0 : request.pageIndex;
+  final start = (pageIndex * pageSize).clamp(0, totalCount);
+  final end = (start + pageSize).clamp(0, totalCount);
+  final paged = filtered.sublist(start, end);
+
+  return ModelQueryResult<T>(records: paged, totalCount: totalCount, overallCount: overallCount);
+}
+
+StoragePreference _storagePreferenceOrDefault() {
+  return AppPreferencesController.current?.storagePreference ?? StoragePreference.hybrid;
+}
+
+LocalDatabase _requireLocalDatabase() {
+  final database = LocalDatabase.current;
+  if (database == null || !database.isAvailable) {
+    throw StateError('Local storage is not available on this platform.');
+  }
+  return database;
+}
+
+String _recordUuidFromPayload(Map<String, dynamic> payload, {required String fallback}) {
+  final uuid = payload['uuid']?.toString().trim();
+  if (uuid != null && uuid.isNotEmpty) {
+    return uuid;
+  }
+
+  final id = payload['id']?.toString().trim();
+  if (id != null && id.isNotEmpty) {
+    return id;
+  }
+
+  return fallback;
+}
+
+int _updatedAtMillisFromPayload(Map<String, dynamic> payload, {required int fallback}) {
+  final value = payload['updatedAt'] ?? payload['updated_at'];
+  if (value is int) {
+    return value;
+  }
+  if (value is num) {
+    return value.toInt();
+  }
+  if (value is String) {
+    final parsed = int.tryParse(value);
+    if (parsed != null) {
+      return parsed;
+    }
+  }
+  return fallback;
 }
 
 int _compareSupabaseValues(Object? left, Object? right) {

@@ -8,8 +8,14 @@ class LocalDatabase {
 
   LocalDatabase._();
 
+  static LocalDatabase? _current;
+
+  static LocalDatabase? get current => _current;
+
   static Future<LocalDatabase> create() async {
-    return LocalDatabase._();
+    final database = LocalDatabase._();
+    _current = database;
+    return database;
   }
 
   bool get isAvailable => false;
