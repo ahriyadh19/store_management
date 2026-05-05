@@ -6,7 +6,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:store_management/localization/app_localizations.dart';
-import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/services/status.dart';
 import 'package:store_management/views/components/model_form.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
@@ -217,17 +216,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Flexible(
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      alignment: WrapAlignment.end,
-                      children: [_StorageModeChip(), _SummaryChip(label: l10n.rows, value: _summaryRowCountLabel)],
-                    ),
-                  ),
-                ),
+                _SummaryChip(label: l10n.rows, value: _summaryRowCountLabel),
               ],
             ),
             const SizedBox(height: 20),
@@ -1474,63 +1463,6 @@ class _SummaryChip extends StatelessWidget {
           Text(value, style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
-    );
-  }
-}
-
-class _StorageModeChip extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final controller = AppPreferencesController.current;
-    if (controller == null) {
-      return const SizedBox.shrink();
-    }
-
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, child) {
-        final l10n = context.l10n;
-
-        IconData icon;
-        String label;
-        String description;
-        switch (controller.storagePreference) {
-          case StoragePreference.onlineOnly:
-            icon = Icons.cloud_done_rounded;
-            label = l10n.storageOnlineOnly;
-            description = l10n.storageOnlineOnlyDescription;
-            break;
-          case StoragePreference.localOnly:
-            icon = Icons.phone_android_rounded;
-            label = l10n.storageLocalOnly;
-            description = l10n.storageLocalOnlyDescription;
-            break;
-          case StoragePreference.hybrid:
-            icon = Icons.sync_rounded;
-            label = l10n.storageHybrid;
-            description = l10n.storageHybridDescription;
-            break;
-        }
-
-        return Tooltip(
-          message: description,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.85),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 16),
-                const SizedBox(width: 6),
-                Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }

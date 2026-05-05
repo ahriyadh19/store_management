@@ -402,7 +402,7 @@ ModelFormDefinition<T> _serverBackedDefinition<T extends Object>({
           return localQuery(request);
         case StoragePreference.hybrid:
           try {
-            return await supabaseQuery(request);
+            return await _hybridQueryDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap)(request);
           } catch (_) {
             return localQuery(request);
           }
@@ -464,52 +464,16 @@ ModelFormDefinition<T> _serverBackedDefinition<T extends Object>({
 
 ModelQueryDelegate<T> _supabaseQueryDelegate<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) {
   return (request) async {
-    final client = Supabase.instance.client;
-    final response = await client.from(tableName).select();
-    final rows = (response as List<dynamic>).map((row) => Map<String, dynamic>.from(row as Map)).toList(growable: false);
+    final records = await _fetchSupabaseRecords(tableName: tableName, fromMap: fromMap, toMap: toMap);
+    return _buildQueryResult(records: records, request: request, toMap: toMap);
+  };
+}
 
-    final records = <T>[];
-    for (final row in rows) {
-      try {
-        final deletedAt = row['deletedAt'] ?? row['deleted_at'];
-        if (deletedAt != null) {
-          continue;
-        }
-        records.add(fromMap(Map<String, dynamic>.from(row)));
-      } catch (_) {
-        // Skip malformed rows so one bad record does not break the full list.
-      }
-    }
-
-    final overallCount = records.length;
-    final normalizedQuery = request.searchQuery.trim().toLowerCase();
-    final filtered = normalizedQuery.isEmpty
-        ? List<T>.from(records)
-        : records
-              .where((record) {
-                final data = toMap(record);
-                return data.values.any((value) => (value?.toString().toLowerCase() ?? '').contains(normalizedQuery));
-              })
-              .toList(growable: false);
-
-    final sortColumnName = request.sortColumnName;
-    if (sortColumnName != null && sortColumnName.isNotEmpty) {
-      filtered.sort((left, right) {
-        final leftValue = toMap(left)[sortColumnName];
-        final rightValue = toMap(right)[sortColumnName];
-        final compareResult = _compareSupabaseValues(leftValue, rightValue);
-        return request.sortAscending ? compareResult : -compareResult;
-      });
-    }
-
-    final totalCount = filtered.length;
-    final pageSize = request.pageSize <= 0 ? 10 : request.pageSize;
-    final pageIndex = request.pageIndex < 0 ? 0 : request.pageIndex;
-    final start = (pageIndex * pageSize).clamp(0, totalCount);
-    final end = (start + pageSize).clamp(0, totalCount);
-    final paged = filtered.sublist(start, end);
-
-    return ModelQueryResult<T>(records: paged, totalCount: totalCount, overallCount: overallCount);
+ModelQueryDelegate<T> _hybridQueryDelegate<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) {
+  return (request) async {
+    final remoteRecords = await _fetchSupabaseRecords(tableName: tableName, fromMap: fromMap, toMap: toMap);
+    final mergedRecords = _mergePendingLocalRecords(tableName: tableName, remoteRecords: remoteRecords, fromMap: fromMap, toMap: toMap);
+    return _buildQueryResult(records: mergedRecords, request: request, toMap: toMap);
   };
 }
 
@@ -697,6 +661,93 @@ ModelQueryResult<T> _buildQueryResult<T extends Object>({required List<T> record
   final paged = filtered.sublist(start, end);
 
   return ModelQueryResult<T>(records: paged, totalCount: totalCount, overallCount: overallCount);
+}
+
+Future<List<T>> _fetchSupabaseRecords<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) async {
+  final client = Supabase.instance.client;
+  final response = await client.from(tableName).select();
+  final rows = (response as List<dynamic>).map((row) => Map<String, dynamic>.from(row as Map)).toList(growable: false);
+
+  final records = <T>[];
+  for (final row in rows) {
+    try {
+      final deletedAt = row['deletedAt'] ?? row['deleted_at'];
+      if (deletedAt != null) {
+        continue;
+      }
+      records.add(fromMap(Map<String, dynamic>.from(row)));
+    } catch (_) {
+      // Skip malformed rows so one bad record does not break the full list.
+    }
+  }
+
+  _cacheRemoteRecords(tableName: tableName, records: records, toMap: toMap);
+  return records;
+}
+
+List<T> _mergePendingLocalRecords<T extends Object>({
+  required String tableName,
+  required List<T> remoteRecords,
+  required T Function(Map<String, dynamic> map) fromMap,
+  required Map<String, dynamic> Function(T model) toMap,
+}) {
+  final database = LocalDatabase.current;
+  if (database == null || !database.isAvailable) {
+    return remoteRecords;
+  }
+
+  final recordByKey = <String, T>{for (final record in remoteRecords) _recordUuidFromPayload(toMap(record), fallback: toMap(record).toString()): record};
+
+  for (final localRecord in database.getRecordsForType(tableName)) {
+    if (localRecord.syncState == OfflineSyncState.synced) {
+      continue;
+    }
+
+    if (localRecord.isDeleted || localRecord.syncState == OfflineSyncState.pendingDelete) {
+      recordByKey.remove(localRecord.recordUuid);
+      continue;
+    }
+
+    try {
+      final payload = Map<String, dynamic>.from(jsonDecode(localRecord.payloadJson) as Map);
+      recordByKey[localRecord.recordUuid] = fromMap(payload);
+    } catch (_) {
+      // Ignore malformed pending records.
+    }
+  }
+
+  return recordByKey.values.toList(growable: false);
+}
+
+void _cacheRemoteRecords<T extends Object>({required String tableName, required List<T> records, required Map<String, dynamic> Function(T model) toMap}) {
+  final database = LocalDatabase.current;
+  if (database == null || !database.isAvailable) {
+    return;
+  }
+
+  final remoteRecordUuids = <String>{};
+  for (final record in records) {
+    final payload = Map<String, dynamic>.from(toMap(record))..removeWhere((key, value) => value == null);
+    final recordUuid = _recordUuidFromPayload(payload, fallback: payload.toString());
+    remoteRecordUuids.add(recordUuid);
+    database.putRecord(
+      modelType: tableName,
+      recordUuid: recordUuid,
+      payloadJson: jsonEncode(payload),
+      updatedAtMillis: _updatedAtMillisFromPayload(payload, fallback: DateTime.now().millisecondsSinceEpoch),
+      syncState: OfflineSyncState.synced,
+      isDeleted: false,
+    );
+  }
+
+  for (final localRecord in database.getRecordsForType(tableName)) {
+    if (localRecord.syncState != OfflineSyncState.synced) {
+      continue;
+    }
+    if (!remoteRecordUuids.contains(localRecord.recordUuid)) {
+      database.removeRecord(modelType: tableName, recordUuid: localRecord.recordUuid);
+    }
+  }
 }
 
 StoragePreference _storagePreferenceOrDefault() {

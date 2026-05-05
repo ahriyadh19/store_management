@@ -720,6 +720,10 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
                   : [
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: _StorageModeAppBarChip(controller: widget.appPreferencesController),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: _ConnectionIndicators(controller: _connectionStatusController),
                       ),
                       Padding(
@@ -1390,6 +1394,65 @@ class _ConnectionIndicators extends StatelessWidget {
             const SizedBox(width: 8),
             _ConnectionIndicatorDot(label: context.l10n.connectionObjectBox, status: controller.objectBoxState, icon: Icons.storage_rounded),
           ],
+        );
+      },
+    );
+  }
+}
+
+class _StorageModeAppBarChip extends StatelessWidget {
+  const _StorageModeAppBarChip({required this.controller});
+
+  final AppPreferencesController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, child) {
+        final l10n = context.l10n;
+
+        IconData icon;
+        String label;
+        String description;
+        switch (controller.storagePreference) {
+          case StoragePreference.onlineOnly:
+            icon = Icons.cloud_done_rounded;
+            label = l10n.storageOnlineOnly;
+            description = l10n.storageOnlineOnlyDescription;
+            break;
+          case StoragePreference.localOnly:
+            icon = Icons.phone_android_rounded;
+            label = l10n.storageLocalOnly;
+            description = l10n.storageLocalOnlyDescription;
+            break;
+          case StoragePreference.hybrid:
+            icon = Icons.sync_rounded;
+            label = l10n.storageHybrid;
+            description = l10n.storageHybridDescription;
+            break;
+        }
+
+        return Tooltip(
+          message: description,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 16),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
