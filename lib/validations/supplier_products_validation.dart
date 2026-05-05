@@ -178,6 +178,22 @@ class SupplierProductsValidation {
       return _badRequest('Barcode must be provided as a non-empty string');
     }
 
+    final batchNumber = request.data?['batchNumber'];
+    if (batchNumber != null && (batchNumber is! String || batchNumber.trim().isEmpty)) {
+      return _badRequest('Batch number must be provided as a non-empty string');
+    }
+
+    final expiryDate = request.data?['expiryDate'];
+    if (expiryDate != null) {
+      if (expiryDate is! int) {
+        return _badRequest('Expiry date must be provided as milliseconds since epoch');
+      }
+
+      if (expiryDate < 0) {
+        return _badRequest('Expiry date must be zero or greater');
+      }
+    }
+
     final stock = request.data?['stock'];
     if (stock is! int) {
       return _badRequest('Stock must be provided as an integer');

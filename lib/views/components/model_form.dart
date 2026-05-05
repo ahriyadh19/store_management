@@ -60,6 +60,7 @@ typedef ModelQueryDelegate<T extends Object> = Future<ModelQueryResult<T>> Funct
 typedef ModelCreateDelegate<T extends Object> = Future<T> Function(T model);
 typedef ModelUpdateDelegate<T extends Object> = Future<T> Function(T model);
 typedef ModelDeleteDelegate<T extends Object> = Future<void> Function(T model);
+typedef ModelAfterCreateHook<T extends Object> = Future<void> Function({required T model, required Map<String, dynamic> values});
 
 class ModelFormDefinition<T extends Object> {
   const ModelFormDefinition({
@@ -68,7 +69,10 @@ class ModelFormDefinition<T extends Object> {
     required this.toMap,
     required this.sampleModel,
     this.queryDelegate,
-    this.createDelegate, this.updateDelegate, this.deleteDelegate,
+    this.createDelegate,
+    this.updateDelegate,
+    this.deleteDelegate,
+    this.afterCreateHook,
   });
 
   final List<ModelFormFieldDefinition> fields;
@@ -79,6 +83,7 @@ class ModelFormDefinition<T extends Object> {
   final ModelCreateDelegate<T>? createDelegate;
   final ModelUpdateDelegate<T>? updateDelegate;
   final ModelDeleteDelegate<T>? deleteDelegate;
+  final ModelAfterCreateHook<T>? afterCreateHook;
 
   T buildModel(Map<String, dynamic> values, {T? existingModel}) {
     final now = DateTime.now().millisecondsSinceEpoch;

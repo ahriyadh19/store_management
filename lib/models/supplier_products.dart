@@ -19,6 +19,8 @@ class SupplierProducts {
   String description;
   String? sku;
   String? barcode;
+  String? batchNumber;
+  DateTime? expiryDate;
   int stock;
   int? reorderLevel;
   int? reorderQuantity;
@@ -39,6 +41,8 @@ class SupplierProducts {
     required this.description,
     this.sku,
     this.barcode,
+    this.batchNumber,
+    this.expiryDate,
     required this.stock,
     this.reorderLevel,
     this.reorderQuantity,
@@ -60,6 +64,8 @@ class SupplierProducts {
     String? description,
     Object? sku = _unset,
     Object? barcode = _unset,
+    Object? batchNumber = _unset,
+    Object? expiryDate = _unset,
     int? stock,
     Object? reorderLevel = _unset,
     Object? reorderQuantity = _unset,
@@ -80,6 +86,8 @@ class SupplierProducts {
       description: description ?? this.description,
       sku: identical(sku, _unset) ? this.sku : sku as String?,
       barcode: identical(barcode, _unset) ? this.barcode : barcode as String?,
+      batchNumber: identical(batchNumber, _unset) ? this.batchNumber : batchNumber as String?,
+      expiryDate: identical(expiryDate, _unset) ? this.expiryDate : expiryDate as DateTime?,
       stock: stock ?? this.stock,
       reorderLevel: identical(reorderLevel, _unset) ? this.reorderLevel : reorderLevel as int?,
       reorderQuantity: identical(reorderQuantity, _unset) ? this.reorderQuantity : reorderQuantity as int?,
@@ -105,6 +113,8 @@ class SupplierProducts {
       'description': description,
       'sku': sku,
       'barcode': barcode,
+      'batchNumber': batchNumber,
+      'expiryDate': expiryDate?.millisecondsSinceEpoch,
       'stock': stock,
       'reorderLevel': reorderLevel,
       'reorderQuantity': reorderQuantity,
@@ -128,6 +138,8 @@ class SupplierProducts {
       description: ModelParsing.stringOrThrow(ModelParsing.value(map, 'description'), 'description'),
       sku: ModelParsing.stringOrNull(ModelParsing.value(map, 'sku')),
       barcode: ModelParsing.stringOrNull(ModelParsing.value(map, 'barcode')),
+      batchNumber: ModelParsing.stringOrNull(ModelParsing.value(map, 'batchNumber')),
+      expiryDate: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'expiryDate')),
       stock: ModelParsing.intOrThrow(ModelParsing.value(map, 'stock'), 'stock'),
       reorderLevel: ModelParsing.intOrNull(ModelParsing.value(map, 'reorderLevel')),
       reorderQuantity: ModelParsing.intOrNull(ModelParsing.value(map, 'reorderQuantity')),
@@ -146,7 +158,7 @@ class SupplierProducts {
 
   @override
   String toString() {
-    return 'SupplierProducts(id: $id, uuid: $uuid, supplierUuid: $supplierUuid, productUuid: $productUuid, price: $price, costPrice: $costPrice, description: $description, sku: $sku, barcode: $barcode, stock: $stock, reorderLevel: $reorderLevel, reorderQuantity: $reorderQuantity, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
+    return 'SupplierProducts(id: $id, uuid: $uuid, supplierUuid: $supplierUuid, productUuid: $productUuid, price: $price, costPrice: $costPrice, description: $description, sku: $sku, barcode: $barcode, batchNumber: $batchNumber, expiryDate: $expiryDate, stock: $stock, reorderLevel: $reorderLevel, reorderQuantity: $reorderQuantity, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
   }
 
   @override
@@ -162,6 +174,9 @@ class SupplierProducts {
         other.description == description &&
         other.sku == sku &&
         other.barcode == barcode &&
+        other.batchNumber == batchNumber &&
+        other.expiryDate == expiryDate &&
+        other.stock == stock &&
         other.reorderLevel == reorderLevel &&
         other.reorderQuantity == reorderQuantity &&
         other.status == status &&
@@ -183,6 +198,8 @@ class SupplierProducts {
         description.hashCode ^
         sku.hashCode ^
         barcode.hashCode ^
+        batchNumber.hashCode ^
+        expiryDate.hashCode ^
         stock.hashCode ^
         reorderLevel.hashCode ^
         reorderQuantity.hashCode ^

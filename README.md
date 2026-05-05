@@ -1,83 +1,27 @@
 # Store Management
 
-Store Management is a Flutter application for retail and branch operations, backed by Supabase and prepared for offline-first persistence on IO platforms. The codebase already includes authentication, localization, domain models, validation rules, CRUD-style controllers, database migrations, and focused regression tests.
+Store Management is a Flutter application for multi-tenant retail operations. It supports owner-level tenancy, store and branch scoping, supplier and product operations, financial records, and inventory workflows backed by Supabase, with ObjectBox infrastructure for offline-first support.
 
-## What Exists Today
+## Highlights
 
-The project is currently strongest in the application core:
-
-- authenticated app bootstrap and session recovery
-- localized auth flow and dashboard shell
-- structured domain models with tolerant parsing helpers
-- validation and controller layers for operational modules
-- Supabase schema migrations for primary and supporting records
-- ObjectBox bootstrap for local persistence preparation
-- focused model serialization and controller tests
-
-Feature screens are still catching up to the model and controller layers, so the repository is well positioned for continued UI, form, and repository work.
-
-## Core Modules
-
-Primary operational modules:
-
-- stores and branches
-- products, categories, and tags
-- clients and suppliers
-- users and roles
-- invoices, payment vouchers, returns, inventory movements, and financial transactions
-
-Supporting records:
-
-- relation records such as `store_branches`, `store_clients`, `store_suppliers`, `store_users`, and `user_roles`
-- association records such as `supplier_products` and `products_tags`
-- detail records such as `store_invoice_items`, `store_return_items`, and `payment_allocations`
-
-The dashboard should expose only primary modules. Supporting records remain important in the data model and controller layer, but they are intentionally not top-level navigation destinations because they depend on parent entities.
-
-## Runtime Flow
-
-- The app starts from `lib/main.dart`.
-- Supabase is initialized before the widget tree is rendered.
-- Authentication state is managed with `flutter_bloc`.
-- Authenticated users are routed to the main shell.
-- Unauthenticated users are routed to the auth flow.
-- English and Arabic localization are built in.
-- On Linux desktop, email confirmation or recovery may complete in the browser, so the auth flow supports manual link handoff when needed.
-- The main AppBar shows always-visible live connection indicators for Supabase and ObjectBox.
-
-### Live Connection Indicators
-
-The main shell AppBar includes two right-side indicators:
-
-- cloud indicator for Supabase connectivity
-- database indicator for ObjectBox local database availability
-
-Each indicator has three real-time states:
-
-- green: active/successful
-- yellow: processing/checking
-- red: failed/disconnected
-
-Behavior details:
-
-- checks start during shell initialization
-- checks continue on a periodic timer
-- checks refresh when the app resumes from background
-- indicator tooltips are localized (English and Arabic)
-
-On Linux desktop, auth state is persisted with file-based local storage so sessions survive restarts.
+- Multi-tenant operating model rooted at owner accounts.
+- Scoped access across owner, store, branch, and user contexts.
+- Core retail domains: stores, branches, products, categories, tags, clients, suppliers, users, and roles.
+- Financial and operational records: invoices, returns, vouchers, transactions, and inventory movements.
+- Supabase-backed data access with tenant-aware query and payload controls.
+- ObjectBox local persistence bootstrap for desktop and mobile IO targets.
+- English and Arabic localization.
 
 ## Tech Stack
 
 - Flutter
-- Dart 3.11+
-- Supabase with `supabase_flutter`
-- `flutter_bloc` for auth state management
-- `decimal` for money precision
-- `shared_preferences` for persisted client settings
-- ObjectBox for local storage bootstrap on Android, iOS, Linux, macOS, and Windows
+- Dart SDK 3.11+
+- Supabase (supabase, supabase_flutter)
+- BLoC (flutter_bloc) for auth state flow
+- Decimal money handling (decimal)
+- ObjectBox local storage (objectbox, objectbox_flutter_libs)
 
-## Project Layout
+## Project Structure
 
 ```text
 lib/
@@ -91,78 +35,76 @@ lib/
   views/
 supabase/
   migrations/
+docs/
 test/
   controllers/
   models/
+  services/
+  views/
 tool/
 ```
 
-## Architecture Summary
+## Runtime Architecture
 
-- `lib/models` holds entities, enum types, and parsing helpers.
-- `lib/controllers` contains auth coordination and CRUD-oriented business logic.
-- `lib/services` contains shared infrastructure such as auth, storage, and local database bootstrap.
-- `lib/validations` contains request validation rules by model.
-- `lib/views` contains auth UI, dashboard wiring, and reusable presentation components.
-- `lib/localization` contains localization delegates and locale control.
-- `supabase/migrations` contains schema and database evolution scripts.
-- `test` contains focused regression coverage for models and controllers.
+- App entrypoint is lib/main.dart.
+- Supabase is initialized before rendering the widget tree.
+- Authentication state controls routing between auth and main shell.
+- Main shell includes live status indicators for cloud and local database connections.
+- Tenant scope service resolves owner/store/branch permissions for runtime enforcement.
 
-## Data Model Conventions
+## Data and Domain Notes
 
-The current model layer follows a few important rules:
+- Entities are UUID-driven for business links.
+- Decimal fields are used for money-safe precision.
+- Parsing is tolerant to camelCase and snake_case payload keys.
+- Sync-aware models include metadata for offline reconciliation.
+- Inventory architecture is transaction-led and batch-aware.
 
-- persisted entities keep `@Id() int id = 0` for local ObjectBox identity
-- business and relation links are UUID-driven in Dart payloads and models
-- money fields use `Decimal` and serialize as strings for precision-safe round trips
-- timestamps are stored as epoch milliseconds in maps and payloads
-- sync-aware entities carry `synced`, `deletedAt`, and `syncedAt`
-- model deserialization accepts both camelCase and snake_case keys for backend compatibility
-- enum-backed fields parse case-insensitively to tolerate upstream payload variation
+## Database Migration
 
-For financial records, the active Dart model uses UUID relations such as `storeUuid`, `clientUuid`, and `sourceUuid`. Numeric relation IDs are not part of the current Dart payload contract for those records.
+Migrations are consolidated into a single file:
 
-## Offline Persistence Status
+- supabase/migrations/20260505_000001_consolidated_schema.sql
 
-The repository is prepared for ObjectBox-backed local persistence on IO platforms.
+This consolidated migration includes:
 
-- `lib/services/local_database.dart` exposes the platform-safe database entry point.
-- `lib/services/local_database_objectbox.dart` initializes ObjectBox on supported IO targets.
-- `lib/services/local_database_stub.dart` provides a safe web stub.
-- `lib/models/offline_sync_record.dart` defines the local sync queue/cache record.
+- Base schema creation.
+- Sync metadata columns and related compatibility updates.
+- Supplier product variation updates.
+- Multi-tenant operating model upgrade, including inventory transaction structures, reporting views, and tenant security rules.
 
-This is infrastructure readiness, not a complete offline sync workflow yet. Supabase remains the active remote source of truth.
+For rollout details, see:
 
-## Database
-
-Supabase schema changes currently live under:
-
-- `supabase/migrations/20260429_000001_initial_schema.sql`
-- `supabase/migrations/20260501_000002_add_sync_metadata_columns.sql` (compatibility no-op)
-
-The migration set covers:
-
-- primary entity tables
-- branch and branch-association tables
-- relation and association tables
-- financial and transaction-detail tables
-- enum-aligned check constraints
-- sync-oriented partial indexes for unsynced active rows
-- indexes and update triggers
-- row-level security policies
-- authenticated access rules
+- docs/operating-model-upgrade.md
 
 ## Requirements
 
 - Flutter SDK
-- Dart SDK compatible with `pubspec.yaml`
-- a Supabase project URL and anon key
-- a Flutter-capable IDE such as VS Code or Android Studio
+- Dart SDK compatible with pubspec.yaml
+- Supabase project URL and anon key
 
-Verify the local toolchain:
+Verify your toolchain:
 
 ```bash
 flutter doctor
+```
+
+## Configuration
+
+Provide Supabase configuration using one of:
+
+1. --dart-define
+2. --dart-define-from-file=.env.local.json
+3. Desktop fallback file .env.local.json in project root (Linux/macOS/Windows only)
+
+Example .env.local.json:
+
+```json
+{
+  "SUPABASE_URL": "https://your-project.supabase.co",
+  "SUPABASE_ANON_KEY": "your-anon-key",
+  "AUTH_REDIRECT_TO": "https://your-app.example.com/auth/callback"
+}
 ```
 
 ## Setup
@@ -173,34 +115,9 @@ Install dependencies:
 flutter pub get
 ```
 
-Provide Supabase configuration in one of these ways:
+## Run
 
-1. Pass values with `--dart-define`.
-2. Pass values with `--dart-define-from-file=.env.local.json`.
-3. On Linux, macOS, or Windows desktop only, place `.env.local.json` in the project root and let the app read it directly.
-
-Optional auth redirect configuration:
-
-- set `AUTH_REDIRECT_TO` when confirmation or recovery links should redirect to a fixed callback URL
-- on web, the current page URL is used when `AUTH_REDIRECT_TO` is not supplied
-
-Example `.env.local.json`:
-
-```json
-{
-  "SUPABASE_URL": "https://your-project.supabase.co",
-  "SUPABASE_ANON_KEY": "your-anon-key",
-  "AUTH_REDIRECT_TO": "https://your-app.example.com/auth/callback"
-}
-```
-
-If configuration is missing or invalid, the app fails during startup while initializing Supabase.
-
-On Android and iOS, the app cannot read `.env.local.json` from the workspace root at runtime, so mobile builds must receive config through `--dart-define` or `--dart-define-from-file`.
-
-## Running
-
-Run with a config file:
+Run with config file:
 
 ```bash
 flutter run --dart-define-from-file=.env.local.json
@@ -209,81 +126,57 @@ flutter run --dart-define-from-file=.env.local.json
 Run with inline defines:
 
 ```bash
-flutter run \
-  --dart-define=SUPABASE_URL=https://your-project.supabase.co \
-  --dart-define=SUPABASE_ANON_KEY=your-anon-key
+flutter run --dart-define=SUPABASE_URL=https://your-project.supabase.co --dart-define=SUPABASE_ANON_KEY=your-anon-key
 ```
 
-For web, prefer `--dart-define` or `--dart-define-from-file`. The desktop-only local file fallback does not apply to web builds.
+## Development Commands
 
-If you launch from VS Code, use a `launch.json` profile that passes the same defines so mobile and desktop runs behave consistently.
-
-## Useful Commands
-
-Install packages:
-
-```bash
-flutter pub get
-```
-
-Analyze the codebase:
+Analyze:
 
 ```bash
 flutter analyze
 ```
 
-Run all tests:
+Run tests:
 
 ```bash
 flutter test
 ```
 
-Note: in this Linux environment, `flutter test` currently fails before test execution with a Dart VM crash while building a native asset (`objective_c`). This appears to be a toolchain/runtime issue rather than a project assertion/test failure.
-
-Run focused tests:
-
-```bash
-flutter test test/models/model_serialization_test.dart
-flutter test test/controllers/supplier_products_controller_test.dart
-flutter test test/controllers/store_invoices_controller_test.dart
-```
-
-Regenerate ObjectBox code after changing ObjectBox entities:
+Generate ObjectBox code after entity changes:
 
 ```bash
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-Build common targets:
+Build targets:
 
 ```bash
 flutter build apk
 flutter build web
 flutter build linux
+flutter build windows
 ```
 
 ## Current Status
 
-Implemented:
+Implemented and active:
 
-- authentication bootstrap and session-driven auth state handling
-- localized auth flow and dashboard shell
-- tolerant, tested domain model serialization
-- validation and CRUD-style controller layers
-- Supabase migrations for primary, relation, and transaction records
-- offline persistence bootstrap for IO platforms
+- Core auth and localization flow.
+- Multi-tenant schema and tenant-aware access enforcement.
+- CRUD-oriented model/controller/validation stack.
+- Inventory service foundation for sale and transfer posting workflows.
+- Consolidated migration strategy.
 
-Still to expand:
+Still expanding:
 
-- dedicated feature pages beyond the current shell and auth flow
-- repository-style persistence wiring between controllers, Supabase, and local sync
-- broader end-to-end flows for inventory, finance, and admin operations
-- reporting and analytics flows
-- broader validation and controller test coverage
+- Additional dedicated UI pages for newer operational tables.
+- Deeper end-to-end workflows for procurement and reporting modules.
+- Broader test coverage across service and integration layers.
 
 ## License
 
-This repository does not currently define a license.
+No license is currently defined in this repository.
 
 ## Maintainer
 

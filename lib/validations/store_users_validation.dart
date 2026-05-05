@@ -55,6 +55,11 @@ class StoreUsersValidation {
       return userRoleUuidError;
     }
 
+    final branchUuidError = ValidationUtils.validateOptionalUuid(request, 'branchUuid', 'Branch uuid reference must be a valid UUID');
+    if (branchUuidError != null) {
+      return branchUuidError;
+    }
+
     return ValidationUtils.validateStatus(request);
   }
 }

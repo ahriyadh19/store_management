@@ -774,13 +774,17 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   Future<void> _performCreate(Map<String, dynamic> values) async {
     final model = widget.formDefinition.buildModel(values);
     final createDelegate = widget.formDefinition.createDelegate;
+    final afterCreateHook = widget.formDefinition.afterCreateHook;
 
     if (_isServerBacked && createDelegate != null) {
       setState(() {
         _isLoading = true;
       });
       try {
-        await createDelegate(model);
+        final createdModel = await createDelegate(model);
+        if (afterCreateHook != null) {
+          await afterCreateHook(model: createdModel, values: values);
+        }
         if (!mounted) {
           return;
         }
@@ -804,6 +808,10 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
         _showError(error);
       }
       return;
+    }
+
+    if (afterCreateHook != null) {
+      await afterCreateHook(model: model, values: values);
     }
 
     setState(() {

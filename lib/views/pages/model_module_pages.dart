@@ -19,6 +19,8 @@ import 'package:store_management/models/tags.dart';
 import 'package:store_management/models/users.dart';
 import 'package:store_management/models/offline_sync_record.dart';
 import 'package:store_management/services/app_preferences_controller.dart';
+import 'package:store_management/services/inventory_transaction_service.dart';
+import 'package:store_management/services/owner_scope_service.dart';
 import 'package:store_management/services/local_database.dart';
 import 'package:store_management/views/components/model_form.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
@@ -26,6 +28,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 ModelFormDefinition<Store> storeFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Store>(
   tableName: 'store',
   fields: [
+    _textField('ownerUserUuid', _t(l10n, 'Owner user UUID', 'معرّف مالك المتجر UUID'), required: true),
     _textField('name', _t(l10n, 'Store name', 'اسم المتجر'), required: true),
     _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
     _multilineField('address', _t(l10n, 'Address', 'العنوان'), required: true),
@@ -35,6 +38,7 @@ ModelFormDefinition<Store> storeFormDefinition(AppLocalizations l10n) => _server
   fromMap: Store.fromMap,
   toMap: (store) => store.toMap(),
   sampleModel: Store(
+    ownerUserUuid: '11111111-1111-4111-8111-111111111111',
     name: 'Central Store',
     description: _t(l10n, 'Primary retail location and stock coordination point.', 'موقع البيع الرئيسي ونقطة تنسيق المخزون.'),
     address: '12 Commerce Ave, Downtown',
@@ -212,9 +216,16 @@ ModelFormDefinition<Roles> roleFormDefinition(AppLocalizations l10n) => _serverB
 ModelFormDefinition<StoreInvoice> invoiceFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreInvoice>(
   tableName: 'store_invoice',
   fields: [
+    _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID')),
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
+    _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID')),
     _textField('clientUuid', _t(l10n, 'Client UUID', 'معرّف العميل UUID'), required: true),
     _textField('invoiceNumber', _t(l10n, 'Invoice number', 'رقم الفاتورة'), required: true),
+    _textField('productUuid', _t(l10n, 'Product UUID', 'معرّف المنتج UUID')),
+    _integerField('quantity', _t(l10n, 'Quantity', 'الكمية')),
+    _decimalField('unitPrice', _t(l10n, 'Unit price', 'سعر الوحدة')),
+    _selectionField('batchSelectionStrategy', _t(l10n, 'Batch strategy', 'استراتيجية اختيار الدفعة'), const [ModelFormSelectOption(label: 'FIFO', value: 'fifo'), ModelFormSelectOption(label: 'FEFO', value: 'fefo')]),
+    _textField('createdByUserUuid', _t(l10n, 'Created by user UUID', 'معرّف المستخدم المنشئ UUID')),
     _selectionField('invoiceType', _t(l10n, 'Invoice type', 'نوع الفاتورة'), _invoiceTypeOptions(l10n), required: true),
     _integerField('itemCount', _t(l10n, 'Item count', 'عدد العناصر'), required: true),
     _decimalField('totalAmount', _t(l10n, 'Total amount', 'المبلغ الإجمالي'), required: true),
@@ -227,6 +238,31 @@ ModelFormDefinition<StoreInvoice> invoiceFormDefinition(AppLocalizations l10n) =
   ],
   fromMap: StoreInvoice.fromMap,
   toMap: (invoice) => invoice.toMap(),
+  afterCreateHook: ({required model, required values}) async {
+    final ownerUuid = _stringOrNull(values['ownerUuid']);
+    final branchUuid = _stringOrNull(values['branchUuid']);
+    final productUuid = _stringOrNull(values['productUuid']);
+    final quantity = _intOrNull(values['quantity']);
+    final unitPrice = _numOrNull(values['unitPrice']);
+
+    if (ownerUuid == null || branchUuid == null || productUuid == null || quantity == null || quantity <= 0 || unitPrice == null) {
+      return;
+    }
+
+    final strategyValue = (_stringOrNull(values['batchSelectionStrategy']) ?? 'fifo').toLowerCase();
+    final strategy = strategyValue == 'fefo' ? BatchSelectionStrategy.fefo : BatchSelectionStrategy.fifo;
+
+    await _inventoryTransactionService.postSaleTransactions(
+      ownerUuid: ownerUuid,
+      branchUuid: branchUuid,
+      productUuid: productUuid,
+      salesInvoiceUuid: model.uuid,
+      quantity: quantity,
+      unitPrice: unitPrice,
+      strategy: strategy,
+      staffUserUuid: _stringOrNull(values['createdByUserUuid']),
+    );
+  },
   sampleModel: StoreInvoice(
     storeUuid: 'store-central-001',
     clientUuid: 'client-blue-market-001',
@@ -342,6 +378,7 @@ ModelFormDefinition<InventoryMovement> inventoryMovementFormDefinition(AppLocali
 ModelFormDefinition<StoreFinancialTransaction> transactionFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreFinancialTransaction>(
   tableName: 'store_financial_transaction',
   fields: [
+    _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID')),
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
     _textField('clientUuid', _t(l10n, 'Client UUID', 'معرّف العميل UUID'), required: true),
     _textField('transactionNumber', _t(l10n, 'Transaction number', 'رقم العملية'), required: true),
@@ -351,11 +388,46 @@ ModelFormDefinition<StoreFinancialTransaction> transactionFormDefinition(AppLoca
     _decimalField('amount', _t(l10n, 'Amount', 'المبلغ'), required: true),
     _selectionField('entryType', _t(l10n, 'Entry type', 'نوع القيد'), _entryTypeOptions(l10n), required: true),
     _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
+    _textField('sourceBranchUuid', _t(l10n, 'Source branch UUID', 'معرّف الفرع المصدر UUID')),
+    _textField('destinationBranchUuid', _t(l10n, 'Destination branch UUID', 'معرّف الفرع الوجهة UUID')),
+    _textField('productUuid', _t(l10n, 'Product UUID', 'معرّف المنتج UUID')),
+    _textField('batchUuid', _t(l10n, 'Batch UUID', 'معرّف الدفعة UUID')),
+    _integerField('quantity', _t(l10n, 'Quantity', 'الكمية')),
+    _decimalField('unitCost', _t(l10n, 'Unit cost', 'تكلفة الوحدة')),
+    _textField('createdByUserUuid', _t(l10n, 'Created by user UUID', 'معرّف المستخدم المنشئ UUID')),
     _dateTimeField('transactionDate', _t(l10n, 'Transaction date', 'تاريخ العملية'), required: true),
     _statusField(l10n),
   ],
   fromMap: StoreFinancialTransaction.fromMap,
   toMap: (transaction) => transaction.toMap(),
+  afterCreateHook: ({required model, required values}) async {
+    final sourceType = _stringOrNull(values['sourceType'])?.toLowerCase();
+    if (sourceType != 'inventory_movement') {
+      return;
+    }
+
+    final ownerUuid = _stringOrNull(values['ownerUuid']);
+    final sourceBranchUuid = _stringOrNull(values['sourceBranchUuid']);
+    final destinationBranchUuid = _stringOrNull(values['destinationBranchUuid']);
+    final productUuid = _stringOrNull(values['productUuid']);
+    final batchUuid = _stringOrNull(values['batchUuid']);
+    final quantity = _intOrNull(values['quantity']);
+    final unitCost = _numOrNull(values['unitCost']) ?? 0;
+
+    if (ownerUuid == null || sourceBranchUuid == null || destinationBranchUuid == null || productUuid == null || batchUuid == null || quantity == null || quantity <= 0) {
+      return;
+    }
+
+    await _inventoryTransactionService.postTransferTransactions(
+      ownerUuid: ownerUuid,
+      transferOrderUuid: model.sourceUuid,
+      sourceBranchUuid: sourceBranchUuid,
+      destinationBranchUuid: destinationBranchUuid,
+      productUuid: productUuid,
+      lots: <InventoryAllocationLot>[InventoryAllocationLot(batchUuid: batchUuid, quantity: quantity, unitCost: unitCost)],
+      staffUserUuid: _stringOrNull(values['createdByUserUuid']),
+    );
+  },
   sampleModel: StoreFinancialTransaction(
     storeUuid: 'store-central-001',
     clientUuid: 'client-blue-market-001',
@@ -379,6 +451,7 @@ ModelFormDefinition<T> _serverBackedDefinition<T extends Object>({
   required T Function(Map<String, dynamic> map) fromMap,
   required Map<String, dynamic> Function(T model) toMap,
   required T sampleModel,
+  ModelAfterCreateHook<T>? afterCreateHook,
 }) {
   final supabaseQuery = _supabaseQueryDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap);
   final supabaseCreate = _supabaseCreateDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap);
@@ -394,6 +467,7 @@ ModelFormDefinition<T> _serverBackedDefinition<T extends Object>({
     fromMap: fromMap,
     toMap: toMap,
     sampleModel: sampleModel,
+    afterCreateHook: afterCreateHook,
     queryDelegate: (request) async {
       switch (_storagePreferenceOrDefault()) {
         case StoragePreference.onlineOnly:
@@ -480,9 +554,14 @@ ModelQueryDelegate<T> _hybridQueryDelegate<T extends Object>({required String ta
 ModelCreateDelegate<T> _supabaseCreateDelegate<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) {
   return (model) async {
     final client = Supabase.instance.client;
-    final payload = Map<String, dynamic>.from(toMap(model))
+    final scope = await _resolveOwnerScope();
+    final payload = _enforceTenantPayloadScope(
+      tableName,
+      Map<String, dynamic>.from(toMap(model))
       ..remove('id')
-      ..removeWhere((key, value) => value == null);
+        ..removeWhere((key, value) => value == null),
+      scope,
+    );
 
     final inserted = await client.from(tableName).insert(payload).select().single();
     return fromMap(Map<String, dynamic>.from(inserted));
@@ -492,7 +571,8 @@ ModelCreateDelegate<T> _supabaseCreateDelegate<T extends Object>({required Strin
 ModelUpdateDelegate<T> _supabaseUpdateDelegate<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) {
   return (model) async {
     final client = Supabase.instance.client;
-    final payload = Map<String, dynamic>.from(toMap(model))..removeWhere((key, value) => value == null);
+    final scope = await _resolveOwnerScope();
+    final payload = _enforceTenantPayloadScope(tableName, Map<String, dynamic>.from(toMap(model))..removeWhere((key, value) => value == null), scope);
 
     final updatedAt = DateTime.now().millisecondsSinceEpoch;
     payload['updatedAt'] = updatedAt;
@@ -502,6 +582,7 @@ ModelUpdateDelegate<T> _supabaseUpdateDelegate<T extends Object>({required Strin
     final id = payload['id'];
 
     dynamic query = client.from(tableName).update(payload);
+    query = _applyTenantQueryScope(query, tableName, scope);
     if (uuid != null && uuid.toString().isNotEmpty) {
       query = query.eq('uuid', uuid);
     } else if (id != null) {
@@ -519,12 +600,14 @@ ModelUpdateDelegate<T> _supabaseUpdateDelegate<T extends Object>({required Strin
 ModelDeleteDelegate<T> _supabaseDeleteDelegate<T extends Object>({required String tableName, required Map<String, dynamic> Function(T model) toMap}) {
   return (model) async {
     final client = Supabase.instance.client;
-    final data = toMap(model);
+    final scope = await _resolveOwnerScope();
+    final data = _enforceTenantPayloadScope(tableName, toMap(model), scope);
     final uuid = data['uuid'];
     final id = data['id'];
     final now = DateTime.now().millisecondsSinceEpoch;
 
     dynamic query = client.from(tableName).update({'deletedAt': now, 'updatedAt': now});
+    query = _applyTenantQueryScope(query, tableName, scope);
     if (uuid != null && uuid.toString().isNotEmpty) {
       query = query.eq('uuid', uuid);
     } else if (id != null) {
@@ -665,7 +748,10 @@ ModelQueryResult<T> _buildQueryResult<T extends Object>({required List<T> record
 
 Future<List<T>> _fetchSupabaseRecords<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) async {
   final client = Supabase.instance.client;
-  final response = await client.from(tableName).select();
+  final scope = await _resolveOwnerScope();
+  dynamic query = client.from(tableName).select();
+  query = _applyTenantQueryScope(query, tableName, scope);
+  final response = await query;
   final rows = (response as List<dynamic>).map((row) => Map<String, dynamic>.from(row as Map)).toList(growable: false);
 
   final records = <T>[];
@@ -1033,4 +1119,160 @@ String transactionEntityLabel(AppLocalizations l10n) => _t(l10n, 'Transaction', 
 final DateTime _createdAt = DateTime(2024, 4, 20, 9, 0);
 final DateTime _updatedAt = DateTime(2024, 4, 21, 14, 30);
 final DateTime _transactionAt = DateTime(2024, 4, 26, 11, 45);
+
+final OwnerScopeService _ownerScopeService = OwnerScopeService();
+final InventoryTransactionService _inventoryTransactionService = InventoryTransactionService(ownerScopeService: _ownerScopeService);
+
+const Set<String> _ownerScopedTables = <String>{
+  'store',
+  'branch',
+  'products',
+  'supplier',
+  'client',
+  'category',
+  'tags',
+  'roles',
+  'store_invoice',
+  'store_payment_voucher',
+  'store_return',
+  'store_financial_transaction',
+  'inventory_movement',
+  'owner_account',
+  'owner_user_membership',
+  'owner_permission_scope',
+  'purchase_order',
+  'supplier_invoice',
+  'inventory_batch',
+  'inventory_transaction',
+  'transfer_order',
+  'sales_order',
+  'sales_invoice',
+  'sales_return',
+  'branch_price',
+  'promotion_rule',
+  'staff_shift',
+  'staff_attendance',
+  'staff_activity_log',
+  'audit_log',
+  'sync_conflict_log',
+  'external_integration_endpoint',
+  'notification_event',
+};
+
+const Set<String> _storeScopedTables = <String>{'store_supplier', 'store_client', 'store_user', 'store_branches'};
+const Set<String> _branchScopedTables = <String>{'branch_product'};
+const Set<String> _selfScopedTables = <String>{'users'};
+
+Future<OwnerScope> _resolveOwnerScope() => _ownerScopeService.resolveCurrentScope();
+
+Map<String, dynamic> _enforceTenantPayloadScope(String tableName, Map<String, dynamic> payload, OwnerScope scope) {
+  final scopedPayload = Map<String, dynamic>.from(payload);
+
+  if (_ownerScopedTables.contains(tableName)) {
+    if (!scope.hasOwner) {
+      throw StateError('No owner scope available for table $tableName');
+    }
+
+    final payloadOwnerUuid = scopedPayload['ownerUuid']?.toString().trim();
+    if (payloadOwnerUuid == null || payloadOwnerUuid.isEmpty) {
+      scopedPayload['ownerUuid'] = scope.ownerUuid;
+    } else if (payloadOwnerUuid != scope.ownerUuid) {
+      throw StateError('Owner scope mismatch for table $tableName');
+    }
+  }
+
+  if (_storeScopedTables.contains(tableName)) {
+    final storeUuid = scopedPayload['storeUuid']?.toString().trim();
+    if (storeUuid == null || storeUuid.isEmpty || !scope.storeUuids.contains(storeUuid)) {
+      throw StateError('Store scope mismatch for table $tableName');
+    }
+  }
+
+  if (_branchScopedTables.contains(tableName)) {
+    final branchUuid = scopedPayload['branchUuid']?.toString().trim();
+    if (branchUuid == null || branchUuid.isEmpty || !scope.branchUuids.contains(branchUuid)) {
+      throw StateError('Branch scope mismatch for table $tableName');
+    }
+  }
+
+  if (_selfScopedTables.contains(tableName)) {
+    final uuid = scopedPayload['uuid']?.toString().trim();
+    if (scope.userUuid != null && uuid != null && uuid.isNotEmpty && uuid != scope.userUuid) {
+      throw StateError('Self scope mismatch for table $tableName');
+    }
+  }
+
+  return scopedPayload;
+}
+
+dynamic _applyTenantQueryScope(dynamic query, String tableName, OwnerScope scope) {
+  dynamic scopedQuery = query;
+
+  if (_ownerScopedTables.contains(tableName)) {
+    if (!scope.hasOwner) {
+      throw StateError('No owner scope available for table $tableName');
+    }
+    scopedQuery = scopedQuery.eq('ownerUuid', scope.ownerUuid);
+  }
+
+  if (_storeScopedTables.contains(tableName)) {
+    if (scope.storeUuids.isEmpty) {
+      throw StateError('No store scope available for table $tableName');
+    }
+    scopedQuery = scopedQuery.inFilter('storeUuid', scope.storeUuids.toList(growable: false));
+  }
+
+  if (_branchScopedTables.contains(tableName)) {
+    if (scope.branchUuids.isEmpty) {
+      throw StateError('No branch scope available for table $tableName');
+    }
+    scopedQuery = scopedQuery.inFilter('branchUuid', scope.branchUuids.toList(growable: false));
+  }
+
+  if (_selfScopedTables.contains(tableName)) {
+    if (scope.userUuid == null || scope.userUuid!.isEmpty) {
+      throw StateError('No user scope available for table $tableName');
+    }
+    scopedQuery = scopedQuery.eq('uuid', scope.userUuid);
+  }
+
+  return scopedQuery;
+}
+
+String? _stringOrNull(Object? value) {
+  final normalized = value?.toString().trim();
+  if (normalized == null || normalized.isEmpty) {
+    return null;
+  }
+  return normalized;
+}
+
+int? _intOrNull(Object? value) {
+  if (value is int) {
+    return value;
+  }
+  if (value is num) {
+    return value.toInt();
+  }
+
+  final normalized = _stringOrNull(value);
+  if (normalized == null) {
+    return null;
+  }
+
+  return int.tryParse(normalized);
+}
+
+num? _numOrNull(Object? value) {
+  if (value is num) {
+    return value;
+  }
+
+  final normalized = _stringOrNull(value);
+  if (normalized == null) {
+    return null;
+  }
+
+  return num.tryParse(normalized);
+}
 

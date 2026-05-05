@@ -40,6 +40,11 @@ class StoresValidation {
       }
     }
 
+    final ownerUserUuidError = ValidationUtils.validateRequiredUuid(request, 'ownerUserUuid', 'Owner user uuid reference must be a valid UUID');
+    if (ownerUserUuidError != null) {
+      return ownerUserUuidError;
+    }
+
     final nameError = ValidationUtils.validateRequiredString(request, 'name', 'Store name is required');
     if (nameError != null) {
       return nameError;

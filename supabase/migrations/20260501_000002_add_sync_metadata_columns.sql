@@ -1,3 +1,0 @@
--- Compatibility migration intentionally kept as a no-op.
--- Complete schema and sync metadata are consolidated in:
---   supabase/migrations/20260429_000001_initial_schema.sql

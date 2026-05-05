@@ -5,10 +5,13 @@ import 'package:store_management/models/model_parsing.dart';
 import 'package:store_management/objectbox.g.dart';
 import 'package:store_management/services/uuid.dart';
 class StoreUser {
+  static const Object _unset = Object();
+
   @Id()
   int id = 0;
   String uuid;
   String storeUuid;
+  String? branchUuid;
   String userUuid;
   String userRoleUuid;
   int status;
@@ -21,6 +24,7 @@ class StoreUser {
     this.id = 0,
     String? uuid,
     required this.storeUuid,
+    this.branchUuid,
     required this.userUuid,
     required this.userRoleUuid,
     required this.status,
@@ -31,11 +35,25 @@ class StoreUser {
     this.syncedAt,
   }) : uuid = uuid ?? UUIDGenerator.generate();
 
-  StoreUser copyWith({int? id, String? uuid, String? storeUuid, String? userUuid, String? userRoleUuid, int? status, DateTime? createdAt, DateTime? updatedAt, bool? synced, DateTime? deletedAt, DateTime? syncedAt}) {
+  StoreUser copyWith({
+    int? id,
+    String? uuid,
+    String? storeUuid,
+    Object? branchUuid = _unset,
+    String? userUuid,
+    String? userRoleUuid,
+    int? status,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    bool? synced,
+    DateTime? deletedAt,
+    DateTime? syncedAt,
+  }) {
     return StoreUser(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
       storeUuid: storeUuid ?? this.storeUuid,
+      branchUuid: identical(branchUuid, _unset) ? this.branchUuid : branchUuid as String?,
       userUuid: userUuid ?? this.userUuid,
       userRoleUuid: userRoleUuid ?? this.userRoleUuid,
       status: status ?? this.status,
@@ -52,6 +70,7 @@ class StoreUser {
       'id': id,
       'uuid': uuid,
       'storeUuid': storeUuid,
+      'branchUuid': branchUuid,
       'userUuid': userUuid,
       'userRoleUuid': userRoleUuid,
       'status': status,
@@ -68,6 +87,7 @@ class StoreUser {
       id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(ModelParsing.value(map, 'uuid')),
       storeUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'storeUuid'), 'storeUuid'),
+      branchUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'branchUuid')),
       userUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'userUuid'), 'userUuid'),
       userRoleUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'userRoleUuid'), 'userRoleUuid'),
       status: ModelParsing.intOrThrow(ModelParsing.value(map, 'status'), 'status'),
@@ -85,7 +105,7 @@ class StoreUser {
 
   @override
   String toString() {
-    return 'StoreUser(id: $id, uuid: $uuid, storeUuid: $storeUuid, userUuid: $userUuid, userRoleUuid: $userRoleUuid, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
+    return 'StoreUser(id: $id, uuid: $uuid, storeUuid: $storeUuid, branchUuid: $branchUuid, userUuid: $userUuid, userRoleUuid: $userRoleUuid, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
   }
 
   @override
@@ -95,6 +115,7 @@ class StoreUser {
     return other.id == id &&
         other.uuid == uuid &&
         other.storeUuid == storeUuid &&
+        other.branchUuid == branchUuid &&
         other.userUuid == userUuid &&
         other.userRoleUuid == userRoleUuid &&
         other.status == status &&
@@ -110,6 +131,7 @@ class StoreUser {
     return id.hashCode ^
         uuid.hashCode ^
         storeUuid.hashCode ^
+        branchUuid.hashCode ^
         userUuid.hashCode ^
         userRoleUuid.hashCode ^
         status.hashCode ^

@@ -8,6 +8,7 @@ class Store {
   @Id()
   int id = 0;
   String uuid;
+  String ownerUserUuid;
   String name;
   String description;
   String address;
@@ -16,13 +17,26 @@ class Store {
   bool synced;
   DateTime? deletedAt;
   DateTime? syncedAt;
-  Store({this.id = 0, String? uuid, required this.name, required this.description, required this.address, required this.phone, required this.email, this.synced = false, this.deletedAt, this.syncedAt})
+  Store({
+    this.id = 0,
+    String? uuid,
+    this.ownerUserUuid = '',
+    required this.name,
+    required this.description,
+    required this.address,
+    required this.phone,
+    required this.email,
+    this.synced = false,
+    this.deletedAt,
+    this.syncedAt,
+  })
     : uuid = uuid ?? UUIDGenerator.generate();
 
-  Store copyWith({int? id, String? uuid, String? name, String? description, String? address, String? phone, String? email, bool? synced, DateTime? deletedAt, DateTime? syncedAt}) {
+  Store copyWith({int? id, String? uuid, String? ownerUserUuid, String? name, String? description, String? address, String? phone, String? email, bool? synced, DateTime? deletedAt, DateTime? syncedAt}) {
     return Store(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
+      ownerUserUuid: ownerUserUuid ?? this.ownerUserUuid,
       name: name ?? this.name,
       description: description ?? this.description,
       address: address ?? this.address,
@@ -38,6 +52,7 @@ class Store {
     return <String, dynamic>{
       'id': id,
       'uuid': uuid,
+      'ownerUserUuid': ownerUserUuid,
       'name': name,
       'description': description,
       'address': address,
@@ -53,6 +68,7 @@ class Store {
     return Store(
       id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(ModelParsing.value(map, 'uuid')),
+      ownerUserUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'ownerUserUuid')) ?? '',
       name: ModelParsing.stringOrNull(ModelParsing.value(map, 'name')) ?? '',
       description: ModelParsing.stringOrNull(ModelParsing.value(map, 'description')) ?? '',
       address: ModelParsing.stringOrNull(ModelParsing.value(map, 'address')) ?? '',
@@ -70,7 +86,7 @@ class Store {
 
   @override
   String toString() {
-    return 'Store(id: $id, uuid: $uuid, name: $name, description: $description, address: $address, phone: $phone, email: $email, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
+    return 'Store(id: $id, uuid: $uuid, ownerUserUuid: $ownerUserUuid, name: $name, description: $description, address: $address, phone: $phone, email: $email, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
   }
 
   @override
@@ -79,6 +95,7 @@ class Store {
 
     return other.id == id &&
         other.uuid == uuid &&
+        other.ownerUserUuid == ownerUserUuid &&
         other.name == name &&
         other.description == description &&
         other.address == address &&
@@ -91,7 +108,7 @@ class Store {
 
   @override
   int get hashCode {
-    return id.hashCode ^ uuid.hashCode ^ name.hashCode ^ description.hashCode ^ address.hashCode ^ phone.hashCode ^ email.hashCode ^ synced.hashCode ^ deletedAt.hashCode ^ syncedAt.hashCode;
+    return id.hashCode ^ ownerUserUuid.hashCode ^ uuid.hashCode ^ name.hashCode ^ description.hashCode ^ address.hashCode ^ phone.hashCode ^ email.hashCode ^ synced.hashCode ^ deletedAt.hashCode ^ syncedAt.hashCode;
   }
 }
 
