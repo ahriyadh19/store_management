@@ -1,4 +1,5 @@
 export 'branches_validation.dart';
+export 'branch_products_validation.dart';
 export 'branch_prices_validation.dart';
 export 'categories_validation.dart';
 export 'clients_validation.dart';

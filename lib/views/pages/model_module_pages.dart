@@ -5,11 +5,13 @@ import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/models/branch.dart';
 import 'package:store_management/models/categories.dart';
 import 'package:store_management/models/client.dart';
+import 'package:store_management/models/branch_product.dart';
 import 'package:store_management/models/supplier.dart';
 import 'package:store_management/models/inventory_movement.dart';
 import 'package:store_management/models/inventory_batch.dart';
 import 'package:store_management/models/inventory_transaction.dart';
 import 'package:store_management/models/model_enums.dart';
+import 'package:store_management/models/payment_allocation.dart';
 import 'package:store_management/models/branch_price.dart';
 import 'package:store_management/models/purchase_order.dart';
 import 'package:store_management/models/purchase_order_item.dart';
@@ -23,14 +25,21 @@ import 'package:store_management/models/staff_activity_log.dart';
 import 'package:store_management/models/staff_attendance.dart';
 import 'package:store_management/models/staff_shift.dart';
 import 'package:store_management/models/store.dart';
+import 'package:store_management/models/store_branches.dart';
+import 'package:store_management/models/store_client.dart';
 import 'package:store_management/models/store_financial_transaction.dart';
 import 'package:store_management/models/store_invoice.dart';
+import 'package:store_management/models/store_invoice_item.dart';
 import 'package:store_management/models/store_payment_voucher.dart';
 import 'package:store_management/models/store_return.dart';
+import 'package:store_management/models/store_return_item.dart';
+import 'package:store_management/models/store_supplier.dart';
+import 'package:store_management/models/store_user.dart';
 import 'package:store_management/models/supplier_invoice.dart';
 import 'package:store_management/models/tags.dart';
 import 'package:store_management/models/transfer_order.dart';
 import 'package:store_management/models/transfer_order_item.dart';
+import 'package:store_management/models/user_roles.dart';
 import 'package:store_management/models/users.dart';
 import 'package:store_management/models/offline_sync_record.dart';
 import 'package:store_management/services/app_preferences_controller.dart';
@@ -222,6 +231,170 @@ ModelFormDefinition<Roles> roleFormDefinition(AppLocalizations l10n) => _serverB
   sampleModel: Roles(
     name: 'Store Supervisor',
     description: _t(l10n, 'Can manage inventory updates, clients, and invoice approvals.', 'يمكنه إدارة تحديثات المخزون والعملاء واعتمادات الفواتير.'),
+    status: RecordStatus.active.code,
+    createdAt: _createdAt,
+    updatedAt: _updatedAt,
+  ),
+);
+
+ModelFormDefinition<UserRoles> userRolesFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<UserRoles>(
+  tableName: 'user_roles',
+  fields: [_textField('userUuid', _t(l10n, 'User UUID', 'معرّف المستخدم UUID'), required: true), _textField('roleUuid', _t(l10n, 'Role UUID', 'معرّف الدور UUID'), required: true), _statusField(l10n)],
+  fromMap: UserRoles.fromMap,
+  toMap: (userRole) => userRole.toMap(),
+  sampleModel: UserRoles(userUuid: '33333333-3333-4333-8333-333333333333', roleUuid: '55555555-5555-4555-8555-555555555555', status: RecordStatus.active.code, createdAt: _createdAt, updatedAt: _updatedAt),
+);
+
+ModelFormDefinition<StoreSupplier> storeSupplierFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreSupplier>(
+  tableName: 'store_supplier',
+  fields: [_textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true), _textField('supplierUuid', _t(l10n, 'Supplier UUID', 'معرّف المورد UUID'), required: true), _statusField(l10n)],
+  fromMap: StoreSupplier.fromMap,
+  toMap: (storeSupplier) => storeSupplier.toMap(),
+  sampleModel: StoreSupplier(storeUuid: 'store-central-001', supplierUuid: 'supplier-alnoor-001', status: RecordStatus.active.code, createdAt: _createdAt, updatedAt: _updatedAt),
+);
+
+ModelFormDefinition<StoreClient> storeClientFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreClient>(
+  tableName: 'store_client',
+  fields: [_textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true), _textField('clientUuid', _t(l10n, 'Client UUID', 'معرّف العميل UUID'), required: true), _statusField(l10n)],
+  fromMap: StoreClient.fromMap,
+  toMap: (storeClient) => storeClient.toMap(),
+  sampleModel: StoreClient(storeUuid: 'store-central-001', clientUuid: 'client-blue-market-001', status: RecordStatus.active.code, createdAt: _createdAt, updatedAt: _updatedAt),
+);
+
+ModelFormDefinition<StoreUser> storeUserFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreUser>(
+  tableName: 'store_user',
+  fields: [
+    _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
+    _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID')),
+    _textField('userUuid', _t(l10n, 'User UUID', 'معرّف المستخدم UUID'), required: true),
+    _textField('userRoleUuid', _t(l10n, 'User role UUID', 'معرّف دور المستخدم UUID'), required: true),
+    _statusField(l10n),
+  ],
+  fromMap: StoreUser.fromMap,
+  toMap: (storeUser) => storeUser.toMap(),
+  sampleModel: StoreUser(
+    storeUuid: 'store-central-001',
+    branchUuid: 'branch-north-001',
+    userUuid: '33333333-3333-4333-8333-333333333333',
+    userRoleUuid: '55555555-5555-4555-8555-555555555555',
+    status: RecordStatus.active.code,
+    createdAt: _createdAt,
+    updatedAt: _updatedAt,
+  ),
+);
+
+ModelFormDefinition<StoreBranches> storeBranchesFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreBranches>(
+  tableName: 'store_branches',
+  fields: [_textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true), _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID'), required: true), _statusField(l10n)],
+  fromMap: StoreBranches.fromMap,
+  toMap: (storeBranch) => storeBranch.toMap(),
+  sampleModel: StoreBranches(storeUuid: 'store-central-001', branchUuid: 'branch-north-001', status: RecordStatus.active.code, createdAt: _createdAt, updatedAt: _updatedAt),
+);
+
+ModelFormDefinition<BranchProduct> branchProductFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<BranchProduct>(
+  tableName: 'branch_product',
+  fields: [
+    _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID'), required: true),
+    _textField('supplierProductUuid', _t(l10n, 'Supplier product UUID', 'معرّف منتج المورد UUID'), required: true),
+    _textField('productUuid', _t(l10n, 'Product UUID', 'معرّف المنتج UUID'), required: true),
+    _integerField('stock', _t(l10n, 'Stock', 'المخزون'), required: true),
+    _integerField('reservedQuantity', _t(l10n, 'Reserved quantity', 'الكمية المحجوزة')),
+    _integerField('reorderLevel', _t(l10n, 'Reorder level', 'حد إعادة الطلب')),
+    _dateTimeField('lastMovementAt', _t(l10n, 'Last movement at', 'آخر حركة')),
+    _statusField(l10n),
+  ],
+  fromMap: BranchProduct.fromMap,
+  toMap: (branchProduct) => branchProduct.toMap(),
+  sampleModel: BranchProduct(
+    branchUuid: 'branch-north-001',
+    supplierProductUuid: 'supplier-product-001',
+    productUuid: 'product-flour-001',
+    stock: 240,
+    reservedQuantity: 15,
+    reorderLevel: 50,
+    lastMovementAt: _transactionAt,
+    status: RecordStatus.active.code,
+    createdAt: _createdAt,
+    updatedAt: _updatedAt,
+  ),
+);
+
+ModelFormDefinition<StoreInvoiceItem> storeInvoiceItemFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreInvoiceItem>(
+  tableName: 'store_invoice_item',
+  fields: [
+    _textField('invoiceUuid', _t(l10n, 'Invoice UUID', 'معرّف الفاتورة UUID'), required: true),
+    _textField('supplierProductUuid', _t(l10n, 'Supplier product UUID', 'معرّف منتج المورد UUID'), required: true),
+    _textField('productUuid', _t(l10n, 'Product UUID', 'معرّف المنتج UUID'), required: true),
+    _integerField('quantity', _t(l10n, 'Quantity', 'الكمية'), required: true),
+    _decimalField('unitPrice', _t(l10n, 'Unit price', 'سعر الوحدة'), required: true),
+    _decimalField('discountAmount', _t(l10n, 'Discount amount', 'مبلغ الخصم'), required: true),
+    _decimalField('taxAmount', _t(l10n, 'Tax amount', 'مبلغ الضريبة'), required: true),
+    _decimalField('lineTotal', _t(l10n, 'Line total', 'إجمالي السطر'), required: true),
+    _statusField(l10n),
+  ],
+  fromMap: StoreInvoiceItem.fromMap,
+  toMap: (storeInvoiceItem) => storeInvoiceItem.toMap(),
+  sampleModel: StoreInvoiceItem(
+    invoiceUuid: 'invoice-2024-0008',
+    supplierProductUuid: 'supplier-product-001',
+    productUuid: 'product-flour-001',
+    quantity: 6,
+    unitPrice: Decimal.parse('35.00'),
+    discountAmount: Decimal.parse('10.00'),
+    taxAmount: Decimal.parse('7.50'),
+    lineTotal: Decimal.parse('207.50'),
+    status: RecordStatus.active.code,
+    createdAt: _createdAt,
+    updatedAt: _updatedAt,
+  ),
+);
+
+ModelFormDefinition<PaymentAllocation> paymentAllocationFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<PaymentAllocation>(
+  tableName: 'payment_allocation',
+  fields: [
+    _textField('paymentVoucherUuid', _t(l10n, 'Payment voucher UUID', 'معرّف سند الدفع UUID'), required: true),
+    _textField('invoiceUuid', _t(l10n, 'Invoice UUID', 'معرّف الفاتورة UUID'), required: true),
+    _decimalField('allocatedAmount', _t(l10n, 'Allocated amount', 'المبلغ المخصص'), required: true),
+    _dateTimeField('allocationDate', _t(l10n, 'Allocation date', 'تاريخ التخصيص'), required: true),
+    _statusField(l10n),
+  ],
+  fromMap: PaymentAllocation.fromMap,
+  toMap: (paymentAllocation) => paymentAllocation.toMap(),
+  sampleModel: PaymentAllocation(
+    paymentVoucherUuid: 'pv-2024-0011',
+    invoiceUuid: 'invoice-2024-0008',
+    allocatedAmount: Decimal.parse('300.00'),
+    allocationDate: _transactionAt,
+    status: RecordStatus.active.code,
+    createdAt: _createdAt,
+    updatedAt: _updatedAt,
+  ),
+);
+
+ModelFormDefinition<StoreReturnItem> storeReturnItemFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreReturnItem>(
+  tableName: 'store_return_item',
+  fields: [
+    _textField('returnUuid', _t(l10n, 'Return UUID', 'معرّف المرتجع UUID'), required: true),
+    _textField('invoiceItemUuid', _t(l10n, 'Invoice item UUID', 'معرّف عنصر الفاتورة UUID')),
+    _textField('supplierProductUuid', _t(l10n, 'Supplier product UUID', 'معرّف منتج المورد UUID'), required: true),
+    _textField('productUuid', _t(l10n, 'Product UUID', 'معرّف المنتج UUID'), required: true),
+    _integerField('quantity', _t(l10n, 'Quantity', 'الكمية'), required: true),
+    _decimalField('unitPrice', _t(l10n, 'Unit price', 'سعر الوحدة'), required: true),
+    _decimalField('lineTotal', _t(l10n, 'Line total', 'إجمالي السطر'), required: true),
+    _multilineField('reason', _t(l10n, 'Reason', 'السبب'), required: true),
+    _statusField(l10n),
+  ],
+  fromMap: StoreReturnItem.fromMap,
+  toMap: (storeReturnItem) => storeReturnItem.toMap(),
+  sampleModel: StoreReturnItem(
+    returnUuid: 'return-2024-0003',
+    invoiceItemUuid: 'invoice-item-001',
+    supplierProductUuid: 'supplier-product-001',
+    productUuid: 'product-flour-001',
+    quantity: 1,
+    unitPrice: Decimal.parse('35.00'),
+    lineTotal: Decimal.parse('35.00'),
+    reason: _t(l10n, 'Damaged packaging on delivery.', 'تلف في التغليف أثناء التسليم.'),
     status: RecordStatus.active.code,
     createdAt: _createdAt,
     updatedAt: _updatedAt,
@@ -1855,9 +2028,18 @@ String clientEntityLabel(AppLocalizations l10n) => _t(l10n, 'Client', 'عميل'
 String supplierEntityLabel(AppLocalizations l10n) => _t(l10n, 'Supplier', 'شركة');
 String userEntityLabel(AppLocalizations l10n) => _t(l10n, 'User', 'مستخدم');
 String roleEntityLabel(AppLocalizations l10n) => _t(l10n, 'Role', 'دور');
+String userRoleEntityLabel(AppLocalizations l10n) => _t(l10n, 'User role', 'دور مستخدم');
+String storeSupplierEntityLabel(AppLocalizations l10n) => _t(l10n, 'Store supplier', 'مورد المتجر');
+String storeClientEntityLabel(AppLocalizations l10n) => _t(l10n, 'Store client', 'عميل المتجر');
+String storeUserEntityLabel(AppLocalizations l10n) => _t(l10n, 'Store user', 'مستخدم المتجر');
+String storeBranchEntityLabel(AppLocalizations l10n) => _t(l10n, 'Store branch link', 'ربط متجر بفرع');
+String branchProductEntityLabel(AppLocalizations l10n) => _t(l10n, 'Branch product', 'منتج الفرع');
 String invoiceEntityLabel(AppLocalizations l10n) => _t(l10n, 'Invoice', 'فاتورة');
+String invoiceItemEntityLabel(AppLocalizations l10n) => _t(l10n, 'Invoice item', 'عنصر فاتورة');
 String returnEntityLabel(AppLocalizations l10n) => _t(l10n, 'Return', 'مرتجع');
+String returnItemEntityLabel(AppLocalizations l10n) => _t(l10n, 'Return item', 'عنصر مرتجع');
 String paymentVoucherEntityLabel(AppLocalizations l10n) => _t(l10n, 'Payment voucher', 'سند دفع');
+String paymentAllocationEntityLabel(AppLocalizations l10n) => _t(l10n, 'Payment allocation', 'تخصيص دفعة');
 String inventoryMovementEntityLabel(AppLocalizations l10n) => _t(l10n, 'Inventory movement', 'حركة مخزون');
 String transactionEntityLabel(AppLocalizations l10n) => _t(l10n, 'Transaction', 'عملية');
 String purchaseOrderEntityLabel(AppLocalizations l10n) => _t(l10n, 'Purchase order', 'أمر شراء');

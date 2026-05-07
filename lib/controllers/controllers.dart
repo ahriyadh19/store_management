@@ -1,5 +1,6 @@
 export 'auth_controller.dart';
 export 'branches_controller.dart';
+export 'branch_products_controller.dart';
 export 'branch_prices_controller.dart';
 export 'categories_controller.dart';
 export 'clients_controller.dart';

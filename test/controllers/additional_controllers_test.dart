@@ -122,6 +122,30 @@ void main() {
     return {'id': id, 'storeUuid': storeUuid, 'branchUuid': branchUuid, 'status': status};
   }
 
+  Map<String, dynamic> buildBranchProductData({
+    int id = 20,
+    String branchUuid = '22222222-2222-4222-8222-222222222222',
+    String supplierProductUuid = '88888888-8888-4888-8888-888888888888',
+    String productUuid = '99999999-9999-4999-8999-999999999999',
+    int stock = 24,
+    int reservedQuantity = 2,
+    int? reorderLevel = 6,
+    int? lastMovementAtMs = 1714262400000,
+    int status = 1,
+  }) {
+    return {
+      'id': id,
+      'branchUuid': branchUuid,
+      'supplierProductUuid': supplierProductUuid,
+      'productUuid': productUuid,
+      'stock': stock,
+      'reservedQuantity': reservedQuantity,
+      'reorderLevel': reorderLevel,
+      'lastMovementAt': lastMovementAtMs,
+      'status': status,
+    };
+  }
+
   Map<String, dynamic> buildPaymentAllocationData({
     int id = 6,
     String paymentVoucherUuid = '66666666-6666-4666-8666-666666666666',
@@ -587,6 +611,27 @@ void main() {
       expect(createResponse.data?.branchUuid, '22222222-2222-4222-8222-222222222222');
       expect(allResponse.statusCode, 200);
       expect(allResponse.data, hasLength(1));
+    });
+
+    test('branch products controller creates and reads branch inventory link', () {
+      final controller = BranchProductsController();
+
+      final createResponse = controller.create(request: buildRequest(data: buildBranchProductData()));
+      final readResponse = controller.read(request: buildRequest(data: {'id': 20}));
+
+      expect(createResponse.statusCode, 201);
+      expect(createResponse.data?.availableQuantity, 22);
+      expect(readResponse.statusCode, 200);
+      expect(readResponse.data?.reorderLevel, 6);
+    });
+
+    test('branch products controller validates non-negative stock', () {
+      final controller = BranchProductsController();
+
+      final response = controller.create(request: buildRequest(data: buildBranchProductData(stock: -1)));
+
+      expect(response.statusCode, 400);
+      expect(response.message, 'Stock must be provided as a non-negative integer');
     });
 
     test('payment allocations controller parses decimal amounts and dates', () {

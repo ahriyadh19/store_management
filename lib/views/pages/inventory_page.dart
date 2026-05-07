@@ -3,7 +3,9 @@ import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/models/inventory_movement.dart';
 import 'package:store_management/models/inventory_batch.dart';
 import 'package:store_management/models/inventory_transaction.dart';
+import 'package:store_management/models/branch_product.dart';
 import 'package:store_management/models/branch_price.dart';
+import 'package:store_management/models/payment_allocation.dart';
 import 'package:store_management/models/purchase_order.dart';
 import 'package:store_management/models/purchase_order_item.dart';
 import 'package:store_management/models/promotion_rule.dart';
@@ -13,9 +15,16 @@ import 'package:store_management/models/sales_return.dart';
 import 'package:store_management/models/staff_activity_log.dart';
 import 'package:store_management/models/staff_attendance.dart';
 import 'package:store_management/models/staff_shift.dart';
+import 'package:store_management/models/store_branches.dart';
+import 'package:store_management/models/store_client.dart';
+import 'package:store_management/models/store_invoice_item.dart';
+import 'package:store_management/models/store_return_item.dart';
+import 'package:store_management/models/store_supplier.dart';
+import 'package:store_management/models/store_user.dart';
 import 'package:store_management/models/supplier_invoice.dart';
 import 'package:store_management/models/transfer_order.dart';
 import 'package:store_management/models/transfer_order_item.dart';
+import 'package:store_management/models/user_roles.dart';
 import 'package:store_management/services/inventory_transaction_service.dart';
 import 'package:store_management/services/owner_scope_service.dart';
 import 'package:store_management/views/pages/model_crud_page.dart';
@@ -361,6 +370,94 @@ class _InventoryPageState extends State<InventoryPage> {
             ),
           ],
         );
+      case _InventorySection.relations:
+        return _buildSectionTabs(
+          tabs: const [
+            Tab(text: 'User Roles'),
+            Tab(text: 'Store Suppliers'),
+            Tab(text: 'Store Clients'),
+            Tab(text: 'Store Users'),
+            Tab(text: 'Store Branches'),
+            Tab(text: 'Branch Products'),
+            Tab(text: 'Invoice Items'),
+            Tab(text: 'Payment Allocations'),
+            Tab(text: 'Return Items'),
+          ],
+          children: [
+            ModelCrudPage<UserRoles>(
+              title: 'User Roles',
+              entityLabel: userRoleEntityLabel(l10n),
+              description: 'Manage role assignments between users and permission roles.',
+              icon: Icons.verified_user_rounded,
+              highlights: const ['Role assignment', 'Status tracking', 'Access mapping'],
+              formDefinition: userRolesFormDefinition(l10n),
+            ),
+            ModelCrudPage<StoreSupplier>(
+              title: 'Store Suppliers',
+              entityLabel: storeSupplierEntityLabel(l10n),
+              description: 'Map suppliers to stores for procurement and fulfillment scope.',
+              icon: Icons.factory_rounded,
+              highlights: const ['Store links', 'Supplier scope', 'Activation state'],
+              formDefinition: storeSupplierFormDefinition(l10n),
+            ),
+            ModelCrudPage<StoreClient>(
+              title: 'Store Clients',
+              entityLabel: storeClientEntityLabel(l10n),
+              description: 'Map clients to stores for sales and credit workflows.',
+              icon: Icons.handshake_rounded,
+              highlights: const ['Client scope', 'Store visibility', 'Status lifecycle'],
+              formDefinition: storeClientFormDefinition(l10n),
+            ),
+            ModelCrudPage<StoreUser>(
+              title: 'Store Users',
+              entityLabel: storeUserEntityLabel(l10n),
+              description: 'Map users to stores and optional branches with role context.',
+              icon: Icons.group_rounded,
+              highlights: const ['Store membership', 'Branch assignment', 'Role link'],
+              formDefinition: storeUserFormDefinition(l10n),
+            ),
+            ModelCrudPage<StoreBranches>(
+              title: 'Store Branch Links',
+              entityLabel: storeBranchEntityLabel(l10n),
+              description: 'Link stores and branches for operational scoping.',
+              icon: Icons.hub_rounded,
+              highlights: const ['Store/branch mapping', 'Operational scope', 'Status control'],
+              formDefinition: storeBranchesFormDefinition(l10n),
+            ),
+            ModelCrudPage<BranchProduct>(
+              title: 'Branch Products',
+              entityLabel: branchProductEntityLabel(l10n),
+              description: 'Track branch-level product stock, reserves, and reorder thresholds.',
+              icon: Icons.inventory_rounded,
+              highlights: const ['Stock position', 'Reserved quantity', 'Reorder levels'],
+              formDefinition: branchProductFormDefinition(l10n),
+            ),
+            ModelCrudPage<StoreInvoiceItem>(
+              title: 'Store Invoice Items',
+              entityLabel: invoiceItemEntityLabel(l10n),
+              description: 'Manage line items for store invoices including taxes and discounts.',
+              icon: Icons.receipt_long_rounded,
+              highlights: const ['Line totals', 'Discount/tax', 'Product linkage'],
+              formDefinition: storeInvoiceItemFormDefinition(l10n),
+            ),
+            ModelCrudPage<PaymentAllocation>(
+              title: 'Payment Allocations',
+              entityLabel: paymentAllocationEntityLabel(l10n),
+              description: 'Allocate payment vouchers to invoices with dated allocations.',
+              icon: Icons.account_balance_wallet_rounded,
+              highlights: const ['Voucher matching', 'Allocation amount', 'Allocation date'],
+              formDefinition: paymentAllocationFormDefinition(l10n),
+            ),
+            ModelCrudPage<StoreReturnItem>(
+              title: 'Store Return Items',
+              entityLabel: returnItemEntityLabel(l10n),
+              description: 'Manage line items returned against invoices and products.',
+              icon: Icons.assignment_return_rounded,
+              highlights: const ['Return linkage', 'Reason tracking', 'Line totals'],
+              formDefinition: storeReturnItemFormDefinition(l10n),
+            ),
+          ],
+        );
     }
   }
 
@@ -393,6 +490,8 @@ class _InventoryPageState extends State<InventoryPage> {
         return 'Pricing';
       case _InventorySection.workforce:
         return 'Workforce';
+      case _InventorySection.relations:
+        return 'Relations';
     }
   }
 
@@ -410,6 +509,8 @@ class _InventoryPageState extends State<InventoryPage> {
         return Icons.price_change_rounded;
       case _InventorySection.workforce:
         return Icons.badge_rounded;
+      case _InventorySection.relations:
+        return Icons.schema_rounded;
     }
   }
 
@@ -427,6 +528,8 @@ class _InventoryPageState extends State<InventoryPage> {
         return 2;
       case _InventorySection.workforce:
         return 3;
+      case _InventorySection.relations:
+        return 9;
     }
   }
 
@@ -611,4 +714,4 @@ class _InventoryPageState extends State<InventoryPage> {
   }
 }
 
-enum _InventorySection { operations, procurement, transfer, sales, pricing, workforce }
+enum _InventorySection { operations, procurement, transfer, sales, pricing, workforce, relations }

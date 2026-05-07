@@ -25,6 +25,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (_isDesktopPlatform) {
     await windowManager.ensureInitialized();
+    await _prepareDesktopWindow();
   }
 
   final localeController = await LocaleController.create();
@@ -43,6 +44,15 @@ Future<void> main() async {
   }
 
   runApp(MyApp(localeController: localeController, appPreferencesController: appPreferencesController, localDatabase: localDatabase, startupError: startupError, startupStackTrace: startupStackTrace));
+}
+
+Future<void> _prepareDesktopWindow() async {
+  const options = WindowOptions(center: true, backgroundColor: Colors.transparent, skipTaskbar: false, titleBarStyle: TitleBarStyle.normal);
+
+  await windowManager.waitUntilReadyToShow(options, () async {
+    await windowManager.show();
+    await windowManager.focus();
+  });
 }
 
 bool get _isDesktopPlatform => !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);

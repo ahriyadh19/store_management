@@ -1,6 +1,6 @@
 # CRUD Completion Matrix
 
-Last updated: 2026-05-07
+Last updated: 2026-05-08
 
 Legend:
 - `Y`: implemented
@@ -22,23 +22,23 @@ Legend:
 | client | Y | Y | Y | T |
 | supplier_products | Y | Y | Y | T |
 | products_tags | Y | Y | Y | T |
-| user_roles | Y | Y | N | T |
-| store_supplier | Y | Y | N | T |
-| store_client | Y | Y | N | T |
-| store_user | Y | Y | N | T |
-| store_branches | Y | Y | N | T |
-| branch_product | Y | N | N | T (serialization only) |
+| user_roles | Y | Y | Y | T |
+| store_supplier | Y | Y | Y | T |
+| store_client | Y | Y | Y | T |
+| store_user | Y | Y | Y | T |
+| store_branches | Y | Y | Y | T |
+| branch_product | Y | Y | Y | T |
 
 ## Sales and Finance
 
 | Entity | Model | Controller CRUD | UI CRUD | Tests |
 |---|---|---|---|---|
 | store_invoice | Y | Y | Y | T |
-| store_invoice_item | Y | Y | N | T |
+| store_invoice_item | Y | Y | Y | T |
 | store_payment_voucher | Y | Y | Y | T |
-| payment_allocation | Y | Y | N | T |
+| payment_allocation | Y | Y | Y | T |
 | store_return | Y | Y | Y | T |
-| store_return_item | Y | Y | N | T |
+| store_return_item | Y | Y | Y | T |
 | store_financial_transaction | Y | Y | Y | T |
 | inventory_movement | Y | Y | Y | T |
 
@@ -65,5 +65,5 @@ Legend:
 ## Recommended Next CRUD Steps
 
 1. Add UI grouping improvements so the expanded inventory tabs remain easy to navigate.
-2. Add workflow-level tests for transfer-to-sale and attendance/activity audit flows.
-3. Add focused validation tests for new enum/status transitions and edge cases.
+2. Add focused validation tests for new enum/status transitions and edge cases.
+3. Add widget and integration test assertions for the new relations tab UX.
