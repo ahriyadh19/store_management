@@ -314,6 +314,74 @@ void main() {
     };
   }
 
+  Map<String, dynamic> buildPurchaseOrderData({
+    int id = 15,
+    String ownerUuid = '11111111-1111-4111-8111-111111111111',
+    String storeUuid = '22222222-2222-4222-8222-222222222222',
+    String supplierUuid = '33333333-3333-4333-8333-333333333333',
+    String poNumber = 'PO-2026-0001',
+    int orderDateMs = 1714262400000,
+    int? expectedDateMs = 1714867200000,
+    String status = 'submitted',
+    String currencyCode = 'USD',
+    num totalAmount = 1290.50,
+    String notes = 'Bulk purchase for monthly replenishment',
+    String createdByUserUuid = '44444444-4444-4444-8444-444444444444',
+  }) {
+    return {
+      'id': id,
+      'ownerUuid': ownerUuid,
+      'storeUuid': storeUuid,
+      'supplierUuid': supplierUuid,
+      'poNumber': poNumber,
+      'orderDate': orderDateMs,
+      'expectedDate': expectedDateMs,
+      'status': status,
+      'currencyCode': currencyCode,
+      'totalAmount': totalAmount,
+      'notes': notes,
+      'createdByUserUuid': createdByUserUuid,
+    };
+  }
+
+  Map<String, dynamic> buildSupplierInvoiceData({
+    int id = 16,
+    String ownerUuid = '11111111-1111-4111-8111-111111111111',
+    String storeUuid = '22222222-2222-4222-8222-222222222222',
+    String supplierUuid = '33333333-3333-4333-8333-333333333333',
+    String? purchaseOrderUuid = '55555555-5555-4555-8555-555555555555',
+    String invoiceNumber = 'SI-2026-0001',
+    int invoiceDateMs = 1714348800000,
+    int? dueDateMs = 1714953600000,
+    String currencyCode = 'USD',
+    num totalAmount = 1500,
+    num taxAmount = 75,
+    num discountAmount = 25,
+    num netAmount = 1550,
+    String status = 'submitted',
+    String notes = 'Supplier invoice for May receiving',
+    String createdByUserUuid = '44444444-4444-4444-8444-444444444444',
+  }) {
+    return {
+      'id': id,
+      'ownerUuid': ownerUuid,
+      'storeUuid': storeUuid,
+      'supplierUuid': supplierUuid,
+      'purchaseOrderUuid': purchaseOrderUuid,
+      'invoiceNumber': invoiceNumber,
+      'invoiceDate': invoiceDateMs,
+      'dueDate': dueDateMs,
+      'currencyCode': currencyCode,
+      'totalAmount': totalAmount,
+      'taxAmount': taxAmount,
+      'discountAmount': discountAmount,
+      'netAmount': netAmount,
+      'status': status,
+      'notes': notes,
+      'createdByUserUuid': createdByUserUuid,
+    };
+  }
+
   group('Barrel exports', () {
     test('controllers and validations barrels expose new surfaces', () {
       final controller = BranchesController();
@@ -549,6 +617,55 @@ void main() {
       expect(response.data?.inventoryHolderType, InventoryHolderType.branch);
       expect(response.data?.counterpartyHolderType, InventoryHolderType.store);
       expect(response.data?.transactionUuid, 'cccccccc-cccc-4ccc-8ccc-cccccccccccc');
+    });
+
+    test('purchase orders controller creates and reads purchase order data', () {
+      final controller = PurchaseOrdersController();
+
+      final createResponse = controller.create(request: buildRequest(data: buildPurchaseOrderData()));
+      final readResponse = controller.read(request: buildRequest(data: {'id': 15}));
+
+      expect(createResponse.statusCode, 201);
+      expect(createResponse.data?.status, 'submitted');
+      expect(createResponse.data?.totalAmount, Decimal.parse('1290.5'));
+      expect(readResponse.statusCode, 200);
+      expect(readResponse.data?.poNumber, 'PO-2026-0001');
+    });
+
+    test('purchase orders controller rejects invalid status', () {
+      final controller = PurchaseOrdersController();
+
+      final response = controller.create(
+        request: buildRequest(data: buildPurchaseOrderData(status: 'processing')),
+      );
+
+      expect(response.statusCode, 400);
+      expect(response.message, 'Purchase order status is invalid');
+    });
+
+    test('supplier invoices controller creates and reads supplier invoice data', () {
+      final controller = SupplierInvoicesController();
+
+      final createResponse = controller.create(request: buildRequest(data: buildSupplierInvoiceData()));
+      final readResponse = controller.read(request: buildRequest(data: {'id': 16}));
+
+      expect(createResponse.statusCode, 201);
+      expect(createResponse.data?.status, 'submitted');
+      expect(createResponse.data?.totalAmount, Decimal.parse('1500'));
+      expect(createResponse.data?.netAmount, Decimal.parse('1550'));
+      expect(readResponse.statusCode, 200);
+      expect(readResponse.data?.invoiceNumber, 'SI-2026-0001');
+    });
+
+    test('supplier invoices controller rejects invalid status', () {
+      final controller = SupplierInvoicesController();
+
+      final response = controller.create(
+        request: buildRequest(data: buildSupplierInvoiceData(status: 'archived')),
+      );
+
+      expect(response.statusCode, 400);
+      expect(response.message, 'Supplier invoice status is invalid');
     });
   });
 }
