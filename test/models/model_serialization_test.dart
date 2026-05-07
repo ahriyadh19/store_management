@@ -668,6 +668,138 @@ void main() {
       expect(movement.unitCost, money('12.75'));
     });
 
+    test('erp payload timestamps support epoch seconds and iso strings', () {
+      final invoice = StoreInvoice.fromMap({
+        'id': 1,
+        'uuid': 'invoice-uuid',
+        'store_uuid': '11111111-1111-4111-8111-111111111111',
+        'client_uuid': '22222222-2222-4222-8222-222222222222',
+        'invoice_number': 'INV-200',
+        'invoice_type': 'credit',
+        'item_count': 1,
+        'total_amount': '1,250.75',
+        'paid_amount': '0',
+        'balance_amount': '1,250.75',
+        'notes': 'ERP timestamp formats',
+        'issued_at': 1713744000,
+        'due_at': '2024-04-23T00:00:00.000Z',
+        'status': 1,
+        'created_at': 1713744000,
+        'updated_at': '2024-04-23T00:00:00.000Z',
+      });
+
+      expect(invoice.issuedAt, DateTime.fromMillisecondsSinceEpoch(1713744000000));
+      expect(invoice.dueAt, DateTime.parse('2024-04-23T00:00:00.000Z'));
+      expect(invoice.totalAmount, money('1250.75'));
+      expect(invoice.balanceAmount, money('1250.75'));
+    });
+
+    test('erp enum aliases and decimal formats hydrate correctly', () {
+      final voucher = StorePaymentVoucher.fromMap({
+        'id': 1,
+        'uuid': 'voucher-uuid',
+        'store_uuid': '11111111-1111-4111-8111-111111111111',
+        'client_uuid': '22222222-2222-4222-8222-222222222222',
+        'voucher_number': 'PV-200',
+        'payee_name': 'Vendor',
+        'amount': ' 2499,99',
+        'payment_method': 'BANK-TRANSFER',
+        'reference_number': 'REF-200',
+        'description': 'ERP formatted values',
+        'transaction_date': '2024-04-22T00:00:00.000Z',
+        'status': 1,
+        'created_at': 1713744000,
+        'updated_at': 1713830400,
+        'synced': 'yes',
+      });
+
+      expect(voucher.amount, money('2499.99'));
+      expect(voucher.paymentMethod, StorePaymentMethod.bankTransfer);
+      expect(voucher.transactionDate, DateTime.parse('2024-04-22T00:00:00.000Z'));
+      expect(voucher.synced, isTrue);
+    });
+
+    test('toErpMap exports snake_case keys and iso timestamps', () {
+      final invoice = StoreInvoice(
+        id: 9,
+        uuid: 'invoice-uuid',
+        storeUuid: '11111111-1111-4111-8111-111111111111',
+        clientUuid: '22222222-2222-4222-8222-222222222222',
+        invoiceNumber: 'INV-ERP-001',
+        invoiceType: StoreInvoiceType.credit,
+        itemCount: 2,
+        totalAmount: money('200.25'),
+        paidAmount: money('50.00'),
+        balanceAmount: money('150.25'),
+        notes: 'ERP export',
+        issuedAt: createdAt,
+        dueAt: updatedAt,
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+      final invoiceMap = invoice.toErpMap();
+      expect(invoiceMap.containsKey('store_uuid'), isTrue);
+      expect(invoiceMap.containsKey('storeUuid'), isFalse);
+      expect(invoiceMap['issued_at'], createdAt.toUtc().toIso8601String());
+      expect(invoiceMap['total_amount'], '200.25');
+      expect(invoiceMap['invoice_type'], 'credit');
+    });
+
+    test('toErpMap exports transactional and inventory records for integration', () {
+      final voucher = StorePaymentVoucher(
+        id: 1,
+        uuid: 'voucher-uuid',
+        storeUuid: '11111111-1111-4111-8111-111111111111',
+        clientUuid: '22222222-2222-4222-8222-222222222222',
+        voucherNumber: 'PV-ERP-001',
+        payeeName: 'Vendor',
+        amount: money('99.90'),
+        paymentMethod: StorePaymentMethod.bankTransfer,
+        referenceNumber: 'REF-ERP-001',
+        description: 'ERP payment',
+        transactionDate: createdAt,
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+      final movement = InventoryMovement(
+        id: 1,
+        uuid: 'movement-uuid',
+        supplierProductUuid: '22222222-2222-4222-8222-222222222222',
+        productUuid: '33333333-3333-4333-8333-333333333333',
+        movementType: InventoryMovementType.transfer,
+        inventoryHolderType: InventoryHolderType.branch,
+        inventoryHolderUuid: '44444444-4444-4444-8444-444444444444',
+        quantityDelta: 5,
+        balanceAfter: 35,
+        unitCost: money('8.50'),
+        referenceType: InventoryReferenceType.transfer,
+        referenceUuid: '55555555-5555-4555-8555-555555555555',
+        counterpartyHolderType: InventoryHolderType.store,
+        counterpartyHolderUuid: '66666666-6666-4666-8666-666666666666',
+        transactionUuid: '77777777-7777-4777-8777-777777777777',
+        note: 'ERP movement',
+        createdByUserUuid: '88888888-8888-4888-8888-888888888888',
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+      final voucherMap = voucher.toErpMap();
+      final movementMap = movement.toErpMap();
+
+      expect(voucherMap['payment_method'], 'bank_transfer');
+      expect(voucherMap['transaction_date'], createdAt.toUtc().toIso8601String());
+      expect(voucherMap.containsKey('transactionDate'), isFalse);
+
+      expect(movementMap['movement_type'], 'transfer');
+      expect(movementMap['inventory_holder_type'], 'branch');
+      expect(movementMap['created_at'], createdAt.toUtc().toIso8601String());
+      expect(movementMap.containsKey('createdAt'), isFalse);
+    });
+
     test('legacy model maps generate uuid when missing', () {
       final supplier = Supplier.fromMap({'id': 1, 'name': 'Store Co', 'description': 'Main supplier', 'status': 1, 'createdAt': createdAt.millisecondsSinceEpoch, 'updatedAt': updatedAt.millisecondsSinceEpoch});
 

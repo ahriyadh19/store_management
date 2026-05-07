@@ -104,6 +104,27 @@ class StoreReturnItem {
     };
   }
 
+  Map<String, dynamic> toErpMap() {
+    return <String, dynamic>{
+      'id': id,
+      'uuid': uuid,
+      'return_uuid': returnUuid,
+      'invoice_item_uuid': invoiceItemUuid,
+      'supplier_product_uuid': supplierProductUuid,
+      'product_uuid': productUuid,
+      'quantity': quantity,
+      'unit_price': unitPrice.toString(),
+      'line_total': lineTotal.toString(),
+      'reason': reason,
+      'status': status,
+      'created_at': ModelParsing.dateTimeToIso8601Utc(createdAt),
+      'updated_at': ModelParsing.dateTimeToIso8601Utc(updatedAt),
+      'synced': synced,
+      'deleted_at': ModelParsing.dateTimeOrNullToIso8601Utc(deletedAt),
+      'synced_at': ModelParsing.dateTimeOrNullToIso8601Utc(syncedAt),
+    };
+  }
+
   factory StoreReturnItem.fromMap(Map<String, dynamic> map) {
     return StoreReturnItem(
       id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,

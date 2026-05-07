@@ -103,6 +103,27 @@ class StoreReturn {
     };
   }
 
+  Map<String, dynamic> toErpMap() {
+    return <String, dynamic>{
+      'id': id,
+      'uuid': uuid,
+      'store_uuid': storeUuid,
+      'client_uuid': clientUuid,
+      'return_number': returnNumber,
+      'return_type': returnType.value,
+      'item_count': itemCount,
+      'total_amount': totalAmount.toString(),
+      'reason': reason,
+      'transaction_date': ModelParsing.dateTimeToIso8601Utc(transactionDate),
+      'status': status,
+      'created_at': ModelParsing.dateTimeToIso8601Utc(createdAt),
+      'updated_at': ModelParsing.dateTimeToIso8601Utc(updatedAt),
+      'synced': synced,
+      'deleted_at': ModelParsing.dateTimeOrNullToIso8601Utc(deletedAt),
+      'synced_at': ModelParsing.dateTimeOrNullToIso8601Utc(syncedAt),
+    };
+  }
+
   factory StoreReturn.fromMap(Map<String, dynamic> map) {
     return StoreReturn(
       id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,

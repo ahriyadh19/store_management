@@ -135,6 +135,33 @@ class InventoryMovement {
     };
   }
 
+  Map<String, dynamic> toErpMap() {
+    return <String, dynamic>{
+      'id': id,
+      'uuid': uuid,
+      'supplier_product_uuid': supplierProductUuid,
+      'product_uuid': productUuid,
+      'movement_type': movementType.value,
+      'inventory_holder_type': inventoryHolderType?.value,
+      'inventory_holder_uuid': inventoryHolderUuid,
+      'quantity_delta': quantityDelta,
+      'balance_after': balanceAfter,
+      'unit_cost': unitCost?.toString(),
+      'reference_type': referenceType.value,
+      'reference_uuid': referenceUuid,
+      'counterparty_holder_type': counterpartyHolderType?.value,
+      'counterparty_holder_uuid': counterpartyHolderUuid,
+      'transaction_uuid': transactionUuid,
+      'note': note,
+      'created_by_user_uuid': createdByUserUuid,
+      'created_at': ModelParsing.dateTimeToIso8601Utc(createdAt),
+      'updated_at': ModelParsing.dateTimeToIso8601Utc(updatedAt),
+      'synced': synced,
+      'deleted_at': ModelParsing.dateTimeOrNullToIso8601Utc(deletedAt),
+      'synced_at': ModelParsing.dateTimeOrNullToIso8601Utc(syncedAt),
+    };
+  }
+
   factory InventoryMovement.fromMap(Map<String, dynamic> map) {
     return InventoryMovement(
       id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,

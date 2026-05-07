@@ -82,6 +82,23 @@ class PaymentAllocation {
     };
   }
 
+  Map<String, dynamic> toErpMap() {
+    return <String, dynamic>{
+      'id': id,
+      'uuid': uuid,
+      'payment_voucher_uuid': paymentVoucherUuid,
+      'invoice_uuid': invoiceUuid,
+      'allocated_amount': allocatedAmount.toString(),
+      'allocation_date': ModelParsing.dateTimeToIso8601Utc(allocationDate),
+      'status': status,
+      'created_at': ModelParsing.dateTimeToIso8601Utc(createdAt),
+      'updated_at': ModelParsing.dateTimeToIso8601Utc(updatedAt),
+      'synced': synced,
+      'deleted_at': ModelParsing.dateTimeOrNullToIso8601Utc(deletedAt),
+      'synced_at': ModelParsing.dateTimeOrNullToIso8601Utc(syncedAt),
+    };
+  }
+
   factory PaymentAllocation.fromMap(Map<String, dynamic> map) {
     return PaymentAllocation(
       id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,

@@ -56,7 +56,12 @@ class ModelParsing {
     }
 
     if (value is String) {
-      return int.tryParse(value);
+      final normalized = value.trim();
+      if (normalized.isEmpty) {
+        return null;
+      }
+
+      return int.tryParse(normalized) ?? int.tryParse(normalized.replaceAll(',', ''));
     }
 
     return null;
@@ -85,7 +90,12 @@ class ModelParsing {
     }
 
     if (value is String) {
-      return double.tryParse(value);
+      final normalized = value.trim();
+      if (normalized.isEmpty) {
+        return null;
+      }
+
+      return double.tryParse(normalized) ?? double.tryParse(normalized.replaceAll(',', ''));
     }
 
     return null;
@@ -124,22 +134,64 @@ class ModelParsing {
       if (normalized == 'false' || normalized == '0') {
         return false;
       }
+      if (normalized == 'yes' || normalized == 'y') {
+        return true;
+      }
+      if (normalized == 'no' || normalized == 'n') {
+        return false;
+      }
     }
 
     return null;
   }
 
   static DateTime? dateTimeOrNullFromMillisecondsSinceEpoch(dynamic value) {
-    final parsedValue = intOrNull(value);
-    if (parsedValue == null) {
+    if (value == null) {
       return null;
     }
 
-    return DateTime.fromMillisecondsSinceEpoch(parsedValue);
+    if (value is DateTime) {
+      return value;
+    }
+
+    final parsedValue = intOrNull(value);
+    if (parsedValue != null) {
+      // ERP integrations commonly send epoch seconds while internal models use milliseconds.
+      final epochMillis = parsedValue.abs() < 100000000000 ? parsedValue * 1000 : parsedValue;
+      return DateTime.fromMillisecondsSinceEpoch(epochMillis);
+    }
+
+    if (value is String) {
+      final normalized = value.trim();
+      if (normalized.isEmpty) {
+        return null;
+      }
+
+      return DateTime.tryParse(normalized);
+    }
+
+    return null;
+  }
+
+  static DateTime dateTimeOrThrow(dynamic value, String fieldName) {
+    final parsedValue = dateTimeOrNullFromMillisecondsSinceEpoch(value);
+    if (parsedValue == null) {
+      throw FormatException('Invalid date value for $fieldName: $value');
+    }
+
+    return parsedValue;
   }
 
   static DateTime dateTimeFromMillisecondsSinceEpoch(dynamic value, String fieldName) {
-    return DateTime.fromMillisecondsSinceEpoch(intOrThrow(value, fieldName));
+    return dateTimeOrThrow(value, fieldName);
+  }
+
+  static String dateTimeToIso8601Utc(DateTime value) {
+    return value.toUtc().toIso8601String();
+  }
+
+  static String? dateTimeOrNullToIso8601Utc(DateTime? value) {
+    return value == null ? null : dateTimeToIso8601Utc(value);
   }
 
   static Decimal? decimalOrNull(dynamic value) {
@@ -160,7 +212,18 @@ class ModelParsing {
     }
 
     if (value is String) {
-      return Decimal.tryParse(value);
+      final normalized = value.trim();
+      if (normalized.isEmpty) {
+        return null;
+      }
+
+      final compact = normalized.replaceAll(' ', '');
+      final stripSymbol = compact.replaceAll(RegExp(r'[^0-9,.-]'), '');
+
+      // Handle common ERP money formats like "1,234.56" and "1234,56".
+      final normalizedDecimal = stripSymbol.contains(',') && !stripSymbol.contains('.') ? stripSymbol.replaceAll(',', '.') : stripSymbol.replaceAll(',', '');
+
+      return Decimal.tryParse(normalizedDecimal);
     }
 
     return null;
@@ -216,7 +279,8 @@ class ModelParsing {
   }
 
   static T _enumFromString<T>(dynamic value, String fieldName, T Function(String value) parser) {
-    return parser(stringOrThrow(value, fieldName).trim().toLowerCase());
+    final normalized = stringOrThrow(value, fieldName).trim().toLowerCase().replaceAll('-', '_').replaceAll(' ', '_');
+    return parser(normalized);
   }
 
   static String _camelToSnake(String value) {

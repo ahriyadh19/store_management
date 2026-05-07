@@ -108,6 +108,28 @@ class StorePaymentVoucher {
     };
   }
 
+  Map<String, dynamic> toErpMap() {
+    return <String, dynamic>{
+      'id': id,
+      'uuid': uuid,
+      'store_uuid': storeUuid,
+      'client_uuid': clientUuid,
+      'voucher_number': voucherNumber,
+      'payee_name': payeeName,
+      'amount': amount.toString(),
+      'payment_method': paymentMethod.value,
+      'reference_number': referenceNumber,
+      'description': description,
+      'transaction_date': ModelParsing.dateTimeToIso8601Utc(transactionDate),
+      'status': status,
+      'created_at': ModelParsing.dateTimeToIso8601Utc(createdAt),
+      'updated_at': ModelParsing.dateTimeToIso8601Utc(updatedAt),
+      'synced': synced,
+      'deleted_at': ModelParsing.dateTimeOrNullToIso8601Utc(deletedAt),
+      'synced_at': ModelParsing.dateTimeOrNullToIso8601Utc(syncedAt),
+    };
+  }
+
   factory StorePaymentVoucher.fromMap(Map<String, dynamic> map) {
     return StorePaymentVoucher(
       id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,

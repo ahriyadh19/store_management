@@ -113,6 +113,29 @@ class StoreFinancialTransaction {
     };
   }
 
+  Map<String, dynamic> toErpMap() {
+    return <String, dynamic>{
+      'id': id,
+      'uuid': uuid,
+      'store_uuid': storeUuid,
+      'client_uuid': clientUuid,
+      'transaction_number': transactionNumber,
+      'transaction_type': transactionType.value,
+      'source_type': sourceType.value,
+      'source_uuid': sourceUuid,
+      'amount': amount.toString(),
+      'entry_type': entryType.value,
+      'description': description,
+      'transaction_date': ModelParsing.dateTimeToIso8601Utc(transactionDate),
+      'status': status,
+      'created_at': ModelParsing.dateTimeToIso8601Utc(createdAt),
+      'updated_at': ModelParsing.dateTimeToIso8601Utc(updatedAt),
+      'synced': synced,
+      'deleted_at': ModelParsing.dateTimeOrNullToIso8601Utc(deletedAt),
+      'synced_at': ModelParsing.dateTimeOrNullToIso8601Utc(syncedAt),
+    };
+  }
+
   factory StoreFinancialTransaction.fromMap(Map<String, dynamic> map) {
     return StoreFinancialTransaction(
       id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,
