@@ -346,6 +346,13 @@ ModelFormDefinition<StorePaymentVoucher> paymentVoucherFormDefinition(AppLocaliz
 ModelFormDefinition<InventoryMovement> inventoryMovementFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<InventoryMovement>(
   tableName: 'inventory_movement',
   fields: [
+    _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID')),
+    _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID')),
+    _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID')),
+    _textField('supplierUuid', _t(l10n, 'Supplier UUID', 'معرّف المورد UUID')),
+    _textField('supplierInvoiceUuid', _t(l10n, 'Supplier invoice UUID', 'معرّف فاتورة المورد UUID')),
+    _textField('batchNumber', _t(l10n, 'Batch number', 'رقم الدفعة')),
+    _dateTimeField('expiryDate', _t(l10n, 'Expiry date', 'تاريخ الانتهاء')),
     _textField('supplierProductUuid', _t(l10n, 'Supplier product UUID', 'معرّف منتج الشركة UUID'), required: true),
     _textField('productUuid', _t(l10n, 'Product UUID', 'معرّف المنتج UUID'), required: true),
     _selectionField('movementType', _t(l10n, 'Movement type', 'نوع الحركة'), _movementTypeOptions(l10n), required: true),
@@ -359,6 +366,40 @@ ModelFormDefinition<InventoryMovement> inventoryMovementFormDefinition(AppLocali
   ],
   fromMap: InventoryMovement.fromMap,
   toMap: (movement) => movement.toMap(),
+  afterCreateHook: ({required model, required values}) async {
+    final movementType = _stringOrNull(values['movementType'])?.toLowerCase();
+    if (movementType != InventoryMovementType.purchase.value) {
+      return;
+    }
+
+    final scope = await _resolveOwnerScope();
+    final ownerUuid = _stringOrNull(values['ownerUuid']) ?? scope.ownerUuid;
+    final storeUuid = _stringOrNull(values['storeUuid']);
+    final branchUuid = _stringOrNull(values['branchUuid']);
+    final supplierUuid = _stringOrNull(values['supplierUuid']);
+    final supplierInvoiceUuid = _stringOrNull(values['supplierInvoiceUuid']) ?? _stringOrNull(values['referenceUuid']) ?? model.referenceUuid;
+    final quantity = _intOrNull(values['quantityDelta']);
+    final unitCost = _numOrNull(values['unitCost']);
+    final expiryMillis = _intOrNull(values['expiryDate']);
+
+    if (ownerUuid == null || storeUuid == null || branchUuid == null || supplierUuid == null || supplierInvoiceUuid == null || quantity == null || quantity <= 0 || unitCost == null) {
+      return;
+    }
+
+    await _inventoryTransactionService.postPurchaseReceipt(
+      ownerUuid: ownerUuid,
+      storeUuid: storeUuid,
+      branchUuid: branchUuid,
+      supplierUuid: supplierUuid,
+      productUuid: model.productUuid,
+      supplierInvoiceUuid: supplierInvoiceUuid,
+      batchNumber: _stringOrNull(values['batchNumber']),
+      expiryDate: expiryMillis == null ? null : DateTime.fromMillisecondsSinceEpoch(expiryMillis),
+      quantity: quantity,
+      unitCost: unitCost,
+      staffUserUuid: _stringOrNull(values['createdByUserUuid']),
+    );
+  },
   sampleModel: InventoryMovement(
     supplierProductUuid: 'supplier-product-001',
     productUuid: 'product-flour-001',

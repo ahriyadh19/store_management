@@ -44,6 +44,7 @@ void main() {
 
   Map<String, dynamic> buildStoreData({
     int id = 2,
+    String ownerUserUuid = '11111111-1111-4111-8111-111111111111',
     String name = 'Main Branch',
     String description = 'Downtown store',
     String address = 'Plot 1 Market Street',
@@ -52,6 +53,7 @@ void main() {
   }) {
     return {
       'id': id,
+      'ownerUserUuid': ownerUserUuid,
       'name': name,
       'description': description,
       'address': address,

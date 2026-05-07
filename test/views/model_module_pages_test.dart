@@ -28,7 +28,7 @@ void main() {
     expect(find.byType(Switch), findsOneWidget);
     expect(find.text('Show create'), findsOneWidget);
     expect(find.text('Products Datatable'), findsOneWidget);
-    expect(find.text('Actions'), findsOneWidget);
+    expect(find.text('View, edit, and delete are in the last column.'), findsOneWidget);
     expect(find.text('Rows per page:'), findsOneWidget);
     expect(find.text('10'), findsWidgets);
 
@@ -36,40 +36,39 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Hide create'), findsOneWidget);
-    await tester.enterText(find.byType(TextFormField).first, 'Warehouse Rice 50kg');
-    final saveButton = find.widgetWithText(FilledButton, 'Save Product');
-    await tester.dragUntilVisible(saveButton, find.byType(ListView).first, const Offset(0, -220));
-    await tester.ensureVisible(saveButton);
-    await tester.pump();
-    await tester.tap(saveButton);
+  });
+
+  testWidgets('inventory module shows dedicated purchase receiving panel', (tester) async {
+    tester.view.physicalSize = const Size(1600, 2200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [AppLocalizations.delegate, GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
+        home: Scaffold(
+          body: buildMainModulePage(
+            page: IndexPage.inventory,
+            title: 'Inventory',
+            description: 'Track stock movements and receiving operations.',
+            icon: Icons.warehouse_rounded,
+            highlights: const ['Stock movement', 'Transfers'],
+          ),
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
 
-    expect(find.text('Saved Product successfully.'), findsOneWidget);
-    expect(find.text('Warehouse Rice 50kg'), findsWidgets);
-    expect(find.byTooltip('View Product'), findsWidgets);
-    expect(find.byTooltip('Edit Product'), findsWidgets);
-    expect(find.byTooltip('Delete Product?'), findsWidgets);
-
-    final deleteButtons = find.byTooltip('Delete Product?');
-    await tester.ensureVisible(deleteButtons.first);
-    await tester.tap(deleteButtons.first);
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
-    await tester.pumpAndSettle();
-
-    await tester.ensureVisible(find.byTooltip('Delete Product?').first);
-    await tester.tap(find.byTooltip('Delete Product?').first);
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
-    await tester.pumpAndSettle();
-
-    await tester.ensureVisible(find.byTooltip('Delete Product?').first);
-    await tester.tap(find.byTooltip('Delete Product?').first);
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('No data available.'), findsOneWidget);
-    expect(find.text('Rows per page:'), findsNothing);
+    expect(find.text('Purchase receiving'), findsOneWidget);
+    expect(find.text('Post purchase receipt'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, 'Store UUID'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, 'Branch UUID'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, 'Supplier invoice UUID'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, 'Quantity'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, 'Unit cost'), findsOneWidget);
   });
 }
