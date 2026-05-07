@@ -6,6 +6,21 @@ import 'package:store_management/services/owner_scope_service.dart';
 import 'package:store_management/views/pages/model_crud_page.dart';
 import 'package:store_management/views/pages/model_module_pages.dart';
 
+typedef PurchaseReceiptPoster =
+    Future<String> Function({
+      required String ownerUuid,
+      required String storeUuid,
+      required String branchUuid,
+      required String supplierUuid,
+      required String productUuid,
+      required String supplierInvoiceUuid,
+      String? batchNumber,
+      DateTime? expiryDate,
+      required int quantity,
+      required num unitCost,
+      String? staffUserUuid,
+    });
+
 class InventoryPage extends StatefulWidget {
   const InventoryPage({
     super.key,
@@ -13,7 +28,9 @@ class InventoryPage extends StatefulWidget {
     required this.description,
     required this.icon,
     this.highlights = const <String>[],
-    this.inventoryTransactionService, this.ownerScopeService,
+    this.inventoryTransactionService,
+    this.ownerScopeService,
+    this.purchaseReceiptPoster,
   });
 
   final String title;
@@ -22,6 +39,7 @@ class InventoryPage extends StatefulWidget {
   final List<String> highlights;
   final InventoryTransactionService? inventoryTransactionService;
   final OwnerScopeService? ownerScopeService;
+  final PurchaseReceiptPoster? purchaseReceiptPoster;
 
   @override
   State<InventoryPage> createState() => _InventoryPageState();
@@ -119,21 +137,22 @@ class _InventoryPageState extends State<InventoryPage> {
                 spacing: 12,
                 runSpacing: 12,
                 children: [
-                  _field(_ownerUuidController, 'Owner UUID', required: true),
-                  _field(_storeUuidController, 'Store UUID', required: true),
-                  _field(_branchUuidController, 'Branch UUID', required: true),
-                  _field(_supplierUuidController, 'Supplier UUID', required: true),
-                  _field(_supplierInvoiceUuidController, 'Supplier invoice UUID', required: true),
-                  _field(_productUuidController, 'Product UUID', required: true),
-                  _field(_batchNumberController, 'Batch number'),
-                  _field(_quantityController, 'Quantity', required: true, isNumber: true),
-                  _field(_unitCostController, 'Unit cost', required: true, isNumber: true),
-                  _field(_expiryDateController, 'Expiry date (YYYY-MM-DD)'),
-                  _field(_staffUserUuidController, 'Staff user UUID'),
+                  _field(_ownerUuidController, 'Owner UUID', fieldKey: 'ownerUuid', required: true),
+                  _field(_storeUuidController, 'Store UUID', fieldKey: 'storeUuid', required: true),
+                  _field(_branchUuidController, 'Branch UUID', fieldKey: 'branchUuid', required: true),
+                  _field(_supplierUuidController, 'Supplier UUID', fieldKey: 'supplierUuid', required: true),
+                  _field(_supplierInvoiceUuidController, 'Supplier invoice UUID', fieldKey: 'supplierInvoiceUuid', required: true),
+                  _field(_productUuidController, 'Product UUID', fieldKey: 'productUuid', required: true),
+                  _field(_batchNumberController, 'Batch number', fieldKey: 'batchNumber'),
+                  _field(_quantityController, 'Quantity', fieldKey: 'quantity', required: true, isNumber: true),
+                  _field(_unitCostController, 'Unit cost', fieldKey: 'unitCost', required: true, isNumber: true),
+                  _field(_expiryDateController, 'Expiry date (YYYY-MM-DD)', fieldKey: 'expiryDate'),
+                  _field(_staffUserUuidController, 'Staff user UUID', fieldKey: 'staffUserUuid'),
                 ],
               ),
               const SizedBox(height: 12),
               FilledButton.icon(
+                key: const Key('purchase-receipt-submit'),
                 onPressed: _postingReceipt ? null : _submitPurchaseReceipt,
                 icon: _postingReceipt ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.inventory_2_rounded),
                 label: Text(_postingReceipt ? 'Posting...' : 'Post purchase receipt'),
@@ -145,10 +164,11 @@ class _InventoryPageState extends State<InventoryPage> {
     );
   }
 
-  Widget _field(TextEditingController controller, String label, {bool required = false, bool isNumber = false}) {
+  Widget _field(TextEditingController controller, String label, {String? fieldKey, bool required = false, bool isNumber = false}) {
     return SizedBox(
       width: 260,
       child: TextFormField(
+        key: fieldKey == null ? null : Key('purchase-receipt-$fieldKey'),
         controller: controller,
         keyboardType: isNumber ? const TextInputType.numberWithOptions(decimal: true) : TextInputType.text,
         decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
@@ -211,8 +231,38 @@ class _InventoryPageState extends State<InventoryPage> {
     });
 
     try {
-      final inventoryTransactionService = _inventoryTransactionService ?? InventoryTransactionService();
-      final batchUuid = await inventoryTransactionService.postPurchaseReceipt(
+      final postPurchaseReceipt =
+          widget.purchaseReceiptPoster ??
+          ({
+            required String ownerUuid,
+            required String storeUuid,
+            required String branchUuid,
+            required String supplierUuid,
+            required String productUuid,
+            required String supplierInvoiceUuid,
+            String? batchNumber,
+            DateTime? expiryDate,
+            required int quantity,
+            required num unitCost,
+            String? staffUserUuid,
+          }) {
+            final inventoryTransactionService = _inventoryTransactionService ?? InventoryTransactionService();
+            return inventoryTransactionService.postPurchaseReceipt(
+              ownerUuid: ownerUuid,
+              storeUuid: storeUuid,
+              branchUuid: branchUuid,
+              supplierUuid: supplierUuid,
+              productUuid: productUuid,
+              supplierInvoiceUuid: supplierInvoiceUuid,
+              batchNumber: batchNumber,
+              expiryDate: expiryDate,
+              quantity: quantity,
+              unitCost: unitCost,
+              staffUserUuid: staffUserUuid,
+            );
+          };
+
+      final batchUuid = await postPurchaseReceipt(
         ownerUuid: _ownerUuidController.text.trim(),
         storeUuid: _storeUuidController.text.trim(),
         branchUuid: _branchUuidController.text.trim(),
