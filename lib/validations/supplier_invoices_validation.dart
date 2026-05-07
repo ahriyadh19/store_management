@@ -5,8 +5,7 @@ import 'package:store_management/validations/validation_utils.dart';
 class SupplierInvoicesValidation {
   static const Set<String> _allowedStatuses = <String>{
     'draft',
-    'submitted',
-    'approved',
+    'open',
     'partially_paid',
     'paid',
     'cancelled',
@@ -69,7 +68,7 @@ class SupplierInvoicesValidation {
       return purchaseOrderUuidError;
     }
 
-    final invoiceNumberError = ValidationUtils.validateRequiredString(request, 'invoiceNumber', 'Supplier invoice number is required');
+    final invoiceNumberError = ValidationUtils.validateRequiredString(request, 'supplierInvoiceNumber', 'Supplier invoice number is required');
     if (invoiceNumberError != null) {
       return invoiceNumberError;
     }
@@ -89,6 +88,11 @@ class SupplierInvoicesValidation {
       return currencyCodeError;
     }
 
+    final subtotalError = ValidationUtils.validateRequiredNum(request, 'subtotal', 'Subtotal amount must be zero or greater', min: 0);
+    if (subtotalError != null) {
+      return subtotalError;
+    }
+
     final totalAmountError = ValidationUtils.validateRequiredNum(request, 'totalAmount', 'Total amount must be zero or greater', min: 0);
     if (totalAmountError != null) {
       return totalAmountError;
@@ -97,16 +101,6 @@ class SupplierInvoicesValidation {
     final taxAmount = request.data?['taxAmount'];
     if (taxAmount != null && (taxAmount is! num || taxAmount < 0)) {
       return ValidationUtils.badRequest('Tax amount must be zero or greater');
-    }
-
-    final discountAmount = request.data?['discountAmount'];
-    if (discountAmount != null && (discountAmount is! num || discountAmount < 0)) {
-      return ValidationUtils.badRequest('Discount amount must be zero or greater');
-    }
-
-    final netAmountError = ValidationUtils.validateRequiredNum(request, 'netAmount', 'Net amount must be zero or greater', min: 0);
-    if (netAmountError != null) {
-      return netAmountError;
     }
 
     final statusError = ValidationUtils.validateRequiredString(request, 'status', 'Supplier invoice status is required');
@@ -119,16 +113,7 @@ class SupplierInvoicesValidation {
       return ValidationUtils.badRequest('Supplier invoice status is invalid');
     }
 
-    final notesError = ValidationUtils.validateRequiredString(request, 'notes', 'Supplier invoice notes are required');
-    if (notesError != null) {
-      return notesError;
-    }
-
-    final createdByUserUuidError = ValidationUtils.validateOptionalUuid(request, 'createdByUserUuid', 'Created by user uuid must be a valid UUID');
-    if (createdByUserUuidError != null) {
-      return createdByUserUuidError;
-    }
-
     return null;
   }
 }
+

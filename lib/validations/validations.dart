@@ -5,6 +5,7 @@ export 'supplier_products_validation.dart';
 export 'supplier_validation.dart';
 export 'inventory_movements_validation.dart';
 export 'payment_allocations_validation.dart';
+export 'purchase_order_items_validation.dart';
 export 'purchase_orders_validation.dart';
 export 'products_tags_validation.dart';
 export 'products_validation.dart';

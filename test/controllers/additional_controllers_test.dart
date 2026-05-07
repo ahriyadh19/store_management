@@ -350,17 +350,14 @@ void main() {
     String storeUuid = '22222222-2222-4222-8222-222222222222',
     String supplierUuid = '33333333-3333-4333-8333-333333333333',
     String? purchaseOrderUuid = '55555555-5555-4555-8555-555555555555',
-    String invoiceNumber = 'SI-2026-0001',
+    String supplierInvoiceNumber = 'SI-2026-0001',
     int invoiceDateMs = 1714348800000,
     int? dueDateMs = 1714953600000,
     String currencyCode = 'USD',
-    num totalAmount = 1500,
+    num subtotal = 1475,
     num taxAmount = 75,
-    num discountAmount = 25,
-    num netAmount = 1550,
-    String status = 'submitted',
-    String notes = 'Supplier invoice for May receiving',
-    String createdByUserUuid = '44444444-4444-4444-8444-444444444444',
+    num totalAmount = 1500,
+    String status = 'open',
   }) {
     return {
       'id': id,
@@ -368,17 +365,38 @@ void main() {
       'storeUuid': storeUuid,
       'supplierUuid': supplierUuid,
       'purchaseOrderUuid': purchaseOrderUuid,
-      'invoiceNumber': invoiceNumber,
+      'supplierInvoiceNumber': supplierInvoiceNumber,
       'invoiceDate': invoiceDateMs,
       'dueDate': dueDateMs,
       'currencyCode': currencyCode,
-      'totalAmount': totalAmount,
+      'subtotal': subtotal,
       'taxAmount': taxAmount,
-      'discountAmount': discountAmount,
-      'netAmount': netAmount,
+      'totalAmount': totalAmount,
       'status': status,
-      'notes': notes,
-      'createdByUserUuid': createdByUserUuid,
+    };
+  }
+
+  Map<String, dynamic> buildPurchaseOrderItemData({
+    int id = 17,
+    String purchaseOrderUuid = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    String productUuid = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    String? supplierProductOfferUuid = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+    int quantity = 10,
+    num unitCost = 12.5,
+    num discountAmount = 5,
+    num lineTotal = 120,
+    int receivedQuantity = 3,
+  }) {
+    return {
+      'id': id,
+      'purchaseOrderUuid': purchaseOrderUuid,
+      'productUuid': productUuid,
+      'supplierProductOfferUuid': supplierProductOfferUuid,
+      'quantity': quantity,
+      'unitCost': unitCost,
+      'discountAmount': discountAmount,
+      'lineTotal': lineTotal,
+      'receivedQuantity': receivedQuantity,
     };
   }
 
@@ -650,11 +668,11 @@ void main() {
       final readResponse = controller.read(request: buildRequest(data: {'id': 16}));
 
       expect(createResponse.statusCode, 201);
-      expect(createResponse.data?.status, 'submitted');
+      expect(createResponse.data?.status, 'open');
+      expect(createResponse.data?.subtotal, Decimal.parse('1475'));
       expect(createResponse.data?.totalAmount, Decimal.parse('1500'));
-      expect(createResponse.data?.netAmount, Decimal.parse('1550'));
       expect(readResponse.statusCode, 200);
-      expect(readResponse.data?.invoiceNumber, 'SI-2026-0001');
+      expect(readResponse.data?.supplierInvoiceNumber, 'SI-2026-0001');
     });
 
     test('supplier invoices controller rejects invalid status', () {
@@ -666,6 +684,29 @@ void main() {
 
       expect(response.statusCode, 400);
       expect(response.message, 'Supplier invoice status is invalid');
+    });
+
+    test('purchase order items controller creates and reads purchase order item data', () {
+      final controller = PurchaseOrderItemsController();
+
+      final createResponse = controller.create(request: buildRequest(data: buildPurchaseOrderItemData()));
+      final readResponse = controller.read(request: buildRequest(data: {'id': 17}));
+
+      expect(createResponse.statusCode, 201);
+      expect(createResponse.data?.quantity, 10);
+      expect(createResponse.data?.unitCost, Decimal.parse('12.5'));
+      expect(createResponse.data?.lineTotal, Decimal.parse('120'));
+      expect(readResponse.statusCode, 200);
+      expect(readResponse.data?.receivedQuantity, 3);
+    });
+
+    test('purchase order items controller rejects invalid quantity', () {
+      final controller = PurchaseOrderItemsController();
+
+      final response = controller.create(request: buildRequest(data: buildPurchaseOrderItemData(quantity: 0)));
+
+      expect(response.statusCode, 400);
+      expect(response.message, 'Quantity must be greater than zero');
     });
   });
 }

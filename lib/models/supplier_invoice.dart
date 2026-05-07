@@ -14,17 +14,14 @@ class SupplierInvoice {
   String storeUuid;
   String supplierUuid;
   String? purchaseOrderUuid;
-  String invoiceNumber;
+  String supplierInvoiceNumber;
   DateTime invoiceDate;
   DateTime? dueDate;
   String currencyCode;
-  Decimal totalAmount;
+  Decimal subtotal;
   Decimal taxAmount;
-  Decimal discountAmount;
-  Decimal netAmount;
+  Decimal totalAmount;
   String status;
-  String notes;
-  String? createdByUserUuid;
   DateTime createdAt;
   DateTime updatedAt;
   bool synced;
@@ -38,17 +35,14 @@ class SupplierInvoice {
     required this.storeUuid,
     required this.supplierUuid,
     this.purchaseOrderUuid,
-    required this.invoiceNumber,
+    required this.supplierInvoiceNumber,
     required this.invoiceDate,
     this.dueDate,
     required this.currencyCode,
-    required this.totalAmount,
+    required this.subtotal,
     required this.taxAmount,
-    required this.discountAmount,
-    required this.netAmount,
+    required this.totalAmount,
     required this.status,
-    required this.notes,
-    this.createdByUserUuid,
     required this.createdAt,
     required this.updatedAt,
     this.synced = false,
@@ -63,17 +57,14 @@ class SupplierInvoice {
     String? storeUuid,
     String? supplierUuid,
     String? purchaseOrderUuid,
-    String? invoiceNumber,
+    String? supplierInvoiceNumber,
     DateTime? invoiceDate,
     DateTime? dueDate,
     String? currencyCode,
-    Decimal? totalAmount,
+    Decimal? subtotal,
     Decimal? taxAmount,
-    Decimal? discountAmount,
-    Decimal? netAmount,
+    Decimal? totalAmount,
     String? status,
-    String? notes,
-    String? createdByUserUuid,
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? synced,
@@ -87,17 +78,14 @@ class SupplierInvoice {
       storeUuid: storeUuid ?? this.storeUuid,
       supplierUuid: supplierUuid ?? this.supplierUuid,
       purchaseOrderUuid: purchaseOrderUuid ?? this.purchaseOrderUuid,
-      invoiceNumber: invoiceNumber ?? this.invoiceNumber,
+      supplierInvoiceNumber: supplierInvoiceNumber ?? this.supplierInvoiceNumber,
       invoiceDate: invoiceDate ?? this.invoiceDate,
       dueDate: dueDate ?? this.dueDate,
       currencyCode: currencyCode ?? this.currencyCode,
-      totalAmount: totalAmount ?? this.totalAmount,
+      subtotal: subtotal ?? this.subtotal,
       taxAmount: taxAmount ?? this.taxAmount,
-      discountAmount: discountAmount ?? this.discountAmount,
-      netAmount: netAmount ?? this.netAmount,
+      totalAmount: totalAmount ?? this.totalAmount,
       status: status ?? this.status,
-      notes: notes ?? this.notes,
-      createdByUserUuid: createdByUserUuid ?? this.createdByUserUuid,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       synced: synced ?? this.synced,
@@ -114,17 +102,14 @@ class SupplierInvoice {
       'storeUuid': storeUuid,
       'supplierUuid': supplierUuid,
       'purchaseOrderUuid': purchaseOrderUuid,
-      'invoiceNumber': invoiceNumber,
+      'supplierInvoiceNumber': supplierInvoiceNumber,
       'invoiceDate': invoiceDate.millisecondsSinceEpoch,
       'dueDate': dueDate?.millisecondsSinceEpoch,
       'currencyCode': currencyCode,
-      'totalAmount': totalAmount.toString(),
+      'subtotal': subtotal.toString(),
       'taxAmount': taxAmount.toString(),
-      'discountAmount': discountAmount.toString(),
-      'netAmount': netAmount.toString(),
+      'totalAmount': totalAmount.toString(),
       'status': status,
-      'notes': notes,
-      'createdByUserUuid': createdByUserUuid,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
       'synced': synced,
@@ -141,17 +126,14 @@ class SupplierInvoice {
       'store_uuid': storeUuid,
       'supplier_uuid': supplierUuid,
       'purchase_order_uuid': purchaseOrderUuid,
-      'invoice_number': invoiceNumber,
+      'supplier_invoice_number': supplierInvoiceNumber,
       'invoice_date': ModelParsing.dateTimeToIso8601Utc(invoiceDate),
       'due_date': ModelParsing.dateTimeOrNullToIso8601Utc(dueDate),
       'currency_code': currencyCode,
-      'total_amount': totalAmount.toString(),
+      'subtotal': subtotal.toString(),
       'tax_amount': taxAmount.toString(),
-      'discount_amount': discountAmount.toString(),
-      'net_amount': netAmount.toString(),
+      'total_amount': totalAmount.toString(),
       'status': status,
-      'notes': notes,
-      'created_by_user_uuid': createdByUserUuid,
       'created_at': ModelParsing.dateTimeToIso8601Utc(createdAt),
       'updated_at': ModelParsing.dateTimeToIso8601Utc(updatedAt),
       'synced': synced,
@@ -170,17 +152,14 @@ class SupplierInvoice {
       storeUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'storeUuid'), 'storeUuid'),
       supplierUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'supplierUuid'), 'supplierUuid'),
       purchaseOrderUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'purchaseOrderUuid')),
-      invoiceNumber: ModelParsing.stringOrThrow(ModelParsing.value(map, 'invoiceNumber'), 'invoiceNumber'),
+      supplierInvoiceNumber: ModelParsing.stringOrThrow(ModelParsing.value(map, 'supplierInvoiceNumber'), 'supplierInvoiceNumber'),
       invoiceDate: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'invoiceDate'), 'invoiceDate'),
       dueDate: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'dueDate')),
       currencyCode: ModelParsing.stringOrThrow(ModelParsing.value(map, 'currencyCode'), 'currencyCode'),
-      totalAmount: ModelParsing.decimalOrThrow(ModelParsing.value(map, 'totalAmount'), 'totalAmount'),
+      subtotal: ModelParsing.decimalOrThrow(ModelParsing.value(map, 'subtotal'), 'subtotal'),
       taxAmount: ModelParsing.decimalOrNull(ModelParsing.value(map, 'taxAmount')) ?? Decimal.zero,
-      discountAmount: ModelParsing.decimalOrNull(ModelParsing.value(map, 'discountAmount')) ?? Decimal.zero,
-      netAmount: ModelParsing.decimalOrThrow(ModelParsing.value(map, 'netAmount'), 'netAmount'),
+      totalAmount: ModelParsing.decimalOrThrow(ModelParsing.value(map, 'totalAmount'), 'totalAmount'),
       status: ModelParsing.stringOrThrow(ModelParsing.value(map, 'status'), 'status'),
-      notes: ModelParsing.stringOrNull(ModelParsing.value(map, 'notes')) ?? '',
-      createdByUserUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'createdByUserUuid')),
       createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'createdAt') ?? nowMillis, 'createdAt'),
       updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'updatedAt') ?? nowMillis, 'updatedAt'),
       synced: ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
@@ -195,7 +174,7 @@ class SupplierInvoice {
 
   @override
   String toString() {
-    return 'SupplierInvoice(id: $id, uuid: $uuid, ownerUuid: $ownerUuid, storeUuid: $storeUuid, supplierUuid: $supplierUuid, purchaseOrderUuid: $purchaseOrderUuid, invoiceNumber: $invoiceNumber, invoiceDate: $invoiceDate, dueDate: $dueDate, currencyCode: $currencyCode, totalAmount: $totalAmount, taxAmount: $taxAmount, discountAmount: $discountAmount, netAmount: $netAmount, status: $status, notes: $notes, createdByUserUuid: $createdByUserUuid, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
+    return 'SupplierInvoice(id: $id, uuid: $uuid, ownerUuid: $ownerUuid, storeUuid: $storeUuid, supplierUuid: $supplierUuid, purchaseOrderUuid: $purchaseOrderUuid, supplierInvoiceNumber: $supplierInvoiceNumber, invoiceDate: $invoiceDate, dueDate: $dueDate, currencyCode: $currencyCode, subtotal: $subtotal, taxAmount: $taxAmount, totalAmount: $totalAmount, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
   }
 
   @override
@@ -208,17 +187,14 @@ class SupplierInvoice {
         other.storeUuid == storeUuid &&
         other.supplierUuid == supplierUuid &&
         other.purchaseOrderUuid == purchaseOrderUuid &&
-        other.invoiceNumber == invoiceNumber &&
+        other.supplierInvoiceNumber == supplierInvoiceNumber &&
         other.invoiceDate == invoiceDate &&
         other.dueDate == dueDate &&
         other.currencyCode == currencyCode &&
-        other.totalAmount == totalAmount &&
+        other.subtotal == subtotal &&
         other.taxAmount == taxAmount &&
-        other.discountAmount == discountAmount &&
-        other.netAmount == netAmount &&
+        other.totalAmount == totalAmount &&
         other.status == status &&
-        other.notes == notes &&
-        other.createdByUserUuid == createdByUserUuid &&
         other.createdAt == createdAt &&
         other.updatedAt == updatedAt &&
         other.synced == synced &&
@@ -234,17 +210,14 @@ class SupplierInvoice {
         storeUuid.hashCode ^
         supplierUuid.hashCode ^
         purchaseOrderUuid.hashCode ^
-        invoiceNumber.hashCode ^
+        supplierInvoiceNumber.hashCode ^
         invoiceDate.hashCode ^
         dueDate.hashCode ^
         currencyCode.hashCode ^
-        totalAmount.hashCode ^
+        subtotal.hashCode ^
         taxAmount.hashCode ^
-        discountAmount.hashCode ^
-        netAmount.hashCode ^
+        totalAmount.hashCode ^
         status.hashCode ^
-        notes.hashCode ^
-        createdByUserUuid.hashCode ^
         createdAt.hashCode ^
         updatedAt.hashCode ^
         synced.hashCode ^

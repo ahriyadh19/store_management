@@ -6,6 +6,7 @@ export 'supplier_controller.dart';
 export 'supplier_products_controller.dart';
 export 'inventory_movements_controller.dart';
 export 'payment_allocations_controller.dart';
+export 'purchase_order_items_controller.dart';
 export 'purchase_orders_controller.dart';
 export 'products_controller.dart';
 export 'products_tags_controller.dart';
