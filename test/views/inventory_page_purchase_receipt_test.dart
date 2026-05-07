@@ -281,4 +281,76 @@ void main() {
     expect(called, 0);
     expect(find.text('Store UUID is required'), findsOneWidget);
   });
+
+  testWidgets('inventory page exposes relations section and relation tabs', (tester) async {
+    tester.view.physicalSize = const Size(1600, 2200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [AppLocalizations.delegate, GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
+        home: const Scaffold(
+          body: InventoryPage(title: 'Inventory', description: 'Track stock movements and receiving operations.', icon: Icons.warehouse_rounded),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final relationsChip = find.widgetWithText(ChoiceChip, 'Relations');
+    await tester.ensureVisible(relationsChip);
+    await tester.tap(relationsChip);
+    await tester.pumpAndSettle();
+
+    expect(find.text('User Roles'), findsWidgets);
+    expect(find.text('Store Suppliers'), findsWidgets);
+    expect(find.text('Store Clients'), findsWidgets);
+    expect(find.text('Store Users'), findsWidgets);
+    expect(find.text('Store Branches'), findsWidgets);
+    expect(find.text('Branch Products'), findsWidgets);
+    expect(find.text('Invoice Items'), findsWidgets);
+    expect(find.text('Payment Allocations'), findsWidgets);
+    expect(find.text('Return Items'), findsWidgets);
+  });
+
+  testWidgets('relations tabs switch between item modules', (tester) async {
+    tester.view.physicalSize = const Size(1600, 2200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [AppLocalizations.delegate, GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
+        home: const Scaffold(
+          body: InventoryPage(title: 'Inventory', description: 'Track stock movements and receiving operations.', icon: Icons.warehouse_rounded),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final relationsChip = find.widgetWithText(ChoiceChip, 'Relations');
+    await tester.ensureVisible(relationsChip);
+    await tester.tap(relationsChip);
+    await tester.pumpAndSettle();
+
+    final paymentTab = find.text('Payment Allocations').first;
+    await tester.ensureVisible(paymentTab);
+    await tester.tap(paymentTab);
+    await tester.pumpAndSettle();
+    expect(find.text('Payment Allocations Datatable'), findsOneWidget);
+
+    final returnTab = find.text('Return Items').first;
+    await tester.ensureVisible(returnTab);
+    await tester.tap(returnTab);
+    await tester.pumpAndSettle();
+    expect(find.text('Store Return Items Datatable'), findsOneWidget);
+  });
 }

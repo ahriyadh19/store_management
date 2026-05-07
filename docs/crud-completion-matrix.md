@@ -3,6 +3,7 @@
 Last updated: 2026-05-08
 
 Legend:
+
 - `Y`: implemented
 - `T`: covered by automated tests
 - `N`: missing
@@ -10,7 +11,7 @@ Legend:
 ## Core Entities
 
 | Entity | Model | Controller CRUD | UI CRUD | Tests |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | supplier | Y | Y | Y | T |
 | products | Y | Y | Y | T |
 | category | Y | Y | Y | T |
@@ -32,7 +33,7 @@ Legend:
 ## Sales and Finance
 
 | Entity | Model | Controller CRUD | UI CRUD | Tests |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | store_invoice | Y | Y | Y | T |
 | store_invoice_item | Y | Y | Y | T |
 | store_payment_voucher | Y | Y | Y | T |
@@ -45,7 +46,7 @@ Legend:
 ## ERP Extensions (Operating Model)
 
 | Entity | Model | Controller CRUD | UI CRUD | Tests |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | purchase_order | Y | Y | Y (inventory tab) | T |
 | purchase_order_item | Y | Y | Y (inventory tab) | T |
 | supplier_invoice | Y | Y | Y (inventory tab) | T |

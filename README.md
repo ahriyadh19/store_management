@@ -174,6 +174,16 @@ Still expanding:
 - Deeper end-to-end workflows for procurement and reporting modules.
 - Broader test coverage across service and integration layers.
 
+## Release Checklist
+
+Before shipping a release, run this checklist:
+
+1. Verify configuration. Confirm `SUPABASE_URL` and `SUPABASE_ANON_KEY` are set for the target environment, and confirm desktop fallback `.env.local.json` is not bundled unintentionally in release artifacts.
+1. Verify quality gates. Run `flutter analyze` and `flutter test`, and resolve all failures before release.
+1. Verify platform builds. Build each deployment target (`windows`, `web`, `apk`, `linux`) and confirm successful output.
+1. Verify runtime smoke checks. Launch the app, confirm startup/auth flow works, and on desktop confirm the window is visible and focused after launch.
+1. Verify data model safety. Confirm latest migration is applied in staging and critical CRUD flows (invoice, inventory movement, transfer order) succeed.
+
 ## License
 
 No license is currently defined in this repository.
