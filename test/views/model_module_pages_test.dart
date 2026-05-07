@@ -65,6 +65,8 @@ void main() {
 
     expect(find.text('Purchase receiving'), findsOneWidget);
     expect(find.text('Post purchase receipt'), findsOneWidget);
+    expect(find.text('Batches'), findsOneWidget);
+    expect(find.text('Transactions'), findsOneWidget);
     expect(find.widgetWithText(TextFormField, 'Store UUID'), findsOneWidget);
     expect(find.widgetWithText(TextFormField, 'Branch UUID'), findsOneWidget);
     expect(find.widgetWithText(TextFormField, 'Supplier invoice UUID'), findsOneWidget);

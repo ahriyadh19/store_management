@@ -46,29 +46,24 @@ Legend:
 
 | Entity | Model | Controller CRUD | UI CRUD | Tests |
 |---|---|---|---|---|
-| purchase_order | Y | Y | N | T |
-| purchase_order_item | Y | Y | N | T |
-| supplier_invoice | Y | Y | N | T |
-| inventory_batch | N | N | N | N |
-| inventory_transaction | service posting only | N | partial (receiving action) | T (workflow-level widget) |
-| transfer_order | N | N | N | N |
-| transfer_order_item | N | N | N | N |
-| sales_order | N | N | N | N |
-| sales_invoice | N | N | N | N |
-| sales_return | N | N | N | N |
-| branch_price | N | N | N | N |
-| promotion_rule | N | N | N | N |
-| staff_shift | N | N | N | N |
-| staff_attendance | N | N | N | N |
-| staff_activity_log | N | N | N | N |
+| purchase_order | Y | Y | Y (inventory tab) | T |
+| purchase_order_item | Y | Y | Y (inventory tab) | T |
+| supplier_invoice | Y | Y | Y (inventory tab) | T |
+| inventory_batch | Y | Y | Y (inventory tab) | T |
+| inventory_transaction | Y | Y | Y (inventory tab) | T |
+| transfer_order | Y | Y | Y (inventory tab) | T |
+| transfer_order_item | Y | Y | Y (inventory tab) | T |
+| sales_order | Y | Y | Y (inventory tab) | T |
+| sales_invoice | Y | Y | Y (inventory tab) | T |
+| sales_return | Y | Y | Y (inventory tab) | T |
+| branch_price | Y | Y | Y (inventory tab) | T |
+| promotion_rule | Y | Y | Y (inventory tab) | T |
+| staff_shift | Y | Y | Y (inventory tab) | T |
+| staff_attendance | Y | Y | Y (inventory tab) | T |
+| staff_activity_log | Y | Y | Y (inventory tab) | T |
 
 ## Recommended Next CRUD Steps
 
-1. Connect `purchase_order_item` mutations to automatic `purchase_order.totalAmount` recalculation.
-2. Introduce dedicated CRUD pages (or tabs) for `purchase_order`, `purchase_order_item`, and `supplier_invoice`.
-3. Add integration tests for procure-to-stock workflow:
-   - create purchase order
-   - add purchase order items
-   - create supplier invoice
-   - receive inventory batch
-   - verify inventory transaction effects
+1. Add UI grouping improvements so the expanded inventory tabs remain easy to navigate.
+2. Add workflow-level tests for transfer-to-sale and attendance/activity audit flows.
+3. Add focused validation tests for new enum/status transitions and edge cases.

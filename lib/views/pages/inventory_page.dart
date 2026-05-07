@@ -1,6 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/models/inventory_movement.dart';
+import 'package:store_management/models/inventory_batch.dart';
+import 'package:store_management/models/inventory_transaction.dart';
+import 'package:store_management/models/branch_price.dart';
+import 'package:store_management/models/purchase_order.dart';
+import 'package:store_management/models/purchase_order_item.dart';
+import 'package:store_management/models/promotion_rule.dart';
+import 'package:store_management/models/sales_invoice.dart';
+import 'package:store_management/models/sales_order.dart';
+import 'package:store_management/models/sales_return.dart';
+import 'package:store_management/models/staff_activity_log.dart';
+import 'package:store_management/models/staff_attendance.dart';
+import 'package:store_management/models/staff_shift.dart';
+import 'package:store_management/models/supplier_invoice.dart';
+import 'package:store_management/models/transfer_order.dart';
+import 'package:store_management/models/transfer_order_item.dart';
 import 'package:store_management/services/inventory_transaction_service.dart';
 import 'package:store_management/services/owner_scope_service.dart';
 import 'package:store_management/views/pages/model_crud_page.dart';
@@ -102,20 +117,177 @@ class _InventoryPageState extends State<InventoryPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Column(
-      children: [
-        Padding(padding: const EdgeInsets.fromLTRB(24, 24, 24, 0), child: _buildPurchaseReceiptCard(context)),
-        Expanded(
-          child: ModelCrudPage<InventoryMovement>(
-            title: widget.title,
-            entityLabel: inventoryMovementEntityLabel(l10n),
-            description: widget.description,
-            icon: widget.icon,
-            highlights: widget.highlights,
-            formDefinition: inventoryMovementFormDefinition(l10n),
+    return DefaultTabController(
+      length: 16,
+      child: Column(
+        children: [
+          Material(
+            color: Colors.transparent,
+            child: TabBar(
+              isScrollable: true,
+              tabs: const [
+                Tab(text: 'Movements'),
+                Tab(text: 'Purchase Orders'),
+                Tab(text: 'Order Items'),
+                Tab(text: 'Supplier Invoices'),
+                Tab(text: 'Batches'),
+                Tab(text: 'Transactions'),
+                Tab(text: 'Transfer Orders'),
+                Tab(text: 'Transfer Items'),
+                Tab(text: 'Sales Orders'),
+                Tab(text: 'Sales Invoices'),
+                Tab(text: 'Sales Returns'),
+                Tab(text: 'Branch Prices'),
+                Tab(text: 'Promotions'),
+                Tab(text: 'Staff Shifts'),
+                Tab(text: 'Attendance'),
+                Tab(text: 'Activity Logs'),
+              ],
+            ),
           ),
-        ),
-      ],
+          Expanded(
+            child: TabBarView(
+              children: [
+                Column(
+                  children: [
+                    Padding(padding: const EdgeInsets.fromLTRB(24, 24, 24, 0), child: _buildPurchaseReceiptCard(context)),
+                    Expanded(
+                      child: ModelCrudPage<InventoryMovement>(
+                        title: widget.title,
+                        entityLabel: inventoryMovementEntityLabel(l10n),
+                        description: widget.description,
+                        icon: widget.icon,
+                        highlights: widget.highlights,
+                        formDefinition: inventoryMovementFormDefinition(l10n),
+                      ),
+                    ),
+                  ],
+                ),
+                ModelCrudPage<PurchaseOrder>(
+                  title: 'Purchase Orders',
+                  entityLabel: purchaseOrderEntityLabel(l10n),
+                  description: 'Manage purchase orders and procurement lifecycle records.',
+                  icon: Icons.shopping_cart_checkout_rounded,
+                  highlights: const ['Procurement', 'Approval flow', 'Expected delivery'],
+                  formDefinition: purchaseOrderFormDefinition(l10n),
+                ),
+                ModelCrudPage<PurchaseOrderItem>(
+                  title: 'Purchase Order Items',
+                  entityLabel: purchaseOrderItemEntityLabel(l10n),
+                  description: 'Manage line items for purchase orders and received quantities.',
+                  icon: Icons.playlist_add_check_circle_rounded,
+                  highlights: const ['Line totals', 'Received quantity', 'Offer linkage'],
+                  formDefinition: purchaseOrderItemFormDefinition(l10n),
+                ),
+                ModelCrudPage<SupplierInvoice>(
+                  title: 'Supplier Invoices',
+                  entityLabel: supplierInvoiceEntityLabel(l10n),
+                  description: 'Manage supplier invoices and payment status visibility.',
+                  icon: Icons.request_quote_rounded,
+                  highlights: const ['Invoice matching', 'Due dates', 'Open balance'],
+                  formDefinition: supplierInvoiceFormDefinition(l10n),
+                ),
+                ModelCrudPage<InventoryBatch>(
+                  title: 'Inventory Batches',
+                  entityLabel: inventoryBatchEntityLabel(l10n),
+                  description: 'Track item batches and their remaining quantities.',
+                  icon: Icons.layers_rounded,
+                  highlights: const ['Batch life-cycle', 'Expiry tracking', 'Cost layers'],
+                  formDefinition: inventoryBatchFormDefinition(l10n),
+                ),
+                ModelCrudPage<InventoryTransaction>(
+                  title: 'Inventory Transactions',
+                  entityLabel: inventoryTransactionEntityLabel(l10n),
+                  description: 'Track detailed inventory ledger entries and references.',
+                  icon: Icons.receipt_long_rounded,
+                  highlights: const ['Ledger entries', 'Reference linking', 'Holder movements'],
+                  formDefinition: inventoryTransactionFormDefinition(l10n),
+                ),
+                ModelCrudPage<TransferOrder>(
+                  title: 'Transfer Orders',
+                  entityLabel: transferOrderEntityLabel(l10n),
+                  description: 'Manage inter-branch stock transfer requests and lifecycle.',
+                  icon: Icons.compare_arrows_rounded,
+                  highlights: const ['Source to destination', 'Transfer status', 'Requested and received tracking'],
+                  formDefinition: transferOrderFormDefinition(l10n),
+                ),
+                ModelCrudPage<TransferOrderItem>(
+                  title: 'Transfer Order Items',
+                  entityLabel: transferOrderItemEntityLabel(l10n),
+                  description: 'Manage transfer order line items and shipped/received quantities.',
+                  icon: Icons.format_list_numbered_rounded,
+                  highlights: const ['Line quantities', 'Shipping progress', 'Receiving progress'],
+                  formDefinition: transferOrderItemFormDefinition(l10n),
+                ),
+                ModelCrudPage<SalesOrder>(
+                  title: 'Sales Orders',
+                  entityLabel: salesOrderEntityLabel(l10n),
+                  description: 'Manage customer sales orders and pricing strategy decisions.',
+                  icon: Icons.shopping_bag_rounded,
+                  highlights: const ['Order pipeline', 'Pricing strategy', 'Customer linkage'],
+                  formDefinition: salesOrderFormDefinition(l10n),
+                ),
+                ModelCrudPage<SalesInvoice>(
+                  title: 'Sales Invoices',
+                  entityLabel: salesInvoiceEntityLabel(l10n),
+                  description: 'Manage sales invoices, totals, and payment progress.',
+                  icon: Icons.receipt_rounded,
+                  highlights: const ['Invoice lifecycle', 'Outstanding balances', 'Payment status'],
+                  formDefinition: salesInvoiceFormDefinition(l10n),
+                ),
+                ModelCrudPage<SalesReturn>(
+                  title: 'Sales Returns',
+                  entityLabel: salesReturnEntityLabel(l10n),
+                  description: 'Track sales returns, reasons, and refund processing.',
+                  icon: Icons.assignment_return_rounded,
+                  highlights: const ['Return reason', 'Refund amount', 'Approval status'],
+                  formDefinition: salesReturnFormDefinition(l10n),
+                ),
+                ModelCrudPage<BranchPrice>(
+                  title: 'Branch Prices',
+                  entityLabel: branchPriceEntityLabel(l10n),
+                  description: 'Configure branch-level product prices and validity windows.',
+                  icon: Icons.price_change_rounded,
+                  highlights: const ['Price tiers', 'Effective dates', 'Priority handling'],
+                  formDefinition: branchPriceFormDefinition(l10n),
+                ),
+                ModelCrudPage<PromotionRule>(
+                  title: 'Promotion Rules',
+                  entityLabel: promotionRuleEntityLabel(l10n),
+                  description: 'Define discount promotions per branch or product scope.',
+                  icon: Icons.local_offer_rounded,
+                  highlights: const ['Discount rules', 'Date windows', 'Scope targeting'],
+                  formDefinition: promotionRuleFormDefinition(l10n),
+                ),
+                ModelCrudPage<StaffShift>(
+                  title: 'Staff Shifts',
+                  entityLabel: staffShiftEntityLabel(l10n),
+                  description: 'Plan and track employee shift schedules and completion.',
+                  icon: Icons.badge_rounded,
+                  highlights: const ['Scheduling', 'Coverage', 'Shift status'],
+                  formDefinition: staffShiftFormDefinition(l10n),
+                ),
+                ModelCrudPage<StaffAttendance>(
+                  title: 'Staff Attendance',
+                  entityLabel: staffAttendanceEntityLabel(l10n),
+                  description: 'Track check-ins, check-outs, and worked minutes.',
+                  icon: Icons.fact_check_rounded,
+                  highlights: const ['Presence records', 'Time worked', 'Attendance status'],
+                  formDefinition: staffAttendanceFormDefinition(l10n),
+                ),
+                ModelCrudPage<StaffActivityLog>(
+                  title: 'Staff Activity Logs',
+                  entityLabel: staffActivityLogEntityLabel(l10n),
+                  description: 'Audit user actions across operational entities.',
+                  icon: Icons.history_rounded,
+                  highlights: const ['Action traceability', 'Entity references', 'Metadata logs'],
+                  formDefinition: staffActivityLogFormDefinition(l10n),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -400,6 +400,78 @@ void main() {
     };
   }
 
+  Map<String, dynamic> buildInventoryBatchData({
+    int id = 18,
+    String ownerUuid = '11111111-1111-4111-8111-111111111111',
+    String storeUuid = '22222222-2222-4222-8222-222222222222',
+    String? supplierUuid = '33333333-3333-4333-8333-333333333333',
+    String productUuid = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    String? supplierInvoiceUuid = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+    String supplierInvoiceItemRef = 'SI-LN-01',
+    String batchNumber = 'BATCH-2026-01',
+    int receivedAtMs = 1715036400000,
+    int? expiryDateMs = 1722812400000,
+    num unitCost = 11.25,
+    int initialQuantity = 100,
+    int remainingQuantity = 80,
+    int status = 1,
+  }) {
+    return {
+      'id': id,
+      'ownerUuid': ownerUuid,
+      'storeUuid': storeUuid,
+      'supplierUuid': supplierUuid,
+      'productUuid': productUuid,
+      'supplierInvoiceUuid': supplierInvoiceUuid,
+      'supplierInvoiceItemRef': supplierInvoiceItemRef,
+      'batchNumber': batchNumber,
+      'receivedAt': receivedAtMs,
+      'expiryDate': expiryDateMs,
+      'unitCost': unitCost,
+      'initialQuantity': initialQuantity,
+      'remainingQuantity': remainingQuantity,
+      'status': status,
+    };
+  }
+
+  Map<String, dynamic> buildInventoryTransactionData({
+    int id = 19,
+    String ownerUuid = '11111111-1111-4111-8111-111111111111',
+    String productUuid = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    String? batchUuid = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+    String holderType = 'branch',
+    String holderUuid = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+    String transactionType = 'purchase',
+    int quantity = 20,
+    num unitCost = 11.25,
+    num? unitPrice,
+    String referenceType = 'supplier_invoice',
+    String? referenceUuid = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+    String? linkedTransactionUuid,
+    String? staffUserUuid = 'ffffffff-ffff-4fff-8fff-ffffffffffff',
+    int occurredAtMs = 1715036400000,
+    String note = 'Purchase receipt ledger entry',
+  }) {
+    return {
+      'id': id,
+      'ownerUuid': ownerUuid,
+      'productUuid': productUuid,
+      'batchUuid': batchUuid,
+      'holderType': holderType,
+      'holderUuid': holderUuid,
+      'transactionType': transactionType,
+      'quantity': quantity,
+      'unitCost': unitCost,
+      'unitPrice': unitPrice,
+      'referenceType': referenceType,
+      'referenceUuid': referenceUuid,
+      'linkedTransactionUuid': linkedTransactionUuid,
+      'staffUserUuid': staffUserUuid,
+      'occurredAt': occurredAtMs,
+      'note': note,
+    };
+  }
+
   group('Barrel exports', () {
     test('controllers and validations barrels expose new surfaces', () {
       final controller = BranchesController();
@@ -707,6 +779,43 @@ void main() {
 
       expect(response.statusCode, 400);
       expect(response.message, 'Quantity must be greater than zero');
+    });
+
+    test('inventory batches controller creates and reads batch data', () {
+      final controller = InventoryBatchesController();
+
+      final createResponse = controller.create(request: buildRequest(data: buildInventoryBatchData()));
+      final readResponse = controller.read(request: buildRequest(data: {'id': 18}));
+
+      expect(createResponse.statusCode, 201);
+      expect(createResponse.data?.unitCost, Decimal.parse('11.25'));
+      expect(createResponse.data?.remainingQuantity, 80);
+      expect(readResponse.statusCode, 200);
+      expect(readResponse.data?.batchNumber, 'BATCH-2026-01');
+    });
+
+    test('inventory transactions controller creates and reads transaction data', () {
+      final controller = InventoryTransactionsController();
+
+      final createResponse = controller.create(request: buildRequest(data: buildInventoryTransactionData()));
+      final readResponse = controller.read(request: buildRequest(data: {'id': 19}));
+
+      expect(createResponse.statusCode, 201);
+      expect(createResponse.data?.transactionType, 'purchase');
+      expect(createResponse.data?.quantity, 20);
+      expect(readResponse.statusCode, 200);
+      expect(readResponse.data?.referenceType, 'supplier_invoice');
+    });
+
+    test('inventory transactions controller rejects invalid holder type', () {
+      final controller = InventoryTransactionsController();
+
+      final response = controller.create(
+        request: buildRequest(data: buildInventoryTransactionData(holderType: 'warehouse')),
+      );
+
+      expect(response.statusCode, 400);
+      expect(response.message, 'Holder type is invalid');
     });
   });
 }
