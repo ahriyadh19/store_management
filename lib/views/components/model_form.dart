@@ -68,6 +68,7 @@ class ModelFormDefinition<T extends Object> {
     required this.fromMap,
     required this.toMap,
     required this.sampleModel,
+    this.tableFieldPriorityKeys = const <String>[],
     this.queryDelegate,
     this.createDelegate,
     this.updateDelegate,
@@ -79,6 +80,7 @@ class ModelFormDefinition<T extends Object> {
   final T Function(Map<String, dynamic> map) fromMap;
   final Map<String, dynamic> Function(T model) toMap;
   final T sampleModel;
+  final List<String> tableFieldPriorityKeys;
   final ModelQueryDelegate<T>? queryDelegate;
   final ModelCreateDelegate<T>? createDelegate;
   final ModelUpdateDelegate<T>? updateDelegate;

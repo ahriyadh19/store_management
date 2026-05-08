@@ -183,7 +183,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       records: visibleRecords,
       visibleFields: _visibleFields,
       toMap: widget.formDefinition.toMap,
-      formatCellValue: _formatCellValue,
+      formatCellValue: _formatCellValueForField,
       isCompactLayout: isCompactLayout,
       selectedRecordKey: _selectedRecordKey,
       recordKeyBuilder: _recordIdentity,
@@ -372,11 +372,127 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   List<ModelFormFieldDefinition> get _visibleFields {
-    final preferredFields = widget.formDefinition.fields.take(5).toList();
-    if (preferredFields.isNotEmpty) {
-      return preferredFields;
+    final fields = widget.formDefinition.fields;
+    if (fields.isEmpty) {
+      return fields;
     }
-    return widget.formDefinition.fields;
+
+    final preferredKeys = widget.formDefinition.tableFieldPriorityKeys;
+    if (preferredKeys.isNotEmpty) {
+      final byKey = <String, ModelFormFieldDefinition>{for (final field in fields) field.key: field};
+      final selected = <ModelFormFieldDefinition>[];
+      for (final key in preferredKeys) {
+        final field = byKey[key];
+        if (field != null && !selected.contains(field)) {
+          selected.add(field);
+        }
+        if (selected.length == 5) {
+          break;
+        }
+      }
+
+      if (selected.length == 5) {
+        return selected;
+      }
+      if (selected.isNotEmpty) {
+        for (final field in fields) {
+          if (!selected.contains(field)) {
+            selected.add(field);
+          }
+          if (selected.length == 5) {
+            break;
+          }
+        }
+        return selected;
+      }
+    }
+
+    final sampleRecord = _records.isNotEmpty ? _records.first : widget.formDefinition.sampleModel;
+    final sampleData = widget.formDefinition.toMap(sampleRecord);
+    return _resolveVisibleFields(fields, sampleData, maxColumns: 5);
+  }
+
+  List<ModelFormFieldDefinition> _resolveVisibleFields(List<ModelFormFieldDefinition> fields, Map<String, dynamic> sampleData, {required int maxColumns}) {
+    if (fields.length <= maxColumns) {
+      return fields;
+    }
+
+    final scored = <_FieldPriority>[];
+    for (var index = 0; index < fields.length; index++) {
+      final field = fields[index];
+      scored.add(_FieldPriority(index: index, field: field, score: _fieldPriorityScore(field, sampleData)));
+    }
+
+    scored.sort((left, right) {
+      final scoreCompare = right.score.compareTo(left.score);
+      if (scoreCompare != 0) {
+        return scoreCompare;
+      }
+      return left.index.compareTo(right.index);
+    });
+
+    final selected = scored.take(maxColumns).toList(growable: false)..sort((left, right) => left.index.compareTo(right.index));
+    return selected.map((entry) => entry.field).toList(growable: false);
+  }
+
+  int _fieldPriorityScore(ModelFormFieldDefinition field, Map<String, dynamic> sampleData) {
+    final key = field.key;
+    final lowerKey = key.toLowerCase();
+    var score = 0;
+
+    const titleKeys = <String>{'name', 'username', 'invoiceNumber', 'returnNumber', 'voucherNumber', 'transactionNumber', 'poNumber', 'orderNumber', 'transferNumber', 'supplierInvoiceNumber', 'batchNumber'};
+
+    if (titleKeys.contains(key)) {
+      score += 120;
+    }
+
+    if (key == 'status') {
+      score += 95;
+    }
+
+    if (lowerKey.contains('amount') || lowerKey.contains('total') || lowerKey == 'quantity' || lowerKey.endsWith('quantity')) {
+      score += 80;
+    }
+
+    if (lowerKey.contains('date') || lowerKey.endsWith('at')) {
+      score += 70;
+    }
+
+    if (key == 'email' || key == 'phone') {
+      score += 65;
+    }
+
+    if (_isRelationLikeField(key)) {
+      score += 58;
+      if (_resolveLinkedValueLabel(fieldKey: key, rowData: sampleData) != null) {
+        score += 18;
+      }
+      if (key == 'ownerUuid' || key == 'createdByUserUuid') {
+        score -= 18;
+      }
+    }
+
+    if (_isTechnicalAuditField(key)) {
+      score -= 90;
+    }
+
+    if (field.required) {
+      score += 16;
+    }
+
+    if (field.readOnly) {
+      score -= 4;
+    }
+
+    return score;
+  }
+
+  bool _isRelationLikeField(String key) {
+    return key.endsWith('Uuid') || key == 'uuid' || key.endsWith('Id') || key == 'id';
+  }
+
+  bool _isTechnicalAuditField(String key) {
+    return key == 'id' || key == 'uuid' || key == 'ownerUuid' || key == 'createdAt' || key == 'updatedAt' || key == 'deletedAt' || key == 'syncedAt' || key == 'synced';
   }
 
   String get _searchQuery => _searchController.text.trim();
@@ -1077,16 +1193,110 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   String _formatCellValue(Object? value) {
+    return _formatCellValueForField(fieldKey: null, value: value, rowData: const <String, dynamic>{});
+  }
+
+  String _formatCellValueForField({required String? fieldKey, required Object? value, required Map<String, dynamic> rowData}) {
     if (value == null) {
       return '-';
     }
+
+    final key = fieldKey;
+    if (key != null && _isRelationLikeField(key)) {
+      final raw = value.toString().trim();
+      if (raw.isEmpty) {
+        return '-';
+      }
+
+      final linkedLabel = _resolveLinkedValueLabel(fieldKey: key, rowData: rowData);
+      final compactIdentifier = _compactIdentifier(raw);
+      if (linkedLabel != null) {
+        return '$linkedLabel ($compactIdentifier)';
+      }
+      return compactIdentifier;
+    }
+
     if (value is int && value > 100000000000) {
       final dateTime = DateTime.fromMillisecondsSinceEpoch(value);
       final month = dateTime.month.toString().padLeft(2, '0');
       final day = dateTime.day.toString().padLeft(2, '0');
       return '${dateTime.year}-$month-$day';
     }
+
+    if (value is DateTime) {
+      final month = value.month.toString().padLeft(2, '0');
+      final day = value.day.toString().padLeft(2, '0');
+      return '${value.year}-$month-$day';
+    }
+
     return value.toString();
+  }
+
+  String? _resolveLinkedValueLabel({required String fieldKey, required Map<String, dynamic> rowData}) {
+    if (fieldKey == 'referenceUuid') {
+      final referenceType = rowData['referenceType']?.toString().trim();
+      if (referenceType != null && referenceType.isNotEmpty) {
+        return referenceType;
+      }
+    }
+
+    var baseKey = fieldKey;
+    if (fieldKey.endsWith('Uuid')) {
+      baseKey = fieldKey.substring(0, fieldKey.length - 4);
+    } else if (fieldKey.endsWith('Id')) {
+      baseKey = fieldKey.substring(0, fieldKey.length - 2);
+    }
+
+    final candidateKeys = <String>[
+      '${baseKey}Name',
+      '${baseKey}Number',
+      '${baseKey}Code',
+      '${baseKey}Title',
+      '${baseKey}Username',
+      '${baseKey}Email',
+      '${baseKey}_name',
+      '${baseKey}_number',
+      '${baseKey}_code',
+      '${baseKey}_title',
+      '${baseKey}_username',
+      '${baseKey}_email',
+    ];
+
+    if (baseKey == 'client' || baseKey == 'customer') {
+      candidateKeys.addAll(const <String>['clientName', 'customerName']);
+    }
+    if (baseKey == 'user') {
+      candidateKeys.addAll(const <String>['userName', 'name', 'username']);
+    }
+    if (baseKey == 'product') {
+      candidateKeys.add('productName');
+    }
+    if (baseKey == 'branch') {
+      candidateKeys.add('branchName');
+    }
+    if (baseKey == 'store') {
+      candidateKeys.add('storeName');
+    }
+
+    for (final candidate in candidateKeys) {
+      final candidateValue = rowData[candidate];
+      if (candidateValue == null) {
+        continue;
+      }
+      final normalized = candidateValue.toString().trim();
+      if (normalized.isNotEmpty && normalized != '-') {
+        return normalized;
+      }
+    }
+
+    return null;
+  }
+
+  String _compactIdentifier(String raw) {
+    if (raw.length <= 14) {
+      return raw;
+    }
+    return '${raw.substring(0, 8)}...${raw.substring(raw.length - 4)}';
   }
 }
 
@@ -1187,7 +1397,7 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
     required List<T> records,
     required List<ModelFormFieldDefinition> visibleFields,
     required Map<String, dynamic> Function(T record) toMap,
-    required String Function(Object? value) formatCellValue,
+    required String Function({required String? fieldKey, required Object? value, required Map<String, dynamic> rowData}) formatCellValue,
     required bool isCompactLayout,
     required String? selectedRecordKey,
     required String Function(T record) recordKeyBuilder,
@@ -1207,7 +1417,7 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
                  DataGridCell<String>(columnName: actionsColumnName, value: ''),
                ],
              );
-             return _GridRowEntry<T>(record: record, row: row, recordKey: recordKeyBuilder(record));
+             return _GridRowEntry<T>(record: record, row: row, recordKey: recordKeyBuilder(record), data: data);
            })
            .toList(growable: false),
        _formatCellValue = formatCellValue,
@@ -1232,7 +1442,7 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
   late final List<DataGridRow> _rows = _entries.map((entry) => entry.row).toList(growable: false);
   final Map<DataGridRow, T> _recordByRow;
   final Map<DataGridRow, _GridRowEntry<T>> _entryByRow;
-  final String Function(Object? value) _formatCellValue;
+  final String Function({required String? fieldKey, required Object? value, required Map<String, dynamic> rowData}) _formatCellValue;
   final bool _isCompactLayout;
   final String? _selectedRecordKey;
   final String _entityLabel;
@@ -1258,7 +1468,9 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
     final record = _recordByRow[row];
     final entry = _entryByRow[row];
     if (record == null) {
-      return DataGridRowAdapter(cells: row.getCells().map((cell) => Text(_formatCellValue(cell.value))).toList(growable: false));
+      return DataGridRowAdapter(
+        cells: row.getCells().map((cell) => Text(_formatCellValue(fieldKey: cell.columnName, value: cell.value, rowData: const <String, dynamic>{}))).toList(growable: false),
+      );
     }
 
     return DataGridRowAdapter(
@@ -1281,7 +1493,11 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
             return Container(
               alignment: Alignment.centerLeft,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Text(_formatCellValue(cell.value), overflow: TextOverflow.ellipsis, maxLines: 2),
+              child: Text(
+                _formatCellValue(fieldKey: cell.columnName, value: cell.value, rowData: entry?.data ?? const <String, dynamic>{}),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+              ),
             );
           })
           .toList(growable: false),
@@ -1294,7 +1510,11 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
       return Container(
         alignment: Alignment.centerLeft,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Text(_formatCellValue(value), overflow: TextOverflow.ellipsis, maxLines: 2),
+        child: Text(
+          _formatCellValue(fieldKey: 'status', value: value, rowData: const <String, dynamic>{}),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 2,
+        ),
       );
     }
 
@@ -1387,11 +1607,20 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
 }
 
 class _GridRowEntry<T extends Object> {
-  const _GridRowEntry({required this.record, required this.row, required this.recordKey});
+  const _GridRowEntry({required this.record, required this.row, required this.recordKey, required this.data});
 
   final T record;
   final DataGridRow row;
   final String recordKey;
+  final Map<String, dynamic> data;
+}
+
+class _FieldPriority {
+  const _FieldPriority({required this.index, required this.field, required this.score});
+
+  final int index;
+  final ModelFormFieldDefinition field;
+  final int score;
 }
 
 enum _RowAction { view, edit, delete }

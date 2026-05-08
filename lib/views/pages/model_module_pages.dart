@@ -52,6 +52,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 ModelFormDefinition<Store> storeFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Store>(
   tableName: 'store',
+  tableFieldPriorityKeys: const <String>['name', 'phone', 'email', 'address', 'ownerUserUuid'],
   fields: [
     _textField('ownerUserUuid', _t(l10n, 'Owner user UUID', 'معرّف مالك المتجر UUID'), required: true),
     _textField('name', _t(l10n, 'Store name', 'اسم المتجر'), required: true),
@@ -74,6 +75,7 @@ ModelFormDefinition<Store> storeFormDefinition(AppLocalizations l10n) => _server
 
 ModelFormDefinition<Branch> branchFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Branch>(
   tableName: 'branch',
+  tableFieldPriorityKeys: const <String>['name', 'phone', 'email', 'address', 'status'],
   fields: [
     _textField('name', _t(l10n, 'Branch name', 'اسم الفرع'), required: true),
     _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
@@ -98,6 +100,7 @@ ModelFormDefinition<Branch> branchFormDefinition(AppLocalizations l10n) => _serv
 
 ModelFormDefinition<Product> productFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Product>(
   tableName: 'products',
+  tableFieldPriorityKeys: const <String>['name', 'description', 'status'],
   fields: [
     _textField('name', _t(l10n, 'Product name', 'اسم المنتج'), required: true),
     _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
@@ -116,6 +119,7 @@ ModelFormDefinition<Product> productFormDefinition(AppLocalizations l10n) => _se
 
 ModelFormDefinition<Categories> categoryFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Categories>(
   tableName: 'category',
+  tableFieldPriorityKeys: const <String>['name', 'parentUuid', 'description', 'status'],
   fields: [
     _textField('name', _t(l10n, 'Category name', 'اسم الفئة'), required: true),
     _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
@@ -154,6 +158,7 @@ ModelFormDefinition<Tags> tagFormDefinition(AppLocalizations l10n) => _serverBac
 
 ModelFormDefinition<Client> clientFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Client>(
   tableName: 'client',
+  tableFieldPriorityKeys: const <String>['name', 'phone', 'availableCredit', 'currentCredit', 'status'],
   fields: [
     _textField('name', _t(l10n, 'Client name', 'اسم العميل'), required: true),
     _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
@@ -184,6 +189,7 @@ ModelFormDefinition<Client> clientFormDefinition(AppLocalizations l10n) => _serv
 
 ModelFormDefinition<Supplier> supplierFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Supplier>(
   tableName: 'supplier',
+  tableFieldPriorityKeys: const <String>['name', 'description', 'status'],
   fields: [
     _textField('name', _t(l10n, 'Supplier name', 'اسم الشركة'), required: true),
     _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
@@ -202,6 +208,7 @@ ModelFormDefinition<Supplier> supplierFormDefinition(AppLocalizations l10n) => _
 
 ModelFormDefinition<User> userFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<User>(
   tableName: 'users',
+  tableFieldPriorityKeys: const <String>['name', 'username', 'email', 'status'],
   fields: [
     _textField('name', _t(l10n, 'Full name', 'الاسم الكامل'), required: true),
     _textField('username', _t(l10n, 'Username', 'اسم المستخدم'), required: true),
@@ -222,6 +229,7 @@ ModelFormDefinition<User> userFormDefinition(AppLocalizations l10n) => _serverBa
 
 ModelFormDefinition<Roles> roleFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Roles>(
   tableName: 'roles',
+  tableFieldPriorityKeys: const <String>['name', 'description', 'status'],
   fields: [
     _textField('name', _t(l10n, 'Role name', 'اسم الدور'), required: true),
     _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
@@ -240,6 +248,7 @@ ModelFormDefinition<Roles> roleFormDefinition(AppLocalizations l10n) => _serverB
 
 ModelFormDefinition<UserRoles> userRolesFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<UserRoles>(
   tableName: 'user_roles',
+  tableFieldPriorityKeys: const <String>['userUuid', 'roleUuid', 'status'],
   fields: [_textField('userUuid', _t(l10n, 'User UUID', 'معرّف المستخدم UUID'), required: true), _textField('roleUuid', _t(l10n, 'Role UUID', 'معرّف الدور UUID'), required: true), _statusField(l10n)],
   fromMap: UserRoles.fromMap,
   toMap: (userRole) => userRole.toMap(),
@@ -248,6 +257,7 @@ ModelFormDefinition<UserRoles> userRolesFormDefinition(AppLocalizations l10n) =>
 
 ModelFormDefinition<StoreSupplier> storeSupplierFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreSupplier>(
   tableName: 'store_supplier',
+  tableFieldPriorityKeys: const <String>['storeUuid', 'supplierUuid', 'status'],
   fields: [_textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true), _textField('supplierUuid', _t(l10n, 'Supplier UUID', 'معرّف المورد UUID'), required: true), _statusField(l10n)],
   fromMap: StoreSupplier.fromMap,
   toMap: (storeSupplier) => storeSupplier.toMap(),
@@ -256,6 +266,7 @@ ModelFormDefinition<StoreSupplier> storeSupplierFormDefinition(AppLocalizations 
 
 ModelFormDefinition<StoreClient> storeClientFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreClient>(
   tableName: 'store_client',
+  tableFieldPriorityKeys: const <String>['storeUuid', 'clientUuid', 'status'],
   fields: [_textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true), _textField('clientUuid', _t(l10n, 'Client UUID', 'معرّف العميل UUID'), required: true), _statusField(l10n)],
   fromMap: StoreClient.fromMap,
   toMap: (storeClient) => storeClient.toMap(),
@@ -264,6 +275,7 @@ ModelFormDefinition<StoreClient> storeClientFormDefinition(AppLocalizations l10n
 
 ModelFormDefinition<StoreUser> storeUserFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreUser>(
   tableName: 'store_user',
+  tableFieldPriorityKeys: const <String>['storeUuid', 'branchUuid', 'userUuid', 'userRoleUuid', 'status'],
   fields: [
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
     _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID')),
@@ -286,6 +298,7 @@ ModelFormDefinition<StoreUser> storeUserFormDefinition(AppLocalizations l10n) =>
 
 ModelFormDefinition<StoreBranches> storeBranchesFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreBranches>(
   tableName: 'store_branches',
+  tableFieldPriorityKeys: const <String>['storeUuid', 'branchUuid', 'status'],
   fields: [_textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true), _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID'), required: true), _statusField(l10n)],
   fromMap: StoreBranches.fromMap,
   toMap: (storeBranch) => storeBranch.toMap(),
@@ -294,6 +307,7 @@ ModelFormDefinition<StoreBranches> storeBranchesFormDefinition(AppLocalizations 
 
 ModelFormDefinition<BranchProduct> branchProductFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<BranchProduct>(
   tableName: 'branch_product',
+  tableFieldPriorityKeys: const <String>['branchUuid', 'productUuid', 'stock', 'reorderLevel', 'status'],
   fields: [
     _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID'), required: true),
     _textField('supplierProductUuid', _t(l10n, 'Supplier product UUID', 'معرّف منتج المورد UUID'), required: true),
@@ -322,6 +336,7 @@ ModelFormDefinition<BranchProduct> branchProductFormDefinition(AppLocalizations 
 
 ModelFormDefinition<StoreInvoiceItem> storeInvoiceItemFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreInvoiceItem>(
   tableName: 'store_invoice_item',
+  tableFieldPriorityKeys: const <String>['invoiceUuid', 'productUuid', 'quantity', 'unitPrice', 'lineTotal'],
   fields: [
     _textField('invoiceUuid', _t(l10n, 'Invoice UUID', 'معرّف الفاتورة UUID'), required: true),
     _textField('supplierProductUuid', _t(l10n, 'Supplier product UUID', 'معرّف منتج المورد UUID'), required: true),
@@ -352,6 +367,7 @@ ModelFormDefinition<StoreInvoiceItem> storeInvoiceItemFormDefinition(AppLocaliza
 
 ModelFormDefinition<PaymentAllocation> paymentAllocationFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<PaymentAllocation>(
   tableName: 'payment_allocation',
+  tableFieldPriorityKeys: const <String>['paymentVoucherUuid', 'invoiceUuid', 'allocatedAmount', 'allocationDate', 'status'],
   fields: [
     _textField('paymentVoucherUuid', _t(l10n, 'Payment voucher UUID', 'معرّف سند الدفع UUID'), required: true),
     _textField('invoiceUuid', _t(l10n, 'Invoice UUID', 'معرّف الفاتورة UUID'), required: true),
@@ -374,6 +390,7 @@ ModelFormDefinition<PaymentAllocation> paymentAllocationFormDefinition(AppLocali
 
 ModelFormDefinition<StoreReturnItem> storeReturnItemFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreReturnItem>(
   tableName: 'store_return_item',
+  tableFieldPriorityKeys: const <String>['returnUuid', 'productUuid', 'quantity', 'unitPrice', 'lineTotal'],
   fields: [
     _textField('returnUuid', _t(l10n, 'Return UUID', 'معرّف المرتجع UUID'), required: true),
     _textField('invoiceItemUuid', _t(l10n, 'Invoice item UUID', 'معرّف عنصر الفاتورة UUID')),
@@ -404,6 +421,7 @@ ModelFormDefinition<StoreReturnItem> storeReturnItemFormDefinition(AppLocalizati
 
 ModelFormDefinition<StoreInvoice> invoiceFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreInvoice>(
   tableName: 'store_invoice',
+  tableFieldPriorityKeys: const <String>['invoiceNumber', 'clientUuid', 'storeUuid', 'totalAmount', 'status'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID')),
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
@@ -472,6 +490,7 @@ ModelFormDefinition<StoreInvoice> invoiceFormDefinition(AppLocalizations l10n) =
 
 ModelFormDefinition<StoreReturn> returnFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreReturn>(
   tableName: 'store_return',
+  tableFieldPriorityKeys: const <String>['returnNumber', 'clientUuid', 'storeUuid', 'totalAmount', 'status'],
   fields: [
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
     _textField('clientUuid', _t(l10n, 'Client UUID', 'معرّف العميل UUID'), required: true),
@@ -502,6 +521,7 @@ ModelFormDefinition<StoreReturn> returnFormDefinition(AppLocalizations l10n) => 
 
 ModelFormDefinition<StorePaymentVoucher> paymentVoucherFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StorePaymentVoucher>(
   tableName: 'store_payment_voucher',
+  tableFieldPriorityKeys: const <String>['voucherNumber', 'clientUuid', 'payeeName', 'amount', 'transactionDate'],
   fields: [
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
     _textField('clientUuid', _t(l10n, 'Client UUID', 'معرّف العميل UUID'), required: true),
@@ -534,6 +554,7 @@ ModelFormDefinition<StorePaymentVoucher> paymentVoucherFormDefinition(AppLocaliz
 
 ModelFormDefinition<InventoryMovement> inventoryMovementFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<InventoryMovement>(
   tableName: 'inventory_movement',
+  tableFieldPriorityKeys: const <String>['movementType', 'productUuid', 'branchUuid', 'quantityDelta', 'referenceUuid'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID')),
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID')),
@@ -607,6 +628,7 @@ ModelFormDefinition<InventoryMovement> inventoryMovementFormDefinition(AppLocali
 
 ModelFormDefinition<StoreFinancialTransaction> transactionFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreFinancialTransaction>(
   tableName: 'store_financial_transaction',
+  tableFieldPriorityKeys: const <String>['transactionNumber', 'clientUuid', 'sourceUuid', 'amount', 'transactionDate'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID')),
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
@@ -677,6 +699,7 @@ ModelFormDefinition<StoreFinancialTransaction> transactionFormDefinition(AppLoca
 
 ModelFormDefinition<PurchaseOrder> purchaseOrderFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<PurchaseOrder>(
   tableName: 'purchase_order',
+  tableFieldPriorityKeys: const <String>['poNumber', 'supplierUuid', 'storeUuid', 'totalAmount', 'status'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), required: true),
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
@@ -711,6 +734,7 @@ ModelFormDefinition<PurchaseOrder> purchaseOrderFormDefinition(AppLocalizations 
 
 ModelFormDefinition<PurchaseOrderItem> purchaseOrderItemFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<PurchaseOrderItem>(
   tableName: 'purchase_order_item',
+  tableFieldPriorityKeys: const <String>['purchaseOrderUuid', 'productUuid', 'quantity', 'unitCost', 'lineTotal'],
   fields: [
     _textField('purchaseOrderUuid', _t(l10n, 'Purchase order UUID', 'معرّف أمر الشراء UUID'), required: true),
     _textField('productUuid', _t(l10n, 'Product UUID', 'معرّف المنتج UUID'), required: true),
@@ -737,6 +761,7 @@ ModelFormDefinition<PurchaseOrderItem> purchaseOrderItemFormDefinition(AppLocali
 
 ModelFormDefinition<SupplierInvoice> supplierInvoiceFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<SupplierInvoice>(
   tableName: 'supplier_invoice',
+  tableFieldPriorityKeys: const <String>['supplierInvoiceNumber', 'supplierUuid', 'storeUuid', 'totalAmount', 'status'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), required: true),
     _textField('supplierUuid', _t(l10n, 'Supplier UUID', 'معرّف المورد UUID'), required: true),
@@ -773,6 +798,7 @@ ModelFormDefinition<SupplierInvoice> supplierInvoiceFormDefinition(AppLocalizati
 
 ModelFormDefinition<InventoryBatch> inventoryBatchFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<InventoryBatch>(
   tableName: 'inventory_batch',
+  tableFieldPriorityKeys: const <String>['batchNumber', 'productUuid', 'remainingQuantity', 'unitCost', 'expiryDate'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), required: true),
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
@@ -811,6 +837,7 @@ ModelFormDefinition<InventoryBatch> inventoryBatchFormDefinition(AppLocalization
 
 ModelFormDefinition<InventoryTransaction> inventoryTransactionFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<InventoryTransaction>(
   tableName: 'inventory_transaction',
+  tableFieldPriorityKeys: const <String>['transactionType', 'productUuid', 'holderUuid', 'quantity', 'occurredAt'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), required: true),
     _textField('productUuid', _t(l10n, 'Product UUID', 'معرّف المنتج UUID'), required: true),
@@ -853,6 +880,7 @@ ModelFormDefinition<InventoryTransaction> inventoryTransactionFormDefinition(App
 
 ModelFormDefinition<TransferOrder> transferOrderFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<TransferOrder>(
   tableName: 'transfer_order',
+  tableFieldPriorityKeys: const <String>['transferNumber', 'sourceBranchUuid', 'destinationBranchUuid', 'requestedAt', 'status'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), required: true),
     _textField('sourceBranchUuid', _t(l10n, 'Source branch UUID', 'معرّف الفرع المصدر UUID'), required: true),
@@ -883,6 +911,7 @@ ModelFormDefinition<TransferOrder> transferOrderFormDefinition(AppLocalizations 
 
 ModelFormDefinition<TransferOrderItem> transferOrderItemFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<TransferOrderItem>(
   tableName: 'transfer_order_item',
+  tableFieldPriorityKeys: const <String>['transferOrderUuid', 'productUuid', 'quantity', 'shippedQuantity', 'receivedQuantity'],
   fields: [
     _textField('transferOrderUuid', _t(l10n, 'Transfer order UUID', 'معرّف أمر التحويل UUID'), required: true),
     _textField('productUuid', _t(l10n, 'Product UUID', 'معرّف المنتج UUID'), required: true),
@@ -897,6 +926,7 @@ ModelFormDefinition<TransferOrderItem> transferOrderItemFormDefinition(AppLocali
 
 ModelFormDefinition<SalesOrder> salesOrderFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<SalesOrder>(
   tableName: 'sales_order',
+  tableFieldPriorityKeys: const <String>['orderNumber', 'customerUuid', 'branchUuid', 'orderDate', 'status'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), required: true),
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
@@ -927,6 +957,7 @@ ModelFormDefinition<SalesOrder> salesOrderFormDefinition(AppLocalizations l10n) 
 
 ModelFormDefinition<SalesInvoice> salesInvoiceFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<SalesInvoice>(
   tableName: 'sales_invoice',
+  tableFieldPriorityKeys: const <String>['invoiceNumber', 'customerUuid', 'branchUuid', 'totalAmount', 'status'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), required: true),
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
@@ -969,6 +1000,7 @@ ModelFormDefinition<SalesInvoice> salesInvoiceFormDefinition(AppLocalizations l1
 
 ModelFormDefinition<SalesReturn> salesReturnFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<SalesReturn>(
   tableName: 'sales_return',
+  tableFieldPriorityKeys: const <String>['returnNumber', 'salesInvoiceUuid', 'refundAmount', 'returnDate', 'status'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), required: true),
     _textField('salesInvoiceUuid', _t(l10n, 'Sales invoice UUID', 'معرّف فاتورة البيع UUID'), required: true),
@@ -997,6 +1029,7 @@ ModelFormDefinition<SalesReturn> salesReturnFormDefinition(AppLocalizations l10n
 
 ModelFormDefinition<BranchPrice> branchPriceFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<BranchPrice>(
   tableName: 'branch_price',
+  tableFieldPriorityKeys: const <String>['branchUuid', 'productUuid', 'priceType', 'price', 'status'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), required: true),
     _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID'), required: true),
@@ -1027,6 +1060,7 @@ ModelFormDefinition<BranchPrice> branchPriceFormDefinition(AppLocalizations l10n
 
 ModelFormDefinition<PromotionRule> promotionRuleFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<PromotionRule>(
   tableName: 'promotion_rule',
+  tableFieldPriorityKeys: const <String>['name', 'branchUuid', 'productUuid', 'discountValue', 'status'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), required: true),
     _textField('name', _t(l10n, 'Name', 'الاسم'), required: true),
@@ -1057,6 +1091,7 @@ ModelFormDefinition<PromotionRule> promotionRuleFormDefinition(AppLocalizations 
 
 ModelFormDefinition<StaffShift> staffShiftFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StaffShift>(
   tableName: 'staff_shift',
+  tableFieldPriorityKeys: const <String>['userUuid', 'branchUuid', 'shiftDate', 'startAt', 'status'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), required: true),
     _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID'), required: true),
@@ -1083,6 +1118,7 @@ ModelFormDefinition<StaffShift> staffShiftFormDefinition(AppLocalizations l10n) 
 
 ModelFormDefinition<StaffAttendance> staffAttendanceFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StaffAttendance>(
   tableName: 'staff_attendance',
+  tableFieldPriorityKeys: const <String>['staffShiftUuid', 'checkInAt', 'checkOutAt', 'minutesWorked', 'status'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), required: true),
     _textField('staffShiftUuid', _t(l10n, 'Staff shift UUID', 'معرّف المناوبة UUID'), required: true),
@@ -1107,6 +1143,7 @@ ModelFormDefinition<StaffAttendance> staffAttendanceFormDefinition(AppLocalizati
 
 ModelFormDefinition<StaffActivityLog> staffActivityLogFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StaffActivityLog>(
   tableName: 'staff_activity_log',
+  tableFieldPriorityKeys: const <String>['action', 'entityType', 'entityUuid', 'userUuid', 'branchUuid'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), required: true),
     _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID')),
@@ -1159,6 +1196,7 @@ ModelFormDefinition<T> _serverBackedDefinition<T extends Object>({
   required T Function(Map<String, dynamic> map) fromMap,
   required Map<String, dynamic> Function(T model) toMap,
   required T sampleModel,
+  List<String> tableFieldPriorityKeys = const <String>[],
   ModelAfterCreateHook<T>? afterCreateHook,
 }) {
   final supabaseQuery = _supabaseQueryDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap);
@@ -1175,6 +1213,7 @@ ModelFormDefinition<T> _serverBackedDefinition<T extends Object>({
     fromMap: fromMap,
     toMap: toMap,
     sampleModel: sampleModel,
+    tableFieldPriorityKeys: tableFieldPriorityKeys,
     afterCreateHook: afterCreateHook,
     queryDelegate: (request) async {
       switch (_storagePreferenceOrDefault()) {
