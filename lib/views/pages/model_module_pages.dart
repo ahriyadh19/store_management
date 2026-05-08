@@ -46,6 +46,7 @@ import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/services/inventory_transaction_service.dart';
 import 'package:store_management/services/owner_scope_service.dart';
 import 'package:store_management/services/local_database.dart';
+import 'package:store_management/services/sync_payload_normalizer.dart';
 import 'package:store_management/services/sync_conflict_resolution.dart';
 import 'package:store_management/views/components/model_form.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
@@ -1317,7 +1318,8 @@ ModelCreateDelegate<T> _supabaseCreateDelegate<T extends Object>({required Strin
         await _recalculatePurchaseOrderTotalRemote(purchaseOrderUuid: purchaseOrderUuid);
       }
     }
-    return fromMap(Map<String, dynamic>.from(inserted));
+    final normalizedInserted = _applySyncMetadataToPayload(Map<String, dynamic>.from(inserted), syncState: OfflineSyncState.synced, fallbackUpdatedAtMillis: DateTime.now().millisecondsSinceEpoch);
+    return fromMap(normalizedInserted);
   };
 }
 
@@ -1352,7 +1354,8 @@ ModelUpdateDelegate<T> _supabaseUpdateDelegate<T extends Object>({required Strin
     if (updated == null) {
       return model;
     }
-    return fromMap(Map<String, dynamic>.from(updated));
+    final normalizedUpdated = _applySyncMetadataToPayload(Map<String, dynamic>.from(updated), syncState: OfflineSyncState.synced, fallbackUpdatedAtMillis: DateTime.now().millisecondsSinceEpoch);
+    return fromMap(normalizedUpdated);
   };
 }
 
@@ -1396,7 +1399,7 @@ ModelQueryDelegate<T> _localQueryDelegate<T extends Object>({required String tab
       }
 
       try {
-        final payload = Map<String, dynamic>.from(jsonDecode(record.payloadJson) as Map);
+        final payload = _applySyncMetadataToPayload(Map<String, dynamic>.from(jsonDecode(record.payloadJson) as Map), syncState: record.syncState, fallbackUpdatedAtMillis: record.updatedAtMillis);
         final deletedAt = payload['deletedAt'] ?? payload['deleted_at'];
         if (deletedAt != null) {
           continue;
@@ -1423,26 +1426,27 @@ Future<T> Function(T model, {int syncState}) _localCreateDelegate<T extends Obje
     payload['updatedAt'] = now;
     payload['deletedAt'] = null;
 
-    final recordUuid = _recordUuidFromPayload(payload, fallback: 'local-$now');
+    final normalizedPayload = _applySyncMetadataToPayload(payload, syncState: syncState, fallbackUpdatedAtMillis: now);
+    final recordUuid = _recordUuidFromPayload(normalizedPayload, fallback: 'local-$now');
     final existingRecord = database.getRecord(modelType: tableName, recordUuid: recordUuid);
     database.putRecord(
       modelType: tableName,
       recordUuid: recordUuid,
-      payloadJson: jsonEncode(payload),
-      updatedAtMillis: _updatedAtMillisFromPayload(payload, fallback: now),
+      payloadJson: jsonEncode(normalizedPayload),
+      updatedAtMillis: _updatedAtMillisFromPayload(normalizedPayload, fallback: now),
       remoteUpdatedAtMillis: _baselineRemoteUpdatedAtMillisForPendingWrite(existingRecord),
       syncState: syncState,
       isDeleted: false,
     );
 
     if (tableName == 'purchase_order_item') {
-      final purchaseOrderUuid = payload['purchaseOrderUuid']?.toString();
+      final purchaseOrderUuid = normalizedPayload['purchaseOrderUuid']?.toString();
       if (purchaseOrderUuid != null && purchaseOrderUuid.isNotEmpty) {
         _recalculatePurchaseOrderTotalLocal(purchaseOrderUuid: purchaseOrderUuid, sourceSyncState: syncState);
       }
     }
 
-    return fromMap(payload);
+    return fromMap(normalizedPayload);
   };
 }
 
@@ -1455,26 +1459,27 @@ Future<T> Function(T model, {int syncState}) _localUpdateDelegate<T extends Obje
     payload['updatedAt'] = now;
     payload['deletedAt'] = null;
 
-    final recordUuid = _recordUuidFromPayload(payload, fallback: 'local-$now');
+    final normalizedPayload = _applySyncMetadataToPayload(payload, syncState: syncState, fallbackUpdatedAtMillis: now);
+    final recordUuid = _recordUuidFromPayload(normalizedPayload, fallback: 'local-$now');
     final existingRecord = database.getRecord(modelType: tableName, recordUuid: recordUuid);
     database.putRecord(
       modelType: tableName,
       recordUuid: recordUuid,
-      payloadJson: jsonEncode(payload),
-      updatedAtMillis: _updatedAtMillisFromPayload(payload, fallback: now),
+      payloadJson: jsonEncode(normalizedPayload),
+      updatedAtMillis: _updatedAtMillisFromPayload(normalizedPayload, fallback: now),
       remoteUpdatedAtMillis: _baselineRemoteUpdatedAtMillisForPendingWrite(existingRecord),
       syncState: syncState,
       isDeleted: false,
     );
 
     if (tableName == 'purchase_order_item') {
-      final purchaseOrderUuid = payload['purchaseOrderUuid']?.toString();
+      final purchaseOrderUuid = normalizedPayload['purchaseOrderUuid']?.toString();
       if (purchaseOrderUuid != null && purchaseOrderUuid.isNotEmpty) {
         _recalculatePurchaseOrderTotalLocal(purchaseOrderUuid: purchaseOrderUuid, sourceSyncState: syncState);
       }
     }
 
-    return fromMap(payload);
+    return fromMap(normalizedPayload);
   };
 }
 
@@ -1491,13 +1496,14 @@ Future<void> Function(T model, {int syncState}) _localDeleteDelegate<T extends O
       payload['deletedAt'] = now;
     }
 
-    final recordUuid = _recordUuidFromPayload(payload, fallback: 'local-$now');
+    final normalizedPayload = _applySyncMetadataToPayload(payload, syncState: syncState, fallbackUpdatedAtMillis: now);
+    final recordUuid = _recordUuidFromPayload(normalizedPayload, fallback: 'local-$now');
     final existingRecord = database.getRecord(modelType: tableName, recordUuid: recordUuid);
     if (supportsSoftDelete) {
       database.putRecord(
         modelType: tableName,
         recordUuid: recordUuid,
-        payloadJson: jsonEncode(payload),
+        payloadJson: jsonEncode(normalizedPayload),
         updatedAtMillis: now,
         remoteUpdatedAtMillis: _baselineRemoteUpdatedAtMillisForPendingWrite(existingRecord),
         syncState: syncState,
@@ -1508,7 +1514,7 @@ Future<void> Function(T model, {int syncState}) _localDeleteDelegate<T extends O
     }
 
     if (tableName == 'purchase_order_item') {
-      final purchaseOrderUuid = payload['purchaseOrderUuid']?.toString();
+      final purchaseOrderUuid = normalizedPayload['purchaseOrderUuid']?.toString();
       if (purchaseOrderUuid != null && purchaseOrderUuid.isNotEmpty) {
         _recalculatePurchaseOrderTotalLocal(purchaseOrderUuid: purchaseOrderUuid, sourceSyncState: syncState);
       }
@@ -1572,7 +1578,16 @@ void _recalculatePurchaseOrderTotalLocal({required String purchaseOrderUuid, req
       final now = DateTime.now().millisecondsSinceEpoch;
       payload['totalAmount'] = total.toString();
       payload['updatedAt'] = now;
-      database.putRecord(modelType: 'purchase_order', recordUuid: purchaseOrderRecord.recordUuid, payloadJson: jsonEncode(payload), updatedAtMillis: now, syncState: totalSyncState, isDeleted: false);
+      final normalizedPayload = _applySyncMetadataToPayload(payload, syncState: totalSyncState, fallbackUpdatedAtMillis: now);
+      database.putRecord(
+        modelType: 'purchase_order',
+        recordUuid: purchaseOrderRecord.recordUuid,
+        payloadJson: jsonEncode(normalizedPayload),
+        updatedAtMillis: now,
+        remoteUpdatedAtMillis: _baselineRemoteUpdatedAtMillisForPendingWrite(purchaseOrderRecord),
+        syncState: totalSyncState,
+        isDeleted: false,
+      );
       return;
     } catch (_) {
       // Ignore malformed local records.
@@ -1637,11 +1652,12 @@ Future<List<T>> _fetchSupabaseRecords<T extends Object>({required String tableNa
   final records = <T>[];
   for (final row in rows) {
     try {
-      final deletedAt = row['deletedAt'] ?? row['deleted_at'];
+      final normalizedRow = _applySyncMetadataToPayload(row, syncState: OfflineSyncState.synced, fallbackUpdatedAtMillis: DateTime.now().millisecondsSinceEpoch);
+      final deletedAt = normalizedRow['deletedAt'] ?? normalizedRow['deleted_at'];
       if (deletedAt != null) {
         continue;
       }
-      records.add(fromMap(Map<String, dynamic>.from(row)));
+      records.add(fromMap(normalizedRow));
     } catch (_) {
       // Skip malformed rows so one bad record does not break the full list.
     }
@@ -1687,7 +1703,7 @@ List<T> _mergePendingLocalRecords<T extends Object>({
     }
 
     try {
-      final payload = Map<String, dynamic>.from(jsonDecode(localRecord.payloadJson) as Map);
+      final payload = _applySyncMetadataToPayload(Map<String, dynamic>.from(jsonDecode(localRecord.payloadJson) as Map), syncState: localRecord.syncState, fallbackUpdatedAtMillis: localRecord.updatedAtMillis);
       recordByKey[localRecord.recordUuid] = fromMap(payload);
     } catch (_) {
       // Ignore malformed pending records.
@@ -1705,7 +1721,11 @@ void _cacheRemoteRecords<T extends Object>({required String tableName, required 
 
   final remoteRecordUuids = <String>{};
   for (final record in records) {
-    final payload = Map<String, dynamic>.from(toMap(record))..removeWhere((key, value) => value == null);
+    final payload = _applySyncMetadataToPayload(
+      Map<String, dynamic>.from(toMap(record))..removeWhere((key, value) => value == null),
+      syncState: OfflineSyncState.synced,
+      fallbackUpdatedAtMillis: DateTime.now().millisecondsSinceEpoch,
+    );
     final recordUuid = _recordUuidFromPayload(payload, fallback: payload.toString());
     remoteRecordUuids.add(recordUuid);
     final remoteUpdatedAtMillis = _updatedAtMillisOrNullFromPayload(payload);
@@ -1742,6 +1762,10 @@ void _cacheRemoteRecords<T extends Object>({required String tableName, required 
   }
 }
 
+Map<String, dynamic> _applySyncMetadataToPayload(Map<String, dynamic> payload, {required int syncState, int? fallbackUpdatedAtMillis}) {
+  return normalizeSyncPayload(payload, syncState: syncState, fallbackUpdatedAtMillis: fallbackUpdatedAtMillis);
+}
+
 StoragePreference _storagePreferenceOrDefault() {
   return AppPreferencesController.current?.storagePreference ?? StoragePreference.hybrid;
 }
@@ -1769,17 +1793,7 @@ String _recordUuidFromPayload(Map<String, dynamic> payload, {required String fal
 }
 
 int? _updatedAtMillisOrNullFromPayload(Map<String, dynamic> payload) {
-  final value = payload['updatedAt'] ?? payload['updated_at'];
-  if (value is int) {
-    return value;
-  }
-  if (value is num) {
-    return value.toInt();
-  }
-  if (value is String) {
-    return int.tryParse(value);
-  }
-  return null;
+  return parseUpdatedAtMillisOrNull(payload);
 }
 
 int? _baselineRemoteUpdatedAtMillisForPendingWrite(OfflineSyncRecord? existingRecord) {
@@ -1811,6 +1825,10 @@ int _updatedAtMillisFromPayload(Map<String, dynamic> payload, {required int fall
     final parsed = int.tryParse(value);
     if (parsed != null) {
       return parsed;
+    }
+    final parsedDate = DateTime.tryParse(value);
+    if (parsedDate != null) {
+      return parsedDate.toUtc().millisecondsSinceEpoch;
     }
   }
   return fallback;

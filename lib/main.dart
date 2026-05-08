@@ -31,6 +31,10 @@ Future<void> main() async {
   final localeController = await LocaleController.create();
   final appPreferencesController = await AppPreferencesController.create();
   final localDatabase = await LocalDatabase.create();
+  final reconciledRecordCount = localDatabase.reconcileSyncMetadata();
+  if (kDebugMode && reconciledRecordCount > 0) {
+    debugPrint('Reconciled sync metadata for $reconciledRecordCount local records.');
+  }
 
   Object? startupError;
   StackTrace? startupStackTrace;

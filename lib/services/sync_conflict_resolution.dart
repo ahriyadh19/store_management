@@ -18,7 +18,7 @@ bool shouldUsePendingLocalRecordInHybridMerge({
 
   final localBaselineRemoteUpdatedAt = localRecord.remoteUpdatedAtMillis;
   if (localBaselineRemoteUpdatedAt == null) {
-    return true;
+    return localRecord.updatedAtMillis >= remoteUpdatedAtMillis;
   }
 
   if (remoteUpdatedAtMillis <= localBaselineRemoteUpdatedAt) {

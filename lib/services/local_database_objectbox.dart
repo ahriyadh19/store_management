@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:objectbox/objectbox.dart' as obx;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -5,6 +7,7 @@ import 'package:store_management/models/branch.dart';
 import 'package:store_management/models/offline_sync_record.dart';
 import 'package:store_management/models/store_branches.dart';
 import 'package:store_management/objectbox.g.dart';
+import 'package:store_management/services/sync_payload_normalizer.dart';
 
 class LocalDatabase {
   static const String branchModelType = 'branch';
@@ -151,6 +154,34 @@ class LocalDatabase {
 
   int clearAllRecords() {
     return offlineSyncRecords.removeAll();
+  }
+
+  int reconcileSyncMetadata() {
+    var updatedCount = 0;
+
+    for (final record in offlineSyncRecords.getAll()) {
+      Map<String, dynamic> payload;
+      try {
+        payload = Map<String, dynamic>.from(jsonDecode(record.payloadJson) as Map);
+      } catch (_) {
+        continue;
+      }
+
+      final normalizedPayload = normalizeSyncPayload(payload, syncState: record.syncState, fallbackUpdatedAtMillis: record.updatedAtMillis);
+      final normalizedPayloadJson = jsonEncode(normalizedPayload);
+      final normalizedUpdatedAtMillis = parseUpdatedAtMillisOrNull(normalizedPayload) ?? record.updatedAtMillis;
+
+      if (record.payloadJson == normalizedPayloadJson && record.updatedAtMillis == normalizedUpdatedAtMillis) {
+        continue;
+      }
+
+      record.payloadJson = normalizedPayloadJson;
+      record.updatedAtMillis = normalizedUpdatedAtMillis;
+      offlineSyncRecords.put(record);
+      updatedCount += 1;
+    }
+
+    return updatedCount;
   }
 
   bool ping() {

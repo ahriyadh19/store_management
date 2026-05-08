@@ -52,6 +52,14 @@ void main() {
     expect(useLocal, isTrue);
   });
 
+  test('pending upsert without baseline is reconciled when remote timestamp is newer than local edit', () {
+    final localRecord = buildRecord(syncState: OfflineSyncState.pendingUpsert, updatedAtMillis: 1000, remoteUpdatedAtMillis: null);
+
+    final useLocal = shouldUsePendingLocalRecordInHybridMerge(localRecord: localRecord, remoteUpdatedAtMillis: 1200);
+
+    expect(useLocal, isFalse);
+  });
+
   test('pending upsert is preserved when remote is not newer than local baseline', () {
     final localRecord = buildRecord(
       syncState: OfflineSyncState.pendingUpsert,

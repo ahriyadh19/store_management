@@ -87,6 +87,8 @@ class LocalDatabase {
 
   bool removeStoreBranches(String storeBranchesUuid) => false;
 
+  int reconcileSyncMetadata() => 0;
+
   bool ping() => false;
 
   Future<void> close() async {}
