@@ -118,13 +118,10 @@ class OwnerScopeService {
       }
 
       if (branchUuids.isEmpty) {
-        final branchRows = await _client.from('branch').select('uuid').eq('ownerUuid', ownerUuid).isFilter('deletedAt', null);
-        for (final raw in branchRows as List<dynamic>) {
-          final uuid = (raw as Map<String, dynamic>)['uuid']?.toString();
-          if (uuid != null && uuid.isNotEmpty) {
-            branchUuids.add(uuid);
-          }
-        }
+        final storeBranchRows = storeUuids.isEmpty
+            ? const <dynamic>[]
+            : await _client.from('store_branches').select('branchUuid,status,deletedAt').eq('status', 1).isFilter('deletedAt', null).inFilter('storeUuid', storeUuids.toList(growable: false));
+        branchUuids.addAll(extractBranchUuidsFromStoreBranchRowsForTesting(storeBranchRows));
       }
 
       return _cache(OwnerScope(userUuid: userUuid, ownerUuid: ownerUuid, storeUuids: storeUuids, branchUuids: branchUuids));
@@ -137,6 +134,18 @@ class OwnerScopeService {
     _cached = _CachedScope(scope: scope, expiresAt: DateTime.now().add(_cacheTtl));
     return scope;
   }
+}
+
+Set<String> extractBranchUuidsFromStoreBranchRowsForTesting(List<dynamic> rows) {
+  final branchUuids = <String>{};
+  for (final raw in rows) {
+    final row = raw as Map<String, dynamic>;
+    final uuid = row['branchUuid']?.toString();
+    if (uuid != null && uuid.isNotEmpty) {
+      branchUuids.add(uuid);
+    }
+  }
+  return branchUuids;
 }
 
 class _CachedScope {

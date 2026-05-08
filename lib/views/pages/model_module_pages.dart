@@ -427,7 +427,7 @@ ModelFormDefinition<StoreInvoice> invoiceFormDefinition(AppLocalizations l10n) =
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID')),
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
     _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID')),
-    _textField('clientUuid', _t(l10n, 'Client UUID', 'معرّف العميل UUID'), required: true),
+    _selectionField('clientUuid', _t(l10n, 'Client', 'العميل'), _clientOptions(l10n, fallbackUuid: 'client-blue-market-001', fallbackLabel: 'Blue Market'), required: true),
     _textField('invoiceNumber', _t(l10n, 'Invoice number', 'رقم الفاتورة'), required: true),
     _textField('productUuid', _t(l10n, 'Product UUID', 'معرّف المنتج UUID')),
     _integerField('quantity', _t(l10n, 'Quantity', 'الكمية')),
@@ -494,7 +494,7 @@ ModelFormDefinition<StoreReturn> returnFormDefinition(AppLocalizations l10n) => 
   tableFieldPriorityKeys: const <String>['returnNumber', 'clientUuid', 'storeUuid', 'totalAmount', 'status'],
   fields: [
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
-    _textField('clientUuid', _t(l10n, 'Client UUID', 'معرّف العميل UUID'), required: true),
+    _selectionField('clientUuid', _t(l10n, 'Client', 'العميل'), _clientOptions(l10n, fallbackUuid: 'client-blue-market-001', fallbackLabel: 'Blue Market'), required: true),
     _textField('returnNumber', _t(l10n, 'Return number', 'رقم المرتجع'), required: true),
     _selectionField('returnType', _t(l10n, 'Return type', 'نوع المرتجع'), _returnTypeOptions(l10n), required: true),
     _integerField('itemCount', _t(l10n, 'Item count', 'عدد العناصر'), required: true),
@@ -525,7 +525,7 @@ ModelFormDefinition<StorePaymentVoucher> paymentVoucherFormDefinition(AppLocaliz
   tableFieldPriorityKeys: const <String>['voucherNumber', 'clientUuid', 'payeeName', 'amount', 'transactionDate'],
   fields: [
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
-    _textField('clientUuid', _t(l10n, 'Client UUID', 'معرّف العميل UUID'), required: true),
+    _selectionField('clientUuid', _t(l10n, 'Client', 'العميل'), _clientOptions(l10n, fallbackUuid: 'client-blue-market-001', fallbackLabel: 'Blue Market'), required: true),
     _textField('voucherNumber', _t(l10n, 'Voucher number', 'رقم السند'), required: true),
     _textField('payeeName', _t(l10n, 'Payee name', 'اسم المستفيد'), required: true),
     _decimalField('amount', _t(l10n, 'Amount', 'المبلغ'), required: true),
@@ -932,7 +932,7 @@ ModelFormDefinition<SalesOrder> salesOrderFormDefinition(AppLocalizations l10n) 
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), required: true),
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
     _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID'), required: true),
-    _textField('customerUuid', _t(l10n, 'Customer UUID', 'معرّف العميل UUID')),
+    _selectionField('customerUuid', _t(l10n, 'Client', 'العميل'), _clientOptions(l10n, fallbackUuid: '44444444-4444-4444-8444-444444444444'), required: false),
     _textField('orderNumber', _t(l10n, 'Order number', 'رقم الطلب'), required: true),
     _dateTimeField('orderDate', _t(l10n, 'Order date', 'تاريخ الطلب'), required: true),
     _selectionField('status', _t(l10n, 'Status', 'الحالة'), _salesOrderStatusOptions(l10n), required: true),
@@ -964,7 +964,7 @@ ModelFormDefinition<SalesInvoice> salesInvoiceFormDefinition(AppLocalizations l1
     _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
     _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID'), required: true),
     _textField('salesOrderUuid', _t(l10n, 'Sales order UUID', 'معرّف أمر البيع UUID')),
-    _textField('customerUuid', _t(l10n, 'Customer UUID', 'معرّف العميل UUID')),
+    _selectionField('customerUuid', _t(l10n, 'Client', 'العميل'), _clientOptions(l10n, fallbackUuid: '44444444-4444-4444-8444-444444444444'), required: false),
     _textField('invoiceNumber', _t(l10n, 'Invoice number', 'رقم الفاتورة'), required: true),
     _dateTimeField('issuedAt', _t(l10n, 'Issued at', 'تاريخ الإصدار'), required: true),
     _textField('currencyCode', _t(l10n, 'Currency code', 'رمز العملة'), required: true),
@@ -2197,7 +2197,6 @@ final InventoryTransactionService _inventoryTransactionService = InventoryTransa
 
 const Set<String> _ownerScopedTables = <String>{
   'store',
-  'branch',
   'products',
   'supplier',
   'client',
@@ -2235,7 +2234,38 @@ const Set<String> _storeScopedTables = <String>{'store_supplier', 'store_client'
 const Set<String> _branchScopedTables = <String>{'branch_product'};
 const Set<String> _selfScopedTables = <String>{'users'};
 
+bool tableUsesOwnerScopeForTesting(String tableName) => _ownerScopedTables.contains(tableName);
+
+bool fieldUsesSelectionForTesting(ModelFormDefinition<Object> definition, String key) {
+  return definition.fields.any((field) => field.key == key && field.type == ModelFormFieldType.selection);
+}
+
 Future<OwnerScope> _resolveOwnerScope() => _ownerScopeService.resolveCurrentScope();
+
+List<ModelFormSelectOption> _clientOptions(AppLocalizations l10n, {required String fallbackUuid, String? fallbackLabel}) {
+  final optionsByUuid = <String, ModelFormSelectOption>{};
+  final database = LocalDatabase.current;
+  if (database != null) {
+    for (final record in database.getRecordsForType('client')) {
+      if (record.isDeleted) {
+        continue;
+      }
+
+      try {
+        final client = Client.fromJson(record.payloadJson);
+        optionsByUuid[client.uuid] = ModelFormSelectOption(label: client.name, value: client.uuid);
+      } catch (_) {
+        continue;
+      }
+    }
+  }
+
+  optionsByUuid.putIfAbsent(fallbackUuid, () => ModelFormSelectOption(label: fallbackLabel ?? fallbackUuid, value: fallbackUuid));
+
+  final options = optionsByUuid.values.toList(growable: false);
+  options.sort((left, right) => left.label.toLowerCase().compareTo(right.label.toLowerCase()));
+  return options;
+}
 
 Map<String, dynamic> _enforceTenantPayloadScope(String tableName, Map<String, dynamic> payload, OwnerScope scope) {
   final scopedPayload = Map<String, dynamic>.from(payload);

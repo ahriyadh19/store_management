@@ -4,8 +4,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/views/index/index_page.dart';
 import 'package:store_management/views/pages/main_module_pages.dart';
+import 'package:store_management/views/pages/model_module_pages.dart';
 
 void main() {
+  test('branch table is not treated as owner-scoped for sync queries', () {
+    expect(tableUsesOwnerScopeForTesting('branch'), isFalse);
+    expect(tableUsesOwnerScopeForTesting('store'), isTrue);
+  });
+
+  test('invoice-related client fields use dropdown selections', () {
+    final english = AppLocalizations(const Locale('en'));
+
+    expect(fieldUsesSelectionForTesting(invoiceFormDefinition(english), 'clientUuid'), isTrue);
+    expect(fieldUsesSelectionForTesting(returnFormDefinition(english), 'clientUuid'), isTrue);
+    expect(fieldUsesSelectionForTesting(paymentVoucherFormDefinition(english), 'clientUuid'), isTrue);
+    expect(fieldUsesSelectionForTesting(salesOrderFormDefinition(english), 'customerUuid'), isTrue);
+    expect(fieldUsesSelectionForTesting(salesInvoiceFormDefinition(english), 'customerUuid'), isTrue);
+  });
+
   testWidgets('product module page shows datatable, create toggle, and row actions', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
