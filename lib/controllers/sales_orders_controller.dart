@@ -50,7 +50,8 @@ class SalesOrdersController {
 
   Response update({required Request request}) {
     try {
-      final validationError = SalesOrdersValidation.validateUpdate(request);
+      final effectiveRequest = _withPreviousStatus(request, salesOrder?.status);
+      final validationError = SalesOrdersValidation.validateUpdate(effectiveRequest);
       if (validationError != null) {
         return validationError;
       }
@@ -59,7 +60,7 @@ class SalesOrdersController {
         return ControllerUtils.notFound('Sales order');
       }
 
-      salesOrder = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: salesOrder, toMap: (model) => model.toMap(), fromMap: SalesOrder.fromMap,
+      salesOrder = ControllerUtils.hydrateModelFromRequest(data: effectiveRequest.data!, existingModel: salesOrder, toMap: (model) => model.toMap(), fromMap: SalesOrder.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Sales Order Updated', message: 'The sales order has been updated successfully', data: salesOrder);
@@ -103,5 +104,14 @@ class SalesOrdersController {
     } catch (error) {
       return _errorResponse(error);
     }
+  }
+
+  Request _withPreviousStatus(Request request, String? currentStatus) {
+    final incomingStatus = request.data?['status'];
+    if (incomingStatus is! String || currentStatus == null) {
+      return request;
+    }
+
+    return request.copyWith(data: <String, dynamic>{...request.data!, 'previousStatus': currentStatus});
   }
 }

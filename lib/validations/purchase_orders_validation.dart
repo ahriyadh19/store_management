@@ -11,6 +11,14 @@ class PurchaseOrdersValidation {
     'cancelled',
   };
 
+  static const Map<String, Set<String>> _allowedTransitions = <String, Set<String>>{
+    'draft': <String>{'draft', 'submitted', 'cancelled'},
+    'submitted': <String>{'submitted', 'partial_received', 'received', 'cancelled'},
+    'partial_received': <String>{'partial_received', 'received', 'cancelled'},
+    'received': <String>{'received'},
+    'cancelled': <String>{'cancelled'},
+  };
+
   static Response? validateRead(Request request) {
     final metadataError = ValidationUtils.validateRequestMetadata(request);
     if (metadataError != null) {
@@ -88,6 +96,13 @@ class PurchaseOrdersValidation {
       return ValidationUtils.badRequest('Purchase order status is invalid');
     }
 
+    if (requireId) {
+      final transitionError = _validateTransition(request, status, 'Purchase order status transition is invalid');
+      if (transitionError != null) {
+        return transitionError;
+      }
+    }
+
     final currencyCodeError = ValidationUtils.validateRequiredString(request, 'currencyCode', 'Currency code is required');
     if (currencyCodeError != null) {
       return currencyCodeError;
@@ -106,6 +121,21 @@ class PurchaseOrdersValidation {
     final createdByUserUuidError = ValidationUtils.validateOptionalUuid(request, 'createdByUserUuid', 'Created by user uuid must be a valid UUID');
     if (createdByUserUuidError != null) {
       return createdByUserUuidError;
+    }
+
+    return null;
+  }
+
+  static Response? _validateTransition(Request request, String nextStatus, String errorMessage) {
+    final previousRaw = request.data?['previousStatus'];
+    if (previousRaw is! String || previousRaw.trim().isEmpty) {
+      return null;
+    }
+
+    final previousStatus = previousRaw.trim().toLowerCase();
+    final allowedNext = _allowedTransitions[previousStatus];
+    if (allowedNext == null || !allowedNext.contains(nextStatus)) {
+      return ValidationUtils.badRequest(errorMessage);
     }
 
     return null;

@@ -4,6 +4,14 @@ import 'package:store_management/validations/validation_utils.dart';
 
 class TransferOrdersValidation {
   static const Set<String> _allowedStatuses = <String>{'draft', 'approved', 'in_transit', 'partially_received', 'received', 'cancelled'};
+  static const Map<String, Set<String>> _allowedTransitions = <String, Set<String>>{
+    'draft': <String>{'draft', 'approved', 'cancelled'},
+    'approved': <String>{'approved', 'in_transit', 'cancelled'},
+    'in_transit': <String>{'in_transit', 'partially_received', 'received', 'cancelled'},
+    'partially_received': <String>{'partially_received', 'received', 'cancelled'},
+    'received': <String>{'received'},
+    'cancelled': <String>{'cancelled'},
+  };
 
   static Response? validateRead(Request request) {
     final metadata = ValidationUtils.validateRequestMetadata(request);
@@ -44,6 +52,23 @@ class TransferOrdersValidation {
     if (statusError != null) return statusError;
     final status = (request.data?['status'] as String).trim().toLowerCase();
     if (!_allowedStatuses.contains(status)) return ValidationUtils.badRequest('Transfer order status is invalid');
+    if (requireId) {
+      final transitionError = _validateTransition(request, status, 'Transfer order status transition is invalid');
+      if (transitionError != null) return transitionError;
+    }
     return ValidationUtils.validateOptionalUuid(request, 'createdByUserUuid', 'Created by user uuid must be a valid UUID');
+  }
+
+  static Response? _validateTransition(Request request, String nextStatus, String errorMessage) {
+    final previousRaw = request.data?['previousStatus'];
+    if (previousRaw is! String || previousRaw.trim().isEmpty) return null;
+
+    final previousStatus = previousRaw.trim().toLowerCase();
+    final allowedNext = _allowedTransitions[previousStatus];
+    if (allowedNext == null || !allowedNext.contains(nextStatus)) {
+      return ValidationUtils.badRequest(errorMessage);
+    }
+
+    return null;
   }
 }

@@ -50,7 +50,8 @@ class TransferOrdersController {
 
   Response update({required Request request}) {
     try {
-      final validationError = TransferOrdersValidation.validateUpdate(request);
+      final effectiveRequest = _withPreviousStatus(request, transferOrder?.status);
+      final validationError = TransferOrdersValidation.validateUpdate(effectiveRequest);
       if (validationError != null) {
         return validationError;
       }
@@ -59,7 +60,7 @@ class TransferOrdersController {
         return ControllerUtils.notFound('Transfer order');
       }
 
-      transferOrder = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: transferOrder, toMap: (model) => model.toMap(), fromMap: TransferOrder.fromMap,
+      transferOrder = ControllerUtils.hydrateModelFromRequest(data: effectiveRequest.data!, existingModel: transferOrder, toMap: (model) => model.toMap(), fromMap: TransferOrder.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Transfer Order Updated', message: 'The transfer order has been updated successfully', data: transferOrder);
@@ -103,5 +104,14 @@ class TransferOrdersController {
     } catch (error) {
       return _errorResponse(error);
     }
+  }
+
+  Request _withPreviousStatus(Request request, String? currentStatus) {
+    final incomingStatus = request.data?['status'];
+    if (incomingStatus is! String || currentStatus == null) {
+      return request;
+    }
+
+    return request.copyWith(data: <String, dynamic>{...request.data!, 'previousStatus': currentStatus});
   }
 }

@@ -778,6 +778,29 @@ void main() {
       expect(response.message, 'Purchase order status is invalid');
     });
 
+    test('purchase orders controller enforces status transition progression', () {
+      final controller = PurchaseOrdersController();
+
+      controller.create(
+        request: buildRequest(data: buildPurchaseOrderData(status: 'submitted')),
+      );
+      final invalidTransition = controller.update(
+        request: buildRequest(
+          data: buildPurchaseOrderData(status: 'draft', notes: 'Attempted rollback after submission'),
+        ),
+      );
+      final validTransition = controller.update(
+        request: buildRequest(
+          data: buildPurchaseOrderData(status: 'partial_received', notes: 'Partially received shipment'),
+        ),
+      );
+
+      expect(invalidTransition.statusCode, 400);
+      expect(invalidTransition.message, 'Purchase order status transition is invalid');
+      expect(validTransition.statusCode, 200);
+      expect(validTransition.data?.status, 'partial_received');
+    });
+
     test('supplier invoices controller creates and reads supplier invoice data', () {
       final controller = SupplierInvoicesController();
 
@@ -801,6 +824,25 @@ void main() {
 
       expect(response.statusCode, 400);
       expect(response.message, 'Supplier invoice status is invalid');
+    });
+
+    test('supplier invoices controller enforces payment status transitions', () {
+      final controller = SupplierInvoicesController();
+
+      controller.create(
+        request: buildRequest(data: buildSupplierInvoiceData(status: 'open')),
+      );
+      final invalidTransition = controller.update(
+        request: buildRequest(data: buildSupplierInvoiceData(status: 'draft', taxAmount: 80)),
+      );
+      final validTransition = controller.update(
+        request: buildRequest(data: buildSupplierInvoiceData(status: 'partially_paid', taxAmount: 80)),
+      );
+
+      expect(invalidTransition.statusCode, 400);
+      expect(invalidTransition.message, 'Supplier invoice status transition is invalid');
+      expect(validTransition.statusCode, 200);
+      expect(validTransition.data?.status, 'partially_paid');
     });
 
     test('purchase order items controller creates and reads purchase order item data', () {

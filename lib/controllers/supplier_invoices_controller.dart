@@ -50,7 +50,8 @@ class SupplierInvoicesController {
 
   Response update({required Request request}) {
     try {
-      final validationError = SupplierInvoicesValidation.validateUpdate(request);
+      final effectiveRequest = _withPreviousStatus(request, supplierInvoice?.status);
+      final validationError = SupplierInvoicesValidation.validateUpdate(effectiveRequest);
       if (validationError != null) {
         return validationError;
       }
@@ -59,7 +60,7 @@ class SupplierInvoicesController {
         return ControllerUtils.notFound('Supplier invoice');
       }
 
-      supplierInvoice = ControllerUtils.hydrateModelFromRequest(data: request.data!, existingModel: supplierInvoice, toMap: (model) => model.toMap(), fromMap: SupplierInvoice.fromMap,
+      supplierInvoice = ControllerUtils.hydrateModelFromRequest(data: effectiveRequest.data!, existingModel: supplierInvoice, toMap: (model) => model.toMap(), fromMap: SupplierInvoice.fromMap,
       );
 
       return Response(statusCode: 200, title: 'Supplier Invoice Updated', message: 'The supplier invoice has been updated successfully', data: supplierInvoice);
@@ -103,5 +104,14 @@ class SupplierInvoicesController {
     } catch (error) {
       return _errorResponse(error);
     }
+  }
+
+  Request _withPreviousStatus(Request request, String? currentStatus) {
+    final incomingStatus = request.data?['status'];
+    if (incomingStatus is! String || currentStatus == null) {
+      return request;
+    }
+
+    return request.copyWith(data: <String, dynamic>{...request.data!, 'previousStatus': currentStatus});
   }
 }

@@ -49,6 +49,19 @@ void main() {
     expect(updated.statusCode, 200);
   });
 
+  test('transfer orders controller blocks backward status transition', () {
+    final controller = TransferOrdersController();
+
+    controller.create(request: buildRequest({'ownerUuid': ownerUuid, 'sourceBranchUuid': branchUuid, 'destinationBranchUuid': branch2Uuid, 'transferNumber': 'TR-002', 'status': 'approved', 'requestedAt': now}));
+
+    final response = controller.update(
+      request: buildRequest({'id': 1, 'ownerUuid': ownerUuid, 'sourceBranchUuid': branchUuid, 'destinationBranchUuid': branch2Uuid, 'transferNumber': 'TR-002', 'status': 'draft', 'requestedAt': now}),
+    );
+
+    expect(response.statusCode, 400);
+    expect(response.message, 'Transfer order status transition is invalid');
+  });
+
   test('transfer order item hard delete works', () {
     final controller = TransferOrderItemsController();
     final created = controller.create(
@@ -118,6 +131,56 @@ void main() {
     expect(orderResponse.statusCode, 201);
     expect(invoiceResponse.statusCode, 201);
     expect(returnResponse.statusCode, 201);
+  });
+
+  test('sales orders controller enforces status progression on update', () {
+    final controller = SalesOrdersController();
+
+    controller.create(
+      request: buildRequest({
+        'ownerUuid': ownerUuid,
+        'storeUuid': storeUuid,
+        'branchUuid': branchUuid,
+        'customerUuid': customerUuid,
+        'orderNumber': 'SO-002',
+        'orderDate': now,
+        'status': 'confirmed',
+        'pricingStrategy': 'branch',
+      }),
+    );
+
+    final invalid = controller.update(
+      request: buildRequest({
+        'id': 1,
+        'ownerUuid': ownerUuid,
+        'storeUuid': storeUuid,
+        'branchUuid': branchUuid,
+        'customerUuid': customerUuid,
+        'orderNumber': 'SO-002',
+        'orderDate': now,
+        'status': 'draft',
+        'pricingStrategy': 'branch',
+      }),
+    );
+
+    final valid = controller.update(
+      request: buildRequest({
+        'id': 1,
+        'ownerUuid': ownerUuid,
+        'storeUuid': storeUuid,
+        'branchUuid': branchUuid,
+        'customerUuid': customerUuid,
+        'orderNumber': 'SO-002',
+        'orderDate': now,
+        'status': 'fulfilled',
+        'pricingStrategy': 'branch',
+      }),
+    );
+
+    expect(invalid.statusCode, 400);
+    expect(invalid.message, 'Sales order status transition is invalid');
+    expect(valid.statusCode, 200);
+    expect(valid.data?.status, 'fulfilled');
   });
 
   test('pricing controllers create works', () {

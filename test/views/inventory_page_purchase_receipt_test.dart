@@ -306,12 +306,27 @@ void main() {
     await tester.tap(relationsChip);
     await tester.pumpAndSettle();
 
+    expect(find.byKey(const Key('inventory-relations-groups')), findsOneWidget);
+    expect(find.byKey(const Key('inventory-relations-tabbar')), findsOneWidget);
+    expect(find.text('Access'), findsOneWidget);
+    expect(find.text('Partners'), findsOneWidget);
+    expect(find.text('Structure'), findsOneWidget);
+    expect(find.text('Financial Lines'), findsOneWidget);
     expect(find.text('User Roles'), findsWidgets);
+    expect(find.text('Store Users'), findsWidgets);
+
+    await tester.tap(find.byKey(const Key('inventory-relations-group-partners')));
+    await tester.pumpAndSettle();
     expect(find.text('Store Suppliers'), findsWidgets);
     expect(find.text('Store Clients'), findsWidgets);
-    expect(find.text('Store Users'), findsWidgets);
+
+    await tester.tap(find.byKey(const Key('inventory-relations-group-structure')));
+    await tester.pumpAndSettle();
     expect(find.text('Store Branches'), findsWidgets);
     expect(find.text('Branch Products'), findsWidgets);
+
+    await tester.tap(find.byKey(const Key('inventory-relations-group-financials')));
+    await tester.pumpAndSettle();
     expect(find.text('Invoice Items'), findsWidgets);
     expect(find.text('Payment Allocations'), findsWidgets);
     expect(find.text('Return Items'), findsWidgets);
@@ -339,6 +354,9 @@ void main() {
     final relationsChip = find.widgetWithText(ChoiceChip, 'Relations');
     await tester.ensureVisible(relationsChip);
     await tester.tap(relationsChip);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('inventory-relations-group-financials')));
     await tester.pumpAndSettle();
 
     final paymentTab = find.text('Payment Allocations').first;

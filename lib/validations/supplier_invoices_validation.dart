@@ -11,6 +11,14 @@ class SupplierInvoicesValidation {
     'cancelled',
   };
 
+  static const Map<String, Set<String>> _allowedTransitions = <String, Set<String>>{
+    'draft': <String>{'draft', 'open', 'cancelled'},
+    'open': <String>{'open', 'partially_paid', 'paid', 'cancelled'},
+    'partially_paid': <String>{'partially_paid', 'paid', 'cancelled'},
+    'paid': <String>{'paid'},
+    'cancelled': <String>{'cancelled'},
+  };
+
   static Response? validateRead(Request request) {
     final metadataError = ValidationUtils.validateRequestMetadata(request);
     if (metadataError != null) {
@@ -111,6 +119,28 @@ class SupplierInvoicesValidation {
     final status = (request.data?['status'] as String).trim().toLowerCase();
     if (!_allowedStatuses.contains(status)) {
       return ValidationUtils.badRequest('Supplier invoice status is invalid');
+    }
+
+    if (requireId) {
+      final transitionError = _validateTransition(request, status, 'Supplier invoice status transition is invalid');
+      if (transitionError != null) {
+        return transitionError;
+      }
+    }
+
+    return null;
+  }
+
+  static Response? _validateTransition(Request request, String nextStatus, String errorMessage) {
+    final previousRaw = request.data?['previousStatus'];
+    if (previousRaw is! String || previousRaw.trim().isEmpty) {
+      return null;
+    }
+
+    final previousStatus = previousRaw.trim().toLowerCase();
+    final allowedNext = _allowedTransitions[previousStatus];
+    if (allowedNext == null || !allowedNext.contains(nextStatus)) {
+      return ValidationUtils.badRequest(errorMessage);
     }
 
     return null;
