@@ -327,7 +327,7 @@ class _ModelFormState extends State<ModelForm> {
                       controller.text = const JsonEncoder.withIndent('  ').convert(updated);
                     },
               icon: const Icon(Icons.admin_panel_settings_rounded),
-              label: Text(l10n.isArabic ? 'محرر الصلاحيات المرئي' : 'Open Visual Permission Editor'),
+              label: Text(l10n.openVisualPermissionEditor),
             ),
           ),
         ],
@@ -395,7 +395,7 @@ class _ModelFormState extends State<ModelForm> {
                         state.didChange(result.value);
                       },
                 icon: const Icon(Icons.search_rounded),
-                label: Text(field.searchButtonLabel ?? (l10n.isArabic ? 'بحث' : 'Search')),
+                label: Text(field.searchButtonLabel ?? l10n.searchAction),
               ),
               if (!field.readOnly && selectedValue != null)
                 IconButton(
@@ -417,7 +417,7 @@ class _ModelFormState extends State<ModelForm> {
 
   String _searchFieldPlaceholder(BuildContext context) {
     final l10n = context.l10n;
-    return l10n.isArabic ? 'لم يتم تحديد قيمة' : 'No value selected';
+    return l10n.noValueSelected;
   }
 
   Future<_SelectionSearchResult?> _showSelectionSearchDialog({required BuildContext context, required ModelFormFieldDefinition field, required List<ModelFormSelectOption> options}) async {
@@ -485,7 +485,7 @@ class _ModelFormState extends State<ModelForm> {
                             Navigator.of(dialogContext).pop(_SelectionSearchResult(value: created.value, createdOption: created));
                           },
                           icon: const Icon(Icons.add_rounded),
-                          label: Text(field.addNewButtonLabel ?? (l10n.isArabic ? 'إضافة جديد' : 'Add new')),
+                          label: Text(field.addNewButtonLabel ?? l10n.addNew),
                         ),
                       ),
                   ],

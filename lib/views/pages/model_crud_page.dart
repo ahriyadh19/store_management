@@ -249,7 +249,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
                 ),
                 const SizedBox(width: 16),
                 IconButton(
-                  tooltip: l10n.isArabic ? 'تحديث' : 'Refresh',
+                  tooltip: l10n.refresh,
                   onPressed: _isLoading
                       ? null
                       : () {
@@ -259,10 +259,10 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
                 ),
                 const SizedBox(width: 8),
                 if (_canSyncRecords) ...[
-                  FilledButton.icon(onPressed: _isLoading || _viewState.sortedRecords.isEmpty ? null : _syncAllRecords, icon: const Icon(Icons.sync_rounded), label: Text(l10n.isArabic ? 'مزامنة الكل' : 'Sync All')),
+                  FilledButton.icon(onPressed: _isLoading || _viewState.sortedRecords.isEmpty ? null : _syncAllRecords, icon: const Icon(Icons.sync_rounded), label: Text(l10n.syncAll)),
                   const SizedBox(width: 12),
                 ],
-                _SummaryChip(label: l10n.isArabic ? 'متزامن' : 'Synced', value: '$syncedCount/${_viewState.totalRowCount}'),
+                _SummaryChip(label: l10n.synced, value: '$syncedCount/${_viewState.totalRowCount}'),
                 const SizedBox(width: 12),
                 _SummaryChip(label: l10n.rows, value: _summaryRowCountLabel),
               ],
@@ -1514,7 +1514,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       if (!mounted) {
         return;
       }
-      _showFeedback(context.l10n.isArabic ? 'تمت مزامنة السجل بنجاح.' : 'Record synced successfully.');
+      _showFeedback(context.l10n.recordSyncedSuccessfully);
     } catch (error) {
       if (!mounted) {
         return;
@@ -1565,7 +1565,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       return;
     }
 
-    final message = context.l10n.isArabic ? 'تمت مزامنة $syncedCount سجلات.' : 'Synced $syncedCount records.';
+    final message = context.l10n.syncedRecords('$syncedCount');
     _showFeedback(message);
   }
 
@@ -1590,7 +1590,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       return;
     }
 
-    throw StateError('No sync delegate available for ${widget.entityLabel}.');
+    throw StateError(context.l10n.noSyncDelegateAvailable(widget.entityLabel));
   }
 
   Widget _buildUnauthorizedCard(BuildContext context) {
@@ -1604,7 +1604,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
           children: [
             Icon(Icons.lock_outline_rounded, color: colorScheme.error),
             const SizedBox(width: 12),
-            Expanded(child: Text('You do not have permission to access this section.', style: theme.textTheme.bodyLarge)),
+            Expanded(child: Text(context.l10n.unauthorizedSectionMessage, style: theme.textTheme.bodyLarge)),
           ],
         ),
       ),
@@ -1614,7 +1614,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   void _showAccessDenied() {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(content: Text('Access denied: your role does not allow this action.')));
+      ..showSnackBar(SnackBar(content: Text(context.l10n.accessDeniedActionNotAllowed)));
   }
 }
 
@@ -1904,7 +1904,7 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
     if (_isCompactLayout) {
       final availableActions = <PopupMenuItem<_RowAction>>[];
       if (_canSync) {
-        availableActions.add(PopupMenuItem<_RowAction>(value: _RowAction.sync, enabled: !isSynced, child: Text(isSynced ? (_l10n.isArabic ? 'Synced' : 'Synced') : (_l10n.isArabic ? 'Sync' : 'Sync'))));
+        availableActions.add(PopupMenuItem<_RowAction>(value: _RowAction.sync, enabled: !isSynced, child: Text(isSynced ? _l10n.synced : _l10n.sync)));
       }
       if (_canView) {
         availableActions.add(PopupMenuItem<_RowAction>(value: _RowAction.view, child: Text(_l10n.viewEntity(_entityLabel))));
@@ -1949,7 +1949,7 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
         children: [
           if (_canSync)
             IconButton(
-              tooltip: isSynced ? (_l10n.isArabic ? 'Synced' : 'Synced') : (_l10n.isArabic ? 'Sync' : 'Sync'),
+              tooltip: isSynced ? _l10n.synced : _l10n.sync,
               onPressed: isSynced ? null : () => _onSync(record),
               icon: Icon(isSynced ? Icons.check_circle_outline_rounded : Icons.sync_rounded, size: 20),
             ),
@@ -2136,9 +2136,9 @@ class _ModelDetailsPage extends StatelessWidget {
       case 'uuid':
         return 'UUID';
       case 'createdAt':
-        return l10n.isArabic ? 'تاريخ الإنشاء' : 'Created at';
+        return l10n.createdAt;
       case 'updatedAt':
-        return l10n.isArabic ? 'تاريخ التحديث' : 'Updated at';
+        return l10n.updatedAt;
       default:
         return key;
     }

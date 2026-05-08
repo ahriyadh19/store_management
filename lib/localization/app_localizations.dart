@@ -203,6 +203,52 @@ class AppLocalizations {
     'clearSearch': 'Clear search',
     'noMatchingRecords': 'No records match the current search.',
     'noDataAvailable': 'No data available.',
+    'refresh': 'Refresh',
+    'syncAll': 'Sync all',
+    'sync': 'Sync',
+    'synced': 'Synced',
+    'recordSyncedSuccessfully': 'Record synced successfully.',
+    'syncedRecords': 'Synced {count} records.',
+    'createdAt': 'Created at',
+    'updatedAt': 'Updated at',
+    'unauthorizedSectionMessage': 'You do not have permission to access this section.',
+    'accessDeniedPageUnavailable': 'Access denied: this page is not available for your role.',
+    'accessDeniedActionNotAllowed': 'Access denied: your role does not allow this action.',
+    'scrollLeft': 'Scroll left',
+    'scrollRight': 'Scroll right',
+    'permissionEditorTitle': 'Permission editor',
+    'searchPermissions': 'Search permissions',
+    'searchPermissionsHint': 'Search by key or label',
+    'apply': 'Apply',
+    'openVisualPermissionEditor': 'Open visual permission editor',
+    'searchAction': 'Search',
+    'noValueSelected': 'No value selected',
+    'addNew': 'Add new',
+    'syncConflictDiagnostics': 'Sync conflict diagnostics',
+    'unknown': 'Unknown',
+    'syncConflictOverrodePendingLocalEdits': 'Remote changes overrode pending local edits.',
+    'conflictedRecords': 'Conflicted records: {count}',
+    'latestConflictAt': 'Latest conflict at: {dateTime}',
+    'purchaseReceiving': 'Purchase receiving',
+    'purchaseReceivingDescription': 'Create inventory batch and post purchase receipt in one action.',
+    'ownerUuidLabel': 'Owner UUID',
+    'storeUuidLabel': 'Store UUID',
+    'branchUuidLabel': 'Branch UUID',
+    'supplierUuidLabel': 'Supplier UUID',
+    'supplierInvoiceUuidLabel': 'Supplier invoice UUID',
+    'productUuidLabel': 'Product UUID',
+    'batchNumberLabel': 'Batch number',
+    'quantityLabel': 'Quantity',
+    'unitCostLabel': 'Unit cost',
+    'expiryDateLabel': 'Expiry date (YYYY-MM-DD)',
+    'staffUserUuidLabel': 'Staff user UUID',
+    'posting': 'Posting...',
+    'postPurchaseReceipt': 'Post purchase receipt',
+    'validPositiveNumbersRequired': 'Quantity and unit cost must be valid positive numbers.',
+    'expiryDateFormatError': 'Expiry date must use YYYY-MM-DD format.',
+    'purchaseReceiptPosted': 'Purchase receipt posted. Batch: {batchUuid}',
+    'purchaseReceiptPostFailed': 'Failed to post purchase receipt: {error}',
+    'noSyncDelegateAvailable': 'No sync delegate available for {entity}.',
     'dataTableTitle': '{title} Datatable',
     'recordsHeader': '{entity} records',
     'createEntity': 'Create {entity}',
@@ -417,6 +463,52 @@ class AppLocalizations {
     'clearSearch': 'مسح البحث',
     'noMatchingRecords': 'لا توجد سجلات تطابق البحث الحالي.',
     'noDataAvailable': 'لا توجد بيانات.',
+    'refresh': 'تحديث',
+    'syncAll': 'مزامنة الكل',
+    'sync': 'مزامنة',
+    'synced': 'متزامن',
+    'recordSyncedSuccessfully': 'تمت مزامنة السجل بنجاح.',
+    'syncedRecords': 'تمت مزامنة {count} سجلات.',
+    'createdAt': 'تاريخ الإنشاء',
+    'updatedAt': 'تاريخ التحديث',
+    'unauthorizedSectionMessage': 'ليست لديك صلاحية الوصول إلى هذا القسم.',
+    'accessDeniedPageUnavailable': 'تم رفض الوصول: هذه الصفحة غير متاحة لدورك.',
+    'accessDeniedActionNotAllowed': 'تم رفض الوصول: دورك لا يسمح بهذا الإجراء.',
+    'scrollLeft': 'التمرير لليسار',
+    'scrollRight': 'التمرير لليمين',
+    'permissionEditorTitle': 'محرر الصلاحيات',
+    'searchPermissions': 'بحث في الصلاحيات',
+    'searchPermissionsHint': 'ابحث بالمفتاح أو التسمية',
+    'apply': 'تطبيق',
+    'openVisualPermissionEditor': 'فتح محرر الصلاحيات المرئي',
+    'searchAction': 'بحث',
+    'noValueSelected': 'لم يتم تحديد قيمة',
+    'addNew': 'إضافة جديد',
+    'syncConflictDiagnostics': 'تشخيص تعارضات المزامنة',
+    'unknown': 'غير معروف',
+    'syncConflictOverrodePendingLocalEdits': 'تجاوزت التغييرات البعيدة التعديلات المحلية المعلقة.',
+    'conflictedRecords': 'السجلات المتعارضة: {count}',
+    'latestConflictAt': 'آخر تعارض في: {dateTime}',
+    'purchaseReceiving': 'استلام المشتريات',
+    'purchaseReceivingDescription': 'أنشئ دفعة مخزون وسجّل استلام الشراء في إجراء واحد.',
+    'ownerUuidLabel': 'معرف المالك',
+    'storeUuidLabel': 'معرف المتجر',
+    'branchUuidLabel': 'معرف الفرع',
+    'supplierUuidLabel': 'معرف المورد',
+    'supplierInvoiceUuidLabel': 'معرف فاتورة المورد',
+    'productUuidLabel': 'معرف المنتج',
+    'batchNumberLabel': 'رقم الدفعة',
+    'quantityLabel': 'الكمية',
+    'unitCostLabel': 'تكلفة الوحدة',
+    'expiryDateLabel': 'تاريخ الانتهاء (YYYY-MM-DD)',
+    'staffUserUuidLabel': 'معرف الموظف',
+    'posting': 'جارٍ الترحيل...',
+    'postPurchaseReceipt': 'ترحيل استلام الشراء',
+    'validPositiveNumbersRequired': 'يجب أن تكون الكمية وتكلفة الوحدة أرقامًا موجبة صالحة.',
+    'expiryDateFormatError': 'يجب أن يستخدم تاريخ الانتهاء التنسيق YYYY-MM-DD.',
+    'purchaseReceiptPosted': 'تم ترحيل استلام الشراء. الدفعة: {batchUuid}',
+    'purchaseReceiptPostFailed': 'فشل ترحيل استلام الشراء: {error}',
+    'noSyncDelegateAvailable': 'لا توجد آلية مزامنة متاحة لـ {entity}.',
     'dataTableTitle': 'جدول {title}',
     'recordsHeader': 'سجلات {entity}',
     'createEntity': 'إنشاء {entity}',
@@ -641,6 +733,52 @@ class AppLocalizations {
   String get clearSearch => _text('clearSearch');
   String get noMatchingRecords => _text('noMatchingRecords');
   String get noDataAvailable => _text('noDataAvailable');
+  String get refresh => _text('refresh');
+  String get syncAll => _text('syncAll');
+  String get sync => _text('sync');
+  String get synced => _text('synced');
+  String get recordSyncedSuccessfully => _text('recordSyncedSuccessfully');
+  String syncedRecords(String count) => _text('syncedRecords', {'count': count});
+  String get createdAt => _text('createdAt');
+  String get updatedAt => _text('updatedAt');
+  String get unauthorizedSectionMessage => _text('unauthorizedSectionMessage');
+  String get accessDeniedPageUnavailable => _text('accessDeniedPageUnavailable');
+  String get accessDeniedActionNotAllowed => _text('accessDeniedActionNotAllowed');
+  String get scrollLeft => _text('scrollLeft');
+  String get scrollRight => _text('scrollRight');
+  String get permissionEditorTitle => _text('permissionEditorTitle');
+  String get searchPermissions => _text('searchPermissions');
+  String get searchPermissionsHint => _text('searchPermissionsHint');
+  String get apply => _text('apply');
+  String get openVisualPermissionEditor => _text('openVisualPermissionEditor');
+  String get searchAction => _text('searchAction');
+  String get noValueSelected => _text('noValueSelected');
+  String get addNew => _text('addNew');
+  String get syncConflictDiagnostics => _text('syncConflictDiagnostics');
+  String get unknown => _text('unknown');
+  String get syncConflictOverrodePendingLocalEdits => _text('syncConflictOverrodePendingLocalEdits');
+  String conflictedRecords(String count) => _text('conflictedRecords', {'count': count});
+  String latestConflictAt(String dateTime) => _text('latestConflictAt', {'dateTime': dateTime});
+  String get purchaseReceiving => _text('purchaseReceiving');
+  String get purchaseReceivingDescription => _text('purchaseReceivingDescription');
+  String get ownerUuidLabel => _text('ownerUuidLabel');
+  String get storeUuidLabel => _text('storeUuidLabel');
+  String get branchUuidLabel => _text('branchUuidLabel');
+  String get supplierUuidLabel => _text('supplierUuidLabel');
+  String get supplierInvoiceUuidLabel => _text('supplierInvoiceUuidLabel');
+  String get productUuidLabel => _text('productUuidLabel');
+  String get batchNumberLabel => _text('batchNumberLabel');
+  String get quantityLabel => _text('quantityLabel');
+  String get unitCostLabel => _text('unitCostLabel');
+  String get expiryDateLabel => _text('expiryDateLabel');
+  String get staffUserUuidLabel => _text('staffUserUuidLabel');
+  String get posting => _text('posting');
+  String get postPurchaseReceipt => _text('postPurchaseReceipt');
+  String get validPositiveNumbersRequired => _text('validPositiveNumbersRequired');
+  String get expiryDateFormatError => _text('expiryDateFormatError');
+  String purchaseReceiptPosted(String batchUuid) => _text('purchaseReceiptPosted', {'batchUuid': batchUuid});
+  String purchaseReceiptPostFailed(String error) => _text('purchaseReceiptPostFailed', {'error': error});
+  String noSyncDelegateAvailable(String entity) => _text('noSyncDelegateAvailable', {'entity': entity});
   String dataTableTitle(String title) => _text('dataTableTitle', {'title': title});
   String recordsHeader(String entity) => _text('recordsHeader', {'entity': entity});
   String createEntity(String entity) => _text('createEntity', {'entity': entity});

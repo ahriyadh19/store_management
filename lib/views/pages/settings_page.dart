@@ -96,7 +96,7 @@ class SettingsPage extends StatelessWidget {
                     ),
                     if (conflictedRecords.isNotEmpty) ...[
                       const SizedBox(height: 20),
-                      Text('Sync conflict diagnostics', style: theme.textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant)),
+                      Text(l10n.syncConflictDiagnostics, style: theme.textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant)),
                       const SizedBox(height: 8),
                       _SyncConflictDiagnosticsTile(conflictedRecordsCount: conflictedRecords.length, latestConflictMillis: latestConflict),
                     ],
@@ -119,9 +119,10 @@ class _SyncConflictDiagnosticsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final latestConflictText = latestConflictMillis == null ? 'Unknown' : DateTime.fromMillisecondsSinceEpoch(latestConflictMillis!, isUtc: false).toLocal().toIso8601String();
+    final latestConflictText = latestConflictMillis == null ? l10n.unknown : DateTime.fromMillisecondsSinceEpoch(latestConflictMillis!, isUtc: false).toLocal().toIso8601String();
 
     return Container(
       decoration: BoxDecoration(
@@ -139,10 +140,10 @@ class _SyncConflictDiagnosticsTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Remote changes overrode pending local edits.', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+                Text(l10n.syncConflictOverrodePendingLocalEdits, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
-                Text('Conflicted records: $conflictedRecordsCount', style: theme.textTheme.bodySmall),
-                Text('Latest conflict at: $latestConflictText', style: theme.textTheme.bodySmall),
+                Text(l10n.conflictedRecords('$conflictedRecordsCount'), style: theme.textTheme.bodySmall),
+                Text(l10n.latestConflictAt(latestConflictText), style: theme.textTheme.bodySmall),
               ],
             ),
           ),

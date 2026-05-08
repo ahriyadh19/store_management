@@ -1040,9 +1040,11 @@ alter table if exists public.branch add column if not exists "storeUuid" uuid;
 update public.branch b
 set "storeUuid" = sb."storeUuid"
 from (
-  select "branchUuid", min("storeUuid") as "storeUuid"
+select distinct on ("branchUuid") "branchUuid", "storeUuid"
   from public.store_branches
-  group by "branchUuid"
+where
+    "deletedAt" is null
+order by "branchUuid", "createdAt" asc, "storeUuid" asc
 ) sb
 where b.uuid = sb."branchUuid"
   and b."storeUuid" is null;

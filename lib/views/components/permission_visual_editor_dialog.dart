@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/services/access_control_service.dart';
 
 class PermissionVisualEditorDialog extends StatefulWidget {
@@ -43,23 +44,24 @@ class _PermissionVisualEditorDialogState extends State<PermissionVisualEditorDia
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final groups = PermissionCatalog.permissionGroups();
     final query = _searchController.text.trim().toLowerCase();
+    final mediaSize = MediaQuery.of(context).size;
+    final dialogWidth = mediaSize.width > 960 ? 880.0 : mediaSize.width * 0.92;
+    final dialogHeight = mediaSize.height > 760 ? 560.0 : mediaSize.height * 0.72;
 
     return AlertDialog(
-      title: const Text('Permission Editor'),
+      title: Text(l10n.permissionEditorTitle),
       content: SizedBox(
-        width: 880,
+        width: dialogWidth,
+        height: dialogHeight,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: MainAxisSize.max,
           children: [
             TextField(
               controller: _searchController,
-              decoration: const InputDecoration(
-                labelText: 'Search permissions',
-                hintText: 'Search by key or label',
-                prefixIcon: Icon(Icons.search_rounded),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(labelText: l10n.searchPermissions, hintText: l10n.searchPermissionsHint, prefixIcon: const Icon(Icons.search_rounded), border: const OutlineInputBorder(),
               ),
               onChanged: (_) => setState(() {}),
             ),
@@ -81,7 +83,7 @@ class _PermissionVisualEditorDialogState extends State<PermissionVisualEditorDia
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           onPressed: () {
@@ -91,7 +93,7 @@ class _PermissionVisualEditorDialogState extends State<PermissionVisualEditorDia
             };
             Navigator.of(context).pop(output);
           },
-          child: const Text('Apply'),
+          child: Text(l10n.apply),
         ),
       ],
     );

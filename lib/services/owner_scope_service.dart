@@ -47,21 +47,27 @@ class OwnerScopeService {
         return _cache(const OwnerScope(userUuid: null, ownerUuid: null, storeUuids: <String>{}, branchUuids: <String>{}));
       }
 
-      final memberships = await _client
-          .from('owner_user_membership')
-          .select('ownerUuid,status,deletedAt,createdAt')
-          .eq('userUuid', userUuid)
-          .eq('status', 1)
-          .isFilter('deletedAt', null)
-          .order('createdAt', ascending: true)
-          .limit(1);
+      String? ownerUuid;
+      try {
+        final memberships = await _client
+            .from('owner_user_membership')
+            .select('ownerUuid,status,deletedAt,createdAt')
+            .eq('userUuid', userUuid)
+            .eq('status', 1)
+            .isFilter('deletedAt', null)
+            .order('createdAt', ascending: true)
+            .limit(1);
 
-      final membershipRows = memberships as List<dynamic>;
-      if (membershipRows.isEmpty) {
-        return _cache(OwnerScope(userUuid: userUuid, ownerUuid: null, storeUuids: const <String>{}, branchUuids: const <String>{}));
+        final membershipRows = memberships as List<dynamic>;
+        if (membershipRows.isNotEmpty) {
+          ownerUuid = (membershipRows.first as Map<String, dynamic>)['ownerUuid']?.toString();
+        }
+      } catch (_) {
+        // Fall back to role-based scope resolution if membership query fails.
       }
 
-      final ownerUuid = (membershipRows.first as Map<String, dynamic>)['ownerUuid']?.toString();
+      ownerUuid ??= await _resolveOwnerUuidFromAssignedRoles(userUuid);
+
       if (ownerUuid == null || ownerUuid.isEmpty) {
         return _cache(OwnerScope(userUuid: userUuid, ownerUuid: null, storeUuids: const <String>{}, branchUuids: const <String>{}));
       }
@@ -133,6 +139,49 @@ class OwnerScopeService {
   OwnerScope _cache(OwnerScope scope) {
     _cached = _CachedScope(scope: scope, expiresAt: DateTime.now().add(_cacheTtl));
     return scope;
+  }
+
+  Future<String?> _resolveOwnerUuidFromAssignedRoles(String userUuid) async {
+    try {
+      final userRoleRows = (await _client
+          .from('user_roles')
+          .select('roleUuid,status,deletedAt')
+          .eq('userUuid', userUuid)
+          .eq('status', 1)
+          .isFilter('deletedAt', null)) as List<dynamic>;
+
+      final roleUuids = userRoleRows
+          .map((row) => (row as Map<String, dynamic>)['roleUuid']?.toString())
+          .whereType<String>()
+          .where((uuid) => uuid.isNotEmpty)
+          .toList(growable: false);
+
+      if (roleUuids.isEmpty) {
+        return null;
+      }
+
+      final roleRows = (await _client
+          .from('roles')
+          .select('ownerUuid,status,deletedAt,createdAt')
+          .inFilter('uuid', roleUuids)
+          .eq('status', 1)
+          .isFilter('deletedAt', null)
+          .order('createdAt', ascending: true)
+          .limit(1)) as List<dynamic>;
+
+      if (roleRows.isEmpty) {
+        return null;
+      }
+
+      final ownerUuid = (roleRows.first as Map<String, dynamic>)['ownerUuid']?.toString();
+      if (ownerUuid == null || ownerUuid.isEmpty) {
+        return null;
+      }
+
+      return ownerUuid;
+    } catch (_) {
+      return null;
+    }
   }
 }
 

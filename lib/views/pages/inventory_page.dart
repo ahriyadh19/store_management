@@ -619,6 +619,7 @@ class _InventoryPageState extends State<InventoryPage> {
   }
 
   Widget _buildPurchaseReceiptCard(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     return Card(
       child: Padding(
@@ -628,25 +629,25 @@ class _InventoryPageState extends State<InventoryPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Purchase receiving', style: theme.textTheme.titleLarge),
+              Text(l10n.purchaseReceiving, style: theme.textTheme.titleLarge),
               const SizedBox(height: 6),
-              Text('Create inventory batch and post purchase receipt in one action.', style: theme.textTheme.bodyMedium),
+              Text(l10n.purchaseReceivingDescription, style: theme.textTheme.bodyMedium),
               const SizedBox(height: 14),
               Wrap(
                 spacing: 12,
                 runSpacing: 12,
                 children: [
-                  _field(_ownerUuidController, 'Owner UUID', fieldKey: 'ownerUuid', required: true),
-                  _field(_storeUuidController, 'Store UUID', fieldKey: 'storeUuid', required: true),
-                  _field(_branchUuidController, 'Branch UUID', fieldKey: 'branchUuid', required: true),
-                  _field(_supplierUuidController, 'Supplier UUID', fieldKey: 'supplierUuid', required: true),
-                  _field(_supplierInvoiceUuidController, 'Supplier invoice UUID', fieldKey: 'supplierInvoiceUuid', required: true),
-                  _field(_productUuidController, 'Product UUID', fieldKey: 'productUuid', required: true),
-                  _field(_batchNumberController, 'Batch number', fieldKey: 'batchNumber'),
-                  _field(_quantityController, 'Quantity', fieldKey: 'quantity', required: true, isNumber: true),
-                  _field(_unitCostController, 'Unit cost', fieldKey: 'unitCost', required: true, isNumber: true),
-                  _field(_expiryDateController, 'Expiry date (YYYY-MM-DD)', fieldKey: 'expiryDate'),
-                  _field(_staffUserUuidController, 'Staff user UUID', fieldKey: 'staffUserUuid'),
+                  _field(_ownerUuidController, l10n.ownerUuidLabel, fieldKey: 'ownerUuid', required: true),
+                  _field(_storeUuidController, l10n.storeUuidLabel, fieldKey: 'storeUuid', required: true),
+                  _field(_branchUuidController, l10n.branchUuidLabel, fieldKey: 'branchUuid', required: true),
+                  _field(_supplierUuidController, l10n.supplierUuidLabel, fieldKey: 'supplierUuid', required: true),
+                  _field(_supplierInvoiceUuidController, l10n.supplierInvoiceUuidLabel, fieldKey: 'supplierInvoiceUuid', required: true),
+                  _field(_productUuidController, l10n.productUuidLabel, fieldKey: 'productUuid', required: true),
+                  _field(_batchNumberController, l10n.batchNumberLabel, fieldKey: 'batchNumber'),
+                  _field(_quantityController, l10n.quantityLabel, fieldKey: 'quantity', required: true, isNumber: true),
+                  _field(_unitCostController, l10n.unitCostLabel, fieldKey: 'unitCost', required: true, isNumber: true),
+                  _field(_expiryDateController, l10n.expiryDateLabel, fieldKey: 'expiryDate'),
+                  _field(_staffUserUuidController, l10n.staffUserUuidLabel, fieldKey: 'staffUserUuid'),
                 ],
               ),
               const SizedBox(height: 12),
@@ -654,7 +655,7 @@ class _InventoryPageState extends State<InventoryPage> {
                 key: const Key('purchase-receipt-submit'),
                 onPressed: _postingReceipt ? null : _submitPurchaseReceipt,
                 icon: _postingReceipt ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.inventory_2_rounded),
-                label: Text(_postingReceipt ? 'Posting...' : 'Post purchase receipt'),
+                label: Text(_postingReceipt ? l10n.posting : l10n.postPurchaseReceipt),
               ),
             ],
           ),
@@ -664,6 +665,7 @@ class _InventoryPageState extends State<InventoryPage> {
   }
 
   Widget _field(TextEditingController controller, String label, {String? fieldKey, bool required = false, bool isNumber = false}) {
+    final l10n = context.l10n;
     return SizedBox(
       width: 260,
       child: TextFormField(
@@ -673,10 +675,10 @@ class _InventoryPageState extends State<InventoryPage> {
         decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
         validator: (value) {
           if (required && (value == null || value.trim().isEmpty)) {
-            return '$label is required';
+            return l10n.fieldRequired(label);
           }
           if (isNumber && value != null && value.trim().isNotEmpty && num.tryParse(value.trim()) == null) {
-            return 'Enter a valid number';
+            return l10n.fieldMustBeNumber(label);
           }
           return null;
         },
@@ -709,8 +711,7 @@ class _InventoryPageState extends State<InventoryPage> {
     final quantity = int.tryParse(_quantityController.text.trim());
     final unitCost = num.tryParse(_unitCostController.text.trim());
     if (quantity == null || quantity <= 0 || unitCost == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Quantity and unit cost must be valid positive numbers.')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.validPositiveNumbersRequired)));
       return;
     }
 
@@ -720,7 +721,7 @@ class _InventoryPageState extends State<InventoryPage> {
       try {
         expiryDate = DateTime.parse(expiryRaw);
       } catch (_) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Expiry date must use YYYY-MM-DD format.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.expiryDateFormatError)));
         return;
       }
     }
@@ -779,7 +780,7 @@ class _InventoryPageState extends State<InventoryPage> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Purchase receipt posted. Batch: $batchUuid')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.purchaseReceiptPosted(batchUuid))));
       _batchNumberController.text = 'BATCH-${DateTime.now().millisecondsSinceEpoch}';
       _quantityController.text = '1';
       _unitCostController.clear();
@@ -788,7 +789,7 @@ class _InventoryPageState extends State<InventoryPage> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to post purchase receipt: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.purchaseReceiptPostFailed(error.toString()))));
     } finally {
       if (mounted) {
         setState(() {

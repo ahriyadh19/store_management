@@ -33,7 +33,8 @@ Widget _buildIndexDrawer(
   final user = authState.user;
   final theme = Theme.of(context);
   final colorScheme = theme.colorScheme;
-  final drawerSections = _buildDrawerSections(l10n, canViewPage: accessSnapshot.canViewPage);
+  final aclUnavailable = accessSnapshot.isLoading || accessSnapshot.lastError != null;
+  final drawerSections = _buildDrawerSections(l10n, canViewPage: (page) => aclUnavailable || accessSnapshot.canViewPage(page));
 
   return Drawer(
     width: 330,
@@ -379,7 +380,7 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
     if (!_canAccessPage(page)) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(const SnackBar(content: Text('Access denied: this page is not available for your role.')));
+        ..showSnackBar(SnackBar(content: Text(context.l10n.accessDeniedPageUnavailable)));
       return;
     }
 
@@ -698,6 +699,10 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
   }
 
   bool _canAccessPage(IndexPage page) {
+    if (_accessControlService.snapshot.isLoading || _accessControlService.snapshot.lastError != null) {
+      return true;
+    }
+
     if (page == IndexPage.settings) {
       return _accessControlService.canUseSettings();
     }
@@ -1054,7 +1059,7 @@ class _WorkspaceTabBar extends StatelessWidget {
         children: [
           IconButton(
             icon: const Icon(Icons.chevron_left_rounded),
-            tooltip: 'Scroll left',
+            tooltip: context.l10n.scrollLeft,
             onPressed: () {
               if (scrollController.hasClients) {
                 final newOffset = (scrollController.offset - 180).clamp(0.0, scrollController.position.maxScrollExtent);
@@ -1125,7 +1130,7 @@ class _WorkspaceTabBar extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.chevron_right_rounded),
-            tooltip: 'Scroll right',
+            tooltip: context.l10n.scrollRight,
             onPressed: () {
               if (scrollController.hasClients) {
                 final newOffset = (scrollController.offset + 180).clamp(0.0, scrollController.position.maxScrollExtent);
