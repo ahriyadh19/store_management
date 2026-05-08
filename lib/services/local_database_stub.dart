@@ -26,6 +26,7 @@ class LocalDatabase {
     required String payloadJson,
     required int updatedAtMillis,
     int? remoteUpdatedAtMillis,
+    int? conflictDetectedAtMillis,
     int syncState = OfflineSyncState.pendingUpsert,
     bool isDeleted = false,
   }) {
@@ -36,6 +37,7 @@ class LocalDatabase {
       payloadJson: payloadJson,
       updatedAtMillis: updatedAtMillis,
       remoteUpdatedAtMillis: remoteUpdatedAtMillis,
+      conflictDetectedAtMillis: conflictDetectedAtMillis,
       syncState: syncState,
       isDeleted: isDeleted,
     );
@@ -68,6 +70,8 @@ class LocalDatabase {
   OfflineSyncRecord? getRecord({required String modelType, required String recordUuid}) => null;
 
   List<OfflineSyncRecord> getRecordsForType(String modelType) => const [];
+
+  List<OfflineSyncRecord> getConflictedRecords() => const [];
 
   bool removeRecord({required String modelType, required String recordUuid}) => false;
 

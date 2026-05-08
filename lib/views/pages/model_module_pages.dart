@@ -46,6 +46,7 @@ import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/services/inventory_transaction_service.dart';
 import 'package:store_management/services/owner_scope_service.dart';
 import 'package:store_management/services/local_database.dart';
+import 'package:store_management/services/sync_conflict_resolution.dart';
 import 'package:store_management/views/components/model_form.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
@@ -1384,11 +1385,13 @@ Future<T> Function(T model, {int syncState}) _localCreateDelegate<T extends Obje
     payload['deletedAt'] = null;
 
     final recordUuid = _recordUuidFromPayload(payload, fallback: 'local-$now');
+    final existingRecord = database.getRecord(modelType: tableName, recordUuid: recordUuid);
     database.putRecord(
       modelType: tableName,
       recordUuid: recordUuid,
       payloadJson: jsonEncode(payload),
       updatedAtMillis: _updatedAtMillisFromPayload(payload, fallback: now),
+      remoteUpdatedAtMillis: _baselineRemoteUpdatedAtMillisForPendingWrite(existingRecord),
       syncState: syncState,
       isDeleted: false,
     );
@@ -1396,7 +1399,7 @@ Future<T> Function(T model, {int syncState}) _localCreateDelegate<T extends Obje
     if (tableName == 'purchase_order_item') {
       final purchaseOrderUuid = payload['purchaseOrderUuid']?.toString();
       if (purchaseOrderUuid != null && purchaseOrderUuid.isNotEmpty) {
-        _recalculatePurchaseOrderTotalLocal(purchaseOrderUuid: purchaseOrderUuid);
+        _recalculatePurchaseOrderTotalLocal(purchaseOrderUuid: purchaseOrderUuid, sourceSyncState: syncState);
       }
     }
 
@@ -1414,11 +1417,13 @@ Future<T> Function(T model, {int syncState}) _localUpdateDelegate<T extends Obje
     payload['deletedAt'] = null;
 
     final recordUuid = _recordUuidFromPayload(payload, fallback: 'local-$now');
+    final existingRecord = database.getRecord(modelType: tableName, recordUuid: recordUuid);
     database.putRecord(
       modelType: tableName,
       recordUuid: recordUuid,
       payloadJson: jsonEncode(payload),
       updatedAtMillis: _updatedAtMillisFromPayload(payload, fallback: now),
+      remoteUpdatedAtMillis: _baselineRemoteUpdatedAtMillisForPendingWrite(existingRecord),
       syncState: syncState,
       isDeleted: false,
     );
@@ -1426,7 +1431,7 @@ Future<T> Function(T model, {int syncState}) _localUpdateDelegate<T extends Obje
     if (tableName == 'purchase_order_item') {
       final purchaseOrderUuid = payload['purchaseOrderUuid']?.toString();
       if (purchaseOrderUuid != null && purchaseOrderUuid.isNotEmpty) {
-        _recalculatePurchaseOrderTotalLocal(purchaseOrderUuid: purchaseOrderUuid);
+        _recalculatePurchaseOrderTotalLocal(purchaseOrderUuid: purchaseOrderUuid, sourceSyncState: syncState);
       }
     }
 
@@ -1448,8 +1453,17 @@ Future<void> Function(T model, {int syncState}) _localDeleteDelegate<T extends O
     }
 
     final recordUuid = _recordUuidFromPayload(payload, fallback: 'local-$now');
+    final existingRecord = database.getRecord(modelType: tableName, recordUuid: recordUuid);
     if (supportsSoftDelete) {
-      database.putRecord(modelType: tableName, recordUuid: recordUuid, payloadJson: jsonEncode(payload), updatedAtMillis: now, syncState: syncState, isDeleted: true);
+      database.putRecord(
+        modelType: tableName,
+        recordUuid: recordUuid,
+        payloadJson: jsonEncode(payload),
+        updatedAtMillis: now,
+        remoteUpdatedAtMillis: _baselineRemoteUpdatedAtMillisForPendingWrite(existingRecord),
+        syncState: syncState,
+        isDeleted: true,
+      );
     } else {
       database.removeRecord(modelType: tableName, recordUuid: recordUuid);
     }
@@ -1457,7 +1471,7 @@ Future<void> Function(T model, {int syncState}) _localDeleteDelegate<T extends O
     if (tableName == 'purchase_order_item') {
       final purchaseOrderUuid = payload['purchaseOrderUuid']?.toString();
       if (purchaseOrderUuid != null && purchaseOrderUuid.isNotEmpty) {
-        _recalculatePurchaseOrderTotalLocal(purchaseOrderUuid: purchaseOrderUuid);
+        _recalculatePurchaseOrderTotalLocal(purchaseOrderUuid: purchaseOrderUuid, sourceSyncState: syncState);
       }
     }
   };
@@ -1484,11 +1498,13 @@ Future<void> _recalculatePurchaseOrderTotalRemote({required String purchaseOrder
   await query;
 }
 
-void _recalculatePurchaseOrderTotalLocal({required String purchaseOrderUuid}) {
+void _recalculatePurchaseOrderTotalLocal({required String purchaseOrderUuid, required int sourceSyncState}) {
   final database = LocalDatabase.current;
   if (database == null || !database.isAvailable) {
     return;
   }
+
+  final totalSyncState = sourceSyncState == OfflineSyncState.synced ? OfflineSyncState.synced : OfflineSyncState.pendingUpsert;
 
   var total = Decimal.zero;
   for (final localRecord in database.getRecordsForType('purchase_order_item')) {
@@ -1517,7 +1533,7 @@ void _recalculatePurchaseOrderTotalLocal({required String purchaseOrderUuid}) {
       final now = DateTime.now().millisecondsSinceEpoch;
       payload['totalAmount'] = total.toString();
       payload['updatedAt'] = now;
-      database.putRecord(modelType: 'purchase_order', recordUuid: purchaseOrderRecord.recordUuid, payloadJson: jsonEncode(payload), updatedAtMillis: now, syncState: OfflineSyncState.pendingUpsert, isDeleted: false);
+      database.putRecord(modelType: 'purchase_order', recordUuid: purchaseOrderRecord.recordUuid, payloadJson: jsonEncode(payload), updatedAtMillis: now, syncState: totalSyncState, isDeleted: false);
       return;
     } catch (_) {
       // Ignore malformed local records.
@@ -1607,7 +1623,14 @@ List<T> _mergePendingLocalRecords<T extends Object>({
     return remoteRecords;
   }
 
-  final recordByKey = <String, T>{for (final record in remoteRecords) _recordUuidFromPayload(toMap(record), fallback: toMap(record).toString()): record};
+  final recordByKey = <String, T>{};
+  final remoteUpdatedAtByKey = <String, int?>{};
+  for (final record in remoteRecords) {
+    final payload = toMap(record);
+    final recordUuid = _recordUuidFromPayload(payload, fallback: payload.toString());
+    recordByKey[recordUuid] = record;
+    remoteUpdatedAtByKey[recordUuid] = _updatedAtMillisOrNullFromPayload(payload);
+  }
 
   for (final localRecord in database.getRecordsForType(tableName)) {
     if (localRecord.syncState == OfflineSyncState.synced) {
@@ -1616,6 +1639,11 @@ List<T> _mergePendingLocalRecords<T extends Object>({
 
     if (localRecord.isDeleted || localRecord.syncState == OfflineSyncState.pendingDelete) {
       recordByKey.remove(localRecord.recordUuid);
+      continue;
+    }
+
+    final remoteUpdatedAtMillis = remoteUpdatedAtByKey[localRecord.recordUuid];
+    if (!shouldUsePendingLocalRecordInHybridMerge(localRecord: localRecord, remoteUpdatedAtMillis: remoteUpdatedAtMillis)) {
       continue;
     }
 
@@ -1641,11 +1669,25 @@ void _cacheRemoteRecords<T extends Object>({required String tableName, required 
     final payload = Map<String, dynamic>.from(toMap(record))..removeWhere((key, value) => value == null);
     final recordUuid = _recordUuidFromPayload(payload, fallback: payload.toString());
     remoteRecordUuids.add(recordUuid);
+    final remoteUpdatedAtMillis = _updatedAtMillisOrNullFromPayload(payload);
+
+    final existingRecord = database.getRecord(modelType: tableName, recordUuid: recordUuid);
+    if (existingRecord != null && existingRecord.syncState != OfflineSyncState.synced) {
+      final shouldKeepPendingLocal = shouldUsePendingLocalRecordInHybridMerge(localRecord: existingRecord, remoteUpdatedAtMillis: remoteUpdatedAtMillis);
+      if (shouldKeepPendingLocal) {
+        continue;
+      }
+    }
+
+    final conflictDetectedAtMillis = existingRecord != null && existingRecord.syncState != OfflineSyncState.synced ? DateTime.now().millisecondsSinceEpoch : null;
+
     database.putRecord(
       modelType: tableName,
       recordUuid: recordUuid,
       payloadJson: jsonEncode(payload),
-      updatedAtMillis: _updatedAtMillisFromPayload(payload, fallback: DateTime.now().millisecondsSinceEpoch),
+      updatedAtMillis: remoteUpdatedAtMillis ?? DateTime.now().millisecondsSinceEpoch,
+      remoteUpdatedAtMillis: remoteUpdatedAtMillis,
+      conflictDetectedAtMillis: conflictDetectedAtMillis,
       syncState: OfflineSyncState.synced,
       isDeleted: false,
     );
@@ -1685,6 +1727,37 @@ String _recordUuidFromPayload(Map<String, dynamic> payload, {required String fal
   }
 
   return fallback;
+}
+
+int? _updatedAtMillisOrNullFromPayload(Map<String, dynamic> payload) {
+  final value = payload['updatedAt'] ?? payload['updated_at'];
+  if (value is int) {
+    return value;
+  }
+  if (value is num) {
+    return value.toInt();
+  }
+  if (value is String) {
+    return int.tryParse(value);
+  }
+  return null;
+}
+
+int? _baselineRemoteUpdatedAtMillisForPendingWrite(OfflineSyncRecord? existingRecord) {
+  if (existingRecord == null) {
+    return null;
+  }
+
+  final baseline = existingRecord.remoteUpdatedAtMillis;
+  if (baseline != null) {
+    return baseline;
+  }
+
+  if (existingRecord.syncState == OfflineSyncState.synced) {
+    return existingRecord.updatedAtMillis;
+  }
+
+  return null;
 }
 
 int _updatedAtMillisFromPayload(Map<String, dynamic> payload, {required int fallback}) {

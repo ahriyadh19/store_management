@@ -35,6 +35,7 @@ class LocalDatabase {
     required String payloadJson,
     required int updatedAtMillis,
     int? remoteUpdatedAtMillis,
+    int? conflictDetectedAtMillis,
     int syncState = OfflineSyncState.pendingUpsert,
     bool isDeleted = false,
   }) {
@@ -45,6 +46,7 @@ class LocalDatabase {
       payloadJson: payloadJson,
       updatedAtMillis: updatedAtMillis,
       remoteUpdatedAtMillis: remoteUpdatedAtMillis,
+      conflictDetectedAtMillis: conflictDetectedAtMillis,
       syncState: syncState,
       isDeleted: isDeleted,
     );
@@ -88,6 +90,15 @@ class LocalDatabase {
 
   List<OfflineSyncRecord> getRecordsForType(String modelType) {
     final query = offlineSyncRecords.query(OfflineSyncRecord_.modelType.equals(modelType)).build();
+    try {
+      return query.find();
+    } finally {
+      query.close();
+    }
+  }
+
+  List<OfflineSyncRecord> getConflictedRecords() {
+    final query = offlineSyncRecords.query(OfflineSyncRecord_.conflictDetectedAtMillis.notNull()).build();
     try {
       return query.find();
     } finally {

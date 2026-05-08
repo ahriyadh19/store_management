@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:9107254583230726546",
-      "lastPropertyId": "9:8922167803272805751",
+      "lastPropertyId": "10:4824815441613426555",
       "name": "OfflineSyncRecord",
       "properties": [
         {
@@ -55,6 +55,11 @@
           "id": "9:8922167803272805751",
           "name": "isDeleted",
           "type": 1
+        },
+        {
+          "id": "10:4824815441613426555",
+          "name": "conflictDetectedAtMillis",
+          "type": 6
         }
       ],
       "relations": []

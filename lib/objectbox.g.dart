@@ -22,7 +22,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
     id: const obx_int.IdUid(1, 9107254583230726546),
     name: 'OfflineSyncRecord',
-    lastPropertyId: const obx_int.IdUid(9, 8922167803272805751),
+    lastPropertyId: const obx_int.IdUid(10, 4824815441613426555),
     flags: 0,
     properties: <obx_int.ModelProperty>[
       obx_int.ModelProperty(
@@ -78,6 +78,12 @@ final _entities = <obx_int.ModelEntity>[
         id: const obx_int.IdUid(9, 8922167803272805751),
         name: 'isDeleted',
         type: 1,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(10, 4824815441613426555),
+        name: 'conflictDetectedAtMillis',
+        type: 6,
         flags: 0,
       ),
     ],
@@ -156,7 +162,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
         final modelTypeOffset = fbb.writeString(object.modelType);
         final recordUuidOffset = fbb.writeString(object.recordUuid);
         final payloadJsonOffset = fbb.writeString(object.payloadJson);
-        fbb.startTable(10);
+        fbb.startTable(11);
         fbb.addInt64(0, object.id);
         fbb.addOffset(1, cacheKeyOffset);
         fbb.addOffset(2, modelTypeOffset);
@@ -166,6 +172,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
         fbb.addInt64(6, object.remoteUpdatedAtMillis);
         fbb.addInt64(7, object.syncState);
         fbb.addBool(8, object.isDeleted);
+        fbb.addInt64(9, object.conflictDetectedAtMillis);
         fbb.finish(fbb.endTable());
         return object.id;
       },
@@ -198,6 +205,8 @@ obx_int.ModelDefinition getObjectBoxModel() {
         );
         final remoteUpdatedAtMillisParam = const fb.Int64Reader()
             .vTableGetNullable(buffer, rootOffset, 16);
+        final conflictDetectedAtMillisParam = const fb.Int64Reader()
+            .vTableGetNullable(buffer, rootOffset, 22);
         final syncStateParam = const fb.Int64Reader().vTableGet(
           buffer,
           rootOffset,
@@ -218,6 +227,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
           payloadJson: payloadJsonParam,
           updatedAtMillis: updatedAtMillisParam,
           remoteUpdatedAtMillis: remoteUpdatedAtMillisParam,
+          conflictDetectedAtMillis: conflictDetectedAtMillisParam,
           syncState: syncStateParam,
           isDeleted: isDeletedParam,
         );
@@ -275,4 +285,8 @@ class OfflineSyncRecord_ {
   static final isDeleted = obx.QueryBooleanProperty<OfflineSyncRecord>(
     _entities[0].properties[8],
   );
+
+  /// See [OfflineSyncRecord.conflictDetectedAtMillis].
+  static final conflictDetectedAtMillis =
+      obx.QueryIntegerProperty<OfflineSyncRecord>(_entities[0].properties[9]);
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:store_management/localization/app_localizations.dart';
+import 'package:store_management/models/offline_sync_record.dart';
 import 'package:store_management/localization/locale_controller.dart';
 import 'package:store_management/services/app_preferences_controller.dart';
+import 'package:store_management/services/local_database.dart';
 import 'package:store_management/views/components/language_switcher.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -18,6 +20,11 @@ class SettingsPage extends StatelessWidget {
         final l10n = context.l10n;
         final theme = Theme.of(context);
         final colorScheme = theme.colorScheme;
+        final conflictedRecords = LocalDatabase.current?.getConflictedRecords() ?? const <OfflineSyncRecord>[];
+        final latestConflict = conflictedRecords
+            .where((record) => record.conflictDetectedAtMillis != null)
+            .map((record) => record.conflictDetectedAtMillis!)
+            .fold<int?>(null, (latest, value) => latest == null || value > latest ? value : latest);
 
         return ListView(
           padding: const EdgeInsets.all(24),
@@ -87,6 +94,12 @@ class SettingsPage extends StatelessWidget {
                       selected: appPreferencesController.storagePreference == StoragePreference.localOnly,
                       onTap: () => appPreferencesController.setStoragePreference(StoragePreference.localOnly),
                     ),
+                    if (conflictedRecords.isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      Text('Sync conflict diagnostics', style: theme.textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant)),
+                      const SizedBox(height: 8),
+                      _SyncConflictDiagnosticsTile(conflictedRecordsCount: conflictedRecords.length, latestConflictMillis: latestConflict),
+                    ],
                   ],
                 ),
               ),
@@ -94,6 +107,47 @@ class SettingsPage extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _SyncConflictDiagnosticsTile extends StatelessWidget {
+  const _SyncConflictDiagnosticsTile({required this.conflictedRecordsCount, required this.latestConflictMillis});
+
+  final int conflictedRecordsCount;
+  final int? latestConflictMillis;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final latestConflictText = latestConflictMillis == null ? 'Unknown' : DateTime.fromMillisecondsSinceEpoch(latestConflictMillis!, isUtc: false).toLocal().toIso8601String();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.errorContainer.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colorScheme.error.withValues(alpha: 0.5)),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.warning_amber_rounded, color: colorScheme.error),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Remote changes overrode pending local edits.', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 4),
+                Text('Conflicted records: $conflictedRecordsCount', style: theme.textTheme.bodySmall),
+                Text('Latest conflict at: $latestConflictText', style: theme.textTheme.bodySmall),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

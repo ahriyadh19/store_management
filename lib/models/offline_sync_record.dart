@@ -20,6 +20,7 @@ class OfflineSyncRecord {
     required this.payloadJson,
     required this.updatedAtMillis,
     this.remoteUpdatedAtMillis,
+    this.conflictDetectedAtMillis,
     this.syncState = OfflineSyncState.pendingUpsert,
     this.isDeleted = false,
   });
@@ -35,6 +36,7 @@ class OfflineSyncRecord {
   String payloadJson;
   int updatedAtMillis;
   int? remoteUpdatedAtMillis;
+  int? conflictDetectedAtMillis;
   int syncState;
   bool isDeleted;
 }

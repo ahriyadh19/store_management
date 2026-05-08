@@ -41,6 +41,9 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
+      - name: Run sync regression tests
+        run: flutter test test/services/sync_conflict_resolution_test.dart test/services/local_database_branch_persistence_test.dart
+
       - name: Run tests
         run: flutter test
 
