@@ -2,7 +2,7 @@
 import 'dart:convert';
 
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/objectbox.g.dart';
+import 'package:store_management/objectbox_compat.dart';
 import 'package:store_management/services/uuid.dart';
 class Store {
   @Id()

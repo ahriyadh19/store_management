@@ -10,6 +10,8 @@ class ModelFormSelectOption {
   final Object value;
 }
 
+typedef ModelFormCreateOptionDelegate = Future<ModelFormSelectOption?> Function(String query);
+
 class ModelFormFieldDefinition {
   const ModelFormFieldDefinition({
     required this.key,
@@ -20,6 +22,10 @@ class ModelFormFieldDefinition {
     this.required = false,
     this.readOnly = false,
     this.options = const [],
+    this.searchable = false,
+    this.searchButtonLabel,
+    this.addNewButtonLabel,
+    this.onCreateOption,
     this.transformValue,
     this.formatValue,
     this.validator,
@@ -33,6 +39,10 @@ class ModelFormFieldDefinition {
   final bool required;
   final bool readOnly;
   final List<ModelFormSelectOption> options;
+  final bool searchable;
+  final String? searchButtonLabel;
+  final String? addNewButtonLabel;
+  final ModelFormCreateOptionDelegate? onCreateOption;
   final Object? Function(Object? rawValue)? transformValue;
   final String Function(Object? value)? formatValue;
   final String? Function(String? value)? validator;
@@ -61,6 +71,7 @@ typedef ModelCreateDelegate<T extends Object> = Future<T> Function(T model);
 typedef ModelUpdateDelegate<T extends Object> = Future<T> Function(T model);
 typedef ModelDeleteDelegate<T extends Object> = Future<void> Function(T model);
 typedef ModelAfterCreateHook<T extends Object> = Future<void> Function({required T model, required Map<String, dynamic> values});
+typedef ModelPrepareCreateValuesHook = Future<Map<String, dynamic>> Function(Map<String, dynamic> values);
 
 class ModelFormDefinition<T extends Object> {
   const ModelFormDefinition({
@@ -74,6 +85,7 @@ class ModelFormDefinition<T extends Object> {
     this.updateDelegate,
     this.deleteDelegate,
     this.afterCreateHook,
+    this.prepareCreateValues,
   });
 
   final List<ModelFormFieldDefinition> fields;
@@ -86,6 +98,7 @@ class ModelFormDefinition<T extends Object> {
   final ModelUpdateDelegate<T>? updateDelegate;
   final ModelDeleteDelegate<T>? deleteDelegate;
   final ModelAfterCreateHook<T>? afterCreateHook;
+  final ModelPrepareCreateValuesHook? prepareCreateValues;
 
   T buildModel(Map<String, dynamic> values, {T? existingModel}) {
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -128,6 +141,7 @@ class _ModelFormState extends State<ModelForm> {
   final _formKey = GlobalKey<FormState>();
   late final Map<String, TextEditingController> _controllers;
   late final Map<String, Object?> _selectedValues;
+  late final Map<String, List<ModelFormSelectOption>> _selectionOptions;
 
   @override
   void initState() {
@@ -139,6 +153,7 @@ class _ModelFormState extends State<ModelForm> {
     _selectedValues = {
       for (final field in widget.definition.where((field) => field.type == ModelFormFieldType.selection)) field.key: widget.initialData[field.key],
     };
+    _selectionOptions = {for (final field in widget.definition.where((field) => field.type == ModelFormFieldType.selection)) field.key: List<ModelFormSelectOption>.from(field.options)};
   }
 
   @override
@@ -218,9 +233,14 @@ class _ModelFormState extends State<ModelForm> {
   Widget _buildField(BuildContext context, ModelFormFieldDefinition field) {
     final l10n = context.l10n;
     if (field.type == ModelFormFieldType.selection) {
+      if (field.searchable) {
+        return _buildSearchableSelectionField(context, field, l10n);
+      }
+
+      final options = _selectionOptions[field.key] ?? field.options;
       return DropdownButtonFormField<Object?>(
         initialValue: _selectedValues[field.key],
-        items: field.options
+        items: options
             .map(
               (option) => DropdownMenuItem<Object?>(
                 value: option.value,
@@ -276,6 +296,158 @@ class _ModelFormState extends State<ModelForm> {
       ),
       validator: (value) => _validateField(field, value),
     );
+  }
+
+  Widget _buildSearchableSelectionField(BuildContext context, ModelFormFieldDefinition field, AppLocalizations l10n) {
+    final options = _selectionOptions[field.key] ?? field.options;
+    final selectedValue = _selectedValues[field.key];
+    final selectedOption = options.where((option) => option.value == selectedValue).cast<ModelFormSelectOption?>().firstWhere((option) => option != null, orElse: () => null);
+
+    return FormField<Object?>(
+      validator: (_) {
+        final selected = _selectedValues[field.key];
+        if (field.required && selected == null) {
+          return l10n.fieldRequired(field.label);
+        }
+        return null;
+      },
+      builder: (state) {
+        return InputDecorator(
+          decoration: InputDecoration(labelText: field.label, hintText: field.hintText, helperText: field.helperText, border: const OutlineInputBorder(), errorText: state.errorText),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  selectedOption?.label ?? _searchFieldPlaceholder(context),
+                  style: selectedOption == null ? Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).hintColor) : Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+              const SizedBox(width: 8),
+              TextButton.icon(
+                onPressed: field.readOnly
+                    ? null
+                    : () async {
+                        final result = await _showSelectionSearchDialog(context: context, field: field, options: options);
+                        if (!mounted || result == null) {
+                          return;
+                        }
+                        setState(() {
+                          if (result.createdOption != null) {
+                            final existing = _selectionOptions[field.key] ?? <ModelFormSelectOption>[];
+                            final merged = <ModelFormSelectOption>[...existing.where((option) => option.value != result.createdOption!.value), result.createdOption!];
+                            merged.sort((left, right) => left.label.toLowerCase().compareTo(right.label.toLowerCase()));
+                            _selectionOptions[field.key] = merged;
+                          }
+                          _selectedValues[field.key] = result.value;
+                        });
+                        state.didChange(result.value);
+                      },
+                icon: const Icon(Icons.search_rounded),
+                label: Text(field.searchButtonLabel ?? (l10n.isArabic ? 'بحث' : 'Search')),
+              ),
+              if (!field.readOnly && selectedValue != null)
+                IconButton(
+                  tooltip: l10n.clearSearch,
+                  onPressed: () {
+                    setState(() {
+                      _selectedValues[field.key] = null;
+                    });
+                    state.didChange(null);
+                  },
+                  icon: const Icon(Icons.close_rounded),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String _searchFieldPlaceholder(BuildContext context) {
+    final l10n = context.l10n;
+    return l10n.isArabic ? 'لم يتم تحديد قيمة' : 'No value selected';
+  }
+
+  Future<_SelectionSearchResult?> _showSelectionSearchDialog({required BuildContext context, required ModelFormFieldDefinition field, required List<ModelFormSelectOption> options}) async {
+    final l10n = context.l10n;
+    final controller = TextEditingController();
+    var query = '';
+
+    List<ModelFormSelectOption> filteredOptions() {
+      final normalized = query.trim().toLowerCase();
+      if (normalized.isEmpty) {
+        return options;
+      }
+      return options.where((option) => option.label.toLowerCase().contains(normalized)).toList(growable: false);
+    }
+
+    final result = await showDialog<_SelectionSearchResult>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            final visibleOptions = filteredOptions();
+            return AlertDialog(
+              title: Text(field.label),
+              content: SizedBox(
+                width: 520,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: controller,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          query = value;
+                        });
+                      },
+                      decoration: InputDecoration(prefixIcon: const Icon(Icons.search_rounded), hintText: l10n.searchTableHint, border: const OutlineInputBorder()),
+                    ),
+                    const SizedBox(height: 12),
+                    Flexible(
+                      child: visibleOptions.isEmpty
+                          ? Align(alignment: Alignment.centerLeft, child: Text(l10n.noMatchingRecords))
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: visibleOptions.length,
+                              itemBuilder: (context, index) {
+                                final option = visibleOptions[index];
+                                return ListTile(
+                                  title: Text(option.label),
+                                  onTap: () {
+                                    Navigator.of(dialogContext).pop(_SelectionSearchResult(value: option.value));
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                    if (field.onCreateOption != null && query.trim().isNotEmpty)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () async {
+                            final created = await field.onCreateOption!(query.trim());
+                            if (!dialogContext.mounted || created == null) {
+                              return;
+                            }
+                            Navigator.of(dialogContext).pop(_SelectionSearchResult(value: created.value, createdOption: created));
+                          },
+                          icon: const Icon(Icons.add_rounded),
+                          label: Text(field.addNewButtonLabel ?? (l10n.isArabic ? 'إضافة جديد' : 'Add new')),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: Text(l10n.cancel))],
+            );
+          },
+        );
+      },
+    );
+
+    controller.dispose();
+    return result;
   }
 
   String? _validateField(ModelFormFieldDefinition field, String? value) {
@@ -367,4 +539,11 @@ class _ModelFormState extends State<ModelForm> {
     }
     return value.toString();
   }
+}
+
+class _SelectionSearchResult {
+  const _SelectionSearchResult({required this.value, this.createdOption});
+
+  final Object? value;
+  final ModelFormSelectOption? createdOption;
 }

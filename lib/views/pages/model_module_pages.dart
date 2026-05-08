@@ -424,10 +424,19 @@ ModelFormDefinition<StoreInvoice> invoiceFormDefinition(AppLocalizations l10n) =
   tableName: 'store_invoice',
   tableFieldPriorityKeys: const <String>['invoiceNumber', 'clientUuid', 'storeUuid', 'totalAmount', 'status'],
   fields: [
-    _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID')),
-    _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
-    _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID')),
-    _selectionField('clientUuid', _t(l10n, 'Client', 'العميل'), _clientOptions(l10n, fallbackUuid: 'client-blue-market-001', fallbackLabel: 'Blue Market'), required: true),
+    _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), hintText: _scopeAutoHint(l10n)),
+    _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), hintText: _scopeAutoHint(l10n)),
+    _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID'), hintText: _scopeAutoHint(l10n)),
+    _selectionField(
+      'clientUuid',
+      _t(l10n, 'Client', 'العميل'),
+      _clientOptions(l10n, fallbackUuid: 'client-blue-market-001', fallbackLabel: 'Blue Market'),
+      required: true,
+      searchable: true,
+      searchButtonLabel: _t(l10n, 'Search client', 'بحث عميل'),
+      addNewButtonLabel: _t(l10n, 'Add new client', 'إضافة عميل جديد'),
+      onCreateOption: (query) => _createClientOptionFromQuery(query: query, l10n: l10n),
+    ),
     _textField('invoiceNumber', _t(l10n, 'Invoice number', 'رقم الفاتورة'), required: true),
     _textField('productUuid', _t(l10n, 'Product UUID', 'معرّف المنتج UUID')),
     _integerField('quantity', _t(l10n, 'Quantity', 'الكمية')),
@@ -493,8 +502,17 @@ ModelFormDefinition<StoreReturn> returnFormDefinition(AppLocalizations l10n) => 
   tableName: 'store_return',
   tableFieldPriorityKeys: const <String>['returnNumber', 'clientUuid', 'storeUuid', 'totalAmount', 'status'],
   fields: [
-    _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
-    _selectionField('clientUuid', _t(l10n, 'Client', 'العميل'), _clientOptions(l10n, fallbackUuid: 'client-blue-market-001', fallbackLabel: 'Blue Market'), required: true),
+    _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), hintText: _scopeAutoHint(l10n)),
+    _selectionField(
+      'clientUuid',
+      _t(l10n, 'Client', 'العميل'),
+      _clientOptions(l10n, fallbackUuid: 'client-blue-market-001', fallbackLabel: 'Blue Market'),
+      required: true,
+      searchable: true,
+      searchButtonLabel: _t(l10n, 'Search client', 'بحث عميل'),
+      addNewButtonLabel: _t(l10n, 'Add new client', 'إضافة عميل جديد'),
+      onCreateOption: (query) => _createClientOptionFromQuery(query: query, l10n: l10n),
+    ),
     _textField('returnNumber', _t(l10n, 'Return number', 'رقم المرتجع'), required: true),
     _selectionField('returnType', _t(l10n, 'Return type', 'نوع المرتجع'), _returnTypeOptions(l10n), required: true),
     _integerField('itemCount', _t(l10n, 'Item count', 'عدد العناصر'), required: true),
@@ -524,8 +542,17 @@ ModelFormDefinition<StorePaymentVoucher> paymentVoucherFormDefinition(AppLocaliz
   tableName: 'store_payment_voucher',
   tableFieldPriorityKeys: const <String>['voucherNumber', 'clientUuid', 'payeeName', 'amount', 'transactionDate'],
   fields: [
-    _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
-    _selectionField('clientUuid', _t(l10n, 'Client', 'العميل'), _clientOptions(l10n, fallbackUuid: 'client-blue-market-001', fallbackLabel: 'Blue Market'), required: true),
+    _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), hintText: _scopeAutoHint(l10n)),
+    _selectionField(
+      'clientUuid',
+      _t(l10n, 'Client', 'العميل'),
+      _clientOptions(l10n, fallbackUuid: 'client-blue-market-001', fallbackLabel: 'Blue Market'),
+      required: true,
+      searchable: true,
+      searchButtonLabel: _t(l10n, 'Search client', 'بحث عميل'),
+      addNewButtonLabel: _t(l10n, 'Add new client', 'إضافة عميل جديد'),
+      onCreateOption: (query) => _createClientOptionFromQuery(query: query, l10n: l10n),
+    ),
     _textField('voucherNumber', _t(l10n, 'Voucher number', 'رقم السند'), required: true),
     _textField('payeeName', _t(l10n, 'Payee name', 'اسم المستفيد'), required: true),
     _decimalField('amount', _t(l10n, 'Amount', 'المبلغ'), required: true),
@@ -929,10 +956,18 @@ ModelFormDefinition<SalesOrder> salesOrderFormDefinition(AppLocalizations l10n) 
   tableName: 'sales_order',
   tableFieldPriorityKeys: const <String>['orderNumber', 'customerUuid', 'branchUuid', 'orderDate', 'status'],
   fields: [
-    _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), required: true),
-    _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
-    _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID'), required: true),
-    _selectionField('customerUuid', _t(l10n, 'Client', 'العميل'), _clientOptions(l10n, fallbackUuid: '44444444-4444-4444-8444-444444444444'), required: false),
+    _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), hintText: _scopeAutoHint(l10n)),
+    _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), hintText: _scopeAutoHint(l10n)),
+    _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID'), hintText: _scopeAutoHint(l10n)),
+    _selectionField(
+      'customerUuid',
+      _t(l10n, 'Client', 'العميل'),
+      _clientOptions(l10n, fallbackUuid: '44444444-4444-4444-8444-444444444444'),
+      searchable: true,
+      searchButtonLabel: _t(l10n, 'Search client', 'بحث عميل'),
+      addNewButtonLabel: _t(l10n, 'Add new client', 'إضافة عميل جديد'),
+      onCreateOption: (query) => _createClientOptionFromQuery(query: query, l10n: l10n),
+    ),
     _textField('orderNumber', _t(l10n, 'Order number', 'رقم الطلب'), required: true),
     _dateTimeField('orderDate', _t(l10n, 'Order date', 'تاريخ الطلب'), required: true),
     _selectionField('status', _t(l10n, 'Status', 'الحالة'), _salesOrderStatusOptions(l10n), required: true),
@@ -960,11 +995,19 @@ ModelFormDefinition<SalesInvoice> salesInvoiceFormDefinition(AppLocalizations l1
   tableName: 'sales_invoice',
   tableFieldPriorityKeys: const <String>['invoiceNumber', 'customerUuid', 'branchUuid', 'totalAmount', 'status'],
   fields: [
-    _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), required: true),
-    _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), required: true),
-    _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID'), required: true),
+    _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), hintText: _scopeAutoHint(l10n)),
+    _textField('storeUuid', _t(l10n, 'Store UUID', 'معرّف المتجر UUID'), hintText: _scopeAutoHint(l10n)),
+    _textField('branchUuid', _t(l10n, 'Branch UUID', 'معرّف الفرع UUID'), hintText: _scopeAutoHint(l10n)),
     _textField('salesOrderUuid', _t(l10n, 'Sales order UUID', 'معرّف أمر البيع UUID')),
-    _selectionField('customerUuid', _t(l10n, 'Client', 'العميل'), _clientOptions(l10n, fallbackUuid: '44444444-4444-4444-8444-444444444444'), required: false),
+    _selectionField(
+      'customerUuid',
+      _t(l10n, 'Client', 'العميل'),
+      _clientOptions(l10n, fallbackUuid: '44444444-4444-4444-8444-444444444444'),
+      searchable: true,
+      searchButtonLabel: _t(l10n, 'Search client', 'بحث عميل'),
+      addNewButtonLabel: _t(l10n, 'Add new client', 'إضافة عميل جديد'),
+      onCreateOption: (query) => _createClientOptionFromQuery(query: query, l10n: l10n),
+    ),
     _textField('invoiceNumber', _t(l10n, 'Invoice number', 'رقم الفاتورة'), required: true),
     _dateTimeField('issuedAt', _t(l10n, 'Issued at', 'تاريخ الإصدار'), required: true),
     _textField('currencyCode', _t(l10n, 'Currency code', 'رمز العملة'), required: true),
@@ -1216,6 +1259,7 @@ ModelFormDefinition<T> _serverBackedDefinition<T extends Object>({
     sampleModel: sampleModel,
     tableFieldPriorityKeys: tableFieldPriorityKeys,
     afterCreateHook: afterCreateHook,
+    prepareCreateValues: (values) => _prepareCreateValuesWithScope(tableName: tableName, values: values),
     queryDelegate: (request) async {
       switch (_storagePreferenceOrDefault()) {
         case StoragePreference.onlineOnly:
@@ -1917,6 +1961,10 @@ ModelFormFieldDefinition _selectionField(
   String label,
   List<ModelFormSelectOption> options, {
   bool required = false,
+  bool searchable = false,
+  String? searchButtonLabel,
+  String? addNewButtonLabel,
+  ModelFormCreateOptionDelegate? onCreateOption,
 }) {
   return ModelFormFieldDefinition(
     key: key,
@@ -1924,6 +1972,10 @@ ModelFormFieldDefinition _selectionField(
     type: ModelFormFieldType.selection,
     required: required,
     options: options,
+    searchable: searchable,
+    searchButtonLabel: searchButtonLabel,
+    addNewButtonLabel: addNewButtonLabel,
+    onCreateOption: onCreateOption,
   );
 }
 
@@ -2240,7 +2292,48 @@ bool fieldUsesSelectionForTesting(ModelFormDefinition<Object> definition, String
   return definition.fields.any((field) => field.key == key && field.type == ModelFormFieldType.selection);
 }
 
+bool fieldUsesSearchableSelectionForTesting(ModelFormDefinition<Object> definition, String key) {
+  return definition.fields.any((field) => field.key == key && field.type == ModelFormFieldType.selection && field.searchable);
+}
+
 Future<OwnerScope> _resolveOwnerScope() => _ownerScopeService.resolveCurrentScope();
+
+String _scopeAutoHint(AppLocalizations l10n) {
+  return _t(l10n, 'Leave empty to auto-assign from your scope.', 'اترك الحقل فارغا ليتم تعيينه تلقائيا حسب نطاقك.');
+}
+
+Future<Map<String, dynamic>> _prepareCreateValuesWithScope({required String tableName, required Map<String, dynamic> values}) async {
+  final scope = await _resolveOwnerScope();
+  return _applyScopeDefaultsToCreateValues(tableName: tableName, values: values, scope: scope);
+}
+
+Map<String, dynamic> applyScopeDefaultsForTesting({required String tableName, required Map<String, dynamic> values, required OwnerScope scope}) {
+  return _applyScopeDefaultsToCreateValues(tableName: tableName, values: values, scope: scope);
+}
+
+Map<String, dynamic> _applyScopeDefaultsToCreateValues({required String tableName, required Map<String, dynamic> values, required OwnerScope scope}) {
+  final scopedValues = Map<String, dynamic>.from(values);
+
+  String? normalized(String key) => _stringOrNull(scopedValues[key]);
+
+  if (_ownerScopedTables.contains(tableName) && normalized('ownerUuid') == null && scope.hasOwner) {
+    scopedValues['ownerUuid'] = scope.ownerUuid;
+  }
+
+  if (normalized('storeUuid') == null && scope.storeUuids.length == 1) {
+    scopedValues['storeUuid'] = scope.storeUuids.first;
+  }
+
+  if (normalized('branchUuid') == null && scope.branchUuids.length == 1) {
+    scopedValues['branchUuid'] = scope.branchUuids.first;
+  }
+
+  if (normalized('createdByUserUuid') == null && scope.userUuid != null && scope.userUuid!.isNotEmpty) {
+    scopedValues['createdByUserUuid'] = scope.userUuid;
+  }
+
+  return scopedValues;
+}
 
 List<ModelFormSelectOption> _clientOptions(AppLocalizations l10n, {required String fallbackUuid, String? fallbackLabel}) {
   final optionsByUuid = <String, ModelFormSelectOption>{};
@@ -2265,6 +2358,36 @@ List<ModelFormSelectOption> _clientOptions(AppLocalizations l10n, {required Stri
   final options = optionsByUuid.values.toList(growable: false);
   options.sort((left, right) => left.label.toLowerCase().compareTo(right.label.toLowerCase()));
   return options;
+}
+
+Future<ModelFormSelectOption?> _createClientOptionFromQuery({required String query, required AppLocalizations l10n}) async {
+  final clientName = query.trim();
+  if (clientName.isEmpty) {
+    return null;
+  }
+
+  final now = DateTime.now();
+  final normalizedToken = clientName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-').replaceAll(RegExp(r'^-+|-+$'), '');
+  final safeToken = normalizedToken.isEmpty ? 'client' : normalizedToken;
+
+  final client = Client(
+    name: clientName,
+    description: _t(l10n, 'Created from invoice flow.', 'تم الإنشاء من شاشة الفاتورة.'),
+    email: '$safeToken-${now.millisecondsSinceEpoch}@local.client',
+    phone: '0000000000',
+    address: _t(l10n, 'To be updated', 'سيتم تحديثه لاحقا'),
+    status: RecordStatus.active.code,
+    creditLimit: Decimal.zero,
+    currentCredit: Decimal.zero,
+    availableCredit: Decimal.zero,
+    createdAt: now,
+    updatedAt: now,
+  );
+
+  final definition = clientFormDefinition(l10n);
+  final createDelegate = definition.createDelegate;
+  final createdClient = createDelegate == null ? client : await createDelegate(client);
+  return ModelFormSelectOption(label: createdClient.name, value: createdClient.uuid);
 }
 
 Map<String, dynamic> _enforceTenantPayloadScope(String tableName, Map<String, dynamic> payload, OwnerScope scope) {

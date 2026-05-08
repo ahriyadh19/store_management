@@ -924,7 +924,9 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   Future<void> _performCreate(Map<String, dynamic> values) async {
-    final model = widget.formDefinition.buildModel(values);
+    final prepareCreateValues = widget.formDefinition.prepareCreateValues;
+    final preparedValues = prepareCreateValues == null ? values : await prepareCreateValues(Map<String, dynamic>.from(values));
+    final model = widget.formDefinition.buildModel(preparedValues);
     final createDelegate = widget.formDefinition.createDelegate;
     final afterCreateHook = widget.formDefinition.afterCreateHook;
 
@@ -935,7 +937,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       try {
         final createdModel = await createDelegate(model);
         if (afterCreateHook != null) {
-          await afterCreateHook(model: createdModel, values: values);
+          await afterCreateHook(model: createdModel, values: preparedValues);
         }
         if (!mounted) {
           return;
@@ -963,7 +965,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     }
 
     if (afterCreateHook != null) {
-      await afterCreateHook(model: model, values: values);
+      await afterCreateHook(model: model, values: preparedValues);
     }
 
     setState(() {

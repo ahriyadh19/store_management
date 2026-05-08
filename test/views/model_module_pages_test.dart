@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:store_management/localization/app_localizations.dart';
+import 'package:store_management/services/owner_scope_service.dart';
 import 'package:store_management/views/index/index_page.dart';
 import 'package:store_management/views/pages/main_module_pages.dart';
 import 'package:store_management/views/pages/model_module_pages.dart';
@@ -20,6 +21,22 @@ void main() {
     expect(fieldUsesSelectionForTesting(paymentVoucherFormDefinition(english), 'clientUuid'), isTrue);
     expect(fieldUsesSelectionForTesting(salesOrderFormDefinition(english), 'customerUuid'), isTrue);
     expect(fieldUsesSelectionForTesting(salesInvoiceFormDefinition(english), 'customerUuid'), isTrue);
+    expect(fieldUsesSearchableSelectionForTesting(invoiceFormDefinition(english), 'clientUuid'), isTrue);
+    expect(fieldUsesSearchableSelectionForTesting(returnFormDefinition(english), 'clientUuid'), isTrue);
+    expect(fieldUsesSearchableSelectionForTesting(paymentVoucherFormDefinition(english), 'clientUuid'), isTrue);
+    expect(fieldUsesSearchableSelectionForTesting(salesOrderFormDefinition(english), 'customerUuid'), isTrue);
+    expect(fieldUsesSearchableSelectionForTesting(salesInvoiceFormDefinition(english), 'customerUuid'), isTrue);
+  });
+
+  test('scope defaults auto-fill owner, store, and branch UUIDs', () {
+    const scope = OwnerScope(userUuid: 'user-1', ownerUuid: 'owner-1', storeUuids: <String>{'store-1'}, branchUuids: <String>{'branch-1'});
+
+    final values = applyScopeDefaultsForTesting(tableName: 'sales_invoice', values: <String, dynamic>{'ownerUuid': null, 'storeUuid': '', 'branchUuid': '   ', 'createdByUserUuid': null}, scope: scope);
+
+    expect(values['ownerUuid'], 'owner-1');
+    expect(values['storeUuid'], 'store-1');
+    expect(values['branchUuid'], 'branch-1');
+    expect(values['createdByUserUuid'], 'user-1');
   });
 
   testWidgets('product module page shows datatable, create toggle, and row actions', (tester) async {
