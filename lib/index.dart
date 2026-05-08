@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -10,6 +11,7 @@ import 'package:store_management/controllers/auth_controller.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/localization/locale_controller.dart';
 import 'package:store_management/services/app_preferences_controller.dart';
+import 'package:store_management/services/access_control_service.dart';
 import 'package:store_management/services/connection_status_controller.dart';
 import 'package:store_management/services/local_database.dart';
 import 'package:store_management/views/index/index_page.dart';
@@ -19,6 +21,7 @@ import 'package:window_manager/window_manager.dart';
 Widget _buildIndexDrawer(
   BuildContext context, {
   required IndexPage activePage,
+  required AccessControlSnapshot accessSnapshot,
   required ValueChanged<IndexPage> onOpenPage,
   required Set<_DrawerSectionKey> expandedSections,
   required VoidCallback onExpandAll,
@@ -30,7 +33,7 @@ Widget _buildIndexDrawer(
   final user = authState.user;
   final theme = Theme.of(context);
   final colorScheme = theme.colorScheme;
-  final drawerSections = _buildDrawerSections(l10n);
+  final drawerSections = _buildDrawerSections(l10n, canViewPage: accessSnapshot.canViewPage);
 
   return Drawer(
     width: 330,
@@ -113,8 +116,8 @@ Widget _buildIndexDrawer(
   );
 }
 
-List<_DrawerSection> _buildDrawerSections(AppLocalizations l10n) {
-  return [
+List<_DrawerSection> _buildDrawerSections(AppLocalizations l10n, {required bool Function(IndexPage page) canViewPage}) {
+  final sections = [
     _DrawerSection(
       key: _DrawerSectionKey.overview,
       title: l10n.overview,
@@ -167,6 +170,11 @@ List<_DrawerSection> _buildDrawerSections(AppLocalizations l10n) {
       ],
     ),
   ];
+
+  return sections
+      .map((section) => _DrawerSection(key: section.key, title: section.title, icon: section.icon, items: section.items.where((item) => canViewPage(item.page)).toList(growable: false)))
+      .where((section) => section.items.isNotEmpty)
+      .toList(growable: false);
 }
 
 String _initialsForUser(String? name, String? email) {
@@ -229,6 +237,7 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
   String? _activeTabId;
   int _nextTabSeed = 1;
   late final ConnectionStatusController _connectionStatusController;
+  late final AccessControlService _accessControlService;
   bool _isAppBarVisible = true;
 
   @override
@@ -240,6 +249,9 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
       windowManager.setPreventClose(true);
     }
     _expandedDrawerSections.add(_drawerSectionForPage(IndexPageStorage.fromStorageKey(widget.appPreferencesController.lastIndexPageKey)));
+    _accessControlService = AccessControlService.instance;
+    _accessControlService.addListener(_onAccessControlChanged);
+    unawaited(_accessControlService.refresh(provisionIfNeeded: true));
     final restored = _restoreWorkspaceTabsFromPreferences();
     if (!restored) {
       final initialPage = IndexPageStorage.fromStorageKey(widget.appPreferencesController.lastIndexPageKey);
@@ -264,7 +276,43 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
     WidgetsBinding.instance.removeObserver(this);
     _tabScrollController.dispose();
     _connectionStatusController.dispose();
+    _accessControlService.removeListener(_onAccessControlChanged);
     super.dispose();
+  }
+
+  void _onAccessControlChanged() {
+    if (!mounted) {
+      return;
+    }
+
+    _pruneUnauthorizedTabs();
+    setState(() {});
+  }
+
+  void _pruneUnauthorizedTabs() {
+    final hasChanges = _tabs.any((tab) => !_canAccessPage(tab.page));
+    if (!hasChanges) {
+      return;
+    }
+
+    _tabs.removeWhere((tab) => !_canAccessPage(tab.page));
+    if (_tabs.isEmpty) {
+      final fallbackPage = _canAccessPage(IndexPage.dashboard) ? IndexPage.dashboard : IndexPage.settings;
+      final fallbackId = 'tab_${_nextTabSeed++}';
+      _tabs.add(_WorkspaceTab(id: fallbackId, page: fallbackPage, pinned: fallbackPage == IndexPage.dashboard, group: _groupForPage(fallbackPage)));
+      _activeTabId = fallbackId;
+      widget.appPreferencesController.saveLastIndexPageKey(fallbackPage.storageKey);
+      _persistWorkspaceTabsState();
+      return;
+    }
+
+    final hasCurrent = _activeTabId != null && _tabs.any((tab) => tab.id == _activeTabId);
+    if (!hasCurrent) {
+      _activeTabId = _tabs.first.id;
+      widget.appPreferencesController.saveLastIndexPageKey(_tabs.first.page.storageKey);
+    }
+
+    _persistWorkspaceTabsState();
   }
 
   @override
@@ -328,6 +376,13 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
   }
 
   void _handleDrawerPageOpened(IndexPage page) {
+    if (!_canAccessPage(page)) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(content: Text('Access denied: this page is not available for your role.')));
+      return;
+    }
+
     _expandedDrawerSections.add(_drawerSectionForPage(page));
     _openPageInTab(page);
     _scaffoldKey.currentState?.closeDrawer();
@@ -566,6 +621,9 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
         }
 
         final page = IndexPageStorage.fromStorageKey(item['page'] as String?);
+        if (!_canAccessPage(page)) {
+          continue;
+        }
         final pinned = item['pinned'] == true;
         restoredTabs.add(_WorkspaceTab(id: 'tab_${_nextTabSeed++}', page: page, pinned: pinned, group: _groupForPage(page)));
       }
@@ -639,6 +697,13 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
     _openPageInTab(IndexPage.dashboard, pinned: true);
   }
 
+  bool _canAccessPage(IndexPage page) {
+    if (page == IndexPage.settings) {
+      return _accessControlService.canUseSettings();
+    }
+    return _accessControlService.canViewPage(page);
+  }
+
   Future<void> _confirmSignOut() async {
     final l10n = context.l10n;
     final didConfirm = await showDialog<bool>(
@@ -664,7 +729,11 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthController>().state;
-    final pageDefinitions = buildIndexPageDefinitions(context, authState, localeController: widget.localeController, appPreferencesController: widget.appPreferencesController);
+    final allPageDefinitions = buildIndexPageDefinitions(context, authState, localeController: widget.localeController, appPreferencesController: widget.appPreferencesController);
+    final pageDefinitions = <IndexPage, IndexPageDefinition>{
+      for (final entry in allPageDefinitions.entries)
+        if (_canAccessPage(entry.key)) entry.key: entry.value,
+    };
     final activeTab = _tabs.isNotEmpty ? _tabs.firstWhere((tab) => tab.id == _activeTabId, orElse: () => _tabs.first) : null;
     final selectedDefinition = activeTab != null ? pageDefinitions[activeTab.page] : null;
 
@@ -702,6 +771,7 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
             drawer: _buildIndexDrawer(
               context,
               activePage: activeTab != null ? activeTab.page : IndexPage.dashboard,
+              accessSnapshot: _accessControlService.snapshot,
               onOpenPage: _handleDrawerPageOpened,
               expandedSections: _expandedDrawerSections,
               onExpandAll: _expandAllDrawerSections,
@@ -734,7 +804,9 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         tooltip: context.l10n.settings,
                         icon: const Icon(Icons.settings_rounded),
-                        onPressed: () {
+                        onPressed: !_accessControlService.canUseSettings()
+                            ? null
+                            : () {
                           _openPageInTab(IndexPage.settings, pinned: true);
                         },
                       ),
@@ -1008,12 +1080,12 @@ class _WorkspaceTabBar extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final tab = tabs[index];
                     final isActive = tab.id == activeTabId;
-                    final definition = pageDefinitions[tab.page]!;
+                    final definition = pageDefinitions[tab.page];
 
                     return _WorkspaceTabTile(
                       key: ValueKey<String>(tab.id),
                       tab: tab,
-                      title: definition.title,
+                      title: definition?.title ?? tab.page.name,
                       active: isActive,
                       onActivate: () => onActivateTab(tab.id),
                       onClose: tab.pinned ? null : () => onCloseTab(tab.id),

@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:store_management/localization/app_localizations.dart';
+import 'package:store_management/views/components/permission_visual_editor_dialog.dart';
 
 enum ModelFormFieldType { text, multiline, email, phone, integer, decimal, dateTime, selection }
 
@@ -29,6 +32,7 @@ class ModelFormFieldDefinition {
     this.transformValue,
     this.formatValue,
     this.validator,
+    this.usePermissionVisualEditor = false,
   });
 
   final String key;
@@ -46,6 +50,7 @@ class ModelFormFieldDefinition {
   final Object? Function(Object? rawValue)? transformValue;
   final String Function(Object? value)? formatValue;
   final String? Function(String? value)? validator;
+  final bool usePermissionVisualEditor;
 }
 
 class ModelQueryRequest {
@@ -75,6 +80,7 @@ typedef ModelPrepareCreateValuesHook = Future<Map<String, dynamic>> Function(Map
 
 class ModelFormDefinition<T extends Object> {
   const ModelFormDefinition({
+    this.tableName,
     required this.fields,
     required this.fromMap,
     required this.toMap,
@@ -88,6 +94,7 @@ class ModelFormDefinition<T extends Object> {
     this.prepareCreateValues,
   });
 
+  final String? tableName;
   final List<ModelFormFieldDefinition> fields;
   final T Function(Map<String, dynamic> map) fromMap;
   final Map<String, dynamic> Function(T model) toMap;
@@ -281,6 +288,51 @@ class _ModelFormState extends State<ModelForm> {
     };
     final maxLines = field.type == ModelFormFieldType.multiline ? 4 : 1;
     final minLines = field.type == ModelFormFieldType.multiline ? 3 : 1;
+
+    if (field.type == ModelFormFieldType.multiline && field.usePermissionVisualEditor) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextFormField(
+            controller: _controllers[field.key],
+            readOnly: field.readOnly,
+            keyboardType: keyboardType,
+            minLines: minLines,
+            maxLines: maxLines,
+            decoration: InputDecoration(labelText: field.label, hintText: field.hintText, helperText: field.helperText, border: const OutlineInputBorder()),
+            validator: (value) => _validateField(field, value),
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: OutlinedButton.icon(
+              onPressed: field.readOnly
+                  ? null
+                  : () async {
+                      final controller = _controllers[field.key];
+                      if (controller == null) {
+                        return;
+                      }
+
+                      final initialMap = _parsePermissionMap(controller.text);
+                      final updated = await showDialog<Map<String, dynamic>>(
+                        context: context,
+                        builder: (_) => PermissionVisualEditorDialog(initialValues: initialMap),
+                      );
+
+                      if (!mounted || updated == null) {
+                        return;
+                      }
+
+                      controller.text = const JsonEncoder.withIndent('  ').convert(updated);
+                    },
+              icon: const Icon(Icons.admin_panel_settings_rounded),
+              label: Text(l10n.isArabic ? 'محرر الصلاحيات المرئي' : 'Open Visual Permission Editor'),
+            ),
+          ),
+        ],
+      );
+    }
 
     return TextFormField(
       controller: _controllers[field.key],
@@ -538,6 +590,27 @@ class _ModelFormState extends State<ModelForm> {
       return '${dateTime.year}-$month-$day $hour:$minute';
     }
     return value.toString();
+  }
+
+  Map<String, dynamic> _parsePermissionMap(String raw) {
+    final normalized = raw.trim();
+    if (normalized.isEmpty) {
+      return const <String, dynamic>{};
+    }
+
+    try {
+      final decoded = json.decode(normalized);
+      if (decoded is Map<String, dynamic>) {
+        return Map<String, dynamic>.from(decoded);
+      }
+      if (decoded is Map) {
+        return Map<String, dynamic>.from(decoded);
+      }
+    } catch (_) {
+      // Fall back to empty map when current text is not valid JSON.
+    }
+
+    return const <String, dynamic>{};
   }
 }
 

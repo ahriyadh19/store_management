@@ -6,6 +6,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:store_management/localization/app_localizations.dart';
+import 'package:store_management/services/access_control_service.dart';
 import 'package:store_management/services/status.dart';
 import 'package:store_management/views/components/model_form.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
@@ -69,6 +70,19 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
 
   @override
   Widget build(BuildContext context) {
+    final canRead = _canReadRecords;
+
+    if (!canRead) {
+      return ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          _ModuleHeader(title: widget.title, description: widget.description, icon: widget.icon, highlights: widget.highlights),
+          const SizedBox(height: 24),
+          _buildUnauthorizedCard(context),
+        ],
+      );
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final showTableSection = !_showCreateForm || constraints.maxHeight >= 840;
@@ -89,6 +103,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
 
   Widget _buildCreateFormToggle(BuildContext context) {
     final l10n = context.l10n;
+    final canCreate = _canCreateRecords;
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Padding(
@@ -113,7 +128,9 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
                 const SizedBox(width: 8),
                 Switch(
                   value: _showCreateForm,
-                  onChanged: (value) {
+                  onChanged: !canCreate
+                      ? null
+                      : (value) {
                     setState(() {
                       _showCreateForm = value;
                     });
@@ -128,6 +145,10 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   Widget _buildCreateFormCard(BuildContext context) {
+    if (!_canCreateRecords) {
+      return _buildUnauthorizedCard(context);
+    }
+
     final l10n = context.l10n;
     final maxHeight = MediaQuery.of(context).size.height * 0.8;
     return Card(
@@ -176,6 +197,10 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     final syncedCount = _viewState.sortedRecords.where(_isRecordSynced).length;
     final currentPage = _effectiveCurrentPage;
     final pageCount = _pageCount;
+    final canView = _canReadRecords;
+    final canEdit = _canUpdateRecords;
+    final canDelete = _canDeleteRecords;
+    final canSync = _canSyncRecords;
     const listHorizontalPadding = 52.0;
     const cardHorizontalPadding = 52.0;
     final availableTableWidth = math.max(constraints.maxWidth - listHorizontalPadding - cardHorizontalPadding, 280.0);
@@ -194,6 +219,10 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       onEdit: _showEditSheet,
       onDelete: _confirmDelete,
       onSync: _syncSingleRecord,
+      canView: canView,
+      canEdit: canEdit,
+      canDelete: canDelete,
+      canSync: canSync,
       isRecordSynced: _isRecordSynced,
       actionsColumnName: _actionsColumnName,
       errorColor: Theme.of(context).colorScheme.error,
@@ -920,6 +949,10 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   void _handleCreateSubmit(Map<String, dynamic> values) {
+    if (!_canCreateRecords) {
+      _showAccessDenied();
+      return;
+    }
     unawaited(_performCreate(values));
   }
 
@@ -983,6 +1016,11 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   Future<void> _showEditSheet(T record) async {
+    if (!_canUpdateRecords) {
+      _showAccessDenied();
+      return;
+    }
+
     final updatedModel = await showModalBottomSheet<T>(
       context: context,
       isScrollControlled: true,
@@ -1067,6 +1105,11 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   Future<void> _confirmDelete(T record) async {
+    if (!_canDeleteRecords) {
+      _showAccessDenied();
+      return;
+    }
+
     final details = widget.formDefinition.toMap(record);
     final didDelete = await showDialog<bool>(
       context: context,
@@ -1167,6 +1210,11 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   void _openDetailsPage(T record) {
+    if (!_canReadRecords) {
+      _showAccessDenied();
+      return;
+    }
+
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => _ModelDetailsPage(entityLabel: widget.entityLabel, title: widget.title, icon: widget.icon, fields: widget.formDefinition.fields, data: widget.formDefinition.toMap(record)),
@@ -1205,6 +1253,11 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   void _openSelectedRecord() {
+    if (!_canReadRecords) {
+      _showAccessDenied();
+      return;
+    }
+
     final record = _selectedRecord;
     if (record == null) {
       return;
@@ -1363,10 +1416,30 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   bool get _canSyncRecords {
+    if (!_canTableAction('sync')) {
+      return false;
+    }
     if (!_isServerBacked) {
       return false;
     }
     return widget.formDefinition.createDelegate != null || widget.formDefinition.updateDelegate != null;
+  }
+
+  bool get _canReadRecords => _canTableAction('read');
+
+  bool get _canCreateRecords => _canTableAction('create');
+
+  bool get _canUpdateRecords => _canTableAction('update');
+
+  bool get _canDeleteRecords => _canTableAction('delete');
+
+  bool _canTableAction(String action) {
+    final tableName = widget.formDefinition.tableName;
+    if (tableName == null || tableName.trim().isEmpty) {
+      return true;
+    }
+
+    return AccessControlService.instance.canTableAction(tableName, action);
   }
 
   bool _isRecordSynced(T record) {
@@ -1418,6 +1491,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
 
   Future<void> _syncSingleRecord(T record) async {
     if (!_canSyncRecords) {
+      _showAccessDenied();
       return;
     }
 
@@ -1454,6 +1528,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
 
   Future<void> _syncAllRecords() async {
     if (!_canSyncRecords) {
+      _showAccessDenied();
       return;
     }
 
@@ -1516,6 +1591,30 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     }
 
     throw StateError('No sync delegate available for ${widget.entityLabel}.');
+  }
+
+  Widget _buildUnauthorizedCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Icon(Icons.lock_outline_rounded, color: colorScheme.error),
+            const SizedBox(width: 12),
+            Expanded(child: Text('You do not have permission to access this section.', style: theme.textTheme.bodyLarge)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAccessDenied() {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('Access denied: your role does not allow this action.')));
   }
 }
 
@@ -1626,6 +1725,10 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
     required Future<void> Function(T record) onEdit,
     required Future<void> Function(T record) onDelete,
     required Future<void> Function(T record) onSync,
+    required bool canView,
+    required bool canEdit,
+    required bool canDelete,
+    required bool canSync,
     required bool Function(T record) isRecordSynced,
     required String actionsColumnName,
     required Color errorColor,
@@ -1650,6 +1753,10 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
        _onEdit = onEdit,
        _onDelete = onDelete,
        _onSync = onSync,
+       _canView = canView,
+       _canEdit = canEdit,
+       _canDelete = canDelete,
+       _canSync = canSync,
        _isRecordSynced = isRecordSynced,
        _actionsColumnName = actionsColumnName,
        _errorColor = errorColor,
@@ -1674,6 +1781,10 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
   final Future<void> Function(T record) _onEdit;
   final Future<void> Function(T record) _onDelete;
   final Future<void> Function(T record) _onSync;
+  final bool _canView;
+  final bool _canEdit;
+  final bool _canDelete;
+  final bool _canSync;
   final bool Function(T record) _isRecordSynced;
   final String _actionsColumnName;
   final Color _errorColor;
@@ -1791,6 +1902,24 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
     final isSynced = _isRecordSynced(record);
 
     if (_isCompactLayout) {
+      final availableActions = <PopupMenuItem<_RowAction>>[];
+      if (_canSync) {
+        availableActions.add(PopupMenuItem<_RowAction>(value: _RowAction.sync, enabled: !isSynced, child: Text(isSynced ? (_l10n.isArabic ? 'Synced' : 'Synced') : (_l10n.isArabic ? 'Sync' : 'Sync'))));
+      }
+      if (_canView) {
+        availableActions.add(PopupMenuItem<_RowAction>(value: _RowAction.view, child: Text(_l10n.viewEntity(_entityLabel))));
+      }
+      if (_canEdit) {
+        availableActions.add(PopupMenuItem<_RowAction>(value: _RowAction.edit, child: Text(_l10n.editEntity(_entityLabel))));
+      }
+      if (_canDelete) {
+        availableActions.add(PopupMenuItem<_RowAction>(value: _RowAction.delete, child: Text(_l10n.deleteEntityQuestion(_entityLabel))));
+      }
+
+      if (availableActions.isEmpty) {
+        return const SizedBox.shrink();
+      }
+
       return Align(
         alignment: Alignment.centerLeft,
         child: PopupMenuButton<_RowAction>(
@@ -1808,12 +1937,7 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
                 _onDelete(record);
             }
           },
-          itemBuilder: (context) => [
-            PopupMenuItem<_RowAction>(value: _RowAction.sync, enabled: !isSynced, child: Text(isSynced ? (_l10n.isArabic ? 'Synced' : 'Synced') : (_l10n.isArabic ? 'Sync' : 'Sync'))),
-            PopupMenuItem<_RowAction>(value: _RowAction.view, child: Text(_l10n.viewEntity(_entityLabel))),
-            PopupMenuItem<_RowAction>(value: _RowAction.edit, child: Text(_l10n.editEntity(_entityLabel))),
-            PopupMenuItem<_RowAction>(value: _RowAction.delete, child: Text(_l10n.deleteEntityQuestion(_entityLabel))),
-          ],
+          itemBuilder: (context) => availableActions,
         ),
       );
     }
@@ -1823,18 +1947,20 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          IconButton(
-            tooltip: isSynced ? (_l10n.isArabic ? 'Synced' : 'Synced') : (_l10n.isArabic ? 'Sync' : 'Sync'),
-            onPressed: isSynced ? null : () => _onSync(record),
-            icon: Icon(isSynced ? Icons.check_circle_outline_rounded : Icons.sync_rounded, size: 20),
-          ),
-          IconButton(tooltip: _l10n.viewEntity(_entityLabel), onPressed: () => _onView(record), icon: const Icon(Icons.visibility_outlined, size: 20)),
-          IconButton(tooltip: _l10n.editEntity(_entityLabel), onPressed: () => _onEdit(record), icon: const Icon(Icons.edit_outlined, size: 20)),
-          IconButton(
-            tooltip: _l10n.deleteEntityQuestion(_entityLabel),
-            onPressed: () => _onDelete(record),
-            icon: Icon(Icons.delete_outline_rounded, size: 20, color: _errorColor),
-          ),
+          if (_canSync)
+            IconButton(
+              tooltip: isSynced ? (_l10n.isArabic ? 'Synced' : 'Synced') : (_l10n.isArabic ? 'Sync' : 'Sync'),
+              onPressed: isSynced ? null : () => _onSync(record),
+              icon: Icon(isSynced ? Icons.check_circle_outline_rounded : Icons.sync_rounded, size: 20),
+            ),
+          if (_canView) IconButton(tooltip: _l10n.viewEntity(_entityLabel), onPressed: () => _onView(record), icon: const Icon(Icons.visibility_outlined, size: 20)),
+          if (_canEdit) IconButton(tooltip: _l10n.editEntity(_entityLabel), onPressed: () => _onEdit(record), icon: const Icon(Icons.edit_outlined, size: 20)),
+          if (_canDelete)
+            IconButton(
+              tooltip: _l10n.deleteEntityQuestion(_entityLabel),
+              onPressed: () => _onDelete(record),
+              icon: Icon(Icons.delete_outline_rounded, size: 20, color: _errorColor),
+            ),
         ],
       ),
     );

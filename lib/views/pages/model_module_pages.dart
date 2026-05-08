@@ -230,10 +230,23 @@ ModelFormDefinition<User> userFormDefinition(AppLocalizations l10n) => _serverBa
 
 ModelFormDefinition<Roles> roleFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Roles>(
   tableName: 'roles',
-  tableFieldPriorityKeys: const <String>['name', 'description', 'status'],
+  tableFieldPriorityKeys: const <String>['name', 'description', 'permissionsJson', 'status'],
   fields: [
     _textField('name', _t(l10n, 'Role name', 'اسم الدور'), required: true),
     _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
+    _multilineField(
+      'permissionsJson',
+      _t(l10n, 'Permissions JSON', 'صلاحيات JSON'),
+      hintText: _t(l10n, '{"page.users.view": true, "table.users.create": true}', '{"page.users.view": true, "table.users.create": true}'),
+      helperText: _t(
+        l10n,
+        'Set true/false permission keys or use allow/deny lists. Example: {"allow":["page.inventory.view"],"deny":["table.users.delete"]}.',
+        'عيّن مفاتيح الصلاحيات بقيم true/false أو استخدم قوائم allow/deny. مثال: {"allow":["page.inventory.view"],"deny":["table.users.delete"]}.',
+      ),
+      transformValue: _permissionsJsonTransform,
+      formatValue: _permissionsJsonFormat,
+      usePermissionVisualEditor: true,
+    ),
     _statusField(l10n),
   ],
   fromMap: Roles.fromMap,
@@ -241,6 +254,14 @@ ModelFormDefinition<Roles> roleFormDefinition(AppLocalizations l10n) => _serverB
   sampleModel: Roles(
     name: 'Store Supervisor',
     description: _t(l10n, 'Can manage inventory updates, clients, and invoice approvals.', 'يمكنه إدارة تحديثات المخزون والعملاء واعتمادات الفواتير.'),
+    permissionsJson: <String, dynamic>{
+      'page.dashboard.view': true,
+      'page.inventory.view': true,
+      'page.clients.view': true,
+      'table.store_invoice.read': true,
+      'table.store_invoice.update': true,
+      'table.users.delete': false,
+    },
     status: RecordStatus.active.code,
     createdAt: _createdAt,
     updatedAt: _updatedAt,
@@ -1253,6 +1274,7 @@ ModelFormDefinition<T> _serverBackedDefinition<T extends Object>({
   final localDelete = _localDeleteDelegate(tableName: tableName, toMap: toMap);
 
   return ModelFormDefinition<T>(
+    tableName: tableName,
     fields: fields,
     fromMap: fromMap,
     toMap: toMap,
@@ -1913,12 +1935,26 @@ ModelFormFieldDefinition _textField(
   );
 }
 
-ModelFormFieldDefinition _multilineField(String key, String label, {bool required = false}) {
+ModelFormFieldDefinition _multilineField(
+  String key,
+  String label, {
+  bool required = false,
+  String? hintText,
+  String? helperText,
+  Object? Function(Object? rawValue)? transformValue,
+  String Function(Object? value)? formatValue,
+  bool usePermissionVisualEditor = false,
+}) {
   return ModelFormFieldDefinition(
     key: key,
     label: label,
     type: ModelFormFieldType.multiline,
     required: required,
+    hintText: hintText,
+    helperText: helperText,
+    transformValue: transformValue,
+    formatValue: formatValue,
+    usePermissionVisualEditor: usePermissionVisualEditor,
   );
 }
 
@@ -2475,6 +2511,56 @@ String? _stringOrNull(Object? value) {
     return null;
   }
   return normalized;
+}
+
+Object? _permissionsJsonTransform(Object? rawValue) {
+  if (rawValue == null) {
+    return const <String, dynamic>{};
+  }
+
+  if (rawValue is Map) {
+    return Map<String, dynamic>.from(rawValue);
+  }
+
+  final normalized = rawValue.toString().trim();
+  if (normalized.isEmpty) {
+    return const <String, dynamic>{};
+  }
+
+  try {
+    final decoded = json.decode(normalized);
+    if (decoded is Map) {
+      return Map<String, dynamic>.from(decoded);
+    }
+    throw const FormatException('Permissions JSON must be an object.');
+  } catch (error) {
+    throw FormatException('Invalid permissions JSON: $error');
+  }
+}
+
+String _permissionsJsonFormat(Object? value) {
+  if (value == null) {
+    return '{}';
+  }
+
+  if (value is String) {
+    final normalized = value.trim();
+    if (normalized.isEmpty) {
+      return '{}';
+    }
+    try {
+      final decoded = json.decode(normalized);
+      return const JsonEncoder.withIndent('  ').convert(decoded);
+    } catch (_) {
+      return normalized;
+    }
+  }
+
+  if (value is Map || value is List) {
+    return const JsonEncoder.withIndent('  ').convert(value);
+  }
+
+  return value.toString();
 }
 
 int? _intOrNull(Object? value) {

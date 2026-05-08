@@ -1,8 +1,10 @@
--- Consolidated migration rebuilt from prior migration chain
--- Source files are inlined below in execution order.
+-- Store Management
+-- Complete Improved Schema Migration
+-- Canonical single-file migration for fresh environments.
+-- Includes core schema, operating model, tenant RLS, and RBAC bootstrap.
 
 
--- ===== BEGIN 20260429_000001_initial_schema.sql =====
+
 
 create extension if not exists pgcrypto;
 
@@ -700,19 +702,17 @@ $$;
 select public.enable_rls_and_authenticated_all_policies();
 drop function if exists public.enable_rls_and_authenticated_all_policies();
 
--- ===== END 20260429_000001_initial_schema.sql =====
 
 
--- ===== BEGIN 20260501_000002_add_sync_metadata_columns.sql =====
-
--- Compatibility migration intentionally kept as a no-op.
--- Complete schema and sync metadata are consolidated in:
---   supabase/migrations/20260429_000001_initial_schema.sql
-
--- ===== END 20260501_000002_add_sync_metadata_columns.sql =====
 
 
--- ===== BEGIN 20260505_000003_multi_tenant_supplier_variations.sql =====
+
+
+
+
+
+
+
 
 alter table if exists public.store
   add column if not exists "ownerUserUuid" uuid;
@@ -784,10 +784,10 @@ begin
 end;
 $$;
 
--- ===== END 20260505_000003_multi_tenant_supplier_variations.sql =====
 
 
--- ===== BEGIN 20260505_000004_operating_model_upgrade.sql =====
+
+
 
 create extension if not exists pgcrypto;
 
@@ -1829,5 +1829,330 @@ with check (
   )
 );
 
--- ===== END 20260505_000004_operating_model_upgrade.sql =====
+
+
+
+
+
+create extension if not exists pgcrypto;
+
+alter table if exists public.roles
+  add column if not exists "permissionsJson" jsonb not null default '{}'::jsonb;
+
+create index if not exists idx_roles_owner_uuid_name on public.roles ("ownerUuid", lower(name));
+
+create or replace function public.default_owner_permissions()
+returns jsonb
+language sql
+immutable
+as $$
+  select jsonb_build_object(
+    '*', true,
+    'page.dashboard.view', true,
+    'page.reports.view', true,
+    'page.settings.view', true,
+    'users.manage', true,
+    'roles.manage', true,
+    'permissions.manage', true
+  );
+$$;
+
+create or replace function public.default_staff_permissions()
+returns jsonb
+language sql
+immutable
+as $$
+  select jsonb_build_object(
+    'page.dashboard.view', true,
+    'page.inventory.view', true,
+    'page.transactions.view', true,
+    'page.products.view', true,
+    'page.invoices.view', true,
+    'table.store_invoice.read', true,
+    'table.store_invoice.create', true,
+    'table.store_invoice.update', true,
+    'table.inventory_transaction.read', true,
+    'table.inventory_transaction.create', true,
+    'table.inventory_batch.read', true
+  );
+$$;
+
+create or replace function public.ensure_owner_default_roles(target_owner_uuid uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  owner_role_uuid uuid;
+  admin_role_uuid uuid;
+  staff_role_uuid uuid;
+begin
+  if target_owner_uuid is null then
+    return;
+  end if;
+
+  select r.uuid into owner_role_uuid
+  from public.roles r
+  where r."ownerUuid" = target_owner_uuid
+    and lower(r.name) = 'owner'
+    and r."deletedAt" is null
+  limit 1;
+
+  if owner_role_uuid is null then
+    insert into public.roles ("ownerUuid", name, description, "permissionsJson", status)
+    values (
+      target_owner_uuid,
+      'Owner',
+      'Primary owner with full system control.',
+      public.default_owner_permissions(),
+      1
+    )
+    returning uuid into owner_role_uuid;
+  end if;
+
+  select r.uuid into admin_role_uuid
+  from public.roles r
+  where r."ownerUuid" = target_owner_uuid
+    and lower(r.name) = 'admin'
+    and r."deletedAt" is null
+  limit 1;
+
+  if admin_role_uuid is null then
+    insert into public.roles ("ownerUuid", name, description, "permissionsJson", status)
+    values (
+      target_owner_uuid,
+      'Admin',
+      'Administrator role with full access to users, roles, and permissions.',
+      public.default_owner_permissions(),
+      1
+    )
+    returning uuid into admin_role_uuid;
+  end if;
+
+  select r.uuid into staff_role_uuid
+  from public.roles r
+  where r."ownerUuid" = target_owner_uuid
+    and lower(r.name) = 'staff'
+    and r."deletedAt" is null
+  limit 1;
+
+  if staff_role_uuid is null then
+    insert into public.roles ("ownerUuid", name, description, "permissionsJson", status)
+    values (
+      target_owner_uuid,
+      'Staff',
+      'Default staff role with operational permissions.',
+      public.default_staff_permissions(),
+      1
+    )
+    returning uuid into staff_role_uuid;
+  end if;
+end;
+$$;
+
+create or replace function public.bootstrap_owner_admin_for_user(target_user_uuid uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  existing_owner_count bigint;
+  owner_uuid uuid;
+  membership_uuid uuid;
+  owner_role_uuid uuid;
+  admin_role_uuid uuid;
+  owner_name text;
+begin
+  if target_user_uuid is null then
+    return jsonb_build_object('ok', false, 'reason', 'missing_user_uuid');
+  end if;
+
+  select count(*) into existing_owner_count
+  from public.owner_account oa
+  where oa."deletedAt" is null;
+
+  if existing_owner_count > 0 then
+    return jsonb_build_object('ok', true, 'bootstrapped', false, 'reason', 'owner_already_exists');
+  end if;
+
+  select coalesce(nullif(trim(u.name), ''), nullif(trim(u.username), ''), 'Primary Owner')
+    into owner_name
+  from public.users u
+  where u.uuid = target_user_uuid
+  limit 1;
+
+  insert into public.owner_account (name, code, base_currency, status)
+  values (owner_name, substr(target_user_uuid::text, 1, 12), 'USD', 1)
+  returning uuid into owner_uuid;
+
+  perform public.ensure_owner_default_roles(owner_uuid);
+
+  insert into public.owner_user_membership (
+    "ownerUuid",
+    "userUuid",
+    role,
+    "permissionsJson",
+    status
+  )
+  values (
+    owner_uuid,
+    target_user_uuid,
+    'owner',
+    public.default_owner_permissions(),
+    1
+  )
+  on conflict ("ownerUuid", "userUuid")
+  do update set
+    role = 'owner',
+    "permissionsJson" = public.default_owner_permissions(),
+    status = 1,
+    "deletedAt" = null,
+    "updatedAt" = public.now_millis()
+  returning uuid into membership_uuid;
+
+  select r.uuid into owner_role_uuid
+  from public.roles r
+  where r."ownerUuid" = owner_uuid
+    and lower(r.name) = 'owner'
+    and r."deletedAt" is null
+  limit 1;
+
+  select r.uuid into admin_role_uuid
+  from public.roles r
+  where r."ownerUuid" = owner_uuid
+    and lower(r.name) = 'admin'
+    and r."deletedAt" is null
+  limit 1;
+
+  if owner_role_uuid is not null then
+    insert into public.user_roles ("userUuid", "roleUuid", status)
+    values (target_user_uuid, owner_role_uuid, 1)
+    on conflict ("userUuid", "roleUuid")
+    do update set
+      status = 1,
+      "deletedAt" = null,
+      "updatedAt" = public.now_millis();
+  end if;
+
+  if admin_role_uuid is not null then
+    insert into public.user_roles ("userUuid", "roleUuid", status)
+    values (target_user_uuid, admin_role_uuid, 1)
+    on conflict ("userUuid", "roleUuid")
+    do update set
+      status = 1,
+      "deletedAt" = null,
+      "updatedAt" = public.now_millis();
+  end if;
+
+  return jsonb_build_object(
+    'ok', true,
+    'bootstrapped', true,
+    'ownerUuid', owner_uuid,
+    'membershipUuid', membership_uuid
+  );
+end;
+$$;
+
+create or replace function public.bootstrap_current_user_access()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_user_uuid uuid;
+begin
+  select u.uuid into current_user_uuid
+  from public.users u
+  where u.auth_user_id = auth.uid()
+  limit 1;
+
+  if current_user_uuid is null then
+    return jsonb_build_object('ok', false, 'reason', 'profile_not_found');
+  end if;
+
+  return public.bootstrap_owner_admin_for_user(current_user_uuid);
+end;
+$$;
+
+create or replace function public.handle_user_rbac_bootstrap()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform public.bootstrap_owner_admin_for_user(new.uuid);
+  return new;
+end;
+$$;
+
+drop trigger if exists on_user_profile_created_rbac_bootstrap on public.users;
+
+create trigger on_user_profile_created_rbac_bootstrap
+after insert on public.users
+for each row execute function public.handle_user_rbac_bootstrap();
+
+create or replace function public.sync_owner_role_permissions_to_membership()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if lower(coalesce(new.role, '')) in ('owner', 'admin') then
+    new."permissionsJson" := public.default_owner_permissions();
+  elsif lower(coalesce(new.role, '')) = 'staff' and coalesce(new."permissionsJson", '{}'::jsonb) = '{}'::jsonb then
+    new."permissionsJson" := public.default_staff_permissions();
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists set_owner_membership_default_permissions on public.owner_user_membership;
+
+create trigger set_owner_membership_default_permissions
+before insert or update on public.owner_user_membership
+for each row execute function public.sync_owner_role_permissions_to_membership();
+
+create index if not exists idx_owner_user_membership_owner_uuid on public.owner_user_membership ("ownerUuid");
+create index if not exists idx_owner_user_membership_user_uuid on public.owner_user_membership ("userUuid");
+create index if not exists idx_owner_permission_scope_membership_uuid on public.owner_permission_scope ("ownerMembershipUuid");
+create index if not exists idx_owner_permission_scope_scope on public.owner_permission_scope ("scopeType", "scopeUuid");
+
+create or replace function public.rebuild_rbac_baseline()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  owner_row record;
+begin
+  for owner_row in
+    select oa.uuid
+    from public.owner_account oa
+    where oa."deletedAt" is null
+  loop
+    perform public.ensure_owner_default_roles(owner_row.uuid);
+  end loop;
+
+  update public.owner_user_membership m
+  set "permissionsJson" = public.default_owner_permissions(),
+      "updatedAt" = public.now_millis()
+  where lower(coalesce(m.role, '')) in ('owner', 'admin')
+    and coalesce(m."permissionsJson", '{}'::jsonb) <> public.default_owner_permissions();
+
+  update public.owner_user_membership m
+  set "permissionsJson" = public.default_staff_permissions(),
+      "updatedAt" = public.now_millis()
+  where lower(coalesce(m.role, '')) = 'staff'
+    and coalesce(m."permissionsJson", '{}'::jsonb) = '{}'::jsonb;
+end;
+$$;
+
+select public.rebuild_rbac_baseline();
 

@@ -62,9 +62,9 @@ tool/
 
 ## Database Migration
 
-Migrations are consolidated into a single file:
+Migrations are rebuilt and consolidated into a single canonical file:
 
-- supabase/migrations/20260505_000001_consolidated_schema.sql
+- supabase/migrations/20260508_000001_complete_improved_schema.sql
 
 This consolidated migration includes:
 
@@ -72,6 +72,13 @@ This consolidated migration includes:
 - Sync metadata columns and related compatibility updates.
 - Supplier product variation updates.
 - Multi-tenant operating model upgrade, including inventory transaction structures, reporting views, and tenant security rules.
+- RBAC role permissions, first-user owner bootstrap, and owner/admin/staff default permission seeding.
+
+There should be only one active migration file in this repository:
+
+- supabase/migrations/20260508_000001_complete_improved_schema.sql
+
+If you have previously applied older split migrations, keep historical records in your deployed database, but use the consolidated file as the single source of truth for fresh environments.
 
 For rollout details, see:
 

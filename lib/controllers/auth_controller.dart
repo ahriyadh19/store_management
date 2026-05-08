@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/models/users.dart';
+import 'package:store_management/services/access_control_service.dart';
 import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/services/auth_repository.dart';
 
@@ -345,6 +346,7 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 
 	Future<void> _onSignedOut(AuthSignedOut event, Emitter<AuthState> emit) async {
 		await _authRepository.signOut();
+    await AccessControlService.instance.refresh();
   }
 
   Future<void> _onSessionChanged(_AuthSessionChanged event, Emitter<AuthState> emit) async {
@@ -356,8 +358,10 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
 
     switch (snapshot.status) {
       case AuthSessionStatus.signedIn:
+        await AccessControlService.instance.refresh(provisionIfNeeded: true);
         emit(state.copyWith(screen: AuthScreen.signIn, status: AuthStatus.authenticated, messageKey: snapshot.messageKey, clearMessage: snapshot.messageKey == null, userEmail: snapshot.email, user: snapshot.user));
       case AuthSessionStatus.signedOut:
+        await AccessControlService.instance.refresh();
         emit(state.copyWith(screen: AuthScreen.signIn, status: AuthStatus.initial,
             messageKey: snapshot.messageKey, clearMessage: snapshot.messageKey == null, clearUserEmail: true, clearUser: true));
       case AuthSessionStatus.passwordRecovery:
