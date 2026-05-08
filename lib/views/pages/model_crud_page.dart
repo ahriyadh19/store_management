@@ -173,6 +173,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     final headerRowHeight = isCompactLayout ? 52.0 : 56.0;
     final visibleRecords = _paginatedRecords;
     final visibleRecordKeys = _viewState.paginatedRecordKeys;
+    final syncedCount = _viewState.sortedRecords.where(_isRecordSynced).length;
     final currentPage = _effectiveCurrentPage;
     final pageCount = _pageCount;
     const listHorizontalPadding = 52.0;
@@ -192,6 +193,8 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       onView: _openDetailsPage,
       onEdit: _showEditSheet,
       onDelete: _confirmDelete,
+      onSync: _syncSingleRecord,
+      isRecordSynced: _isRecordSynced,
       actionsColumnName: _actionsColumnName,
       errorColor: Theme.of(context).colorScheme.error,
     );
@@ -216,6 +219,22 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
                   ),
                 ),
                 const SizedBox(width: 16),
+                IconButton(
+                  tooltip: l10n.isArabic ? 'تحديث' : 'Refresh',
+                  onPressed: _isLoading
+                      ? null
+                      : () {
+                          unawaited(_refreshViewState(immediateSearch: true));
+                        },
+                  icon: const Icon(Icons.refresh_rounded),
+                ),
+                const SizedBox(width: 8),
+                if (_canSyncRecords) ...[
+                  FilledButton.icon(onPressed: _isLoading || _viewState.sortedRecords.isEmpty ? null : _syncAllRecords, icon: const Icon(Icons.sync_rounded), label: Text(l10n.isArabic ? 'مزامنة الكل' : 'Sync All')),
+                  const SizedBox(width: 12),
+                ],
+                _SummaryChip(label: l10n.isArabic ? 'متزامن' : 'Synced', value: '$syncedCount/${_viewState.totalRowCount}'),
+                const SizedBox(width: 12),
                 _SummaryChip(label: l10n.rows, value: _summaryRowCountLabel),
               ],
             ),
@@ -326,8 +345,8 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   List<GridColumn> _buildColumns(double tableWidth, {required bool isCompactLayout}) {
     final resolvedWidths = _resolvedColumnWidths(tableWidth, isCompactLayout: isCompactLayout);
     final dataColumnMinimumWidth = isCompactLayout ? 110.0 : 160.0;
-    final actionsColumnMinimumWidth = isCompactLayout ? 132.0 : 156.0;
-    final actionsColumnWidth = isCompactLayout ? 132.0 : 156.0;
+    final actionsColumnMinimumWidth = isCompactLayout ? 132.0 : 236.0;
+    final actionsColumnWidth = isCompactLayout ? 132.0 : 236.0;
 
     return [
       for (final field in _visibleFields)
@@ -347,7 +366,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   Map<String, double> _resolvedColumnWidths(double tableWidth, {required bool isCompactLayout}) {
-    final defaultActionsWidth = isCompactLayout ? 132.0 : 156.0;
+    final defaultActionsWidth = isCompactLayout ? 132.0 : 236.0;
     final dataColumnCount = _visibleFields.length;
     final minimumDataWidth = isCompactLayout ? 110.0 : 160.0;
     final computedDataWidth = dataColumnCount == 0 ? minimumDataWidth : ((tableWidth - defaultActionsWidth) / dataColumnCount).clamp(minimumDataWidth, isCompactLayout ? 180.0 : 260.0);
@@ -374,7 +393,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   List<ModelFormFieldDefinition> get _visibleFields {
     final fields = widget.formDefinition.fields;
     if (fields.isEmpty) {
-      return fields;
+      return _appendSyncFieldsIfAvailable(fields, widget.formDefinition.toMap(widget.formDefinition.sampleModel));
     }
 
     final preferredKeys = widget.formDefinition.tableFieldPriorityKeys;
@@ -392,7 +411,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       }
 
       if (selected.length == 5) {
-        return selected;
+        return _appendSyncFieldsIfAvailable(selected, widget.formDefinition.toMap(_records.isNotEmpty ? _records.first : widget.formDefinition.sampleModel));
       }
       if (selected.isNotEmpty) {
         for (final field in fields) {
@@ -403,13 +422,30 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
             break;
           }
         }
-        return selected;
+        return _appendSyncFieldsIfAvailable(selected, widget.formDefinition.toMap(_records.isNotEmpty ? _records.first : widget.formDefinition.sampleModel));
       }
     }
 
     final sampleRecord = _records.isNotEmpty ? _records.first : widget.formDefinition.sampleModel;
     final sampleData = widget.formDefinition.toMap(sampleRecord);
-    return _resolveVisibleFields(fields, sampleData, maxColumns: 5);
+    return _appendSyncFieldsIfAvailable(_resolveVisibleFields(fields, sampleData, maxColumns: 5), sampleData);
+  }
+
+  List<ModelFormFieldDefinition> _appendSyncFieldsIfAvailable(List<ModelFormFieldDefinition> fields, Map<String, dynamic> sampleData) {
+    final selected = List<ModelFormFieldDefinition>.from(fields);
+    final hasSynced = selected.any((field) => field.key == 'synced');
+    final hasSyncedAt = selected.any((field) => field.key == 'syncedAt');
+
+    if (!hasSynced && sampleData.containsKey('synced')) {
+      selected.add(const ModelFormFieldDefinition(key: 'synced', label: 'Synced', type: ModelFormFieldType.text, readOnly: true));
+    }
+
+    final hasSyncedDate = sampleData.containsKey('syncedAt') || sampleData.containsKey('synced_at');
+    if (!hasSyncedAt && hasSyncedDate) {
+      selected.add(const ModelFormFieldDefinition(key: 'syncedAt', label: 'Date Synced', type: ModelFormFieldType.text, readOnly: true));
+    }
+
+    return selected;
   }
 
   List<ModelFormFieldDefinition> _resolveVisibleFields(List<ModelFormFieldDefinition> fields, Map<String, dynamic> sampleData, {required int maxColumns}) {
@@ -1197,11 +1233,36 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   String _formatCellValueForField({required String? fieldKey, required Object? value, required Map<String, dynamic> rowData}) {
+    final key = fieldKey;
+    if (key == 'synced') {
+      final boolValue = _boolFromValue(value);
+      if (boolValue == null) {
+        return value?.toString() ?? '-';
+      }
+      return boolValue ? 'Yes' : 'No';
+    }
+
+    if (key == 'syncedAt') {
+      final resolvedValue = value ?? rowData['synced_at'];
+      if (resolvedValue == null) {
+        return '-';
+      }
+      final millis = _millisecondsFromValue(resolvedValue);
+      if (millis == null) {
+        return resolvedValue.toString();
+      }
+      final date = DateTime.fromMillisecondsSinceEpoch(millis);
+      final month = date.month.toString().padLeft(2, '0');
+      final day = date.day.toString().padLeft(2, '0');
+      final hour = date.hour.toString().padLeft(2, '0');
+      final minute = date.minute.toString().padLeft(2, '0');
+      return '${date.year}-$month-$day $hour:$minute';
+    }
+
     if (value == null) {
       return '-';
     }
 
-    final key = fieldKey;
     if (key != null && _isRelationLikeField(key)) {
       final raw = value.toString().trim();
       if (raw.isEmpty) {
@@ -1297,6 +1358,162 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       return raw;
     }
     return '${raw.substring(0, 8)}...${raw.substring(raw.length - 4)}';
+  }
+
+  bool get _canSyncRecords {
+    if (!_isServerBacked) {
+      return false;
+    }
+    return widget.formDefinition.createDelegate != null || widget.formDefinition.updateDelegate != null;
+  }
+
+  bool _isRecordSynced(T record) {
+    final data = widget.formDefinition.toMap(record);
+    return _boolFromValue(data['synced']) ?? false;
+  }
+
+  bool? _boolFromValue(Object? value) {
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value != 0;
+    }
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == 'true' || normalized == '1' || normalized == 'yes') {
+        return true;
+      }
+      if (normalized == 'false' || normalized == '0' || normalized == 'no') {
+        return false;
+      }
+    }
+    return null;
+  }
+
+  int? _millisecondsFromValue(Object? value) {
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    if (value is DateTime) {
+      return value.millisecondsSinceEpoch;
+    }
+    if (value is String) {
+      final asInt = int.tryParse(value);
+      if (asInt != null) {
+        return asInt;
+      }
+      final parsedDate = DateTime.tryParse(value);
+      if (parsedDate != null) {
+        return parsedDate.millisecondsSinceEpoch;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _syncSingleRecord(T record) async {
+    if (!_canSyncRecords) {
+      return;
+    }
+
+    final createDelegate = widget.formDefinition.createDelegate;
+    final updateDelegate = widget.formDefinition.updateDelegate;
+    if (createDelegate == null && updateDelegate == null) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _runSyncForRecord(record, createDelegate: createDelegate, updateDelegate: updateDelegate);
+      if (!mounted) {
+        return;
+      }
+      await _refreshViewState(immediateSearch: true);
+      if (!mounted) {
+        return;
+      }
+      _showFeedback(context.l10n.isArabic ? 'تمت مزامنة السجل بنجاح.' : 'Record synced successfully.');
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _isLoading = false;
+      });
+      _showError(error);
+    }
+  }
+
+  Future<void> _syncAllRecords() async {
+    if (!_canSyncRecords) {
+      return;
+    }
+
+    final createDelegate = widget.formDefinition.createDelegate;
+    final updateDelegate = widget.formDefinition.updateDelegate;
+    if (createDelegate == null && updateDelegate == null) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    var syncedCount = 0;
+    for (final record in _viewState.sortedRecords) {
+      if (_isRecordSynced(record)) {
+        continue;
+      }
+
+      try {
+        await _runSyncForRecord(record, createDelegate: createDelegate, updateDelegate: updateDelegate);
+        syncedCount += 1;
+      } catch (_) {
+        // Continue syncing remaining records even if one row fails.
+      }
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    await _refreshViewState(immediateSearch: true);
+    if (!mounted) {
+      return;
+    }
+
+    final message = context.l10n.isArabic ? 'تمت مزامنة $syncedCount سجلات.' : 'Synced $syncedCount records.';
+    _showFeedback(message);
+  }
+
+  Future<void> _runSyncForRecord(T record, {required ModelCreateDelegate<T>? createDelegate, required ModelUpdateDelegate<T>? updateDelegate}) async {
+    final data = widget.formDefinition.toMap(record);
+    final uuid = data['uuid']?.toString() ?? '';
+    final id = data['id'];
+    final looksLikeLocalOnlyRecord = uuid.startsWith('local-') || uuid.trim().isEmpty || id == null || id == 0;
+
+    if (looksLikeLocalOnlyRecord && createDelegate != null) {
+      await createDelegate(record);
+      return;
+    }
+
+    if (updateDelegate != null) {
+      await updateDelegate(record);
+      return;
+    }
+
+    if (createDelegate != null) {
+      await createDelegate(record);
+      return;
+    }
+
+    throw StateError('No sync delegate available for ${widget.entityLabel}.');
   }
 }
 
@@ -1406,6 +1623,8 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
     required void Function(T record) onView,
     required Future<void> Function(T record) onEdit,
     required Future<void> Function(T record) onDelete,
+    required Future<void> Function(T record) onSync,
+    required bool Function(T record) isRecordSynced,
     required String actionsColumnName,
     required Color errorColor,
   }) : _entries = records
@@ -1428,6 +1647,8 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
        _onView = onView,
        _onEdit = onEdit,
        _onDelete = onDelete,
+       _onSync = onSync,
+       _isRecordSynced = isRecordSynced,
        _actionsColumnName = actionsColumnName,
        _errorColor = errorColor,
        _recordByRow = <DataGridRow, T>{},
@@ -1450,6 +1671,8 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
   final void Function(T record) _onView;
   final Future<void> Function(T record) _onEdit;
   final Future<void> Function(T record) _onDelete;
+  final Future<void> Function(T record) _onSync;
+  final bool Function(T record) _isRecordSynced;
   final String _actionsColumnName;
   final Color _errorColor;
 
@@ -1563,6 +1786,8 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
   }
 
   Widget _buildActionCell(T record) {
+    final isSynced = _isRecordSynced(record);
+
     if (_isCompactLayout) {
       return Align(
         alignment: Alignment.centerLeft,
@@ -1571,6 +1796,8 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
           icon: const Icon(Icons.more_horiz_rounded),
           onSelected: (action) {
             switch (action) {
+              case _RowAction.sync:
+                _onSync(record);
               case _RowAction.view:
                 _onView(record);
               case _RowAction.edit:
@@ -1580,6 +1807,7 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
             }
           },
           itemBuilder: (context) => [
+            PopupMenuItem<_RowAction>(value: _RowAction.sync, enabled: !isSynced, child: Text(isSynced ? (_l10n.isArabic ? 'Synced' : 'Synced') : (_l10n.isArabic ? 'Sync' : 'Sync'))),
             PopupMenuItem<_RowAction>(value: _RowAction.view, child: Text(_l10n.viewEntity(_entityLabel))),
             PopupMenuItem<_RowAction>(value: _RowAction.edit, child: Text(_l10n.editEntity(_entityLabel))),
             PopupMenuItem<_RowAction>(value: _RowAction.delete, child: Text(_l10n.deleteEntityQuestion(_entityLabel))),
@@ -1590,9 +1818,14 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
 
     return Align(
       alignment: Alignment.centerLeft,
-      child: Wrap(
-        spacing: 4,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
+          IconButton(
+            tooltip: isSynced ? (_l10n.isArabic ? 'Synced' : 'Synced') : (_l10n.isArabic ? 'Sync' : 'Sync'),
+            onPressed: isSynced ? null : () => _onSync(record),
+            icon: Icon(isSynced ? Icons.check_circle_outline_rounded : Icons.sync_rounded, size: 20),
+          ),
           IconButton(tooltip: _l10n.viewEntity(_entityLabel), onPressed: () => _onView(record), icon: const Icon(Icons.visibility_outlined, size: 20)),
           IconButton(tooltip: _l10n.editEntity(_entityLabel), onPressed: () => _onEdit(record), icon: const Icon(Icons.edit_outlined, size: 20)),
           IconButton(
@@ -1623,7 +1856,7 @@ class _FieldPriority {
   final int score;
 }
 
-enum _RowAction { view, edit, delete }
+enum _RowAction { sync, view, edit, delete }
 
 class _ModuleHeader extends StatelessWidget {
   const _ModuleHeader({required this.title, required this.description, required this.icon, required this.highlights});
