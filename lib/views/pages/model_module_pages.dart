@@ -441,7 +441,7 @@ ModelFormDefinition<StoreInvoice> invoiceFormDefinition(AppLocalizations l10n) =
     _textField('productUuid', _t(l10n, 'Product UUID', 'معرّف المنتج UUID')),
     _integerField('quantity', _t(l10n, 'Quantity', 'الكمية')),
     _decimalField('unitPrice', _t(l10n, 'Unit price', 'سعر الوحدة')),
-    _selectionField('batchSelectionStrategy', _t(l10n, 'Batch strategy', 'استراتيجية اختيار الدفعة'), const [ModelFormSelectOption(label: 'FIFO', value: 'fifo'), ModelFormSelectOption(label: 'FEFO', value: 'fefo')]),
+    _selectionField('batchSelectionStrategy', _t(l10n, 'Batch strategy', 'استراتيجية اختيار الدفعة'), _batchStrategyOptions(l10n)),
     _textField('createdByUserUuid', _t(l10n, 'Created by user UUID', 'معرّف المستخدم المنشئ UUID')),
     _selectionField('invoiceType', _t(l10n, 'Invoice type', 'نوع الفاتورة'), _invoiceTypeOptions(l10n), required: true),
     _integerField('itemCount', _t(l10n, 'Item count', 'عدد العناصر'), required: true),
@@ -1996,6 +1996,11 @@ List<ModelFormSelectOption> _paymentMethodOptions(AppLocalizations l10n) => [
 List<ModelFormSelectOption> _invoiceTypeOptions(AppLocalizations l10n) => [
   for (final type in StoreInvoiceType.values)
     ModelFormSelectOption(label: _enumLabel(l10n, type.name), value: type.value),
+];
+
+List<ModelFormSelectOption> _batchStrategyOptions(AppLocalizations l10n) => [
+  ModelFormSelectOption(label: _t(l10n, 'FIFO - Oldest stock first', 'FIFO - الأقدم أولا'), value: 'fifo'),
+  ModelFormSelectOption(label: _t(l10n, 'FEFO - Earliest expiry first', 'FEFO - الأقرب انتهاءً أولا'), value: 'fefo'),
 ];
 
 List<ModelFormSelectOption> _returnTypeOptions(AppLocalizations l10n) => [
