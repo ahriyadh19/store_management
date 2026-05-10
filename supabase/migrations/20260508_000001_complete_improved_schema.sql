@@ -1879,6 +1879,83 @@ as $$
   );
 $$;
 
+create or replace function public.default_manager_permissions()
+returns jsonb
+language sql
+immutable
+as $$
+  select jsonb_build_object(
+    'page.dashboard.view', true,
+    'page.inventory.view', true,
+    'page.transactions.view', true,
+    'page.products.view', true,
+    'page.invoices.view', true,
+    'page.clients.view', true,
+    'page.suppliers.view', true,
+    'table.products.read', true,
+    'table.products.create', true,
+    'table.products.update', true,
+    'table.client.read', true,
+    'table.client.create', true,
+    'table.client.update', true,
+    'table.supplier.read', true,
+    'table.supplier.create', true,
+    'table.supplier.update', true,
+    'table.store_invoice.read', true,
+    'table.store_invoice.create', true,
+    'table.store_invoice.update', true,
+    'table.inventory_transaction.read', true,
+    'table.inventory_transaction.create', true,
+    'table.inventory_batch.read', true
+  );
+$$;
+
+create or replace function public.default_viewer_permissions()
+returns jsonb
+language sql
+immutable
+as $$
+  select jsonb_build_object(
+    'page.dashboard.view', true,
+    'page.inventory.view', true,
+    'page.products.view', true,
+    'page.invoices.view', true,
+    'page.clients.view', true,
+    'page.suppliers.view', true,
+    'table.products.read', true,
+    'table.client.read', true,
+    'table.supplier.read', true,
+    'table.store_invoice.read', true,
+    'table.inventory_transaction.read', true,
+    'table.inventory_batch.read', true
+  );
+$$;
+
+create or replace function public.default_accountant_permissions()
+returns jsonb
+language sql
+immutable
+as $$
+  select jsonb_build_object(
+    'page.dashboard.view', true,
+    'page.reports.view', true,
+    'page.invoices.view', true,
+    'page.transactions.view', true,
+    'page.clients.view', true,
+    'table.store_invoice.read', true,
+    'table.store_invoice.update', true,
+    'table.store_payment_voucher.read', true,
+    'table.store_payment_voucher.create', true,
+    'table.store_payment_voucher.update', true,
+    'table.payment_allocation.read', true,
+    'table.payment_allocation.create', true,
+    'table.payment_allocation.update', true,
+    'table.store_financial_transaction.read', true,
+    'table.store_financial_transaction.create', true,
+    'table.store_financial_transaction.update', true,
+    'table.client.read', true
+  );
+$$;
 create or replace function public.ensure_owner_default_roles(target_owner_uuid uuid)
 returns void
 language plpgsql
@@ -1888,7 +1965,11 @@ as $$
 declare
   owner_role_uuid uuid;
   admin_role_uuid uuid;
+manager_role_uuid uuid;
   staff_role_uuid uuid;
+viewer_role_uuid uuid;
+
+accountant_role_uuid uuid;
 begin
   if target_owner_uuid is null then
     return;
@@ -1932,6 +2013,31 @@ begin
     returning uuid into admin_role_uuid;
   end if;
 
+select r.uuid into manager_role_uuid
+  from public.roles r
+  where r."ownerUuid" = target_owner_uuid
+    and lower(r.name) = 'manager'
+    and r."deletedAt" is null
+  limit 1;
+
+if manager_role_uuid is null then
+insert into
+    public.roles (
+        "ownerUuid",
+        name,
+        description,
+        "permissionsJson",
+        status
+    )
+values (
+        target_owner_uuid,
+        'Manager',
+        'Operational manager with broad day-to-day management permissions.',
+        public.default_manager_permissions (),
+        1
+    ) returning uuid into manager_role_uuid;
+
+end if;
   select r.uuid into staff_role_uuid
   from public.roles r
   where r."ownerUuid" = target_owner_uuid
@@ -1950,6 +2056,57 @@ begin
     )
     returning uuid into staff_role_uuid;
   end if;
+select r.uuid into viewer_role_uuid
+  from public.roles r
+  where r."ownerUuid" = target_owner_uuid
+    and lower(r.name) = 'viewer'
+    and r."deletedAt" is null
+  limit 1;
+
+if viewer_role_uuid is null then
+insert into
+    public.roles (
+        "ownerUuid",
+        name,
+        description,
+        "permissionsJson",
+        status
+    )
+values (
+        target_owner_uuid,
+        'Viewer',
+        'Read-only role for dashboards, inventory, and invoices.',
+        public.default_viewer_permissions (),
+        1
+    ) returning uuid into viewer_role_uuid;
+
+end if;
+
+select r.uuid into accountant_role_uuid
+  from public.roles r
+  where r."ownerUuid" = target_owner_uuid
+    and lower(r.name) = 'accountant'
+    and r."deletedAt" is null
+  limit 1;
+
+if accountant_role_uuid is null then
+insert into
+    public.roles (
+        "ownerUuid",
+        name,
+        description,
+        "permissionsJson",
+        status
+    )
+values (
+        target_owner_uuid,
+        'Accountant',
+        'Finance-focused role for invoicing, payments, and ledgers.',
+        public.default_accountant_permissions (),
+        1
+    ) returning uuid into accountant_role_uuid;
+
+end if;
 end;
 $$;
 
@@ -1963,8 +2120,7 @@ declare
   existing_owner_count bigint;
   owner_uuid uuid;
   membership_uuid uuid;
-  owner_role_uuid uuid;
-  admin_role_uuid uuid;
+owner_role_uuid uuid;
   owner_name text;
 begin
   if target_user_uuid is null then
@@ -2008,7 +2164,10 @@ begin
   on conflict ("ownerUuid", "userUuid")
   do update set
     role = 'owner',
-    "permissionsJson" = public.default_owner_permissions(),
+"permissionsJson" = case
+      when coalesce(public.owner_user_membership."permissionsJson", '{}'::jsonb) = '{}'::jsonb then public.default_owner_permissions()
+      else public.owner_user_membership."permissionsJson"
+    end,
     status = 1,
     "deletedAt" = null,
     "updatedAt" = public.now_millis()
@@ -2021,26 +2180,9 @@ begin
     and r."deletedAt" is null
   limit 1;
 
-  select r.uuid into admin_role_uuid
-  from public.roles r
-  where r."ownerUuid" = owner_uuid
-    and lower(r.name) = 'admin'
-    and r."deletedAt" is null
-  limit 1;
-
   if owner_role_uuid is not null then
     insert into public.user_roles ("userUuid", "roleUuid", status)
     values (target_user_uuid, owner_role_uuid, 1)
-    on conflict ("userUuid", "roleUuid")
-    do update set
-      status = 1,
-      "deletedAt" = null,
-      "updatedAt" = public.now_millis();
-  end if;
-
-  if admin_role_uuid is not null then
-    insert into public.user_roles ("userUuid", "roleUuid", status)
-    values (target_user_uuid, admin_role_uuid, 1)
     on conflict ("userUuid", "roleUuid")
     do update set
       status = 1,
@@ -2104,10 +2246,17 @@ security definer
 set search_path = public
 as $$
 begin
-  if lower(coalesce(new.role, '')) in ('owner', 'admin') then
+if lower(coalesce(new.role, '')) in ('owner', 'admin') and coalesce(new."permissionsJson", '{}'::jsonb) = '{}'::jsonb then
     new."permissionsJson" := public.default_owner_permissions();
+elsif lower(coalesce(new.role, '')) = 'manager' and coalesce(new."permissionsJson", '{}'::jsonb) = '{}'::jsonb then
+    new."permissionsJson" := public.default_manager_permissions();
   elsif lower(coalesce(new.role, '')) = 'staff' and coalesce(new."permissionsJson", '{}'::jsonb) = '{}'::jsonb then
     new."permissionsJson" := public.default_staff_permissions();
+elsif lower(coalesce(new.role, '')) = 'viewer' and coalesce(new."permissionsJson", '{}'::jsonb) = '{}'::jsonb then
+    new."permissionsJson" := public.default_viewer_permissions();
+
+elsif lower(coalesce(new.role, '')) = 'accountant' and coalesce(new."permissionsJson", '{}'::jsonb) = '{}'::jsonb then
+    new."permissionsJson" := public.default_accountant_permissions();
   end if;
 
   return new;
@@ -2146,12 +2295,29 @@ begin
   set "permissionsJson" = public.default_owner_permissions(),
       "updatedAt" = public.now_millis()
   where lower(coalesce(m.role, '')) in ('owner', 'admin')
-    and coalesce(m."permissionsJson", '{}'::jsonb) <> public.default_owner_permissions();
+and coalesce(m."permissionsJson", '{}'::jsonb) = '{}'::jsonb;
+
+update public.owner_user_membership m
+  set "permissionsJson" = public.default_manager_permissions(),
+      "updatedAt" = public.now_millis()
+  where lower(coalesce(m.role, '')) = 'manager'
+    and coalesce(m."permissionsJson", '{}'::jsonb) = '{}'::jsonb;
 
   update public.owner_user_membership m
   set "permissionsJson" = public.default_staff_permissions(),
       "updatedAt" = public.now_millis()
   where lower(coalesce(m.role, '')) = 'staff'
+    and coalesce(m."permissionsJson", '{}'::jsonb) = '{}'::jsonb;
+update public.owner_user_membership m
+  set "permissionsJson" = public.default_viewer_permissions(),
+      "updatedAt" = public.now_millis()
+  where lower(coalesce(m.role, '')) = 'viewer'
+    and coalesce(m."permissionsJson", '{}'::jsonb) = '{}'::jsonb;
+
+update public.owner_user_membership m
+  set "permissionsJson" = public.default_accountant_permissions(),
+      "updatedAt" = public.now_millis()
+  where lower(coalesce(m.role, '')) = 'accountant'
     and coalesce(m."permissionsJson", '{}'::jsonb) = '{}'::jsonb;
 end;
 $$;

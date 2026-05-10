@@ -42,13 +42,7 @@ class AccessControlSnapshot {
   bool get hasOwnerScope => ownerUuid != null && ownerUuid!.isNotEmpty;
 
   bool get isOwnerAdmin {
-    final normalizedMembershipRoles = membershipRoles.map(_normalizePermissionKey);
-    final normalizedRoleNames = roleNames.map(_normalizePermissionKey);
-    return normalizedMembershipRoles.contains('owner') ||
-        normalizedMembershipRoles.contains('admin') ||
-        normalizedRoleNames.contains('owner') ||
-        normalizedRoleNames.contains('admin') ||
-        allowPermissions.contains('*');
+    return allowPermissions.contains('*');
   }
 
   bool can(String permission) {
@@ -209,13 +203,18 @@ class AccessControlService extends ChangeNotifier {
 
       for (final row in normalizedMemberships) {
         final role = row['role']?.toString();
+        final normalizedRole = _normalizePermissionKey(role ?? '');
         if (role != null && role.trim().isNotEmpty) {
-          membershipRoles.add(_normalizePermissionKey(role));
+          membershipRoles.add(normalizedRole);
         }
 
         final parsed = _parsePermissions(row['permissionsJson']);
         allowPermissions.addAll(parsed.allow);
         denyPermissions.addAll(parsed.deny);
+
+        if (parsed.allow.isEmpty && parsed.deny.isEmpty) {
+          allowPermissions.addAll(_defaultAllowPermissionsForSystemRole(normalizedRole));
+        }
       }
 
       if (membershipUuids.isNotEmpty) {
@@ -233,19 +232,27 @@ class AccessControlService extends ChangeNotifier {
       final roleNames = <String>{};
       for (final row in roleRows) {
         final roleName = row['name']?.toString();
+        final normalizedRoleName = _normalizePermissionKey(roleName ?? '');
         if (roleName != null && roleName.trim().isNotEmpty) {
-          roleNames.add(_normalizePermissionKey(roleName));
+          roleNames.add(normalizedRoleName);
         }
 
         final parsed = _parsePermissions(row['permissionsJson']);
         allowPermissions.addAll(parsed.allow);
         denyPermissions.addAll(parsed.deny);
+
+        if (parsed.allow.isEmpty && parsed.deny.isEmpty) {
+          allowPermissions.addAll(_defaultAllowPermissionsForSystemRole(normalizedRoleName));
+        }
       }
 
-      final isOwnerLikeMembership = membershipRoles.contains('owner') || membershipRoles.contains('admin');
-      final isOwnerLikeRole = roleNames.contains('owner') || roleNames.contains('admin');
-      if (isOwnerLikeMembership || isOwnerLikeRole) {
+      final hasPrivilegedRole =
+          membershipRoles.any(_isPrivilegedRoleName) || roleNames.any(_isPrivilegedRoleName);
+      if (hasPrivilegedRole) {
+        // Ensure tenant owner/admin users remain fully functional even if
+        // permissionsJson payloads were partially customized or malformed.
         allowPermissions.add('*');
+        denyPermissions.remove('*');
       }
 
       if (!allowPermissions.contains('*') && !allowPermissions.contains(PermissionCatalog.dashboardView)) {
@@ -361,6 +368,51 @@ class AccessControlService extends ChangeNotifier {
       return Map<String, dynamic>.from(row);
     }
     return const <String, dynamic>{};
+  }
+}
+
+Set<String> _defaultAllowPermissionsForSystemRole(String normalizedRole) {
+  switch (normalizedRole) {
+    case 'owner':
+    case 'admin':
+      return const <String>{'*'};
+    case 'manager':
+      return const <String>{
+        PermissionCatalog.dashboardView,
+        'page.inventory.view',
+        'page.transactions.view',
+        'page.products.view',
+        'page.invoices.view',
+        'page.clients.view',
+        'page.suppliers.view',
+      };
+    case 'staff':
+      return const <String>{
+        PermissionCatalog.dashboardView,
+        'page.inventory.view',
+        'page.transactions.view',
+        'page.products.view',
+        'page.invoices.view',
+      };
+    case 'viewer':
+      return const <String>{
+        PermissionCatalog.dashboardView,
+        'page.inventory.view',
+        'page.products.view',
+        'page.invoices.view',
+        'page.clients.view',
+        'page.suppliers.view',
+      };
+    case 'accountant':
+      return const <String>{
+        PermissionCatalog.dashboardView,
+        PermissionCatalog.reportsView,
+        'page.invoices.view',
+        'page.transactions.view',
+        'page.clients.view',
+      };
+    default:
+      return const <String>{};
   }
 }
 
@@ -682,6 +734,19 @@ _PermissionSet _parsePermissions(dynamic value) {
 
 String _normalizePermissionKey(String value) {
   return value.trim().replaceAll(' ', '').replaceAll('/', '.').toLowerCase();
+}
+
+bool _isPrivilegedRoleName(String normalizedRole) {
+  if (normalizedRole.isEmpty) {
+    return false;
+  }
+
+  final canonical = normalizedRole.replaceAll('_', '').replaceAll('-', '').replaceAll('.', '');
+  return switch (canonical) {
+    // Keep common legacy/user-entry variants to avoid accidental lock-outs.
+    'owner' || 'admin' || 'superadmin' || 'onwer' || 'amin' => true,
+    _ => false,
+  };
 }
 
 List<String> _permissionCandidates(String permission) {
