@@ -488,6 +488,68 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
     }
   }
 
+  Future<bool> _confirmBulkTabClose({required String title, required String warning, required List<_WorkspaceTab> tabsToClose, required String confirmLabel}) async {
+    if (!mounted || tabsToClose.isEmpty) {
+      return false;
+    }
+
+    final authState = context.read<AuthController>().state;
+    final pageDefinitions = buildIndexPageDefinitions(context, authState, localeController: widget.localeController, appPreferencesController: widget.appPreferencesController);
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final shouldClose = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(title),
+          content: SizedBox(
+            width: 420,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(warning),
+                const SizedBox(height: 12),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 220),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (final tab in tabsToClose)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('• '),
+                                Expanded(child: Text(pageDefinitions[tab.page]?.title ?? tab.page.name)),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(context.l10n.cancel)),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: colorScheme.error, foregroundColor: colorScheme.onError),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(confirmLabel),
+            ),
+          ],
+        );
+      },
+    );
+
+    return shouldClose == true;
+  }
+
   void _toggleTabPin(String tabId) {
     final index = _tabs.indexWhere((tab) => tab.id == tabId);
     if (index == -1) {
@@ -534,7 +596,18 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
     _persistWorkspaceTabsState();
   }
 
-  void _closeAllUnpinnedTabs() {
+  Future<void> _closeAllUnpinnedTabs() async {
+    final tabsToClose = _tabs.where((tab) => !tab.pinned).toList(growable: false);
+    if (tabsToClose.isEmpty) {
+      return;
+    }
+
+    final l10n = context.l10n;
+    final shouldClose = await _confirmBulkTabClose(title: l10n.dangerCloseAllUnpinnedTabsQuestion, warning: l10n.dangerCloseAllUnpinnedTabsWarning, tabsToClose: tabsToClose, confirmLabel: l10n.closeAllUnpinnedTabs);
+    if (!shouldClose || !mounted) {
+      return;
+    }
+
     IndexPage? persistedPage;
 
     setState(() {
@@ -561,7 +634,18 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
     _persistWorkspaceTabsState();
   }
 
-  void _closeAllTabs() {
+  Future<void> _closeAllTabs() async {
+    final tabsToClose = List<_WorkspaceTab>.of(_tabs, growable: false);
+    if (tabsToClose.isEmpty) {
+      return;
+    }
+
+    final l10n = context.l10n;
+    final shouldClose = await _confirmBulkTabClose(title: l10n.closeAllTabsQuestion, warning: l10n.dangerCloseAllUnpinnedTabsWarning, tabsToClose: tabsToClose, confirmLabel: l10n.closeAll);
+    if (!shouldClose || !mounted) {
+      return;
+    }
+
     final fallbackPage = _canAccessPage(IndexPage.dashboard) ? IndexPage.dashboard : IndexPage.settings;
     final fallbackId = 'tab_${_nextTabSeed++}';
 

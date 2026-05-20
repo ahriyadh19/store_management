@@ -169,6 +169,7 @@ class AppLocalizations {
     'closeTabQuestion': 'Close tab?',
     'closeTabWarning': '"{tab}" will be closed and data in this tab may be unsaved.',
     'closeTabAction': 'Close tab',
+    'closeAllTabsQuestion': 'Danger: Close all tabs?',
     'dangerCloseAllUnpinnedTabsQuestion': 'Danger: Close all unpinned tabs?',
     'dangerCloseAllUnpinnedTabsWarning': 'These pages will be closed:',
     'closeAll': 'Close all',
@@ -429,6 +430,7 @@ class AppLocalizations {
     'closeTabQuestion': 'إغلاق علامة التبويب؟',
     'closeTabWarning': 'سيتم إغلاق "{tab}" وقد تكون بيانات هذه العلامة غير محفوظة.',
     'closeTabAction': 'إغلاق علامة التبويب',
+    'closeAllTabsQuestion': 'تحذير: إغلاق جميع علامات التبويب؟',
     'dangerCloseAllUnpinnedTabsQuestion': 'تحذير: إغلاق جميع علامات التبويب غير المثبتة؟',
     'dangerCloseAllUnpinnedTabsWarning': 'سيتم إغلاق الصفحات التالية:',
     'closeAll': 'إغلاق الكل',
@@ -699,6 +701,7 @@ class AppLocalizations {
   String get closeTabQuestion => _text('closeTabQuestion');
   String closeTabWarning(String tab) => _text('closeTabWarning', {'tab': tab});
   String get closeTabAction => _text('closeTabAction');
+  String get closeAllTabsQuestion => _text('closeAllTabsQuestion');
   String get dangerCloseAllUnpinnedTabsQuestion => _text('dangerCloseAllUnpinnedTabsQuestion');
   String get dangerCloseAllUnpinnedTabsWarning => _text('dangerCloseAllUnpinnedTabsWarning');
   String get closeAll => _text('closeAll');
