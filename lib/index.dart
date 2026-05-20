@@ -1612,7 +1612,7 @@ class _ConnectionIndicators extends StatelessWidget {
           children: [
             _ConnectionIndicatorDot(label: context.l10n.connectionSupabase, status: controller.supabaseState, icon: Icons.cloud_rounded),
             const SizedBox(width: 8),
-            _ConnectionIndicatorDot(label: context.l10n.connectionObjectBox, status: controller.objectBoxState, icon: Icons.storage_rounded),
+            _ConnectionIndicatorDot(label: context.l10n.connectionSQLite, status: controller.localDatabaseState, icon: Icons.storage_rounded),
           ],
         );
       },

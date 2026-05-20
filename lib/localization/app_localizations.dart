@@ -147,7 +147,7 @@ class AppLocalizations {
     'storageLocalOnly': 'Store local',
     'storageLocalOnlyDescription': 'Store data only on this device. Shared data will not be available everywhere.',
     'connectionSupabase': 'Supabase',
-    'connectionObjectBox': 'ObjectBox',
+    'connectionSQLite': 'SQLite (Drift)',
     'connectionStatusConnected': 'Connected',
     'connectionStatusChecking': 'Checking',
     'connectionStatusDisconnected': 'Disconnected',
@@ -408,7 +408,7 @@ class AppLocalizations {
     'storageLocalOnly': 'تخزين محلي',
     'storageLocalOnlyDescription': 'احفظ البيانات على هذا الجهاز فقط. لن تكون البيانات المشتركة متاحة في كل مكان.',
     'connectionSupabase': 'Supabase',
-    'connectionObjectBox': 'ObjectBox',
+    'connectionSQLite': 'SQLite (Drift)',
     'connectionStatusConnected': 'متصل',
     'connectionStatusChecking': 'جارٍ التحقق',
     'connectionStatusDisconnected': 'غير متصل',
@@ -679,7 +679,7 @@ class AppLocalizations {
   String get storageLocalOnly => _text('storageLocalOnly');
   String get storageLocalOnlyDescription => _text('storageLocalOnlyDescription');
   String get connectionSupabase => _text('connectionSupabase');
-  String get connectionObjectBox => _text('connectionObjectBox');
+  String get connectionSQLite => _text('connectionSQLite');
   String get connectionStatusConnected => _text('connectionStatusConnected');
   String get connectionStatusChecking => _text('connectionStatusChecking');
   String get connectionStatusDisconnected => _text('connectionStatusDisconnected');

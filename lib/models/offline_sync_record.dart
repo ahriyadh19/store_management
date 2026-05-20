@@ -1,4 +1,4 @@
-import 'package:store_management/objectbox_compat.dart';
+import 'package:store_management/local_entity_annotations.dart';
 
 class OfflineSyncState {
   static const int synced = 0;

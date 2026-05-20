@@ -1,6 +1,6 @@
 # Store Management
 
-Store Management is a Flutter application for multi-tenant retail operations. It supports owner-level tenancy, store and branch scoping, supplier and product operations, financial records, and inventory workflows backed by Supabase, with ObjectBox infrastructure for offline-first support.
+Store Management is a Flutter application for multi-tenant retail operations. It supports owner-level tenancy, store and branch scoping, supplier and product operations, financial records, and inventory workflows backed by Supabase, with Drift on SQLite providing the local offline-first data layer.
 
 ## Highlights
 
@@ -9,7 +9,7 @@ Store Management is a Flutter application for multi-tenant retail operations. It
 - Core retail domains: stores, branches, products, categories, tags, clients, suppliers, users, and roles.
 - Financial and operational records: invoices, returns, vouchers, transactions, and inventory movements.
 - Supabase-backed data access with tenant-aware query and payload controls.
-- ObjectBox local persistence bootstrap for desktop and mobile IO targets.
+- Drift + SQLite local persistence bootstrap for desktop and mobile IO targets.
 - English and Arabic localization.
 
 ## Tech Stack
@@ -19,7 +19,7 @@ Store Management is a Flutter application for multi-tenant retail operations. It
 - Supabase (supabase, supabase_flutter)
 - BLoC (flutter_bloc) for auth state flow
 - Decimal money handling (decimal)
-- ObjectBox local storage (objectbox, objectbox_flutter_libs)
+- Drift local storage (drift, sqlite3_flutter_libs)
 
 ## Project Structure
 
@@ -150,10 +150,10 @@ Run tests:
 flutter test
 ```
 
-Generate ObjectBox code after entity changes:
+Generate Drift code after schema changes:
 
 ```bash
-dart run build_runner build --delete-conflicting-outputs
+dart run build_runner build
 ```
 
 Build targets:

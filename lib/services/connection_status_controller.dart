@@ -31,10 +31,10 @@ class ConnectionStatusController extends ChangeNotifier {
   bool _isChecking = false;
 
   ConnectionIndicatorState _supabaseState = ConnectionIndicatorState.processing;
-  ConnectionIndicatorState _objectBoxState = ConnectionIndicatorState.processing;
+  ConnectionIndicatorState _localDatabaseState = ConnectionIndicatorState.processing;
 
   ConnectionIndicatorState get supabaseState => _supabaseState;
-  ConnectionIndicatorState get objectBoxState => _objectBoxState;
+  ConnectionIndicatorState get localDatabaseState => _localDatabaseState;
 
   void start() {
     if (_started) {
@@ -42,7 +42,7 @@ class ConnectionStatusController extends ChangeNotifier {
     }
 
     _started = true;
-    _setStates(supabase: ConnectionIndicatorState.processing, objectBox: ConnectionIndicatorState.processing);
+    _setStates(supabase: ConnectionIndicatorState.processing, localDatabase: ConnectionIndicatorState.processing);
     unawaited(_runChecks());
   }
 
@@ -57,13 +57,13 @@ class ConnectionStatusController extends ChangeNotifier {
     _timer?.cancel();
 
     if (showProcessing) {
-      _setStates(supabase: ConnectionIndicatorState.processing, objectBox: ConnectionIndicatorState.processing);
+      _setStates(supabase: ConnectionIndicatorState.processing, localDatabase: ConnectionIndicatorState.processing);
     }
 
     try {
-      final results = await Future.wait<ConnectionIndicatorState>([_checkSupabaseConnection(), _checkObjectBoxConnection()]);
+      final results = await Future.wait<ConnectionIndicatorState>([_checkSupabaseConnection(), _checkLocalDatabaseConnection()]);
 
-      _setStates(supabase: results[0], objectBox: results[1]);
+      _setStates(supabase: results[0], localDatabase: results[1]);
     } finally {
       _isChecking = false;
       _scheduleNextCheck();
@@ -96,7 +96,7 @@ class ConnectionStatusController extends ChangeNotifier {
     }
   }
 
-  Future<ConnectionIndicatorState> _checkObjectBoxConnection() async {
+  Future<ConnectionIndicatorState> _checkLocalDatabaseConnection() async {
     final database = _localDatabase;
     if (database == null || !database.isAvailable) {
       return ConnectionIndicatorState.failed;
@@ -142,17 +142,17 @@ class ConnectionStatusController extends ChangeNotifier {
       return;
     }
 
-    final isHealthy = _supabaseState == ConnectionIndicatorState.active && _objectBoxState == ConnectionIndicatorState.active;
+    final isHealthy = _supabaseState == ConnectionIndicatorState.active && _localDatabaseState == ConnectionIndicatorState.active;
     final nextInterval = isHealthy ? _healthyPollInterval : _recoveryPollInterval;
     _timer = Timer(nextInterval, () {
       unawaited(_runChecks());
     });
   }
 
-  void _setStates({required ConnectionIndicatorState supabase, required ConnectionIndicatorState objectBox}) {
-    final didChange = _supabaseState != supabase || _objectBoxState != objectBox;
+  void _setStates({required ConnectionIndicatorState supabase, required ConnectionIndicatorState localDatabase}) {
+    final didChange = _supabaseState != supabase || _localDatabaseState != localDatabase;
     _supabaseState = supabase;
-    _objectBoxState = objectBox;
+    _localDatabaseState = localDatabase;
 
     if (didChange) {
       notifyListeners();
