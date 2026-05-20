@@ -527,7 +527,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       score += 65;
     }
 
-    if (_isRelationLikeField(key)) {
+    if (isModelRelationLikeField(key)) {
       score += 58;
       if (_resolveLinkedValueLabel(fieldKey: key, rowData: sampleData) != null) {
         score += 18;
@@ -550,10 +550,6 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     }
 
     return score;
-  }
-
-  bool _isRelationLikeField(String key) {
-    return key.endsWith('Uuid') || key == 'uuid' || key.endsWith('Id') || key == 'id';
   }
 
   bool _isTechnicalAuditField(String key) {
@@ -636,11 +632,16 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       return _computeSynchronousViewState(records: _records, searchQuery: searchQuery);
     }
 
-    final result = await queryDelegate(ModelQueryRequest(searchQuery: searchQuery, sortColumnName: _sortColumnName, sortAscending: _sortAscending, pageIndex: _currentPage, pageSize: _rowsPerPage));
+    var result = await queryDelegate(ModelQueryRequest(searchQuery: searchQuery, sortColumnName: _sortColumnName, sortAscending: _sortAscending, pageIndex: _currentPage, pageSize: _rowsPerPage));
 
-    final records = result.records;
     final pageCount = result.totalCount == 0 ? 1 : (result.totalCount / _rowsPerPage).ceil();
     final effectiveCurrentPage = math.min(_currentPage, pageCount - 1);
+
+    if (effectiveCurrentPage != _currentPage && result.totalCount > 0) {
+      result = await queryDelegate(ModelQueryRequest(searchQuery: searchQuery, sortColumnName: _sortColumnName, sortAscending: _sortAscending, pageIndex: effectiveCurrentPage, pageSize: _rowsPerPage));
+    }
+
+    final records = result.records;
     final recordByKey = <String, T>{};
     final indexByRecordKey = <String, int>{};
     final paginatedRecordKeys = <String>[];
@@ -683,7 +684,14 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       'pageIndex': _currentPage,
       'pageSize': _rowsPerPage,
       'entries': snapshots
-          .map((snapshot) => <String, Object?>{'index': snapshot.index, 'recordKey': snapshot.recordKey, 'searchBlob': snapshot.searchBlob, 'sortValue': _toIsolateSortValue(snapshot.data[_sortColumnName])})
+          .map(
+            (snapshot) => <String, Object?>{
+              'index': snapshot.index,
+              'recordKey': snapshot.recordKey,
+              'searchBlob': snapshot.searchBlob,
+              'sortValue': _toIsolateSortValue(modelFieldSortValue(fields: widget.formDefinition.fields, fieldKey: _sortColumnName, value: snapshot.data[_sortColumnName], rowData: snapshot.data)),
+            },
+          )
           .toList(growable: false),
     };
 
@@ -726,8 +734,8 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     final sortColumnName = _sortColumnName;
     if (sortColumnName != null) {
       sortedSnapshots.sort((left, right) {
-        final leftValue = left.data[sortColumnName];
-        final rightValue = right.data[sortColumnName];
+        final leftValue = modelFieldSortValue(fields: widget.formDefinition.fields, fieldKey: sortColumnName, value: left.data[sortColumnName], rowData: left.data);
+        final rightValue = modelFieldSortValue(fields: widget.formDefinition.fields, fieldKey: sortColumnName, value: right.data[sortColumnName], rowData: right.data);
         final result = _compareSortValues(leftValue, rightValue);
         return _sortAscending ? result : -result;
       });
@@ -771,17 +779,15 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     for (var index = 0; index < _records.length; index++) {
       final record = _records[index];
       final data = widget.formDefinition.toMap(record);
-      final searchBuffer = StringBuffer();
-      for (final field in visibleFields) {
-        final value = data[field.key];
-        searchBuffer
-          ..write(' ')
-          ..write(_formatCellValue(value).toLowerCase())
-          ..write(' ')
-          ..write(value?.toString().toLowerCase() ?? '');
-      }
-
-      snapshots.add(_RecordSnapshot<T>(index: index, record: record, data: data, recordKey: _recordIdentityFromMap(data), searchBlob: searchBuffer.toString()));
+      snapshots.add(
+        _RecordSnapshot<T>(
+          index: index,
+          record: record,
+          data: data,
+          recordKey: _recordIdentityFromMap(data),
+          searchBlob: buildModelSearchBlob(fields: visibleFields.isEmpty ? widget.formDefinition.fields : widget.formDefinition.fields, rowData: data),
+        ),
+      );
     }
 
     _cachedRecordSnapshots = snapshots;
@@ -1288,124 +1294,22 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   String _formatCellValueForField({required String? fieldKey, required Object? value, required Map<String, dynamic> rowData}) {
-    final key = fieldKey;
-    if (key == 'synced') {
-      final boolValue = _boolFromValue(value);
-      if (boolValue == null) {
-        return value?.toString() ?? '-';
-      }
-      return boolValue ? 'Yes' : 'No';
-    }
-
-    if (key == 'syncedAt') {
-      final resolvedValue = value ?? rowData['synced_at'];
-      if (resolvedValue == null) {
-        return '-';
-      }
-      final millis = _millisecondsFromValue(resolvedValue);
-      if (millis == null) {
-        return resolvedValue.toString();
-      }
-      final date = DateTime.fromMillisecondsSinceEpoch(millis);
-      final month = date.month.toString().padLeft(2, '0');
-      final day = date.day.toString().padLeft(2, '0');
-      final hour = date.hour.toString().padLeft(2, '0');
-      final minute = date.minute.toString().padLeft(2, '0');
-      return '${date.year}-$month-$day $hour:$minute';
-    }
-
-    if (value == null) {
-      return '-';
-    }
-
-    if (key != null && _isRelationLikeField(key)) {
-      final raw = value.toString().trim();
-      if (raw.isEmpty) {
-        return '-';
-      }
-
-      final linkedLabel = _resolveLinkedValueLabel(fieldKey: key, rowData: rowData);
-      final compactIdentifier = _compactIdentifier(raw);
-      if (linkedLabel != null) {
-        return '$linkedLabel ($compactIdentifier)';
-      }
-      return compactIdentifier;
-    }
-
-    if (value is int && value > 100000000000) {
-      final dateTime = DateTime.fromMillisecondsSinceEpoch(value);
-      final month = dateTime.month.toString().padLeft(2, '0');
-      final day = dateTime.day.toString().padLeft(2, '0');
-      return '${dateTime.year}-$month-$day';
-    }
-
-    if (value is DateTime) {
-      final month = value.month.toString().padLeft(2, '0');
-      final day = value.day.toString().padLeft(2, '0');
-      return '${value.year}-$month-$day';
-    }
-
-    return value.toString();
+    return formatModelFieldDisplayValue(fields: widget.formDefinition.fields, fieldKey: fieldKey, value: value, rowData: rowData);
   }
 
   String? _resolveLinkedValueLabel({required String fieldKey, required Map<String, dynamic> rowData}) {
-    if (fieldKey == 'referenceUuid') {
-      final referenceType = rowData['referenceType']?.toString().trim();
-      if (referenceType != null && referenceType.isNotEmpty) {
-        return referenceType;
-      }
+    final value = rowData[fieldKey];
+    final formatted = formatModelFieldDisplayValue(fields: widget.formDefinition.fields, fieldKey: fieldKey, value: value, rowData: rowData);
+    final compactIdentifier = value == null ? null : _compactIdentifier(value.toString().trim());
+    if (compactIdentifier == null || formatted == compactIdentifier || formatted == '$compactIdentifier ($compactIdentifier)') {
+      return null;
     }
 
-    var baseKey = fieldKey;
-    if (fieldKey.endsWith('Uuid')) {
-      baseKey = fieldKey.substring(0, fieldKey.length - 4);
-    } else if (fieldKey.endsWith('Id')) {
-      baseKey = fieldKey.substring(0, fieldKey.length - 2);
+    if (formatted.endsWith(' ($compactIdentifier)')) {
+      return formatted.substring(0, formatted.length - compactIdentifier.length - 3);
     }
 
-    final candidateKeys = <String>[
-      '${baseKey}Name',
-      '${baseKey}Number',
-      '${baseKey}Code',
-      '${baseKey}Title',
-      '${baseKey}Username',
-      '${baseKey}Email',
-      '${baseKey}_name',
-      '${baseKey}_number',
-      '${baseKey}_code',
-      '${baseKey}_title',
-      '${baseKey}_username',
-      '${baseKey}_email',
-    ];
-
-    if (baseKey == 'client' || baseKey == 'customer') {
-      candidateKeys.addAll(const <String>['clientName', 'customerName']);
-    }
-    if (baseKey == 'user') {
-      candidateKeys.addAll(const <String>['userName', 'name', 'username']);
-    }
-    if (baseKey == 'product') {
-      candidateKeys.add('productName');
-    }
-    if (baseKey == 'branch') {
-      candidateKeys.add('branchName');
-    }
-    if (baseKey == 'store') {
-      candidateKeys.add('storeName');
-    }
-
-    for (final candidate in candidateKeys) {
-      final candidateValue = rowData[candidate];
-      if (candidateValue == null) {
-        continue;
-      }
-      final normalized = candidateValue.toString().trim();
-      if (normalized.isNotEmpty && normalized != '-') {
-        return normalized;
-      }
-    }
-
-    return null;
+    return formatted;
   }
 
   String _compactIdentifier(String raw) {
@@ -1470,29 +1374,6 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       }
       if (normalized == 'false' || normalized == '0' || normalized == 'no') {
         return false;
-      }
-    }
-    return null;
-  }
-
-  int? _millisecondsFromValue(Object? value) {
-    if (value is int) {
-      return value;
-    }
-    if (value is num) {
-      return value.toInt();
-    }
-    if (value is DateTime) {
-      return value.millisecondsSinceEpoch;
-    }
-    if (value is String) {
-      final asInt = int.tryParse(value);
-      if (asInt != null) {
-        return asInt;
-      }
-      final parsedDate = DateTime.tryParse(value);
-      if (parsedDate != null) {
-        return parsedDate.millisecondsSinceEpoch;
       }
     }
     return null;

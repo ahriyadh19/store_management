@@ -70,6 +70,9 @@ For every tracked item, keep these fields current:
 | 2026-05-20 | ACL-001 | Added normalized permission catalog, ACL compatibility fixes, and runtime permission loading tasks. | Copilot | Captures the current roles and permissions workstream. |
 | 2026-05-20 | CORE-002 | Converted the tracker into a stricter operational document with IDs, changelog, and reusable templates. | Copilot | Use this log for every future task status update. |
 | 2026-05-20 | CORE-004 | Added next-session prioritization and removed duplicate rows from category sections. | Copilot | Category sections now reference canonical task IDs instead of duplicating full task records. |
+| 2026-05-20 | UI-007 | Standardized shared DataTable display/search/sort behavior and replaced the Reports placeholder with a real analytics page. | Copilot | Shared table logic now uses field metadata for display/query consistency and refetches a valid page when server-side filtering shrinks a result set. |
+| 2026-05-20 | UI-002 | Completed selector-driven permission assignment workflows across shared forms and inventory relation screens. | Copilot | Permission, role, page, and store/user assignment flows now avoid manual UUID entry for stable relations. |
+| 2026-05-20 | UI-003 | Completed the remaining UUID-heavy relation workflow cleanup, including the purchase receiving panel. | Copilot | Stable single-table relations now use selectors where the local cache can supply options; only scope and polymorphic IDs remain raw. |
 
 ## Next Session Focus
 
@@ -80,8 +83,8 @@ Use this section to decide the next tasks before any new implementation work sta
 | 1 | DB-002 | Migration Rollout Validation | Needs Review | Critical | The canonical schema must be validated in a real Supabase environment before the migration path is considered fully safe. |
 | 2 | DB-006 | Migration Deployment Verification | Pending | Critical | Staging or production-like rollout verification is still outstanding for the consolidated schema. |
 | 3 | ACL-005 | Permission Snapshot Refinement | In Progress | High | Permission refresh behavior still needs stronger session and admin-change handling. |
-| 4 | UI-002 | Permission Assignment UX | In Progress | High | Admin permission management still relies on raw UUID entry and needs usability improvements. |
-| 5 | QA-001 | Permission Catalog Backfill QA | Needs Review | High | Legacy role payload backfill needs real dataset validation. |
+| 4 | QA-001 | Permission Catalog Backfill QA | Needs Review | High | Legacy role payload backfill needs real dataset validation. |
+| 5 | CORE-003 | Route Metadata Standardization | Pending | Medium | Shared route and permission metadata would reduce drift between navigation, page catalog seeding, and access checks. |
 
 ## Completed Features
 
@@ -89,7 +92,10 @@ Use this section to decide the next tasks before any new implementation work sta
 |---|---|---|---|---|---|---|---|---|---|
 | DB-001 | Canonical Supabase Migration | Consolidated schema, tenant rules, permission catalog, and compatibility helpers into a single canonical migration file. | Completed | Critical | Copilot | 2026-05-20 | 2026-05-20 | 2026-05-20 | `supabase/migrations/20260508_000001_complete_improved_schema.sql`, `README.md` | Fresh environments should apply only the canonical migration file. |
 | ACL-002 | Permission Catalog Models | Added normalized permission entities for pages, permissions, role permissions, and user permissions. | Completed | High | Copilot | 2026-05-20 | 2026-05-20 | 2026-05-20 | `lib/models/access_page.dart`, `lib/models/access_permission.dart`, `lib/models/role_permission.dart`, `lib/models/user_permission.dart` | Drift schema generation remained unchanged in this tracking update. |
-| UI-001 | Access Management Datatables | Added CRUD-backed access tabs for pages, permissions, role permissions, and user permissions. | Completed | High | Copilot | 2026-05-20 | 2026-05-20 | 2026-05-20 | `lib/views/pages/inventory_page.dart`, `lib/views/pages/model_module_pages.dart` | Current forms still use UUID fields directly for assignments. |
+| UI-001 | Access Management Datatables | Added CRUD-backed access tabs for pages, permissions, role permissions, and user permissions. | Completed | High | Copilot | 2026-05-20 | 2026-05-20 | 2026-05-20 | `lib/views/pages/inventory_page.dart`, `lib/views/pages/model_module_pages.dart` | Assignment flows now use selector-backed fields for stable permission relations. |
+| UI-007 | Shared Datatable Consistency And Reports Page | Refactored the shared CRUD/query pipeline so table search, sort, labels, and server pagination stay aligned with field metadata, and added a real Reports module with analytics, sync health, and recent activity sections. | Completed | High | Copilot | 2026-05-20 | 2026-05-20 | 2026-05-20 | `lib/views/components/model_form.dart`, `lib/views/pages/model_crud_page.dart`, `lib/views/pages/model_module_pages.dart`, `lib/views/pages/reports_page.dart`, `lib/views/index/index_page_registry.dart`, `test/views/model_module_pages_test.dart`, `test/views/reports_page_test.dart` | Stable relation labels now follow selection metadata when available; remaining raw IDs are intentionally scope-based or polymorphic. |
+| UI-002 | Permission Assignment UX | Replaced raw UUID entry in permission-related forms with searchable selectors and clearer admin workflows. | Completed | High | Copilot | 2026-05-20 | 2026-05-20 | 2026-05-20 | `lib/views/pages/model_module_pages.dart`, `lib/views/components/model_form.dart`, `lib/views/pages/inventory_page.dart`, `test/views/model_module_pages_test.dart` | Permission and relation-management assignment flows now use selection-backed field metadata and focused coverage. |
+| UI-003 | UUID-Heavy Permission Forms | Removed manual UUID-heavy relation entry from the remaining stable permission and inventory-receiving workflows. | Completed | High | Copilot | 2026-05-20 | 2026-05-20 | 2026-05-20 | `lib/views/pages/model_module_pages.dart`, `lib/views/pages/inventory_page.dart`, `test/views/model_module_pages_test.dart` | Scope fields like `ownerUuid` and polymorphic references remain raw by design. |
 | ACL-003 | ACL Compatibility Fix | Fixed role resolution so owner/admin access is not dropped by mismatched or blank owner scoping on assigned roles. | Completed | Critical | Copilot | 2026-05-20 | 2026-05-20 | 2026-05-20 | `lib/services/access_control_service.dart`, `test/services/access_control_service_test.dart` | Focused ACL tests passed after the fix. |
 | ACL-004 | Normalized Permission Loading | Access control service now merges role-based and user-specific normalized permission grants with legacy compatibility. | Completed | Critical | Copilot | 2026-05-20 | 2026-05-20 | 2026-05-20 | `lib/services/access_control_service.dart`, `test/services/access_control_service_test.dart` | User grants apply after role grants to support direct overrides. |
 
@@ -97,14 +103,12 @@ Use this section to decide the next tasks before any new implementation work sta
 
 | Task ID | Task / Feature | Detailed Description | Current Status | Priority | Assigned Developer | Date Created | Last Updated | Completion Date | Related Modules / Files | Notes / Known Issues |
 |---|---|---|---|---|---|---|---|---|---|
-| UI-002 | Permission Assignment UX | Replace raw UUID entry in permission-related forms with searchable selectors and clearer admin workflows. | In Progress | High | Unassigned | 2026-05-20 | 2026-05-20 |  | `lib/views/pages/model_module_pages.dart`, `lib/views/components/model_form.dart`, `lib/views/pages/inventory_page.dart` | Current UI is functional but not admin-friendly for real-world usage. |
 | ACL-005 | Permission Snapshot Refinement | Improve how permissions are preloaded, cached, and refreshed across login, tab navigation, and long-lived sessions. | In Progress | High | Unassigned | 2026-05-20 | 2026-05-20 |  | `lib/services/access_control_service.dart`, `lib/controllers/auth_controller.dart`, `lib/index.dart` | Needs broader session refresh coverage and better stale-state handling. |
 
 ## Bugs And Issues To Fix
 
 | Task ID | Task / Feature | Detailed Description | Current Status | Priority | Assigned Developer | Date Created | Last Updated | Completion Date | Related Modules / Files | Notes / Known Issues |
 |---|---|---|---|---|---|---|---|---|---|
-| UI-003 | UUID-Heavy Permission Forms | Permission CRUD currently requires manual UUID knowledge for related entities, increasing operator error risk. | Pending | High | Unassigned | 2026-05-20 | 2026-05-20 |  | `lib/views/pages/model_module_pages.dart`, `lib/views/components/model_form.dart` | Should be replaced with lookup/search components. |
 | DB-002 | Migration Rollout Validation | Canonical migration has been consolidated but still needs live validation in Supabase environments. | Needs Review | Critical | Unassigned | 2026-05-20 | 2026-05-20 |  | `supabase/migrations/20260508_000001_complete_improved_schema.sql` | SQL was prepared and consolidated locally; deployment verification is still required. |
 | QA-001 | Permission Catalog Backfill QA | Backfill logic from legacy `permissionsJson` to normalized role permissions needs runtime QA with real tenant data. | Needs Review | High | Unassigned | 2026-05-20 | 2026-05-20 |  | `supabase/migrations/20260508_000001_complete_improved_schema.sql`, `lib/services/access_control_service.dart` | Needs confirmation for mixed legacy/custom role payloads. |
 

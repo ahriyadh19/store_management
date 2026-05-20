@@ -5,8 +5,8 @@ import 'package:store_management/localization/locale_controller.dart';
 import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/views/index/dashboard_home_page.dart';
 import 'package:store_management/views/index/index_page.dart';
-import 'package:store_management/views/index/module_page_view.dart';
 import 'package:store_management/views/pages/main_module_pages.dart';
+import 'package:store_management/views/pages/reports_page.dart';
 import 'package:store_management/views/pages/settings_page.dart';
 
 Map<IndexPage, IndexPageDefinition> buildIndexPageDefinitions(BuildContext context, AuthState authState, {required LocaleController localeController, required AppPreferencesController appPreferencesController}) {
@@ -17,11 +17,9 @@ Map<IndexPage, IndexPageDefinition> buildIndexPageDefinitions(BuildContext conte
       title: l10n.dashboard,
       bodyBuilder: (_) => DashboardHomePage(authState: authState),
     ),
-    IndexPage.reports: _placeholderModulePage(
+    IndexPage.reports: IndexPageDefinition(
       title: l10n.reports,
-      icon: Icons.bar_chart_rounded,
-      description: _t(l10n, 'Track store performance, sales movement, and operational summaries from one place.', 'تابع أداء المتجر وحركة المبيعات والملخصات التشغيلية من مكان واحد.'),
-      highlights: _list(l10n, ['Sales summary', 'Store performance', 'Export area'], ['ملخص المبيعات', 'أداء المتجر', 'منطقة التصدير']),
+      bodyBuilder: (_) => const ReportsPage(),
     ),
     IndexPage.stores: _modulePage(
       page: IndexPage.stores,
@@ -140,12 +138,5 @@ IndexPageDefinition _modulePage({required IndexPage page, required String title,
   return IndexPageDefinition(
     title: title,
     bodyBuilder: (_) => buildMainModulePage(page: page, title: title, description: description, icon: icon, highlights: highlights),
-  );
-}
-
-IndexPageDefinition _placeholderModulePage({required String title, required IconData icon, required String description, List<String> highlights = const []}) {
-  return IndexPageDefinition(
-    title: title,
-    bodyBuilder: (_) => ModulePageView(title: title, icon: icon, description: description, highlights: highlights),
   );
 }

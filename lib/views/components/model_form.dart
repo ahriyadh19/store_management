@@ -54,6 +54,269 @@ class ModelFormFieldDefinition {
   final bool usePermissionVisualEditor;
 }
 
+ModelFormFieldDefinition? findModelFormFieldDefinition(List<ModelFormFieldDefinition> fields, String? key) {
+  if (key == null) {
+    return null;
+  }
+
+  for (final field in fields) {
+    if (field.key == key) {
+      return field;
+    }
+  }
+
+  return null;
+}
+
+bool isModelRelationLikeField(String key) {
+  return key.endsWith('Uuid') || key == 'uuid' || key.endsWith('Id') || key == 'id';
+}
+
+String formatModelFieldDisplayValue({required List<ModelFormFieldDefinition> fields, required String? fieldKey, required Object? value, required Map<String, dynamic> rowData}) {
+  final key = fieldKey;
+  if (key == 'synced') {
+    final boolValue = _boolFromValue(value);
+    if (boolValue == null) {
+      return value?.toString() ?? '-';
+    }
+    return boolValue ? 'Yes' : 'No';
+  }
+
+  if (key == 'syncedAt') {
+    final resolvedValue = value ?? rowData['synced_at'];
+    if (resolvedValue == null) {
+      return '-';
+    }
+    final millis = _millisecondsFromValue(resolvedValue);
+    if (millis == null) {
+      return resolvedValue.toString();
+    }
+    final date = DateTime.fromMillisecondsSinceEpoch(millis);
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day $hour:$minute';
+  }
+
+  if (value == null) {
+    return '-';
+  }
+
+  final optionLabel = key == null ? null : _resolveModelFieldOptionLabel(fields: fields, fieldKey: key, value: value);
+  if (key != null && isModelRelationLikeField(key)) {
+    final raw = value.toString().trim();
+    if (raw.isEmpty) {
+      return '-';
+    }
+
+    final linkedLabel = _resolveModelLinkedValueLabel(fields: fields, fieldKey: key, rowData: rowData, fallbackOptionLabel: optionLabel);
+    final compactIdentifier = _compactIdentifier(raw);
+    if (linkedLabel != null) {
+      return '$linkedLabel ($compactIdentifier)';
+    }
+    return compactIdentifier;
+  }
+
+  if (optionLabel != null) {
+    return optionLabel;
+  }
+
+  if (value is int && value > 100000000000) {
+    final dateTime = DateTime.fromMillisecondsSinceEpoch(value);
+    final month = dateTime.month.toString().padLeft(2, '0');
+    final day = dateTime.day.toString().padLeft(2, '0');
+    return '${dateTime.year}-$month-$day';
+  }
+
+  if (value is DateTime) {
+    final month = value.month.toString().padLeft(2, '0');
+    final day = value.day.toString().padLeft(2, '0');
+    return '${value.year}-$month-$day';
+  }
+
+  return value.toString();
+}
+
+Object? modelFieldSortValue({required List<ModelFormFieldDefinition> fields, required String? fieldKey, required Object? value, required Map<String, dynamic> rowData}) {
+  final key = fieldKey;
+  if (key == null) {
+    return value;
+  }
+
+  if (key == 'syncedAt') {
+    return _millisecondsFromValue(value ?? rowData['synced_at']) ?? formatModelFieldDisplayValue(fields: fields, fieldKey: key, value: value, rowData: rowData).toLowerCase();
+  }
+
+  final field = findModelFormFieldDefinition(fields, key);
+  if (field?.type == ModelFormFieldType.selection || isModelRelationLikeField(key)) {
+    return formatModelFieldDisplayValue(fields: fields, fieldKey: key, value: value, rowData: rowData).toLowerCase();
+  }
+
+  if (value is DateTime) {
+    return value.millisecondsSinceEpoch;
+  }
+
+  return value;
+}
+
+String buildModelSearchBlob({required List<ModelFormFieldDefinition> fields, required Map<String, dynamic> rowData}) {
+  final searchBuffer = StringBuffer();
+  final visitedKeys = <String>{};
+
+  for (final field in fields) {
+    visitedKeys.add(field.key);
+    final value = rowData[field.key];
+    searchBuffer
+      ..write(' ')
+      ..write(formatModelFieldDisplayValue(fields: fields, fieldKey: field.key, value: value, rowData: rowData).toLowerCase())
+      ..write(' ')
+      ..write(value?.toString().toLowerCase() ?? '');
+  }
+
+  for (final entry in rowData.entries) {
+    if (!visitedKeys.add(entry.key)) {
+      continue;
+    }
+
+    searchBuffer
+      ..write(' ')
+      ..write(entry.key.toLowerCase())
+      ..write(' ')
+      ..write(entry.value?.toString().toLowerCase() ?? '');
+  }
+
+  return searchBuffer.toString();
+}
+
+String? _resolveModelFieldOptionLabel({required List<ModelFormFieldDefinition> fields, required String fieldKey, required Object? value}) {
+  final field = findModelFormFieldDefinition(fields, fieldKey);
+  if (field == null || field.type != ModelFormFieldType.selection || value == null) {
+    return null;
+  }
+
+  final normalizedValue = value.toString();
+  for (final option in field.options) {
+    if (option.value == value || option.value.toString() == normalizedValue) {
+      final label = option.label.trim();
+      if (label.isNotEmpty) {
+        return label;
+      }
+    }
+  }
+
+  return null;
+}
+
+String? _resolveModelLinkedValueLabel({required List<ModelFormFieldDefinition> fields, required String fieldKey, required Map<String, dynamic> rowData, String? fallbackOptionLabel}) {
+  if (fieldKey == 'referenceUuid') {
+    final referenceType = rowData['referenceType']?.toString().trim();
+    if (referenceType != null && referenceType.isNotEmpty) {
+      return referenceType;
+    }
+  }
+
+  var baseKey = fieldKey;
+  if (fieldKey.endsWith('Uuid')) {
+    baseKey = fieldKey.substring(0, fieldKey.length - 4);
+  } else if (fieldKey.endsWith('Id')) {
+    baseKey = fieldKey.substring(0, fieldKey.length - 2);
+  }
+
+  final candidateKeys = <String>[
+    '${baseKey}Name',
+    '${baseKey}Number',
+    '${baseKey}Code',
+    '${baseKey}Title',
+    '${baseKey}Username',
+    '${baseKey}Email',
+    '${baseKey}_name',
+    '${baseKey}_number',
+    '${baseKey}_code',
+    '${baseKey}_title',
+    '${baseKey}_username',
+    '${baseKey}_email',
+  ];
+
+  if (baseKey == 'client' || baseKey == 'customer') {
+    candidateKeys.addAll(const <String>['clientName', 'customerName']);
+  }
+  if (baseKey == 'user') {
+    candidateKeys.addAll(const <String>['userName', 'name', 'username']);
+  }
+  if (baseKey == 'product') {
+    candidateKeys.add('productName');
+  }
+  if (baseKey == 'branch') {
+    candidateKeys.add('branchName');
+  }
+  if (baseKey == 'store') {
+    candidateKeys.add('storeName');
+  }
+
+  for (final candidate in candidateKeys) {
+    final candidateValue = rowData[candidate];
+    if (candidateValue == null) {
+      continue;
+    }
+    final normalized = candidateValue.toString().trim();
+    if (normalized.isNotEmpty && normalized != '-') {
+      return normalized;
+    }
+  }
+
+  return fallbackOptionLabel;
+}
+
+String _compactIdentifier(String raw) {
+  if (raw.length <= 14) {
+    return raw;
+  }
+  return '${raw.substring(0, 8)}...${raw.substring(raw.length - 4)}';
+}
+
+bool? _boolFromValue(Object? value) {
+  if (value is bool) {
+    return value;
+  }
+  if (value is num) {
+    return value != 0;
+  }
+  if (value is String) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized == 'true' || normalized == '1' || normalized == 'yes') {
+      return true;
+    }
+    if (normalized == 'false' || normalized == '0' || normalized == 'no') {
+      return false;
+    }
+  }
+  return null;
+}
+
+int? _millisecondsFromValue(Object? value) {
+  if (value is int) {
+    return value;
+  }
+  if (value is num) {
+    return value.toInt();
+  }
+  if (value is DateTime) {
+    return value.millisecondsSinceEpoch;
+  }
+  if (value is String) {
+    final asInt = int.tryParse(value.trim());
+    if (asInt != null) {
+      return asInt;
+    }
+    final asDate = DateTime.tryParse(value.trim());
+    if (asDate != null) {
+      return asDate.millisecondsSinceEpoch;
+    }
+  }
+  return null;
+}
+
 class ModelQueryRequest {
   const ModelQueryRequest({required this.searchQuery, required this.sortColumnName, required this.sortAscending, required this.pageIndex, required this.pageSize});
 

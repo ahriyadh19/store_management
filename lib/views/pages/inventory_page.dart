@@ -30,6 +30,7 @@ import 'package:store_management/models/transfer_order_item.dart';
 import 'package:store_management/models/user_permission.dart';
 import 'package:store_management/models/user_roles.dart';
 import 'package:store_management/services/inventory_transaction_service.dart';
+import 'package:store_management/services/local_database.dart';
 import 'package:store_management/services/owner_scope_service.dart';
 import 'package:store_management/views/pages/model_crud_page.dart';
 import 'package:store_management/views/pages/model_module_pages.dart';
@@ -657,6 +658,12 @@ class _InventoryPageState extends State<InventoryPage> {
   Widget _buildPurchaseReceiptCard(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
+    final storeOptions = _relationOptions(tableName: 'store', fallbackValue: 'store-central-001', fallbackLabel: 'Central Store', labelKeys: const <String>['name']);
+    final branchOptions = _relationOptions(tableName: 'branch', fallbackValue: 'branch-north-001', fallbackLabel: 'North Branch', labelKeys: const <String>['name']);
+    final supplierOptions = _relationOptions(tableName: 'supplier', fallbackValue: 'supplier-alnoor-001', fallbackLabel: 'Al Noor Trading', labelKeys: const <String>['name']);
+    final supplierInvoiceOptions = _relationOptions(tableName: 'supplier_invoice', fallbackValue: 'supplier-invoice-sample-001', fallbackLabel: 'SI-2026-0012', labelKeys: const <String>['supplierInvoiceNumber']);
+    final productOptions = _relationOptions(tableName: 'products', fallbackValue: 'product-flour-001', fallbackLabel: 'Premium Flour 25kg', labelKeys: const <String>['name']);
+    final userOptions = _relationOptions(tableName: 'users', fallbackValue: 'user-ops-manager-001', fallbackLabel: 'Operations Manager', labelKeys: const <String>['name', 'username', 'email']);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -674,16 +681,16 @@ class _InventoryPageState extends State<InventoryPage> {
                 runSpacing: 12,
                 children: [
                   _field(_ownerUuidController, l10n.ownerUuidLabel, fieldKey: 'ownerUuid', required: true),
-                  _field(_storeUuidController, l10n.storeUuidLabel, fieldKey: 'storeUuid', required: true),
-                  _field(_branchUuidController, l10n.branchUuidLabel, fieldKey: 'branchUuid', required: true),
-                  _field(_supplierUuidController, l10n.supplierUuidLabel, fieldKey: 'supplierUuid', required: true),
-                  _field(_supplierInvoiceUuidController, l10n.supplierInvoiceUuidLabel, fieldKey: 'supplierInvoiceUuid', required: true),
-                  _field(_productUuidController, l10n.productUuidLabel, fieldKey: 'productUuid', required: true),
+                  _relationField(_storeUuidController, l10n.storeUuidLabel, fieldKey: 'storeUuid', options: storeOptions, required: true),
+                  _relationField(_branchUuidController, l10n.branchUuidLabel, fieldKey: 'branchUuid', options: branchOptions, required: true),
+                  _relationField(_supplierUuidController, l10n.supplierUuidLabel, fieldKey: 'supplierUuid', options: supplierOptions, required: true),
+                  _relationField(_supplierInvoiceUuidController, l10n.supplierInvoiceUuidLabel, fieldKey: 'supplierInvoiceUuid', options: supplierInvoiceOptions, required: true),
+                  _relationField(_productUuidController, l10n.productUuidLabel, fieldKey: 'productUuid', options: productOptions, required: true),
                   _field(_batchNumberController, l10n.batchNumberLabel, fieldKey: 'batchNumber'),
                   _field(_quantityController, l10n.quantityLabel, fieldKey: 'quantity', required: true, isNumber: true),
                   _field(_unitCostController, l10n.unitCostLabel, fieldKey: 'unitCost', required: true, isNumber: true),
                   _field(_expiryDateController, l10n.expiryDateLabel, fieldKey: 'expiryDate'),
-                  _field(_staffUserUuidController, l10n.staffUserUuidLabel, fieldKey: 'staffUserUuid'),
+                  _relationField(_staffUserUuidController, l10n.staffUserUuidLabel, fieldKey: 'staffUserUuid', options: userOptions, allowEmpty: true),
                 ],
               ),
               const SizedBox(height: 12),
@@ -722,6 +729,43 @@ class _InventoryPageState extends State<InventoryPage> {
     );
   }
 
+  Widget _relationField(TextEditingController controller, String label, {required String fieldKey, required List<_InventorySelectOption> options, bool required = false, bool allowEmpty = false}) {
+    final l10n = context.l10n;
+    final currentValue = controller.text.trim();
+    final dropdownItems = <DropdownMenuItem<String>>[
+      if (allowEmpty) const DropdownMenuItem<String>(value: '', child: Text('-')),
+      ...options.map(
+        (option) => DropdownMenuItem<String>(
+          value: option.value,
+          child: Text(option.label, overflow: TextOverflow.ellipsis),
+        ),
+      ),
+    ];
+    final hasCurrentValue = dropdownItems.any((item) => item.value == currentValue);
+
+    return SizedBox(
+      width: 260,
+      child: DropdownButtonFormField<String>(
+        key: Key('purchase-receipt-$fieldKey'),
+        value: hasCurrentValue ? currentValue : (allowEmpty ? '' : null),
+        isExpanded: true,
+        decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+        items: dropdownItems,
+        onChanged: (value) {
+          setState(() {
+            controller.text = (value ?? '').trim();
+          });
+        },
+        validator: (value) {
+          if (required && (value == null || value.trim().isEmpty)) {
+            return l10n.fieldRequired(label);
+          }
+          return null;
+        },
+      ),
+    );
+  }
+
   Future<void> _prefillOwnerFromScope() async {
     final ownerScopeService = _ownerScopeService;
     if (ownerScopeService == null) {
@@ -733,7 +777,21 @@ class _InventoryPageState extends State<InventoryPage> {
       if (!mounted || !scope.hasOwner) {
         return;
       }
-      _ownerUuidController.text = scope.ownerUuid!;
+      final sortedStoreUuids = scope.storeUuids.toList(growable: false)..sort();
+      final sortedBranchUuids = scope.branchUuids.toList(growable: false)..sort();
+
+      setState(() {
+        _ownerUuidController.text = scope.ownerUuid!;
+        if (_storeUuidController.text.trim().isEmpty && sortedStoreUuids.isNotEmpty) {
+          _storeUuidController.text = sortedStoreUuids.first;
+        }
+        if (_branchUuidController.text.trim().isEmpty && sortedBranchUuids.isNotEmpty) {
+          _branchUuidController.text = sortedBranchUuids.first;
+        }
+        if (_staffUserUuidController.text.trim().isEmpty && scope.userUuid != null && scope.userUuid!.isNotEmpty) {
+          _staffUserUuidController.text = scope.userUuid!;
+        }
+      });
     } catch (_) {
       // Best-effort prefill only; UI remains usable with manual owner UUID.
     }
@@ -834,6 +892,49 @@ class _InventoryPageState extends State<InventoryPage> {
       }
     }
   }
+}
+
+List<_InventorySelectOption> _relationOptions({required String tableName, required String fallbackValue, required String fallbackLabel, List<String> labelKeys = const <String>[]}) {
+  final optionsByValue = <String, _InventorySelectOption>{fallbackValue: _InventorySelectOption(value: fallbackValue, label: fallbackLabel)};
+
+  final database = LocalDatabase.current;
+  if (database != null && database.isAvailable) {
+    for (final row in database.getRowsForType(tableName)) {
+      if (row['deletedAt'] != null || row['deleted_at'] != null) {
+        continue;
+      }
+
+      final value = row['uuid']?.toString().trim() ?? row['id']?.toString().trim() ?? '';
+      if (value.isEmpty) {
+        continue;
+      }
+
+      final label = _relationOptionLabel(row, labelKeys: labelKeys) ?? value;
+      optionsByValue[value] = _InventorySelectOption(value: value, label: label);
+    }
+  }
+
+  final options = optionsByValue.values.toList(growable: false);
+  options.sort((left, right) => left.label.toLowerCase().compareTo(right.label.toLowerCase()));
+  return options;
+}
+
+String? _relationOptionLabel(Map<String, dynamic> row, {required List<String> labelKeys}) {
+  final candidates = <String>{...labelKeys, 'name', 'title', 'supplierInvoiceNumber', 'invoiceNumber', 'username', 'email'};
+  for (final key in candidates) {
+    final value = row[key]?.toString().trim();
+    if (value != null && value.isNotEmpty) {
+      return value;
+    }
+  }
+  return null;
+}
+
+class _InventorySelectOption {
+  const _InventorySelectOption({required this.value, required this.label});
+
+  final String value;
+  final String label;
 }
 
 enum _InventorySection { operations, procurement, transfer, sales, pricing, workforce, relations }
