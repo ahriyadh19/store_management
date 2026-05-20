@@ -561,6 +561,21 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
     _persistWorkspaceTabsState();
   }
 
+  void _closeAllTabs() {
+    final fallbackPage = _canAccessPage(IndexPage.dashboard) ? IndexPage.dashboard : IndexPage.settings;
+    final fallbackId = 'tab_${_nextTabSeed++}';
+
+    setState(() {
+      _tabs
+        ..clear()
+        ..add(_WorkspaceTab(id: fallbackId, page: fallbackPage, pinned: false, group: _groupForPage(fallbackPage)));
+      _activeTabId = fallbackId;
+    });
+
+    widget.appPreferencesController.saveLastIndexPageKey(fallbackPage.storageKey);
+    _persistWorkspaceTabsState();
+  }
+
 
   void _closeTabsToRight(String tabId) {
     final index = _tabs.indexWhere((tab) => tab.id == tabId);
@@ -839,6 +854,7 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
                   onReorderTabs: _reorderTabs,
                   onMoveTab: _moveTabById,
                   onCloseTabsToRight: _closeTabsToRight,
+                  onCloseAllTabs: () async => _closeAllTabs(),
                   onCloseAllUnpinned: () async => _closeAllUnpinnedTabs(),
                   onRecoverDashboard: _recoverWorkspaceWithDashboard,
                 ),
@@ -1027,6 +1043,7 @@ class _WorkspaceTabBar extends StatelessWidget {
     required this.onReorderTabs,
     required this.onMoveTab,
     required this.onCloseTabsToRight,
+    required this.onCloseAllTabs,
     required this.onCloseAllUnpinned,
     required this.onRecoverDashboard,
   });
@@ -1041,6 +1058,7 @@ class _WorkspaceTabBar extends StatelessWidget {
   final void Function(int oldIndex, int newIndex) onReorderTabs;
   final void Function(String tabId, int delta) onMoveTab;
   final ValueChanged<String> onCloseTabsToRight;
+  final Future<void> Function() onCloseAllTabs;
   final Future<void> Function() onCloseAllUnpinned;
   final VoidCallback onRecoverDashboard;
 
@@ -1146,6 +1164,7 @@ class _WorkspaceTabBar extends StatelessWidget {
             onCloseTab: onCloseTab,
             onTogglePin: onTogglePin,
             onMoveTab: onMoveTab,
+            onCloseAllTabs: onCloseAllTabs,
             onCloseAllUnpinned: onCloseAllUnpinned,
             onRecoverDashboard: onRecoverDashboard,
           ),
@@ -1188,75 +1207,86 @@ class _WorkspaceTabTile extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: PopupMenuButton<String>(
-        tooltip: '',
-        onSelected: (value) {
-          if (value == 'pin') {
-            onTogglePin();
-          } else if (value == 'close-right') {
-            onCloseTabsToRight();
-          } else if (value == 'close' && onClose != null) {
-            onClose!();
-          }
-        },
-        itemBuilder: (context) => [
-          PopupMenuItem<String>(value: 'pin', child: Text(tab.pinned ? l10n.unpinTab : l10n.pinTab)),
-          PopupMenuItem<String>(value: 'close-right', child: Text(l10n.closeTabsToRight)),
-          if (onClose != null) PopupMenuItem<String>(value: 'close', child: Text(l10n.closeTabAction)),
-        ],
-        child: InkWell(
-          onTap: onActivate,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 130),
+        curve: Curves.easeOut,
+        width: 236,
+        decoration: BoxDecoration(
+          color: backgroundColor,
           borderRadius: BorderRadius.circular(14),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 130),
-            curve: Curves.easeOut,
-            width: 236,
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: borderColor),
-              boxShadow: active ? [BoxShadow(color: colorScheme.primary.withValues(alpha: 0.18), blurRadius: 12, offset: const Offset(0, 4))] : null,
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(color: groupColor, shape: BoxShape.circle),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelLarge?.copyWith(fontWeight: active ? FontWeight.w800 : FontWeight.w600),
+          border: Border.all(color: borderColor),
+          boxShadow: active ? [BoxShadow(color: colorScheme.primary.withValues(alpha: 0.18), blurRadius: 12, offset: const Offset(0, 4))] : null,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onActivate,
+            borderRadius: BorderRadius.circular(14),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(color: groupColor, shape: BoxShape.circle),
                   ),
-                ),
-                InkWell(
-                  onTap: onTogglePin,
-                  borderRadius: BorderRadius.circular(10),
-                  child: Padding(
-                    padding: const EdgeInsets.all(2),
-                    child: Icon(tab.pinned ? Icons.push_pin_rounded : Icons.push_pin_outlined, size: 16, color: tab.pinned ? colorScheme.primary : colorScheme.onSurfaceVariant),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelLarge?.copyWith(fontWeight: active ? FontWeight.w800 : FontWeight.w600),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 6),
-                if (onClose != null)
                   InkWell(
-                    onTap: onClose,
+                    onTap: onTogglePin,
                     borderRadius: BorderRadius.circular(10),
                     child: Padding(
                       padding: const EdgeInsets.all(2),
-                      child: Icon(Icons.close_rounded, size: 16, color: colorScheme.error),
+                      child: Icon(tab.pinned ? Icons.push_pin_rounded : Icons.push_pin_outlined, size: 16, color: tab.pinned ? colorScheme.primary : colorScheme.onSurfaceVariant),
                     ),
-                  )
-                else
+                  ),
+                  const SizedBox(width: 2),
+                  PopupMenuButton<String>(
+                    tooltip: '',
+                    padding: EdgeInsets.zero,
+                    onSelected: (value) {
+                      if (value == 'pin') {
+                        onTogglePin();
+                      } else if (value == 'close-right') {
+                        onCloseTabsToRight();
+                      } else if (value == 'close' && onClose != null) {
+                        onClose!();
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem<String>(value: 'pin', child: Text(tab.pinned ? l10n.unpinTab : l10n.pinTab)),
+                      PopupMenuItem<String>(value: 'close-right', child: Text(l10n.closeTabsToRight)),
+                      if (onClose != null) PopupMenuItem<String>(value: 'close', child: Text(l10n.closeTabAction)),
+                    ],
+                    child: Padding(
+                      padding: const EdgeInsets.all(2),
+                      child: Icon(Icons.more_vert_rounded, size: 16, color: colorScheme.onSurfaceVariant),
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  if (onClose != null)
+                    InkWell(
+                      onTap: onClose,
+                      borderRadius: BorderRadius.circular(10),
+                      child: Padding(
+                        padding: const EdgeInsets.all(2),
+                        child: Icon(Icons.close_rounded, size: 16, color: colorScheme.error),
+                      ),
+                    )
+                  else
+                    const SizedBox(width: 4),
                   const SizedBox(width: 4),
-                const SizedBox(width: 4),
-                reorderHandle,
-              ],
+                  reorderHandle,
+                ],
+              ),
             ),
           ),
         ),
@@ -1274,6 +1304,7 @@ class _TabsOverflowMenu extends StatelessWidget {
     required this.onCloseTab,
     required this.onTogglePin,
     required this.onMoveTab,
+    required this.onCloseAllTabs,
     required this.onCloseAllUnpinned,
     required this.onRecoverDashboard,
   });
@@ -1285,6 +1316,7 @@ class _TabsOverflowMenu extends StatelessWidget {
   final ValueChanged<String> onCloseTab;
   final ValueChanged<String> onTogglePin;
   final void Function(String tabId, int delta) onMoveTab;
+  final Future<void> Function() onCloseAllTabs;
   final Future<void> Function() onCloseAllUnpinned;
   final VoidCallback onRecoverDashboard;
 
@@ -1292,12 +1324,18 @@ class _TabsOverflowMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
+    final hasClosableTabs = tabs.length > 1;
     final hasUnpinnedTabs = tabs.any((tab) => !tab.pinned);
 
     return PopupMenuButton<String>(
       tooltip: l10n.openTabsTooltip('${tabs.length}'),
       constraints: const BoxConstraints(minWidth: 320, maxWidth: 420, maxHeight: 440),
       onSelected: (value) {
+        if (value == 'close-all') {
+          Future<void>.microtask(onCloseAllTabs);
+          return;
+        }
+
         if (value == 'close-unpinned') {
           Future<void>.microtask(onCloseAllUnpinned);
           return;
@@ -1325,7 +1363,28 @@ class _TabsOverflowMenu extends StatelessWidget {
       itemBuilder: (context) {
         final entries = <PopupMenuEntry<String>>[];
 
+        if (hasClosableTabs) {
+          entries.add(
+            PopupMenuItem<String>(
+              value: 'close-all',
+              child: Row(
+                children: [
+                  Icon(Icons.close_fullscreen_rounded, size: 16, color: colorScheme.error),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.closeAll,
+                    style: TextStyle(color: colorScheme.error, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
         if (hasUnpinnedTabs) {
+          if (entries.isNotEmpty) {
+            entries.add(const PopupMenuDivider());
+          }
           entries.add(
             PopupMenuItem<String>(
               value: 'close-unpinned',
