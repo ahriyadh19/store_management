@@ -55,6 +55,7 @@ import 'package:store_management/services/remote_failure_classifier.dart';
 import 'package:store_management/services/sync_payload_normalizer.dart';
 import 'package:store_management/services/sync_conflict_resolution.dart';
 import 'package:store_management/views/components/model_form.dart';
+import 'package:store_management/views/index/index_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 ModelFormDefinition<Store> storeFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Store>(
@@ -302,17 +303,20 @@ ModelFormDefinition<AccessPage> accessPageFormDefinition(AppLocalizations l10n) 
   ],
   fromMap: AccessPage.fromMap,
   toMap: (page) => page.toMap(),
-  sampleModel: AccessPage(
-    key: 'users',
-    title: 'Users',
-    routeKey: 'users',
-    module: 'access',
-    description: _t(l10n, 'Manage user records and access assignments.', 'إدارة سجلات المستخدمين وتعيينات الوصول.'),
-    icon: 'person_outline_rounded',
-    status: RecordStatus.active.code,
-    createdAt: _createdAt,
-    updatedAt: _updatedAt,
-  ),
+  sampleModel: () {
+    final usersMetadata = indexPageMetadata(IndexPage.users);
+    return AccessPage(
+      key: usersMetadata.routeKey,
+      title: localizedIndexPageTitle(l10n, IndexPage.users),
+      routeKey: usersMetadata.routeKey,
+      module: usersMetadata.menuSection.name,
+      description: localizedIndexPageDescription(l10n, IndexPage.users),
+      icon: usersMetadata.iconName,
+      status: RecordStatus.active.code,
+      createdAt: _createdAt,
+      updatedAt: _updatedAt,
+    );
+  }(),
 );
 
 ModelFormDefinition<AccessPermission> accessPermissionFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<AccessPermission>(
@@ -329,7 +333,7 @@ ModelFormDefinition<AccessPermission> accessPermissionFormDefinition(AppLocaliza
   fromMap: AccessPermission.fromMap,
   toMap: (permission) => permission.toMap(),
   sampleModel: AccessPermission(
-    key: 'page.users.view',
+    key: indexPageMetadata(IndexPage.users).permissionKey,
     action: 'view',
     description: _t(l10n, 'Allows navigation to the users page.', 'يسمح بالتنقل إلى صفحة المستخدمين.'),
     status: RecordStatus.active.code,

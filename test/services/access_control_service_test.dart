@@ -70,6 +70,12 @@ void main() {
     expect(pagePermissionFromTableForTesting('store_client'), PermissionCatalog.pageViewPermission(IndexPage.inventory));
   });
 
+  test('page permissions are sourced from the shared page catalog', () {
+    for (final page in allIndexPages) {
+      expect(PermissionCatalog.pageViewPermission(page), indexPageMetadata(page).permissionKey);
+    }
+  });
+
   test('assigned roles keep owner-compatible and legacy unscoped rows', () {
     final rows = filterRoleRowsForOwnerForTesting(
       ownerUuid: 'owner-1',

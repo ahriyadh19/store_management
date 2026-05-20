@@ -118,64 +118,27 @@ Widget _buildIndexDrawer(
 }
 
 List<_DrawerSection> _buildDrawerSections(AppLocalizations l10n, {required bool Function(IndexPage page) canViewPage}) {
-  final sections = [
-    _DrawerSection(
-      key: _DrawerSectionKey.overview,
-      title: l10n.overview,
-      icon: Icons.space_dashboard_rounded,
-      items: [
-        _DrawerItem(page: IndexPage.dashboard, label: l10n.dashboard, icon: Icons.dashboard_rounded, countsAsModule: false),
-        _DrawerItem(page: IndexPage.reports, label: l10n.reports, icon: Icons.bar_chart_rounded, countsAsModule: false),
-        _DrawerItem(page: IndexPage.stores, label: l10n.stores, icon: Icons.store_mall_directory_rounded),
-        _DrawerItem(page: IndexPage.branches, label: l10n.branches, icon: Icons.storefront_rounded),
-      ],
-    ),
-    _DrawerSection(
-      key: _DrawerSectionKey.catalog,
-      title: l10n.catalog,
-      icon: Icons.inventory_2_rounded,
-      items: [
-        _DrawerItem(page: IndexPage.products, label: l10n.products, icon: Icons.inventory_2_rounded),
-        _DrawerItem(page: IndexPage.categories, label: l10n.categories, icon: Icons.category_rounded),
-        _DrawerItem(page: IndexPage.tags, label: l10n.tags, icon: Icons.sell_rounded),
-      ],
-    ),
-    _DrawerSection(
-      key: _DrawerSectionKey.sales,
-      title: l10n.sales,
-      icon: Icons.point_of_sale_rounded,
-      items: [
-        _DrawerItem(page: IndexPage.invoices, label: l10n.invoices, icon: Icons.receipt_long_rounded),
-        _DrawerItem(page: IndexPage.returns, label: l10n.returns, icon: Icons.assignment_return_rounded),
-        _DrawerItem(page: IndexPage.paymentVouchers, label: l10n.paymentVouchers, icon: Icons.account_balance_wallet_rounded),
-      ],
-    ),
-    _DrawerSection(
-      key: _DrawerSectionKey.people,
-      title: l10n.people,
-      icon: Icons.groups_rounded,
-      items: [
-        _DrawerItem(page: IndexPage.clients, label: l10n.clients, icon: Icons.support_agent_rounded),
-        _DrawerItem(page: IndexPage.suppliers, label: l10n.suppliers, icon: Icons.apartment_rounded),
-        _DrawerItem(page: IndexPage.users, label: l10n.users, icon: Icons.person_outline_rounded),
-        _DrawerItem(page: IndexPage.roles, label: l10n.roles, icon: Icons.admin_panel_settings_rounded),
-      ],
-    ),
-    _DrawerSection(
-      key: _DrawerSectionKey.operations,
-      title: l10n.operations,
-      icon: Icons.settings_suggest_rounded,
-      items: [
-        _DrawerItem(page: IndexPage.inventory, label: l10n.inventory, icon: Icons.warehouse_rounded),
-        _DrawerItem(page: IndexPage.transactions, label: l10n.transactions, icon: Icons.sync_alt_rounded),
-      ],
-    ),
-  ];
+  final sections = <_DrawerSection>[];
 
-  return sections
-      .map((section) => _DrawerSection(key: section.key, title: section.title, icon: section.icon, items: section.items.where((item) => canViewPage(item.page)).toList(growable: false)))
-      .where((section) => section.items.isNotEmpty)
-      .toList(growable: false);
+  for (final sectionKey in _DrawerSectionKey.values) {
+    final items = <_DrawerItem>[];
+    for (final page in allIndexPages) {
+      if (!canViewPage(page) || _drawerSectionForPage(page) != sectionKey) {
+        continue;
+      }
+
+      final metadata = indexPageMetadata(page);
+      items.add(_DrawerItem(page: page, label: localizedIndexPageTitle(l10n, page), icon: metadata.icon, countsAsModule: metadata.countsAsModule));
+    }
+
+    if (items.isEmpty) {
+      continue;
+    }
+
+    sections.add(_DrawerSection(key: sectionKey, title: _drawerSectionTitle(l10n, sectionKey), icon: _drawerSectionIcon(sectionKey), items: items));
+  }
+
+  return sections;
 }
 
 String _initialsForUser(String? name, String? email) {
@@ -1053,58 +1016,44 @@ class _DrawerSectionCard extends StatelessWidget {
 }
 
 _DrawerSectionKey _drawerSectionForPage(IndexPage page) {
-  switch (page) {
-    case IndexPage.dashboard:
-    case IndexPage.reports:
-    case IndexPage.stores:
-    case IndexPage.branches:
-      return _DrawerSectionKey.overview;
-    case IndexPage.products:
-    case IndexPage.categories:
-    case IndexPage.tags:
-      return _DrawerSectionKey.catalog;
-    case IndexPage.invoices:
-    case IndexPage.returns:
-    case IndexPage.paymentVouchers:
-      return _DrawerSectionKey.sales;
-    case IndexPage.clients:
-    case IndexPage.suppliers:
-    case IndexPage.users:
-    case IndexPage.roles:
-      return _DrawerSectionKey.people;
-    case IndexPage.inventory:
-    case IndexPage.transactions:
-    case IndexPage.settings:
-      return _DrawerSectionKey.operations;
-  }
+  return switch (indexPageMetadata(page).menuSection) {
+    IndexPageMenuSection.overview => _DrawerSectionKey.overview,
+    IndexPageMenuSection.catalog => _DrawerSectionKey.catalog,
+    IndexPageMenuSection.sales => _DrawerSectionKey.sales,
+    IndexPageMenuSection.people => _DrawerSectionKey.people,
+    IndexPageMenuSection.operations => _DrawerSectionKey.operations,
+  };
 }
 
 _TabGroup _groupForPage(IndexPage page) {
-  switch (page) {
-    case IndexPage.dashboard:
-    case IndexPage.reports:
-    case IndexPage.stores:
-    case IndexPage.branches:
-      return _TabGroup.overview;
-    case IndexPage.products:
-    case IndexPage.categories:
-    case IndexPage.tags:
-      return _TabGroup.catalog;
-    case IndexPage.invoices:
-    case IndexPage.returns:
-    case IndexPage.paymentVouchers:
-      return _TabGroup.sales;
-    case IndexPage.clients:
-    case IndexPage.suppliers:
-    case IndexPage.users:
-    case IndexPage.roles:
-      return _TabGroup.people;
-    case IndexPage.inventory:
-    case IndexPage.transactions:
-      return _TabGroup.operations;
-    case IndexPage.settings:
-      return _TabGroup.system;
-  }
+  return switch (indexPageMetadata(page).tabGroup) {
+    IndexPageTabGroup.overview => _TabGroup.overview,
+    IndexPageTabGroup.catalog => _TabGroup.catalog,
+    IndexPageTabGroup.sales => _TabGroup.sales,
+    IndexPageTabGroup.people => _TabGroup.people,
+    IndexPageTabGroup.operations => _TabGroup.operations,
+    IndexPageTabGroup.system => _TabGroup.system,
+  };
+}
+
+String _drawerSectionTitle(AppLocalizations l10n, _DrawerSectionKey key) {
+  return switch (key) {
+    _DrawerSectionKey.overview => l10n.overview,
+    _DrawerSectionKey.catalog => l10n.catalog,
+    _DrawerSectionKey.sales => l10n.sales,
+    _DrawerSectionKey.people => l10n.people,
+    _DrawerSectionKey.operations => l10n.operations,
+  };
+}
+
+IconData _drawerSectionIcon(_DrawerSectionKey key) {
+  return switch (key) {
+    _DrawerSectionKey.overview => Icons.space_dashboard_rounded,
+    _DrawerSectionKey.catalog => Icons.inventory_2_rounded,
+    _DrawerSectionKey.sales => Icons.point_of_sale_rounded,
+    _DrawerSectionKey.people => Icons.groups_rounded,
+    _DrawerSectionKey.operations => Icons.settings_suggest_rounded,
+  };
 }
 
 class _WorkspaceTab {

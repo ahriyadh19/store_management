@@ -685,25 +685,7 @@ class PermissionCatalog {
   }
 
   static String pageViewPermission(IndexPage page) {
-    return switch (page) {
-      IndexPage.dashboard => dashboardView,
-      IndexPage.reports => reportsView,
-      IndexPage.stores => 'page.stores.view',
-      IndexPage.branches => 'page.branches.view',
-      IndexPage.products => 'page.products.view',
-      IndexPage.categories => 'page.categories.view',
-      IndexPage.tags => 'page.tags.view',
-      IndexPage.invoices => 'page.invoices.view',
-      IndexPage.returns => 'page.returns.view',
-      IndexPage.paymentVouchers => 'page.paymentVouchers.view',
-      IndexPage.clients => 'page.clients.view',
-      IndexPage.suppliers => 'page.suppliers.view',
-      IndexPage.users => 'page.users.view',
-      IndexPage.roles => 'page.roles.view',
-      IndexPage.inventory => 'page.inventory.view',
-      IndexPage.transactions => 'page.transactions.view',
-      IndexPage.settings => settingsView,
-    };
+    return indexPageMetadata(page).permissionKey;
   }
 
   static String tableActionPermission(String tableName, String action) => 'table.${_normalizePermissionKey(tableName)}.${_normalizePermissionKey(action)}';

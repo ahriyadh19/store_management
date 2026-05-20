@@ -53,6 +53,22 @@ void main() {
     expect(fieldUsesSearchableSelectionForTesting(storeUserFormDefinition(english), 'userUuid'), isTrue);
   });
 
+  test('access page and permission samples follow the shared users page catalog', () {
+    final english = AppLocalizations(const Locale('en'));
+    final pageDefinition = accessPageFormDefinition(english);
+    final permissionDefinition = accessPermissionFormDefinition(english);
+    final pageSample = pageDefinition.sampleModel;
+    final permissionSample = permissionDefinition.sampleModel;
+    final usersMetadata = indexPageMetadata(IndexPage.users);
+
+    expect(pageSample.key, usersMetadata.routeKey);
+    expect(pageSample.routeKey, usersMetadata.routeKey);
+    expect(pageSample.title, localizedIndexPageTitle(english, IndexPage.users));
+    expect(pageSample.module, usersMetadata.menuSection.name);
+    expect(pageSample.icon, usersMetadata.iconName);
+    expect(permissionSample.key, usersMetadata.permissionKey);
+  });
+
   test('operational relation fields use selections for stable foreign keys', () {
     final english = AppLocalizations(const Locale('en'));
 
