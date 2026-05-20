@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:store_management/localization/app_localizations.dart';
+import 'package:store_management/services/access_control_service.dart';
 import 'package:store_management/views/pages/inventory_page.dart';
 
 Future<void> _selectPurchaseReceiptOption(WidgetTester tester, String fieldKey, String label) async {
@@ -376,5 +377,57 @@ void main() {
     await tester.tap(returnTab);
     await tester.pumpAndSettle();
     expect(find.text('Store Return Items Datatable'), findsOneWidget);
+  });
+
+  testWidgets('inventory relations hide inaccessible admin tabs while keeping inventory relation modules', (tester) async {
+    tester.view.physicalSize = const Size(1600, 2200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    const snapshot = AccessControlSnapshot(
+      isLoading: false,
+      userUuid: 'user-1',
+      ownerUuid: 'owner-1',
+      membershipRoles: <String>{'inventory_staff'},
+      roleNames: <String>{'inventory_staff'},
+      allowPermissions: <String>{'page.inventory.view'},
+      denyPermissions: <String>{},
+      lastError: null,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [AppLocalizations.delegate, GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
+        home: const Scaffold(
+          body: InventoryPage(title: 'Inventory', description: 'Track stock movements and receiving operations.', icon: Icons.warehouse_rounded, accessSnapshot: snapshot, aclUnavailable: false),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final relationsChip = find.widgetWithText(ChoiceChip, 'Relations');
+    await tester.ensureVisible(relationsChip);
+    await tester.tap(relationsChip);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Access'), findsOneWidget);
+    expect(find.text('Partners'), findsOneWidget);
+    expect(find.text('Structure'), findsOneWidget);
+    expect(find.text('Financial Lines'), findsOneWidget);
+    expect(find.text('Permissions'), findsNothing);
+    expect(find.text('Role Permissions'), findsNothing);
+    expect(find.text('User Permissions'), findsNothing);
+    expect(find.text('User Roles'), findsNothing);
+    expect(find.text('Store Users'), findsWidgets);
+
+    await tester.tap(find.byKey(const Key('inventory-relations-group-partners')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Store Suppliers'), findsWidgets);
+    expect(find.text('Store Clients'), findsWidgets);
   });
 }

@@ -46,10 +46,6 @@ class AccessControlSnapshot {
   }
 
   bool can(String permission) {
-    if (isOwnerAdmin) {
-      return true;
-    }
-
     final normalized = _normalizePermissionKey(permission);
     if (normalized.isEmpty) {
       return false;
@@ -60,6 +56,10 @@ class AccessControlSnapshot {
       if (denyPermissions.contains(candidate)) {
         return false;
       }
+    }
+
+    if (isOwnerAdmin) {
+      return true;
     }
 
     final allowCandidates = _permissionCandidates(normalized);
@@ -741,20 +741,28 @@ class PermissionCatalog {
       'inventory_batch' => pageViewPermission(IndexPage.inventory),
       'inventory_transaction' => pageViewPermission(IndexPage.inventory),
       'inventory_movement' => pageViewPermission(IndexPage.inventory),
+      'store_supplier' => pageViewPermission(IndexPage.inventory),
+      'store_client' => pageViewPermission(IndexPage.inventory),
+      'store_user' => pageViewPermission(IndexPage.inventory),
+      'store_branches' => pageViewPermission(IndexPage.inventory),
+      'branch_product' => pageViewPermission(IndexPage.inventory),
+      'store_invoice_item' => pageViewPermission(IndexPage.inventory),
+      'payment_allocation' => pageViewPermission(IndexPage.inventory),
+      'store_return_item' => pageViewPermission(IndexPage.inventory),
       'store_financial_transaction' => pageViewPermission(IndexPage.transactions),
-      'purchase_order' => pageViewPermission(IndexPage.transactions),
-      'purchase_order_item' => pageViewPermission(IndexPage.transactions),
-      'supplier_invoice' => pageViewPermission(IndexPage.transactions),
-      'transfer_order' => pageViewPermission(IndexPage.transactions),
-      'transfer_order_item' => pageViewPermission(IndexPage.transactions),
-      'sales_order' => pageViewPermission(IndexPage.transactions),
-      'sales_invoice' => pageViewPermission(IndexPage.transactions),
-      'sales_return' => pageViewPermission(IndexPage.transactions),
-      'branch_price' => pageViewPermission(IndexPage.transactions),
-      'promotion_rule' => pageViewPermission(IndexPage.transactions),
-      'staff_shift' => pageViewPermission(IndexPage.transactions),
-      'staff_attendance' => pageViewPermission(IndexPage.transactions),
-      'staff_activity_log' => pageViewPermission(IndexPage.transactions),
+      'purchase_order' => pageViewPermission(IndexPage.inventory),
+      'purchase_order_item' => pageViewPermission(IndexPage.inventory),
+      'supplier_invoice' => pageViewPermission(IndexPage.inventory),
+      'transfer_order' => pageViewPermission(IndexPage.inventory),
+      'transfer_order_item' => pageViewPermission(IndexPage.inventory),
+      'sales_order' => pageViewPermission(IndexPage.inventory),
+      'sales_invoice' => pageViewPermission(IndexPage.inventory),
+      'sales_return' => pageViewPermission(IndexPage.inventory),
+      'branch_price' => pageViewPermission(IndexPage.inventory),
+      'promotion_rule' => pageViewPermission(IndexPage.inventory),
+      'staff_shift' => pageViewPermission(IndexPage.inventory),
+      'staff_attendance' => pageViewPermission(IndexPage.inventory),
+      'staff_activity_log' => pageViewPermission(IndexPage.inventory),
       _ => null,
     };
   }
@@ -960,6 +968,9 @@ Map<String, Set<String>> applyExplicitPermissionGrantForTesting({required Set<St
 bool shouldRefreshAccessSnapshotForTesting({required bool isLoading, required bool hasError, required DateTime? lastSuccessfulRefreshAt, required Duration maxAge, required DateTime now}) {
   return _shouldRefreshAccessSnapshot(isLoading: isLoading, hasError: hasError, lastSuccessfulRefreshAt: lastSuccessfulRefreshAt, maxAge: maxAge, now: now);
 }
+
+@visibleForTesting
+String? pagePermissionFromTableForTesting(String tableName) => PermissionCatalog.pagePermissionFromTable(tableName);
 
 String _canonicalSystemRole(String role) {
   final normalized = _normalizePermissionKey(role);

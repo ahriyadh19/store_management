@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:store_management/services/access_control_service.dart';
+import 'package:store_management/views/index/index_page.dart';
 
 void main() {
   test('canonical system role maps privileged admin and owner variants', () {
@@ -42,6 +43,31 @@ void main() {
     expect(snapshot.isOwnerAdmin, isTrue);
     expect(snapshot.can(PermissionCatalog.settingsView), isTrue);
     expect(snapshot.can(PermissionCatalog.rolesManage), isTrue);
+  });
+
+  test('explicit deny still overrides wildcard access', () {
+    const snapshot = AccessControlSnapshot(
+      isLoading: false,
+      userUuid: 'user-1',
+      ownerUuid: 'owner-1',
+      membershipRoles: <String>{'owner'},
+      roleNames: <String>{'owner'},
+      allowPermissions: <String>{'*'},
+      denyPermissions: <String>{PermissionCatalog.rolesManage},
+      lastError: null,
+    );
+
+    expect(snapshot.isOwnerAdmin, isTrue);
+    expect(snapshot.can(PermissionCatalog.settingsView), isTrue);
+    expect(snapshot.can(PermissionCatalog.rolesManage), isFalse);
+  });
+
+  test('inventory-owned tables inherit inventory page read access after refactor', () {
+    expect(pagePermissionFromTableForTesting('purchase_order'), PermissionCatalog.pageViewPermission(IndexPage.inventory));
+    expect(pagePermissionFromTableForTesting('sales_invoice'), PermissionCatalog.pageViewPermission(IndexPage.inventory));
+    expect(pagePermissionFromTableForTesting('branch_price'), PermissionCatalog.pageViewPermission(IndexPage.inventory));
+    expect(pagePermissionFromTableForTesting('store_invoice_item'), PermissionCatalog.pageViewPermission(IndexPage.inventory));
+    expect(pagePermissionFromTableForTesting('store_client'), PermissionCatalog.pageViewPermission(IndexPage.inventory));
   });
 
   test('assigned roles keep owner-compatible and legacy unscoped rows', () {

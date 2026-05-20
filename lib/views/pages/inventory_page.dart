@@ -29,6 +29,7 @@ import 'package:store_management/models/transfer_order.dart';
 import 'package:store_management/models/transfer_order_item.dart';
 import 'package:store_management/models/user_permission.dart';
 import 'package:store_management/models/user_roles.dart';
+import 'package:store_management/services/access_control_service.dart';
 import 'package:store_management/services/inventory_transaction_service.dart';
 import 'package:store_management/services/local_database.dart';
 import 'package:store_management/services/owner_scope_service.dart';
@@ -60,6 +61,8 @@ class InventoryPage extends StatefulWidget {
     this.inventoryTransactionService,
     this.ownerScopeService,
     this.purchaseReceiptPoster,
+    this.accessSnapshot,
+    this.aclUnavailable,
   });
 
   final String title;
@@ -69,6 +72,8 @@ class InventoryPage extends StatefulWidget {
   final InventoryTransactionService? inventoryTransactionService;
   final OwnerScopeService? ownerScopeService;
   final PurchaseReceiptPoster? purchaseReceiptPoster;
+  final AccessControlSnapshot? accessSnapshot;
+  final bool? aclUnavailable;
 
   @override
   State<InventoryPage> createState() => _InventoryPageState();
@@ -133,25 +138,32 @@ class _InventoryPageState extends State<InventoryPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final visibleSections = _visibleSections(l10n);
+    final activeSection = visibleSections.contains(_activeSection) ? _activeSection : (visibleSections.isEmpty ? null : visibleSections.first);
+
     return Column(
       children: [
-        _buildSectionSelector(context),
+        _buildSectionSelector(context, visibleSections: visibleSections, activeSection: activeSection),
         const SizedBox(height: 8),
-        Expanded(child: _buildSectionContent(context, l10n)),
+        Expanded(child: _buildSectionContent(context, l10n, activeSection: activeSection)),
       ],
     );
   }
 
-  Widget _buildSectionSelector(BuildContext context) {
-    final sections = _InventorySection.values;
+  Widget _buildSectionSelector(BuildContext context, {required List<_InventorySection> visibleSections, required _InventorySection? activeSection}) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    if (visibleSections.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          for (final section in sections)
+          for (final section in visibleSections)
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ChoiceChip(
@@ -163,12 +175,12 @@ class _InventoryPageState extends State<InventoryPage> {
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(color: _activeSection == section ? colorScheme.onPrimary.withValues(alpha: 0.18) : colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(999)),
+                      decoration: BoxDecoration(color: activeSection == section ? colorScheme.onPrimary.withValues(alpha: 0.18) : colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(999)),
                       child: Text('${_sectionCount(section)}', style: theme.textTheme.labelSmall),
                     ),
                   ],
                 ),
-                selected: _activeSection == section,
+                selected: activeSection == section,
                 onSelected: (_) {
                   if (_activeSection != section) {
                     setState(() => _activeSection = section);
@@ -181,221 +193,51 @@ class _InventoryPageState extends State<InventoryPage> {
     );
   }
 
-  Widget _buildSectionContent(BuildContext context, AppLocalizations l10n) {
-    switch (_activeSection) {
+  Widget _buildSectionContent(BuildContext context, AppLocalizations l10n, {required _InventorySection? activeSection}) {
+    if (activeSection == null) {
+      return _buildUnavailableSectionCard(context);
+    }
+
+    switch (activeSection) {
       case _InventorySection.operations:
-        return _buildSectionTabs(
-          tabs: const [
-            Tab(text: 'Movements'),
-            Tab(text: 'Batches'),
-            Tab(text: 'Transactions'),
-          ],
-          children: [
-            Column(
-              children: [
-                Padding(padding: const EdgeInsets.fromLTRB(24, 24, 24, 0), child: _buildPurchaseReceiptCard(context)),
-                Expanded(
-                  child: ModelCrudPage<InventoryMovement>(
-                    title: widget.title,
-                    entityLabel: inventoryMovementEntityLabel(l10n),
-                    description: widget.description,
-                    icon: widget.icon,
-                    highlights: widget.highlights,
-                    formDefinition: inventoryMovementFormDefinition(l10n),
-                  ),
-                ),
-              ],
-            ),
-            ModelCrudPage<InventoryBatch>(
-              title: 'Inventory Batches',
-              entityLabel: inventoryBatchEntityLabel(l10n),
-              description: 'Track item batches and their remaining quantities.',
-              icon: Icons.layers_rounded,
-              highlights: const ['Batch life-cycle', 'Expiry tracking', 'Cost layers'],
-              formDefinition: inventoryBatchFormDefinition(l10n),
-            ),
-            ModelCrudPage<InventoryTransaction>(
-              title: 'Inventory Transactions',
-              entityLabel: inventoryTransactionEntityLabel(l10n),
-              description: 'Track detailed inventory ledger entries and references.',
-              icon: Icons.receipt_long_rounded,
-              highlights: const ['Ledger entries', 'Reference linking', 'Holder movements'],
-              formDefinition: inventoryTransactionFormDefinition(l10n),
-            ),
-          ],
-        );
+        return _buildSectionFromModules(context, _modulesForSection(l10n, _InventorySection.operations));
       case _InventorySection.procurement:
-        return _buildSectionTabs(
-          tabs: const [
-            Tab(text: 'Purchase Orders'),
-            Tab(text: 'Order Items'),
-            Tab(text: 'Supplier Invoices'),
-          ],
-          children: [
-            ModelCrudPage<PurchaseOrder>(
-              title: 'Purchase Orders',
-              entityLabel: purchaseOrderEntityLabel(l10n),
-              description: 'Manage purchase orders and procurement lifecycle records.',
-              icon: Icons.shopping_cart_checkout_rounded,
-              highlights: const ['Procurement', 'Approval flow', 'Expected delivery'],
-              formDefinition: purchaseOrderFormDefinition(l10n),
-            ),
-            ModelCrudPage<PurchaseOrderItem>(
-              title: 'Purchase Order Items',
-              entityLabel: purchaseOrderItemEntityLabel(l10n),
-              description: 'Manage line items for purchase orders and received quantities.',
-              icon: Icons.playlist_add_check_circle_rounded,
-              highlights: const ['Line totals', 'Received quantity', 'Offer linkage'],
-              formDefinition: purchaseOrderItemFormDefinition(l10n),
-            ),
-            ModelCrudPage<SupplierInvoice>(
-              title: 'Supplier Invoices',
-              entityLabel: supplierInvoiceEntityLabel(l10n),
-              description: 'Manage supplier invoices and payment status visibility.',
-              icon: Icons.request_quote_rounded,
-              highlights: const ['Invoice matching', 'Due dates', 'Open balance'],
-              formDefinition: supplierInvoiceFormDefinition(l10n),
-            ),
-          ],
-        );
+        return _buildSectionFromModules(context, _modulesForSection(l10n, _InventorySection.procurement));
       case _InventorySection.transfer:
-        return _buildSectionTabs(
-          tabs: const [
-            Tab(text: 'Transfer Orders'),
-            Tab(text: 'Transfer Items'),
-          ],
-          children: [
-            ModelCrudPage<TransferOrder>(
-              title: 'Transfer Orders',
-              entityLabel: transferOrderEntityLabel(l10n),
-              description: 'Manage inter-branch stock transfer requests and lifecycle.',
-              icon: Icons.compare_arrows_rounded,
-              highlights: const ['Source to destination', 'Transfer status', 'Requested and received tracking'],
-              formDefinition: transferOrderFormDefinition(l10n),
-            ),
-            ModelCrudPage<TransferOrderItem>(
-              title: 'Transfer Order Items',
-              entityLabel: transferOrderItemEntityLabel(l10n),
-              description: 'Manage transfer order line items and shipped/received quantities.',
-              icon: Icons.format_list_numbered_rounded,
-              highlights: const ['Line quantities', 'Shipping progress', 'Receiving progress'],
-              formDefinition: transferOrderItemFormDefinition(l10n),
-            ),
-          ],
-        );
+        return _buildSectionFromModules(context, _modulesForSection(l10n, _InventorySection.transfer));
       case _InventorySection.sales:
-        return _buildSectionTabs(
-          tabs: const [
-            Tab(text: 'Sales Orders'),
-            Tab(text: 'Sales Invoices'),
-            Tab(text: 'Sales Returns'),
-          ],
-          children: [
-            ModelCrudPage<SalesOrder>(
-              title: 'Sales Orders',
-              entityLabel: salesOrderEntityLabel(l10n),
-              description: 'Manage customer sales orders and pricing strategy decisions.',
-              icon: Icons.shopping_bag_rounded,
-              highlights: const ['Order pipeline', 'Pricing strategy', 'Customer linkage'],
-              formDefinition: salesOrderFormDefinition(l10n),
-            ),
-            ModelCrudPage<SalesInvoice>(
-              title: 'Sales Invoices',
-              entityLabel: salesInvoiceEntityLabel(l10n),
-              description: 'Manage sales invoices, totals, and payment progress.',
-              icon: Icons.receipt_rounded,
-              highlights: const ['Invoice lifecycle', 'Outstanding balances', 'Payment status'],
-              formDefinition: salesInvoiceFormDefinition(l10n),
-            ),
-            ModelCrudPage<SalesReturn>(
-              title: 'Sales Returns',
-              entityLabel: salesReturnEntityLabel(l10n),
-              description: 'Track sales returns, reasons, and refund processing.',
-              icon: Icons.assignment_return_rounded,
-              highlights: const ['Return reason', 'Refund amount', 'Approval status'],
-              formDefinition: salesReturnFormDefinition(l10n),
-            ),
-          ],
-        );
+        return _buildSectionFromModules(context, _modulesForSection(l10n, _InventorySection.sales));
       case _InventorySection.pricing:
-        return _buildSectionTabs(
-          tabs: const [
-            Tab(text: 'Branch Prices'),
-            Tab(text: 'Promotions'),
-          ],
-          children: [
-            ModelCrudPage<BranchPrice>(
-              title: 'Branch Prices',
-              entityLabel: branchPriceEntityLabel(l10n),
-              description: 'Configure branch-level product prices and validity windows.',
-              icon: Icons.price_change_rounded,
-              highlights: const ['Price tiers', 'Effective dates', 'Priority handling'],
-              formDefinition: branchPriceFormDefinition(l10n),
-            ),
-            ModelCrudPage<PromotionRule>(
-              title: 'Promotion Rules',
-              entityLabel: promotionRuleEntityLabel(l10n),
-              description: 'Define discount promotions per branch or product scope.',
-              icon: Icons.local_offer_rounded,
-              highlights: const ['Discount rules', 'Date windows', 'Scope targeting'],
-              formDefinition: promotionRuleFormDefinition(l10n),
-            ),
-          ],
-        );
+        return _buildSectionFromModules(context, _modulesForSection(l10n, _InventorySection.pricing));
       case _InventorySection.workforce:
-        return _buildSectionTabs(
-          tabs: const [
-            Tab(text: 'Staff Shifts'),
-            Tab(text: 'Attendance'),
-            Tab(text: 'Activity Logs'),
-          ],
-          children: [
-            ModelCrudPage<StaffShift>(
-              title: 'Staff Shifts',
-              entityLabel: staffShiftEntityLabel(l10n),
-              description: 'Plan and track employee shift schedules and completion.',
-              icon: Icons.badge_rounded,
-              highlights: const ['Scheduling', 'Coverage', 'Shift status'],
-              formDefinition: staffShiftFormDefinition(l10n),
-            ),
-            ModelCrudPage<StaffAttendance>(
-              title: 'Staff Attendance',
-              entityLabel: staffAttendanceEntityLabel(l10n),
-              description: 'Track check-ins, check-outs, and worked minutes.',
-              icon: Icons.fact_check_rounded,
-              highlights: const ['Presence records', 'Time worked', 'Attendance status'],
-              formDefinition: staffAttendanceFormDefinition(l10n),
-            ),
-            ModelCrudPage<StaffActivityLog>(
-              title: 'Staff Activity Logs',
-              entityLabel: staffActivityLogEntityLabel(l10n),
-              description: 'Audit user actions across operational entities.',
-              icon: Icons.history_rounded,
-              highlights: const ['Action traceability', 'Entity references', 'Metadata logs'],
-              formDefinition: staffActivityLogFormDefinition(l10n),
-            ),
-          ],
-        );
+        return _buildSectionFromModules(context, _modulesForSection(l10n, _InventorySection.workforce));
       case _InventorySection.relations:
         return _buildRelationsSection(l10n);
     }
   }
 
   Widget _buildRelationsSection(AppLocalizations l10n) {
+    final visibleGroups = _visibleRelationGroups(l10n);
+    final activeGroup = visibleGroups.contains(_activeRelationsGroup) ? _activeRelationsGroup : (visibleGroups.isEmpty ? null : visibleGroups.first);
+
+    if (activeGroup == null) {
+      return _buildUnavailableSectionCard(context);
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 0), child: _buildRelationsGroupSelector()),
-        const SizedBox(height: 8),
-        Expanded(
-          child: _buildSectionTabs(tabBarKey: const Key('inventory-relations-tabbar'), tabs: _relationTabsForGroup(_activeRelationsGroup), children: _relationChildrenForGroup(l10n, _activeRelationsGroup)),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: _buildRelationsGroupSelector(groups: visibleGroups, activeGroup: activeGroup),
         ),
+        const SizedBox(height: 8),
+        Expanded(child: _buildSectionFromModules(context, _modulesForRelationGroup(l10n, activeGroup), tabBarKey: const Key('inventory-relations-tabbar'))),
       ],
     );
   }
 
-  Widget _buildRelationsGroupSelector() {
-    final groups = _InventoryRelationsGroup.values;
+  Widget _buildRelationsGroupSelector({required List<_InventoryRelationsGroup> groups, required _InventoryRelationsGroup activeGroup}) {
     return SingleChildScrollView(
       key: const Key('inventory-relations-groups'),
       scrollDirection: Axis.horizontal,
@@ -408,7 +250,7 @@ class _InventoryPageState extends State<InventoryPage> {
                 key: Key('inventory-relations-group-${group.name}'),
                 avatar: Icon(_relationsGroupIcon(group), size: 18),
                 label: Text(_relationsGroupLabel(group)),
-                selected: _activeRelationsGroup == group,
+                selected: activeGroup == group,
                 onSelected: (_) {
                   if (_activeRelationsGroup != group) {
                     setState(() {
@@ -421,140 +263,6 @@ class _InventoryPageState extends State<InventoryPage> {
         ],
       ),
     );
-  }
-
-  List<Tab> _relationTabsForGroup(_InventoryRelationsGroup group) {
-    switch (group) {
-      case _InventoryRelationsGroup.access:
-        return const [Tab(text: 'Pages'), Tab(text: 'Permissions'), Tab(text: 'Role Permissions'), Tab(text: 'User Permissions'), Tab(text: 'User Roles'), Tab(text: 'Store Users')];
-      case _InventoryRelationsGroup.partners:
-        return const [Tab(text: 'Store Suppliers'), Tab(text: 'Store Clients')];
-      case _InventoryRelationsGroup.structure:
-        return const [Tab(text: 'Store Branches'), Tab(text: 'Branch Products')];
-      case _InventoryRelationsGroup.financials:
-        return const [Tab(text: 'Invoice Items'), Tab(text: 'Payment Allocations'), Tab(text: 'Return Items')];
-    }
-  }
-
-  List<Widget> _relationChildrenForGroup(AppLocalizations l10n, _InventoryRelationsGroup group) {
-    switch (group) {
-      case _InventoryRelationsGroup.access:
-        return [
-          ModelCrudPage<AccessPage>(
-            title: 'Pages',
-            entityLabel: accessPageEntityLabel(l10n),
-            description: 'Define the page catalog that can be shown in menus and route guards.',
-            icon: Icons.web_asset_rounded,
-            highlights: const ['Page catalog', 'Route mapping', 'Menu visibility'],
-            formDefinition: accessPageFormDefinition(l10n),
-          ),
-          ModelCrudPage<AccessPermission>(
-            title: 'Permissions',
-            entityLabel: accessPermissionEntityLabel(l10n),
-            description: 'Register permission keys that roles and users can be granted or denied.',
-            icon: Icons.key_rounded,
-            highlights: const ['Permission keys', 'Action mapping', 'Catalog control'],
-            formDefinition: accessPermissionFormDefinition(l10n),
-          ),
-          ModelCrudPage<RolePermission>(
-            title: 'Role Permissions',
-            entityLabel: rolePermissionEntityLabel(l10n),
-            description: 'Assign page and action permissions to roles with explicit allow or deny decisions.',
-            icon: Icons.admin_panel_settings_rounded,
-            highlights: const ['Role grants', 'Deny overrides', 'Tenant policy'],
-            formDefinition: rolePermissionFormDefinition(l10n),
-          ),
-          ModelCrudPage<UserPermission>(
-            title: 'User Permissions',
-            entityLabel: userPermissionEntityLabel(l10n),
-            description: 'Grant or deny targeted permissions directly to individual users.',
-            icon: Icons.manage_accounts_rounded,
-            highlights: const ['Direct overrides', 'Staff exceptions', 'Access tuning'],
-            formDefinition: userPermissionFormDefinition(l10n),
-          ),
-          ModelCrudPage<UserRoles>(
-            title: 'User Roles',
-            entityLabel: userRoleEntityLabel(l10n),
-            description: 'Manage role assignments between users and permission roles.',
-            icon: Icons.verified_user_rounded,
-            highlights: const ['Role assignment', 'Status tracking', 'Access mapping'],
-            formDefinition: userRolesFormDefinition(l10n),
-          ),
-          ModelCrudPage<StoreUser>(
-            title: 'Store Users',
-            entityLabel: storeUserEntityLabel(l10n),
-            description: 'Map users to stores and optional branches with role context.',
-            icon: Icons.group_rounded,
-            highlights: const ['Store membership', 'Branch assignment', 'Role link'],
-            formDefinition: storeUserFormDefinition(l10n),
-          ),
-        ];
-      case _InventoryRelationsGroup.partners:
-        return [
-          ModelCrudPage<StoreSupplier>(
-            title: 'Store Suppliers',
-            entityLabel: storeSupplierEntityLabel(l10n),
-            description: 'Map suppliers to stores for procurement and fulfillment scope.',
-            icon: Icons.factory_rounded,
-            highlights: const ['Store links', 'Supplier scope', 'Activation state'],
-            formDefinition: storeSupplierFormDefinition(l10n),
-          ),
-          ModelCrudPage<StoreClient>(
-            title: 'Store Clients',
-            entityLabel: storeClientEntityLabel(l10n),
-            description: 'Map clients to stores for sales and credit workflows.',
-            icon: Icons.handshake_rounded,
-            highlights: const ['Client scope', 'Store visibility', 'Status lifecycle'],
-            formDefinition: storeClientFormDefinition(l10n),
-          ),
-        ];
-      case _InventoryRelationsGroup.structure:
-        return [
-          ModelCrudPage<StoreBranches>(
-            title: 'Store Branch Links',
-            entityLabel: storeBranchEntityLabel(l10n),
-            description: 'Link stores and branches for operational scoping.',
-            icon: Icons.hub_rounded,
-            highlights: const ['Store/branch mapping', 'Operational scope', 'Status control'],
-            formDefinition: storeBranchesFormDefinition(l10n),
-          ),
-          ModelCrudPage<BranchProduct>(
-            title: 'Branch Products',
-            entityLabel: branchProductEntityLabel(l10n),
-            description: 'Track branch-level product stock, reserves, and reorder thresholds.',
-            icon: Icons.inventory_rounded,
-            highlights: const ['Stock position', 'Reserved quantity', 'Reorder levels'],
-            formDefinition: branchProductFormDefinition(l10n),
-          ),
-        ];
-      case _InventoryRelationsGroup.financials:
-        return [
-          ModelCrudPage<StoreInvoiceItem>(
-            title: 'Store Invoice Items',
-            entityLabel: invoiceItemEntityLabel(l10n),
-            description: 'Manage line items for store invoices including taxes and discounts.',
-            icon: Icons.receipt_long_rounded,
-            highlights: const ['Line totals', 'Discount/tax', 'Product linkage'],
-            formDefinition: storeInvoiceItemFormDefinition(l10n),
-          ),
-          ModelCrudPage<PaymentAllocation>(
-            title: 'Payment Allocations',
-            entityLabel: paymentAllocationEntityLabel(l10n),
-            description: 'Allocate payment vouchers to invoices with dated allocations.',
-            icon: Icons.account_balance_wallet_rounded,
-            highlights: const ['Voucher matching', 'Allocation amount', 'Allocation date'],
-            formDefinition: paymentAllocationFormDefinition(l10n),
-          ),
-          ModelCrudPage<StoreReturnItem>(
-            title: 'Store Return Items',
-            entityLabel: returnItemEntityLabel(l10n),
-            description: 'Manage line items returned against invoices and products.',
-            icon: Icons.assignment_return_rounded,
-            highlights: const ['Return linkage', 'Reason tracking', 'Line totals'],
-            formDefinition: storeReturnItemFormDefinition(l10n),
-          ),
-        ];
-    }
   }
 
   String _relationsGroupLabel(_InventoryRelationsGroup group) {
@@ -637,21 +345,468 @@ class _InventoryPageState extends State<InventoryPage> {
   }
 
   int _sectionCount(_InventorySection section) {
+    return _sectionCountForPermissions(context.l10n, section);
+  }
+
+  List<_InventorySection> _visibleSections(AppLocalizations l10n) {
+    return _InventorySection.values.where((section) => _sectionCountForPermissions(l10n, section) > 0).toList(growable: false);
+  }
+
+  int _sectionCountForPermissions(AppLocalizations l10n, _InventorySection section) {
+    if (section == _InventorySection.relations) {
+      return _visibleRelationGroups(l10n).fold<int>(0, (count, group) => count + _modulesForRelationGroup(l10n, group).where((module) => _canReadTable(module.tableName)).length);
+    }
+
+    return _modulesForSection(l10n, section).where((module) => _canReadTable(module.tableName)).length;
+  }
+
+  List<_InventoryRelationsGroup> _visibleRelationGroups(AppLocalizations l10n) {
+    return _InventoryRelationsGroup.values.where((group) => _modulesForRelationGroup(l10n, group).where((module) => _canReadTable(module.tableName)).isNotEmpty).toList(growable: false);
+  }
+
+  Widget _buildSectionFromModules(BuildContext context, List<_InventoryModule> modules, {Key? tabBarKey}) {
+    final visibleModules = modules.where((module) => _canReadTable(module.tableName)).toList(growable: false);
+    if (visibleModules.isEmpty) {
+      return _buildUnavailableSectionCard(context);
+    }
+
+    return _buildSectionTabs(
+      tabBarKey: tabBarKey,
+      tabs: [for (final module in visibleModules) Tab(text: module.label)],
+      children: [for (final module in visibleModules) module.child],
+    );
+  }
+
+  Widget _buildUnavailableSectionCard(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(context.l10n.unauthorizedSectionMessage, style: theme.textTheme.bodyLarge),
+          ),
+        ),
+      ),
+    );
+  }
+
+  AccessControlSnapshot get _effectiveAccessSnapshot => widget.accessSnapshot ?? AccessControlService.instance.snapshot;
+
+  bool get _isAclUnavailable => widget.aclUnavailable ?? AccessControlService.instance.isSupabaseUnavailable;
+
+  bool _canReadTable(String? tableName) {
+    if (_isAclUnavailable) {
+      return true;
+    }
+
+    final accessSnapshot = _effectiveAccessSnapshot;
+    if (accessSnapshot.isLoading || accessSnapshot.lastError != null) {
+      return true;
+    }
+
+    if (tableName == null || tableName.trim().isEmpty) {
+      return true;
+    }
+
+    return accessSnapshot.canTableAction(tableName, 'read');
+  }
+
+  List<_InventoryModule> _modulesForSection(AppLocalizations l10n, _InventorySection section) {
     switch (section) {
       case _InventorySection.operations:
-        return 3;
+        return [
+          _InventoryModule(
+            label: 'Movements',
+            tableName: 'inventory_movement',
+            child: Column(
+              children: [
+                Padding(padding: const EdgeInsets.fromLTRB(24, 24, 24, 0), child: _buildPurchaseReceiptCard(context)),
+                Expanded(
+                  child: ModelCrudPage<InventoryMovement>(
+                    title: widget.title,
+                    entityLabel: inventoryMovementEntityLabel(l10n),
+                    description: widget.description,
+                    icon: widget.icon,
+                    highlights: widget.highlights,
+                    formDefinition: inventoryMovementFormDefinition(l10n),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _InventoryModule(
+            label: 'Batches',
+            tableName: 'inventory_batch',
+            child: ModelCrudPage<InventoryBatch>(
+              title: 'Inventory Batches',
+              entityLabel: inventoryBatchEntityLabel(l10n),
+              description: 'Track item batches and their remaining quantities.',
+              icon: Icons.layers_rounded,
+              highlights: const ['Batch life-cycle', 'Expiry tracking', 'Cost layers'],
+              formDefinition: inventoryBatchFormDefinition(l10n),
+            ),
+          ),
+          _InventoryModule(
+            label: 'Transactions',
+            tableName: 'inventory_transaction',
+            child: ModelCrudPage<InventoryTransaction>(
+              title: 'Inventory Transactions',
+              entityLabel: inventoryTransactionEntityLabel(l10n),
+              description: 'Track detailed inventory ledger entries and references.',
+              icon: Icons.receipt_long_rounded,
+              highlights: const ['Ledger entries', 'Reference linking', 'Holder movements'],
+              formDefinition: inventoryTransactionFormDefinition(l10n),
+            ),
+          ),
+        ];
       case _InventorySection.procurement:
-        return 3;
+        return [
+          _InventoryModule(
+            label: 'Purchase Orders',
+            tableName: 'purchase_order',
+            child: ModelCrudPage<PurchaseOrder>(
+              title: 'Purchase Orders',
+              entityLabel: purchaseOrderEntityLabel(l10n),
+              description: 'Manage purchase orders and procurement lifecycle records.',
+              icon: Icons.shopping_cart_checkout_rounded,
+              highlights: const ['Procurement', 'Approval flow', 'Expected delivery'],
+              formDefinition: purchaseOrderFormDefinition(l10n),
+            ),
+          ),
+          _InventoryModule(
+            label: 'Order Items',
+            tableName: 'purchase_order_item',
+            child: ModelCrudPage<PurchaseOrderItem>(
+              title: 'Purchase Order Items',
+              entityLabel: purchaseOrderItemEntityLabel(l10n),
+              description: 'Manage line items for purchase orders and received quantities.',
+              icon: Icons.playlist_add_check_circle_rounded,
+              highlights: const ['Line totals', 'Received quantity', 'Offer linkage'],
+              formDefinition: purchaseOrderItemFormDefinition(l10n),
+            ),
+          ),
+          _InventoryModule(
+            label: 'Supplier Invoices',
+            tableName: 'supplier_invoice',
+            child: ModelCrudPage<SupplierInvoice>(
+              title: 'Supplier Invoices',
+              entityLabel: supplierInvoiceEntityLabel(l10n),
+              description: 'Manage supplier invoices and payment status visibility.',
+              icon: Icons.request_quote_rounded,
+              highlights: const ['Invoice matching', 'Due dates', 'Open balance'],
+              formDefinition: supplierInvoiceFormDefinition(l10n),
+            ),
+          ),
+        ];
       case _InventorySection.transfer:
-        return 2;
+        return [
+          _InventoryModule(
+            label: 'Transfer Orders',
+            tableName: 'transfer_order',
+            child: ModelCrudPage<TransferOrder>(
+              title: 'Transfer Orders',
+              entityLabel: transferOrderEntityLabel(l10n),
+              description: 'Manage inter-branch stock transfer requests and lifecycle.',
+              icon: Icons.compare_arrows_rounded,
+              highlights: const ['Source to destination', 'Transfer status', 'Requested and received tracking'],
+              formDefinition: transferOrderFormDefinition(l10n),
+            ),
+          ),
+          _InventoryModule(
+            label: 'Transfer Items',
+            tableName: 'transfer_order_item',
+            child: ModelCrudPage<TransferOrderItem>(
+              title: 'Transfer Order Items',
+              entityLabel: transferOrderItemEntityLabel(l10n),
+              description: 'Manage transfer order line items and shipped/received quantities.',
+              icon: Icons.format_list_numbered_rounded,
+              highlights: const ['Line quantities', 'Shipping progress', 'Receiving progress'],
+              formDefinition: transferOrderItemFormDefinition(l10n),
+            ),
+          ),
+        ];
       case _InventorySection.sales:
-        return 3;
+        return [
+          _InventoryModule(
+            label: 'Sales Orders',
+            tableName: 'sales_order',
+            child: ModelCrudPage<SalesOrder>(
+              title: 'Sales Orders',
+              entityLabel: salesOrderEntityLabel(l10n),
+              description: 'Manage customer sales orders and pricing strategy decisions.',
+              icon: Icons.shopping_bag_rounded,
+              highlights: const ['Order pipeline', 'Pricing strategy', 'Customer linkage'],
+              formDefinition: salesOrderFormDefinition(l10n),
+            ),
+          ),
+          _InventoryModule(
+            label: 'Sales Invoices',
+            tableName: 'sales_invoice',
+            child: ModelCrudPage<SalesInvoice>(
+              title: 'Sales Invoices',
+              entityLabel: salesInvoiceEntityLabel(l10n),
+              description: 'Manage sales invoices, totals, and payment progress.',
+              icon: Icons.receipt_rounded,
+              highlights: const ['Invoice lifecycle', 'Outstanding balances', 'Payment status'],
+              formDefinition: salesInvoiceFormDefinition(l10n),
+            ),
+          ),
+          _InventoryModule(
+            label: 'Sales Returns',
+            tableName: 'sales_return',
+            child: ModelCrudPage<SalesReturn>(
+              title: 'Sales Returns',
+              entityLabel: salesReturnEntityLabel(l10n),
+              description: 'Track sales returns, reasons, and refund processing.',
+              icon: Icons.assignment_return_rounded,
+              highlights: const ['Return reason', 'Refund amount', 'Approval status'],
+              formDefinition: salesReturnFormDefinition(l10n),
+            ),
+          ),
+        ];
       case _InventorySection.pricing:
-        return 2;
+        return [
+          _InventoryModule(
+            label: 'Branch Prices',
+            tableName: 'branch_price',
+            child: ModelCrudPage<BranchPrice>(
+              title: 'Branch Prices',
+              entityLabel: branchPriceEntityLabel(l10n),
+              description: 'Configure branch-level product prices and validity windows.',
+              icon: Icons.price_change_rounded,
+              highlights: const ['Price tiers', 'Effective dates', 'Priority handling'],
+              formDefinition: branchPriceFormDefinition(l10n),
+            ),
+          ),
+          _InventoryModule(
+            label: 'Promotions',
+            tableName: 'promotion_rule',
+            child: ModelCrudPage<PromotionRule>(
+              title: 'Promotion Rules',
+              entityLabel: promotionRuleEntityLabel(l10n),
+              description: 'Define discount promotions per branch or product scope.',
+              icon: Icons.local_offer_rounded,
+              highlights: const ['Discount rules', 'Date windows', 'Scope targeting'],
+              formDefinition: promotionRuleFormDefinition(l10n),
+            ),
+          ),
+        ];
       case _InventorySection.workforce:
-        return 3;
+        return [
+          _InventoryModule(
+            label: 'Staff Shifts',
+            tableName: 'staff_shift',
+            child: ModelCrudPage<StaffShift>(
+              title: 'Staff Shifts',
+              entityLabel: staffShiftEntityLabel(l10n),
+              description: 'Plan and track employee shift schedules and completion.',
+              icon: Icons.badge_rounded,
+              highlights: const ['Scheduling', 'Coverage', 'Shift status'],
+              formDefinition: staffShiftFormDefinition(l10n),
+            ),
+          ),
+          _InventoryModule(
+            label: 'Attendance',
+            tableName: 'staff_attendance',
+            child: ModelCrudPage<StaffAttendance>(
+              title: 'Staff Attendance',
+              entityLabel: staffAttendanceEntityLabel(l10n),
+              description: 'Track check-ins, check-outs, and worked minutes.',
+              icon: Icons.fact_check_rounded,
+              highlights: const ['Presence records', 'Time worked', 'Attendance status'],
+              formDefinition: staffAttendanceFormDefinition(l10n),
+            ),
+          ),
+          _InventoryModule(
+            label: 'Activity Logs',
+            tableName: 'staff_activity_log',
+            child: ModelCrudPage<StaffActivityLog>(
+              title: 'Staff Activity Logs',
+              entityLabel: staffActivityLogEntityLabel(l10n),
+              description: 'Audit user actions across operational entities.',
+              icon: Icons.history_rounded,
+              highlights: const ['Action traceability', 'Entity references', 'Metadata logs'],
+              formDefinition: staffActivityLogFormDefinition(l10n),
+            ),
+          ),
+        ];
       case _InventorySection.relations:
-        return 9;
+        return const <_InventoryModule>[];
+    }
+  }
+
+  List<_InventoryModule> _modulesForRelationGroup(AppLocalizations l10n, _InventoryRelationsGroup group) {
+    switch (group) {
+      case _InventoryRelationsGroup.access:
+        return [
+          _InventoryModule(
+            label: 'Pages',
+            tableName: 'pages',
+            child: ModelCrudPage<AccessPage>(
+              title: 'Pages',
+              entityLabel: accessPageEntityLabel(l10n),
+              description: 'Define the page catalog that can be shown in menus and route guards.',
+              icon: Icons.web_asset_rounded,
+              highlights: const ['Page catalog', 'Route mapping', 'Menu visibility'],
+              formDefinition: accessPageFormDefinition(l10n),
+            ),
+          ),
+          _InventoryModule(
+            label: 'Permissions',
+            tableName: 'permissions',
+            child: ModelCrudPage<AccessPermission>(
+              title: 'Permissions',
+              entityLabel: accessPermissionEntityLabel(l10n),
+              description: 'Register permission keys that roles and users can be granted or denied.',
+              icon: Icons.key_rounded,
+              highlights: const ['Permission keys', 'Action mapping', 'Catalog control'],
+              formDefinition: accessPermissionFormDefinition(l10n),
+            ),
+          ),
+          _InventoryModule(
+            label: 'Role Permissions',
+            tableName: 'role_permissions',
+            child: ModelCrudPage<RolePermission>(
+              title: 'Role Permissions',
+              entityLabel: rolePermissionEntityLabel(l10n),
+              description: 'Assign page and action permissions to roles with explicit allow or deny decisions.',
+              icon: Icons.admin_panel_settings_rounded,
+              highlights: const ['Role grants', 'Deny overrides', 'Tenant policy'],
+              formDefinition: rolePermissionFormDefinition(l10n),
+            ),
+          ),
+          _InventoryModule(
+            label: 'User Permissions',
+            tableName: 'user_permissions',
+            child: ModelCrudPage<UserPermission>(
+              title: 'User Permissions',
+              entityLabel: userPermissionEntityLabel(l10n),
+              description: 'Grant or deny targeted permissions directly to individual users.',
+              icon: Icons.manage_accounts_rounded,
+              highlights: const ['Direct overrides', 'Staff exceptions', 'Access tuning'],
+              formDefinition: userPermissionFormDefinition(l10n),
+            ),
+          ),
+          _InventoryModule(
+            label: 'User Roles',
+            tableName: 'user_roles',
+            child: ModelCrudPage<UserRoles>(
+              title: 'User Roles',
+              entityLabel: userRoleEntityLabel(l10n),
+              description: 'Manage role assignments between users and permission roles.',
+              icon: Icons.verified_user_rounded,
+              highlights: const ['Role assignment', 'Status tracking', 'Access mapping'],
+              formDefinition: userRolesFormDefinition(l10n),
+            ),
+          ),
+          _InventoryModule(
+            label: 'Store Users',
+            tableName: 'store_user',
+            child: ModelCrudPage<StoreUser>(
+              title: 'Store Users',
+              entityLabel: storeUserEntityLabel(l10n),
+              description: 'Map users to stores and optional branches with role context.',
+              icon: Icons.group_rounded,
+              highlights: const ['Store membership', 'Branch assignment', 'Role link'],
+              formDefinition: storeUserFormDefinition(l10n),
+            ),
+          ),
+        ];
+      case _InventoryRelationsGroup.partners:
+        return [
+          _InventoryModule(
+            label: 'Store Suppliers',
+            tableName: 'store_supplier',
+            child: ModelCrudPage<StoreSupplier>(
+              title: 'Store Suppliers',
+              entityLabel: storeSupplierEntityLabel(l10n),
+              description: 'Map suppliers to stores for procurement and fulfillment scope.',
+              icon: Icons.factory_rounded,
+              highlights: const ['Store links', 'Supplier scope', 'Activation state'],
+              formDefinition: storeSupplierFormDefinition(l10n),
+            ),
+          ),
+          _InventoryModule(
+            label: 'Store Clients',
+            tableName: 'store_client',
+            child: ModelCrudPage<StoreClient>(
+              title: 'Store Clients',
+              entityLabel: storeClientEntityLabel(l10n),
+              description: 'Map clients to stores for sales and credit workflows.',
+              icon: Icons.handshake_rounded,
+              highlights: const ['Client scope', 'Store visibility', 'Status lifecycle'],
+              formDefinition: storeClientFormDefinition(l10n),
+            ),
+          ),
+        ];
+      case _InventoryRelationsGroup.structure:
+        return [
+          _InventoryModule(
+            label: 'Store Branches',
+            tableName: 'store_branches',
+            child: ModelCrudPage<StoreBranches>(
+              title: 'Store Branch Links',
+              entityLabel: storeBranchEntityLabel(l10n),
+              description: 'Link stores and branches for operational scoping.',
+              icon: Icons.hub_rounded,
+              highlights: const ['Store/branch mapping', 'Operational scope', 'Status control'],
+              formDefinition: storeBranchesFormDefinition(l10n),
+            ),
+          ),
+          _InventoryModule(
+            label: 'Branch Products',
+            tableName: 'branch_product',
+            child: ModelCrudPage<BranchProduct>(
+              title: 'Branch Products',
+              entityLabel: branchProductEntityLabel(l10n),
+              description: 'Track branch-level product stock, reserves, and reorder thresholds.',
+              icon: Icons.inventory_rounded,
+              highlights: const ['Stock position', 'Reserved quantity', 'Reorder levels'],
+              formDefinition: branchProductFormDefinition(l10n),
+            ),
+          ),
+        ];
+      case _InventoryRelationsGroup.financials:
+        return [
+          _InventoryModule(
+            label: 'Invoice Items',
+            tableName: 'store_invoice_item',
+            child: ModelCrudPage<StoreInvoiceItem>(
+              title: 'Store Invoice Items',
+              entityLabel: invoiceItemEntityLabel(l10n),
+              description: 'Manage line items for store invoices including taxes and discounts.',
+              icon: Icons.receipt_long_rounded,
+              highlights: const ['Line totals', 'Discount/tax', 'Product linkage'],
+              formDefinition: storeInvoiceItemFormDefinition(l10n),
+            ),
+          ),
+          _InventoryModule(
+            label: 'Payment Allocations',
+            tableName: 'payment_allocation',
+            child: ModelCrudPage<PaymentAllocation>(
+              title: 'Payment Allocations',
+              entityLabel: paymentAllocationEntityLabel(l10n),
+              description: 'Allocate payment vouchers to invoices with dated allocations.',
+              icon: Icons.account_balance_wallet_rounded,
+              highlights: const ['Voucher matching', 'Allocation amount', 'Allocation date'],
+              formDefinition: paymentAllocationFormDefinition(l10n),
+            ),
+          ),
+          _InventoryModule(
+            label: 'Return Items',
+            tableName: 'store_return_item',
+            child: ModelCrudPage<StoreReturnItem>(
+              title: 'Store Return Items',
+              entityLabel: returnItemEntityLabel(l10n),
+              description: 'Manage line items returned against invoices and products.',
+              icon: Icons.assignment_return_rounded,
+              highlights: const ['Return linkage', 'Reason tracking', 'Line totals'],
+              formDefinition: storeReturnItemFormDefinition(l10n),
+            ),
+          ),
+        ];
     }
   }
 
@@ -935,6 +1090,14 @@ class _InventorySelectOption {
 
   final String value;
   final String label;
+}
+
+class _InventoryModule {
+  const _InventoryModule({required this.label, required this.tableName, required this.child});
+
+  final String label;
+  final String? tableName;
+  final Widget child;
 }
 
 enum _InventorySection { operations, procurement, transfer, sales, pricing, workforce, relations }
