@@ -372,7 +372,7 @@ class AccessControlService extends ChangeNotifier {
 }
 
 Set<String> _defaultAllowPermissionsForSystemRole(String normalizedRole) {
-  switch (normalizedRole) {
+  switch (_canonicalSystemRole(normalizedRole)) {
     case 'owner':
     case 'admin':
       return const <String>{'*'};
@@ -736,15 +736,33 @@ String _normalizePermissionKey(String value) {
   return value.trim().replaceAll(' ', '').replaceAll('/', '.').toLowerCase();
 }
 
-bool _isPrivilegedRoleName(String normalizedRole) {
-  if (normalizedRole.isEmpty) {
-    return false;
+@visibleForTesting
+String canonicalSystemRoleForTesting(String role) => _canonicalSystemRole(role);
+
+String _canonicalSystemRole(String role) {
+  final normalized = _normalizePermissionKey(role);
+  if (normalized.isEmpty) {
+    return '';
   }
 
-  final canonical = normalizedRole.replaceAll('_', '').replaceAll('-', '').replaceAll('.', '');
+  final canonical = normalized.replaceAll('_', '').replaceAll('-', '').replaceAll('.', '');
+  if (canonical.contains('owner')) {
+    return 'owner';
+  }
+
   return switch (canonical) {
-    // Keep common legacy/user-entry variants to avoid accidental lock-outs.
-    'owner' || 'admin' || 'superadmin' || 'onwer' || 'amin' => true,
+    'admin' || 'amin' || 'administrator' || 'adminstrator' || 'systemadmin' || 'systemadministrator' || 'superadmin' || 'superadministrator' => 'admin',
+    'manager' => 'manager',
+    'staff' => 'staff',
+    'viewer' => 'viewer',
+    'accountant' => 'accountant',
+    _ => normalized,
+  };
+}
+
+bool _isPrivilegedRoleName(String normalizedRole) {
+  return switch (_canonicalSystemRole(normalizedRole)) {
+    'owner' || 'admin' => true,
     _ => false,
   };
 }

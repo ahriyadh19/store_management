@@ -1434,12 +1434,17 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   bool get _canDeleteRecords => _canTableAction('delete');
 
   bool _canTableAction(String action) {
+    final accessSnapshot = AccessControlService.instance.snapshot;
+    if (accessSnapshot.isLoading || accessSnapshot.lastError != null) {
+      return action == 'read';
+    }
+
     final tableName = widget.formDefinition.tableName;
     if (tableName == null || tableName.trim().isEmpty) {
       return true;
     }
 
-    return AccessControlService.instance.canTableAction(tableName, action);
+    return accessSnapshot.canTableAction(tableName, action);
   }
 
   bool _isRecordSynced(T record) {

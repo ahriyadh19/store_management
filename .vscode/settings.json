@@ -10,5 +10,6 @@
         "socketexception",
         "Supabase",
         "syncfusion"
-    ]
+    ],
+    "cmake.sourceDirectory": "/Files/Projects/Flutter/store_management/linux"
 }

@@ -809,7 +809,7 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         tooltip: context.l10n.settings,
                         icon: const Icon(Icons.settings_rounded),
-                        onPressed: !_accessControlService.canUseSettings()
+                        onPressed: !_canAccessPage(IndexPage.settings)
                             ? null
                             : () {
                           _openPageInTab(IndexPage.settings, pinned: true);
