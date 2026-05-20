@@ -82,6 +82,7 @@ For existing deployed environments, treat this file as the canonical rebuild ref
 For rollout details, see:
 
 - docs/operating-model-upgrade.md
+- docs/project-tracking.md
 
 ## Requirements
 
@@ -165,6 +166,10 @@ flutter build windows
 ```
 
 ## Current Status
+
+Project tracking and task state are maintained in:
+
+- docs/project-tracking.md
 
 Implemented and active:
 
