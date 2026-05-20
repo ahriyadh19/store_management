@@ -146,9 +146,11 @@ class AccessControlService extends ChangeNotifier {
 
   static final AccessControlService instance = AccessControlService();
   static const String _supabaseUnavailableError = 'Supabase client is not initialized.';
+  static const Duration defaultSnapshotMaxAge = Duration(seconds: 45);
 
   SupabaseClient? _client;
   AccessControlSnapshot _snapshot = AccessControlSnapshot.initial();
+  DateTime? _lastSuccessfulRefreshAt;
 
   AccessControlSnapshot get snapshot => _snapshot;
 
@@ -162,9 +164,21 @@ class AccessControlService extends ChangeNotifier {
 
   bool canTableAction(String tableName, String action) => _snapshot.canTableAction(tableName, action);
 
+  bool shouldRefresh({Duration maxAge = defaultSnapshotMaxAge, DateTime? now}) {
+    return _shouldRefreshAccessSnapshot(isLoading: _snapshot.isLoading, hasError: _snapshot.lastError != null, lastSuccessfulRefreshAt: _lastSuccessfulRefreshAt, maxAge: maxAge, now: now ?? DateTime.now());
+  }
+
+  Future<void> refreshIfStale({bool provisionIfNeeded = false, Duration maxAge = defaultSnapshotMaxAge}) async {
+    if (!shouldRefresh(maxAge: maxAge)) {
+      return;
+    }
+    await refresh(provisionIfNeeded: provisionIfNeeded);
+  }
+
   Future<void> refresh({bool provisionIfNeeded = false}) async {
     final client = _resolveClient();
     if (client == null) {
+      _lastSuccessfulRefreshAt = null;
       _snapshot = AccessControlSnapshot.initial().copyWith(lastError: _supabaseUnavailableError);
       notifyListeners();
       return;
@@ -175,6 +189,7 @@ class AccessControlService extends ChangeNotifier {
 
     final authUser = client.auth.currentUser;
     if (authUser == null) {
+      _lastSuccessfulRefreshAt = null;
       _snapshot = AccessControlSnapshot.initial();
       notifyListeners();
       return;
@@ -187,6 +202,7 @@ class AccessControlService extends ChangeNotifier {
 
       final userUuid = await _loadCurrentUserUuid(authUser.id);
       if (userUuid == null || userUuid.isEmpty) {
+        _lastSuccessfulRefreshAt = null;
         _snapshot = AccessControlSnapshot.initial().copyWith(lastError: 'Unable to resolve current profile uuid.');
         notifyListeners();
         return;
@@ -291,6 +307,7 @@ class AccessControlService extends ChangeNotifier {
         denyPermissions: UnmodifiableSetView<String>(denyPermissions),
         lastError: null,
       );
+      _lastSuccessfulRefreshAt = DateTime.now();
       notifyListeners();
     } catch (error) {
       _snapshot = _snapshot.copyWith(
@@ -487,6 +504,16 @@ class AccessControlService extends ChangeNotifier {
       return null;
     }
   }
+}
+
+bool _shouldRefreshAccessSnapshot({required bool isLoading, required bool hasError, required DateTime? lastSuccessfulRefreshAt, required Duration maxAge, required DateTime now}) {
+  if (isLoading) {
+    return false;
+  }
+  if (hasError || lastSuccessfulRefreshAt == null) {
+    return true;
+  }
+  return now.difference(lastSuccessfulRefreshAt) >= maxAge;
 }
 
 Set<String> _defaultAllowPermissionsForSystemRole(String normalizedRole) {
@@ -927,6 +954,11 @@ Map<String, Set<String>> applyExplicitPermissionGrantForTesting({required Set<St
   final nextDeny = Set<String>.from(denyPermissions);
   _applyExplicitPermissionGrant(allowPermissions: nextAllow, denyPermissions: nextDeny, permission: permission, isAllowed: isAllowed);
   return <String, Set<String>>{'allow': nextAllow, 'deny': nextDeny};
+}
+
+@visibleForTesting
+bool shouldRefreshAccessSnapshotForTesting({required bool isLoading, required bool hasError, required DateTime? lastSuccessfulRefreshAt, required Duration maxAge, required DateTime now}) {
+  return _shouldRefreshAccessSnapshot(isLoading: isLoading, hasError: hasError, lastSuccessfulRefreshAt: lastSuccessfulRefreshAt, maxAge: maxAge, now: now);
 }
 
 String _canonicalSystemRole(String role) {

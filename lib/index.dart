@@ -266,6 +266,7 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _connectionStatusController.refresh();
+      unawaited(_accessControlService.refreshIfStale(provisionIfNeeded: true));
     }
   }
 
@@ -339,6 +340,7 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
   }
 
   void _openPageInTab(IndexPage page, {bool pinned = false, bool savePreference = true}) {
+    unawaited(_accessControlService.refreshIfStale());
     final tabId = 'tab_${_nextTabSeed++}';
     setState(() {
       _tabs.add(_WorkspaceTab(id: tabId, page: page, pinned: pinned, group: _groupForPage(page)));
@@ -354,6 +356,7 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
   }
 
   void _activateTab(String tabId, {bool savePreference = true}) {
+    unawaited(_accessControlService.refreshIfStale());
     _WorkspaceTab? tab;
     for (final element in _tabs) {
       if (element.id == tabId) {
@@ -376,7 +379,11 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
     _persistWorkspaceTabsState();
   }
 
-  void _handleDrawerPageOpened(IndexPage page) {
+  void _handleDrawerPageOpened(IndexPage page) async {
+    await _accessControlService.refreshIfStale();
+    if (!mounted) {
+      return;
+    }
     if (!_canAccessPage(page)) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()

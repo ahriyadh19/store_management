@@ -73,6 +73,7 @@ For every tracked item, keep these fields current:
 | 2026-05-20 | UI-007 | Standardized shared DataTable display/search/sort behavior and replaced the Reports placeholder with a real analytics page. | Copilot | Shared table logic now uses field metadata for display/query consistency and refetches a valid page when server-side filtering shrinks a result set. |
 | 2026-05-20 | UI-002 | Completed selector-driven permission assignment workflows across shared forms and inventory relation screens. | Copilot | Permission, role, page, and store/user assignment flows now avoid manual UUID entry for stable relations. |
 | 2026-05-20 | UI-003 | Completed the remaining UUID-heavy relation workflow cleanup, including the purchase receiving panel. | Copilot | Stable single-table relations now use selectors where the local cache can supply options; only scope and polymorphic IDs remain raw. |
+| 2026-05-20 | ACL-005 | Added stale ACL snapshot refresh handling on app resume and navigation, then revalidated the full test suite. | Copilot | Long-lived sessions now re-check permissions instead of relying only on initial load and auth-change events. |
 
 ## Next Session Focus
 
@@ -82,9 +83,9 @@ Use this section to decide the next tasks before any new implementation work sta
 |---|---|---|---|---|---|
 | 1 | DB-002 | Migration Rollout Validation | Needs Review | Critical | The canonical schema must be validated in a real Supabase environment before the migration path is considered fully safe. |
 | 2 | DB-006 | Migration Deployment Verification | Pending | Critical | Staging or production-like rollout verification is still outstanding for the consolidated schema. |
-| 3 | ACL-005 | Permission Snapshot Refinement | In Progress | High | Permission refresh behavior still needs stronger session and admin-change handling. |
-| 4 | QA-001 | Permission Catalog Backfill QA | Needs Review | High | Legacy role payload backfill needs real dataset validation. |
-| 5 | CORE-003 | Route Metadata Standardization | Pending | Medium | Shared route and permission metadata would reduce drift between navigation, page catalog seeding, and access checks. |
+| 3 | QA-001 | Permission Catalog Backfill QA | Needs Review | High | Legacy role payload backfill needs real dataset validation. |
+| 4 | CORE-003 | Route Metadata Standardization | Pending | Medium | Shared route and permission metadata would reduce drift between navigation, page catalog seeding, and access checks. |
+| 5 | ACL-006 | Permission Audit Trail | Pending | Medium | Auditability is the next meaningful permission-system improvement after snapshot freshness is stabilized. |
 
 ## Completed Features
 
@@ -96,14 +97,13 @@ Use this section to decide the next tasks before any new implementation work sta
 | UI-007 | Shared Datatable Consistency And Reports Page | Refactored the shared CRUD/query pipeline so table search, sort, labels, and server pagination stay aligned with field metadata, and added a real Reports module with analytics, sync health, and recent activity sections. | Completed | High | Copilot | 2026-05-20 | 2026-05-20 | 2026-05-20 | `lib/views/components/model_form.dart`, `lib/views/pages/model_crud_page.dart`, `lib/views/pages/model_module_pages.dart`, `lib/views/pages/reports_page.dart`, `lib/views/index/index_page_registry.dart`, `test/views/model_module_pages_test.dart`, `test/views/reports_page_test.dart` | Stable relation labels now follow selection metadata when available; remaining raw IDs are intentionally scope-based or polymorphic. |
 | UI-002 | Permission Assignment UX | Replaced raw UUID entry in permission-related forms with searchable selectors and clearer admin workflows. | Completed | High | Copilot | 2026-05-20 | 2026-05-20 | 2026-05-20 | `lib/views/pages/model_module_pages.dart`, `lib/views/components/model_form.dart`, `lib/views/pages/inventory_page.dart`, `test/views/model_module_pages_test.dart` | Permission and relation-management assignment flows now use selection-backed field metadata and focused coverage. |
 | UI-003 | UUID-Heavy Permission Forms | Removed manual UUID-heavy relation entry from the remaining stable permission and inventory-receiving workflows. | Completed | High | Copilot | 2026-05-20 | 2026-05-20 | 2026-05-20 | `lib/views/pages/model_module_pages.dart`, `lib/views/pages/inventory_page.dart`, `test/views/model_module_pages_test.dart` | Scope fields like `ownerUuid` and polymorphic references remain raw by design. |
+| ACL-005 | Permission Snapshot Refinement | Improved how permissions are refreshed across auth transitions, app resume, and navigation in long-lived sessions. | Completed | High | Copilot | 2026-05-20 | 2026-05-20 | 2026-05-20 | `lib/services/access_control_service.dart`, `lib/controllers/auth_controller.dart`, `lib/index.dart`, `test/services/access_control_service_test.dart` | Snapshot refreshes now use a staleness policy instead of relying only on initial load and sign-in/sign-out events. |
 | ACL-003 | ACL Compatibility Fix | Fixed role resolution so owner/admin access is not dropped by mismatched or blank owner scoping on assigned roles. | Completed | Critical | Copilot | 2026-05-20 | 2026-05-20 | 2026-05-20 | `lib/services/access_control_service.dart`, `test/services/access_control_service_test.dart` | Focused ACL tests passed after the fix. |
 | ACL-004 | Normalized Permission Loading | Access control service now merges role-based and user-specific normalized permission grants with legacy compatibility. | Completed | Critical | Copilot | 2026-05-20 | 2026-05-20 | 2026-05-20 | `lib/services/access_control_service.dart`, `test/services/access_control_service_test.dart` | User grants apply after role grants to support direct overrides. |
 
 ## Features Under Development
 
-| Task ID | Task / Feature | Detailed Description | Current Status | Priority | Assigned Developer | Date Created | Last Updated | Completion Date | Related Modules / Files | Notes / Known Issues |
-|---|---|---|---|---|---|---|---|---|---|
-| ACL-005 | Permission Snapshot Refinement | Improve how permissions are preloaded, cached, and refreshed across login, tab navigation, and long-lived sessions. | In Progress | High | Unassigned | 2026-05-20 | 2026-05-20 |  | `lib/services/access_control_service.dart`, `lib/controllers/auth_controller.dart`, `lib/index.dart` | Needs broader session refresh coverage and better stale-state handling. |
+No active in-repo feature work is currently marked in progress.
 
 ## Bugs And Issues To Fix
 

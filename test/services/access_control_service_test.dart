@@ -90,4 +90,22 @@ void main() {
     expect(result['deny'], contains('page.users.view'));
     expect(result['allow'], contains(PermissionCatalog.dashboardView));
   });
+
+  test('stale snapshots should refresh when the max age is exceeded', () {
+    final now = DateTime(2026, 5, 20, 12, 0, 0);
+
+    expect(shouldRefreshAccessSnapshotForTesting(isLoading: false, hasError: false, lastSuccessfulRefreshAt: now.subtract(const Duration(minutes: 2)), maxAge: const Duration(seconds: 45), now: now), isTrue);
+
+    expect(shouldRefreshAccessSnapshotForTesting(isLoading: false, hasError: false, lastSuccessfulRefreshAt: now.subtract(const Duration(seconds: 10)), maxAge: const Duration(seconds: 45), now: now), isFalse);
+  });
+
+  test('missing or errored snapshots refresh immediately unless loading is already active', () {
+    final now = DateTime(2026, 5, 20, 12, 0, 0);
+
+    expect(shouldRefreshAccessSnapshotForTesting(isLoading: false, hasError: true, lastSuccessfulRefreshAt: now, maxAge: const Duration(seconds: 45), now: now), isTrue);
+
+    expect(shouldRefreshAccessSnapshotForTesting(isLoading: false, hasError: false, lastSuccessfulRefreshAt: null, maxAge: const Duration(seconds: 45), now: now), isTrue);
+
+    expect(shouldRefreshAccessSnapshotForTesting(isLoading: true, hasError: true, lastSuccessfulRefreshAt: null, maxAge: const Duration(seconds: 45), now: now), isFalse);
+  });
 }

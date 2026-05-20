@@ -4,6 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/views/pages/inventory_page.dart';
 
+Future<void> _selectPurchaseReceiptOption(WidgetTester tester, String fieldKey, String label) async {
+  await tester.tap(find.byKey(Key('purchase-receipt-$fieldKey')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(label).last);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('purchase receiving submit maps expected payload', (tester) async {
     tester.view.physicalSize = const Size(1600, 2200);
@@ -66,32 +73,32 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byKey(const Key('purchase-receipt-ownerUuid')), 'owner-uuid-1');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-storeUuid')), 'store-uuid-1');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-branchUuid')), 'branch-uuid-1');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-supplierUuid')), 'supplier-uuid-1');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-supplierInvoiceUuid')), 'supplier-invoice-uuid-1');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-productUuid')), 'product-uuid-1');
+    await _selectPurchaseReceiptOption(tester, 'storeUuid', 'Central Store');
+    await _selectPurchaseReceiptOption(tester, 'branchUuid', 'North Branch');
+    await _selectPurchaseReceiptOption(tester, 'supplierUuid', 'Al Noor Trading');
+    await _selectPurchaseReceiptOption(tester, 'supplierInvoiceUuid', 'SI-2026-0012');
+    await _selectPurchaseReceiptOption(tester, 'productUuid', 'Premium Flour 25kg');
     await tester.enterText(find.byKey(const Key('purchase-receipt-batchNumber')), 'BATCH-9001');
     await tester.enterText(find.byKey(const Key('purchase-receipt-quantity')), '8');
     await tester.enterText(find.byKey(const Key('purchase-receipt-unitCost')), '12.5');
     await tester.enterText(find.byKey(const Key('purchase-receipt-expiryDate')), '2026-06-01');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-staffUserUuid')), 'staff-uuid-1');
+    await _selectPurchaseReceiptOption(tester, 'staffUserUuid', 'Operations Manager');
 
     await tester.tap(find.byKey(const Key('purchase-receipt-submit')));
     await tester.pumpAndSettle();
 
     expect(called, 1);
     expect(payload['ownerUuid'], 'owner-uuid-1');
-    expect(payload['storeUuid'], 'store-uuid-1');
-    expect(payload['branchUuid'], 'branch-uuid-1');
-    expect(payload['supplierUuid'], 'supplier-uuid-1');
-    expect(payload['supplierInvoiceUuid'], 'supplier-invoice-uuid-1');
-    expect(payload['productUuid'], 'product-uuid-1');
+    expect(payload['storeUuid'], 'store-central-001');
+    expect(payload['branchUuid'], 'branch-north-001');
+    expect(payload['supplierUuid'], 'supplier-alnoor-001');
+    expect(payload['supplierInvoiceUuid'], 'supplier-invoice-sample-001');
+    expect(payload['productUuid'], 'product-flour-001');
     expect(payload['batchNumber'], 'BATCH-9001');
     expect(payload['quantity'], 8);
     expect(payload['unitCost'], 12.5);
     expect(payload['expiryDate'], DateTime.parse('2026-06-01'));
-    expect(payload['staffUserUuid'], 'staff-uuid-1');
+    expect(payload['staffUserUuid'], 'user-ops-manager-001');
     expect(find.textContaining('Purchase receipt posted. Batch: batch-test-001'), findsOneWidget);
   });
 
@@ -142,11 +149,11 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byKey(const Key('purchase-receipt-ownerUuid')), 'owner-uuid-1');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-storeUuid')), 'store-uuid-1');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-branchUuid')), 'branch-uuid-1');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-supplierUuid')), 'supplier-uuid-1');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-supplierInvoiceUuid')), 'supplier-invoice-uuid-1');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-productUuid')), 'product-uuid-1');
+    await _selectPurchaseReceiptOption(tester, 'storeUuid', 'Central Store');
+    await _selectPurchaseReceiptOption(tester, 'branchUuid', 'North Branch');
+    await _selectPurchaseReceiptOption(tester, 'supplierUuid', 'Al Noor Trading');
+    await _selectPurchaseReceiptOption(tester, 'supplierInvoiceUuid', 'SI-2026-0012');
+    await _selectPurchaseReceiptOption(tester, 'productUuid', 'Premium Flour 25kg');
     await tester.enterText(find.byKey(const Key('purchase-receipt-quantity')), '8');
     await tester.enterText(find.byKey(const Key('purchase-receipt-unitCost')), '12.5');
     await tester.enterText(find.byKey(const Key('purchase-receipt-expiryDate')), 'not-a-date');
@@ -205,11 +212,11 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byKey(const Key('purchase-receipt-ownerUuid')), 'owner-uuid-1');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-storeUuid')), 'store-uuid-1');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-branchUuid')), 'branch-uuid-1');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-supplierUuid')), 'supplier-uuid-1');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-supplierInvoiceUuid')), 'supplier-invoice-uuid-1');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-productUuid')), 'product-uuid-1');
+    await _selectPurchaseReceiptOption(tester, 'storeUuid', 'Central Store');
+    await _selectPurchaseReceiptOption(tester, 'branchUuid', 'North Branch');
+    await _selectPurchaseReceiptOption(tester, 'supplierUuid', 'Al Noor Trading');
+    await _selectPurchaseReceiptOption(tester, 'supplierInvoiceUuid', 'SI-2026-0012');
+    await _selectPurchaseReceiptOption(tester, 'productUuid', 'Premium Flour 25kg');
     await tester.enterText(find.byKey(const Key('purchase-receipt-quantity')), '-2');
     await tester.enterText(find.byKey(const Key('purchase-receipt-unitCost')), 'x');
 
@@ -267,11 +274,10 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byKey(const Key('purchase-receipt-ownerUuid')), 'owner-uuid-1');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-storeUuid')), '');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-branchUuid')), 'branch-uuid-1');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-supplierUuid')), 'supplier-uuid-1');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-supplierInvoiceUuid')), 'supplier-invoice-uuid-1');
-    await tester.enterText(find.byKey(const Key('purchase-receipt-productUuid')), 'product-uuid-1');
+    await _selectPurchaseReceiptOption(tester, 'branchUuid', 'North Branch');
+    await _selectPurchaseReceiptOption(tester, 'supplierUuid', 'Al Noor Trading');
+    await _selectPurchaseReceiptOption(tester, 'supplierInvoiceUuid', 'SI-2026-0012');
+    await _selectPurchaseReceiptOption(tester, 'productUuid', 'Premium Flour 25kg');
     await tester.enterText(find.byKey(const Key('purchase-receipt-quantity')), '8');
     await tester.enterText(find.byKey(const Key('purchase-receipt-unitCost')), '12.5');
 
