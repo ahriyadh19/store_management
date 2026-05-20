@@ -1777,8 +1777,6 @@ select public.create_owner_policy('sync_conflict_log');
 select public.create_owner_policy('external_integration_endpoint');
 select public.create_owner_policy('notification_event');
 
-drop function if exists public.create_owner_policy(text);
-
 drop policy if exists purchase_order_item_owner_policy on public.purchase_order_item;
 create policy purchase_order_item_owner_policy on public.purchase_order_item
 for all to authenticated
@@ -2436,6 +2434,7 @@ select public.create_owner_policy ('role_permissions');
 
 select public.create_owner_policy ('user_permissions');
 
+drop function if exists public.create_owner_policy (text);
 insert into public.pages ("ownerUuid", key, title, "routeKey", module, description, icon, status)
 select
   oa.uuid,

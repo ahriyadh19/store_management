@@ -52,6 +52,16 @@ tool/
 - Main shell includes live status indicators for cloud and local database connections.
 - Tenant scope service resolves owner/store/branch permissions for runtime enforcement.
 
+## Storage Strategies
+
+The app exposes three runtime-selectable persistence modes from settings while keeping domain models and business logic independent from any storage engine.
+
+- Online + local: recommended. Supabase remains the central backend for auth, shared data, and synchronization, while Drift on SQLite provides an offline-first local cache for fast reads and uninterrupted usage.
+- Online only: Supabase acts as the single source of truth with no local reconciliation layer. This is simpler operationally, but it depends on network availability and can add latency on heavier screens.
+- Local only: SQLite stores data only on the current device. This gives maximum offline speed, but it intentionally drops cross-device sync, real-time updates, and centralized control.
+
+The mapping boundary is explicit: domain entities stay pure in `lib/models`, and `lib/data/entity_mapper.dart` converts between application entities, Supabase payloads, and local rows.
+
 ## Data and Domain Notes
 
 - Entities are UUID-driven for business links.
@@ -68,16 +78,23 @@ The repository uses one canonical Supabase migration file:
 
 That single file now includes:
 
-- Base schema creation for operational, finance, inventory, and tenant tables.
-- Tenant scope helpers and RLS policies.
-- Owner bootstrap and default role provisioning.
-- Normalized permission catalog tables: `pages`, `permissions`, `role_permissions`, and `user_permissions`.
-- Backfill and sync functions that keep legacy `roles.permissionsJson` aligned with normalized permission grants.
-- The owner access helper fix that avoids recursive RLS evaluation.
+- Base schema creation for operational, finance, procurement, sales, inventory, audit, notification, and tenant tables.
+- Shared database helpers such as `now_millis()`, `set_updated_at()`, generated usernames, and inventory protection functions.
+- Owner-account operating model tables and access helpers for `owner_account`, `owner_user_membership`, and `owner_permission_scope`.
+- Normalized permission catalog tables and RBAC support, including policy generation for owner-scoped tables.
+- Inventory tables and controls, including `inventory_batch`, `inventory_transaction`, `inventory_policy`, and the `v_inventory_balance` view.
+- Broad indexing coverage for owner scope, relationship joins, date filters, and unsynced-row reconciliation.
+- Row-level security enablement and authenticated/owner-scoped policies across the migrated tables.
 
 For a fresh environment, apply only this file. The older incremental migration files have been removed from the repository so the schema source of truth stays clean.
 
 For existing deployed environments, treat this file as the canonical rebuild reference rather than replaying deleted historical fragments.
+
+Migration review notes from the current repository state:
+
+- Only one migration file exists under `supabase/migrations`, so README guidance should point to a single canonical schema source.
+- The migration defines the original operational tables, then extends them with owner-scoped tenancy, procurement, inventory, transfer, sales, pricing, staffing, audit, and integration surfaces.
+- The file also enables RLS and creates owner-access policies after the schema additions, which matches the app's multi-tenant access model.
 
 For rollout details, see:
 
