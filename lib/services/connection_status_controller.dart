@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:store_management/services/local_database.dart';
+import 'package:store_management/services/remote_failure_classifier.dart';
 
 enum ConnectionIndicatorState { processing, active, failed }
 
@@ -80,7 +81,7 @@ class ConnectionStatusController extends ChangeNotifier {
       await supabaseClient.from('users').select('id').limit(1).maybeSingle().timeout(_requestTimeout);
       return ConnectionIndicatorState.active;
     } on PostgrestException catch (error) {
-      if (_looksLikeConnectivityFailure(error.message)) {
+      if (isRemoteConnectivityFailure(error)) {
         return ConnectionIndicatorState.failed;
       }
 
@@ -88,7 +89,7 @@ class ConnectionStatusController extends ChangeNotifier {
     } on TimeoutException {
       return ConnectionIndicatorState.failed;
     } catch (error) {
-      if (_looksLikeConnectivityFailure(error.toString())) {
+      if (isRemoteConnectivityFailure(error)) {
         return ConnectionIndicatorState.failed;
       }
 
@@ -107,17 +108,6 @@ class ConnectionStatusController extends ChangeNotifier {
     } catch (_) {
       return ConnectionIndicatorState.failed;
     }
-  }
-
-  bool _looksLikeConnectivityFailure(String message) {
-    final normalized = message.toLowerCase();
-    return normalized.contains('socketexception') ||
-        normalized.contains('failed host lookup') ||
-        normalized.contains('connection refused') ||
-        normalized.contains('network') ||
-        normalized.contains('timed out') ||
-        normalized.contains('timeout') ||
-        normalized.contains('dns');
   }
 
   SupabaseClient? _resolveSupabaseClient() {

@@ -51,6 +51,7 @@ import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/services/inventory_transaction_service.dart';
 import 'package:store_management/services/owner_scope_service.dart';
 import 'package:store_management/services/local_database.dart';
+import 'package:store_management/services/remote_failure_classifier.dart';
 import 'package:store_management/services/sync_payload_normalizer.dart';
 import 'package:store_management/services/sync_conflict_resolution.dart';
 import 'package:store_management/views/components/model_form.dart';
@@ -1391,7 +1392,10 @@ ModelFormDefinition<T> _serverBackedDefinition<T extends Object>({
         case StoragePreference.hybrid:
           try {
             return await _hybridQueryDelegate(tableName: tableName, mapper: mapper)(request);
-          } catch (_) {
+          } catch (error) {
+            if (!isRemoteConnectivityFailure(error)) {
+              rethrow;
+            }
             return localQuery(request);
           }
       }
@@ -1407,7 +1411,10 @@ ModelFormDefinition<T> _serverBackedDefinition<T extends Object>({
             final created = await supabaseCreate(model);
             await localCreate(created, syncState: OfflineSyncState.synced);
             return created;
-          } catch (_) {
+          } catch (error) {
+            if (!isRemoteConnectivityFailure(error)) {
+              rethrow;
+            }
             return localCreate(model, syncState: OfflineSyncState.pendingUpsert);
           }
       }
@@ -1423,7 +1430,10 @@ ModelFormDefinition<T> _serverBackedDefinition<T extends Object>({
             final updated = await supabaseUpdate(model);
             await localUpdate(updated, syncState: OfflineSyncState.synced);
             return updated;
-          } catch (_) {
+          } catch (error) {
+            if (!isRemoteConnectivityFailure(error)) {
+              rethrow;
+            }
             return localUpdate(model, syncState: OfflineSyncState.pendingUpsert);
           }
       }
@@ -1441,7 +1451,10 @@ ModelFormDefinition<T> _serverBackedDefinition<T extends Object>({
             await supabaseDelete(model);
             await localDelete(model, syncState: OfflineSyncState.synced);
             return;
-          } catch (_) {
+          } catch (error) {
+            if (!isRemoteConnectivityFailure(error)) {
+              rethrow;
+            }
             await localDelete(model, syncState: OfflineSyncState.pendingDelete);
             return;
           }

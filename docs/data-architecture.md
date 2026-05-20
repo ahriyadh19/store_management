@@ -28,6 +28,16 @@ Domain models are shared across Flutter, web, and desktop code paths.
 
 Current mappers default local and remote payloads to the entity's canonical map shape. That keeps behavior stable while making it safe to diverge storage schemas later without rewriting UI or business logic.
 
+## Runtime Storage Strategies
+
+The active persistence strategy is selected at runtime from the settings page, but the domain layer stays unchanged across all modes.
+
+- `online + local` is the recommended mode. Supabase remains the authoritative backend for authentication, shared relational data, and synchronization while Drift + SQLite acts as an offline-first cache for fast reads and uninterrupted use. Connectivity failures can queue pending local writes for later reconciliation, while backend validation or policy rejections are surfaced immediately instead of being silently cached.
+- `online only` uses Supabase as the single source of truth. This removes synchronization complexity and local cache reconciliation, but it depends on network availability and can introduce more latency on data-heavy flows.
+- `local only` keeps data on-device in the local relational store. This provides the fastest access and full offline capability, but it intentionally gives up cross-device sync, real-time updates, and centralized control.
+
+In every mode, table shape, field naming, and indexing should stay aligned across remote and local schemas so hybrid caching does not pay unnecessary mapping overhead or create avoidable sync conflicts.
+
 ## Remote Source Of Truth
 
 Supabase is the authoritative backend.
@@ -54,6 +64,7 @@ Synchronization keeps remote consistency while preserving newer edits.
 - Pending local updates are merged with remote rows using timestamp-aware conflict checks.
 - Pending deletes win over stale remote rows to avoid resurrecting deleted records.
 - Conflict timestamps are recorded when incoming remote data overtakes a non-synced local edit.
+- Timestamp-based reconciliation uses the last known remote baseline plus the local pending write timestamp to decide whether hybrid mode should keep the local edit or accept the fresher remote row.
 - Partial sync is supported at the table and record level because local caches and sync metadata are keyed by model type and record UUID.
 
 ## Expected Data Flow
