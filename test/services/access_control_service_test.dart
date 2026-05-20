@@ -43,4 +43,51 @@ void main() {
     expect(snapshot.can(PermissionCatalog.settingsView), isTrue);
     expect(snapshot.can(PermissionCatalog.rolesManage), isTrue);
   });
+
+  test('assigned roles keep owner-compatible and legacy unscoped rows', () {
+    final rows = filterRoleRowsForOwnerForTesting(
+      ownerUuid: 'owner-1',
+      rows: <Map<String, dynamic>>[
+        <String, dynamic>{'uuid': 'role-1', 'ownerUuid': 'owner-1', 'name': 'Owner'},
+        <String, dynamic>{'uuid': 'role-2', 'ownerUuid': '', 'name': 'Admin'},
+        <String, dynamic>{'uuid': 'role-3', 'ownerUuid': 'owner-2', 'name': 'Viewer'},
+      ],
+    );
+
+    expect(rows.map((row) => row['uuid']), containsAll(<String>['role-1', 'role-2']));
+    expect(rows.map((row) => row['uuid']), isNot(contains('role-3')));
+  });
+
+  test('assigned roles fall back to all rows when owner scoping finds no matches', () {
+    final rows = filterRoleRowsForOwnerForTesting(
+      ownerUuid: 'owner-1',
+      rows: <Map<String, dynamic>>[
+        <String, dynamic>{'uuid': 'role-1', 'ownerUuid': 'owner-2', 'name': 'Owner'},
+        <String, dynamic>{'uuid': 'role-2', 'ownerUuid': 'owner-3', 'name': 'Admin'},
+      ],
+    );
+
+    expect(rows.map((row) => row['uuid']), <String>['role-1', 'role-2']);
+  });
+
+  test('explicit allow removes matching deny candidates', () {
+    final result = applyExplicitPermissionGrantForTesting(
+      allowPermissions: <String>{PermissionCatalog.dashboardView},
+      denyPermissions: <String>{'page.users.*', 'page.users.view'},
+      permission: 'page.users.view',
+      isAllowed: true,
+    );
+
+    expect(result['allow'], contains('page.users.view'));
+    expect(result['deny'], isNot(contains('page.users.view')));
+    expect(result['deny'], isNot(contains('page.users.*')));
+  });
+
+  test('explicit deny removes exact allow permission', () {
+    final result = applyExplicitPermissionGrantForTesting(allowPermissions: <String>{'page.users.view', PermissionCatalog.dashboardView}, denyPermissions: <String>{}, permission: 'page.users.view', isAllowed: false);
+
+    expect(result['allow'], isNot(contains('page.users.view')));
+    expect(result['deny'], contains('page.users.view'));
+    expect(result['allow'], contains(PermissionCatalog.dashboardView));
+  });
 }

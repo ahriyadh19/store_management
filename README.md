@@ -62,23 +62,22 @@ tool/
 
 ## Database Migration
 
-Migrations are rebuilt and consolidated into a single canonical file:
+The repository uses one canonical Supabase migration file:
 
 - supabase/migrations/20260508_000001_complete_improved_schema.sql
 
-This consolidated migration includes:
+That single file now includes:
 
-- Base schema creation.
-- Sync metadata columns and related compatibility updates.
-- Supplier product variation updates.
-- Multi-tenant operating model upgrade, including inventory transaction structures, reporting views, and tenant security rules.
-- RBAC role permissions, first-user owner bootstrap, and owner/admin/staff default permission seeding.
+- Base schema creation for operational, finance, inventory, and tenant tables.
+- Tenant scope helpers and RLS policies.
+- Owner bootstrap and default role provisioning.
+- Normalized permission catalog tables: `pages`, `permissions`, `role_permissions`, and `user_permissions`.
+- Backfill and sync functions that keep legacy `roles.permissionsJson` aligned with normalized permission grants.
+- The owner access helper fix that avoids recursive RLS evaluation.
 
-There should be only one active migration file in this repository:
+For a fresh environment, apply only this file. The older incremental migration files have been removed from the repository so the schema source of truth stays clean.
 
-- supabase/migrations/20260508_000001_complete_improved_schema.sql
-
-If you have previously applied older split migrations, keep historical records in your deployed database, but use the consolidated file as the single source of truth for fresh environments.
+For existing deployed environments, treat this file as the canonical rebuild reference rather than replaying deleted historical fragments.
 
 For rollout details, see:
 
@@ -173,11 +172,11 @@ Implemented and active:
 - Multi-tenant schema and tenant-aware access enforcement.
 - CRUD-oriented model/controller/validation stack.
 - Inventory service foundation for sale and transfer posting workflows.
-- Consolidated migration strategy.
+- Single-file migration strategy with normalized permission catalog support.
 
 Still expanding:
 
-- Additional dedicated UI pages for newer operational tables.
+- UUID-free administration flows for permission assignment screens.
 - Deeper end-to-end workflows for procurement and reporting modules.
 - Broader test coverage across service and integration layers.
 

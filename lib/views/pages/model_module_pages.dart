@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
 import 'package:store_management/localization/app_localizations.dart';
+import 'package:store_management/models/access_page.dart';
+import 'package:store_management/models/access_permission.dart';
 import 'package:store_management/models/branch.dart';
 import 'package:store_management/models/categories.dart';
 import 'package:store_management/models/client.dart';
@@ -17,6 +19,7 @@ import 'package:store_management/models/purchase_order.dart';
 import 'package:store_management/models/purchase_order_item.dart';
 import 'package:store_management/models/promotion_rule.dart';
 import 'package:store_management/models/product.dart';
+import 'package:store_management/models/role_permission.dart';
 import 'package:store_management/models/roles.dart';
 import 'package:store_management/models/sales_invoice.dart';
 import 'package:store_management/models/sales_order.dart';
@@ -39,6 +42,7 @@ import 'package:store_management/models/supplier_invoice.dart';
 import 'package:store_management/models/tags.dart';
 import 'package:store_management/models/transfer_order.dart';
 import 'package:store_management/models/transfer_order_item.dart';
+import 'package:store_management/models/user_permission.dart';
 import 'package:store_management/models/user_roles.dart';
 import 'package:store_management/models/users.dart';
 import 'package:store_management/models/offline_sync_record.dart';
@@ -275,6 +279,101 @@ ModelFormDefinition<UserRoles> userRolesFormDefinition(AppLocalizations l10n) =>
   fromMap: UserRoles.fromMap,
   toMap: (userRole) => userRole.toMap(),
   sampleModel: UserRoles(userUuid: '33333333-3333-4333-8333-333333333333', roleUuid: '55555555-5555-4555-8555-555555555555', status: RecordStatus.active.code, createdAt: _createdAt, updatedAt: _updatedAt),
+);
+
+ModelFormDefinition<AccessPage> accessPageFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<AccessPage>(
+  tableName: 'pages',
+  tableFieldPriorityKeys: const <String>['key', 'title', 'routeKey', 'module', 'status'],
+  fields: [
+    _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), hintText: _scopeAutoHint(l10n)),
+    _textField('key', _t(l10n, 'Page key', 'مفتاح الصفحة'), required: true),
+    _textField('title', _t(l10n, 'Title', 'العنوان'), required: true),
+    _textField('routeKey', _t(l10n, 'Route key', 'مفتاح المسار')),
+    _textField('module', _t(l10n, 'Module', 'الوحدة')),
+    _multilineField('description', _t(l10n, 'Description', 'الوصف')),
+    _textField('icon', _t(l10n, 'Icon name', 'اسم الأيقونة')),
+    _statusField(l10n),
+  ],
+  fromMap: AccessPage.fromMap,
+  toMap: (page) => page.toMap(),
+  sampleModel: AccessPage(
+    key: 'users',
+    title: 'Users',
+    routeKey: 'users',
+    module: 'access',
+    description: _t(l10n, 'Manage user records and access assignments.', 'إدارة سجلات المستخدمين وتعيينات الوصول.'),
+    icon: 'person_outline_rounded',
+    status: RecordStatus.active.code,
+    createdAt: _createdAt,
+    updatedAt: _updatedAt,
+  ),
+);
+
+ModelFormDefinition<AccessPermission> accessPermissionFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<AccessPermission>(
+  tableName: 'permissions',
+  tableFieldPriorityKeys: const <String>['key', 'action', 'pageUuid', 'status'],
+  fields: [
+    _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), hintText: _scopeAutoHint(l10n)),
+    _textField('pageUuid', _t(l10n, 'Page UUID', 'معرّف الصفحة UUID')),
+    _textField('key', _t(l10n, 'Permission key', 'مفتاح الصلاحية'), required: true),
+    _textField('action', _t(l10n, 'Action', 'الإجراء'), required: true),
+    _multilineField('description', _t(l10n, 'Description', 'الوصف')),
+    _statusField(l10n),
+  ],
+  fromMap: AccessPermission.fromMap,
+  toMap: (permission) => permission.toMap(),
+  sampleModel: AccessPermission(
+    key: 'page.users.view',
+    action: 'view',
+    description: _t(l10n, 'Allows navigation to the users page.', 'يسمح بالتنقل إلى صفحة المستخدمين.'),
+    status: RecordStatus.active.code,
+    createdAt: _createdAt,
+    updatedAt: _updatedAt,
+  ),
+);
+
+ModelFormDefinition<RolePermission> rolePermissionFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<RolePermission>(
+  tableName: 'role_permissions',
+  tableFieldPriorityKeys: const <String>['roleUuid', 'permissionUuid', 'isAllowed', 'status'],
+  fields: [
+    _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), hintText: _scopeAutoHint(l10n)),
+    _textField('roleUuid', _t(l10n, 'Role UUID', 'معرّف الدور UUID'), required: true),
+    _textField('permissionUuid', _t(l10n, 'Permission UUID', 'معرّف الصلاحية UUID'), required: true),
+    _selectionField('isAllowed', _t(l10n, 'Decision', 'القرار'), _allowDenyOptions(l10n), required: true),
+    _statusField(l10n),
+  ],
+  fromMap: RolePermission.fromMap,
+  toMap: (rolePermission) => rolePermission.toMap(),
+  sampleModel: RolePermission(
+    roleUuid: '55555555-5555-4555-8555-555555555555',
+    permissionUuid: '77777777-7777-4777-8777-777777777777',
+    isAllowed: true,
+    status: RecordStatus.active.code,
+    createdAt: _createdAt,
+    updatedAt: _updatedAt,
+  ),
+);
+
+ModelFormDefinition<UserPermission> userPermissionFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<UserPermission>(
+  tableName: 'user_permissions',
+  tableFieldPriorityKeys: const <String>['userUuid', 'permissionUuid', 'isAllowed', 'status'],
+  fields: [
+    _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), hintText: _scopeAutoHint(l10n)),
+    _textField('userUuid', _t(l10n, 'User UUID', 'معرّف المستخدم UUID'), required: true),
+    _textField('permissionUuid', _t(l10n, 'Permission UUID', 'معرّف الصلاحية UUID'), required: true),
+    _selectionField('isAllowed', _t(l10n, 'Decision', 'القرار'), _allowDenyOptions(l10n), required: true),
+    _statusField(l10n),
+  ],
+  fromMap: UserPermission.fromMap,
+  toMap: (userPermission) => userPermission.toMap(),
+  sampleModel: UserPermission(
+    userUuid: '33333333-3333-4333-8333-333333333333',
+    permissionUuid: '77777777-7777-4777-8777-777777777777',
+    isAllowed: true,
+    status: RecordStatus.active.code,
+    createdAt: _createdAt,
+    updatedAt: _updatedAt,
+  ),
 );
 
 ModelFormDefinition<StoreSupplier> storeSupplierFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<StoreSupplier>(
@@ -2024,6 +2123,8 @@ List<ModelFormSelectOption> _statusOptions(AppLocalizations l10n) => [
   ModelFormSelectOption(label: _t(l10n, 'Inactive', 'غير نشط'), value: 0),
 ];
 
+List<ModelFormSelectOption> _allowDenyOptions(AppLocalizations l10n) => [ModelFormSelectOption(label: _t(l10n, 'Allow', 'سماح'), value: true), ModelFormSelectOption(label: _t(l10n, 'Deny', 'منع'), value: false)];
+
 List<ModelFormSelectOption> _paymentMethodOptions(AppLocalizations l10n) => [
   for (final method in StorePaymentMethod.values)
     ModelFormSelectOption(label: _enumLabel(l10n, method.name), value: method.value),
@@ -2252,6 +2353,10 @@ String supplierEntityLabel(AppLocalizations l10n) => _t(l10n, 'Supplier', 'شر�
 String userEntityLabel(AppLocalizations l10n) => _t(l10n, 'User', 'مستخدم');
 String roleEntityLabel(AppLocalizations l10n) => _t(l10n, 'Role', 'دور');
 String userRoleEntityLabel(AppLocalizations l10n) => _t(l10n, 'User role', 'دور مستخدم');
+String accessPageEntityLabel(AppLocalizations l10n) => _t(l10n, 'Page', 'صفحة');
+String accessPermissionEntityLabel(AppLocalizations l10n) => _t(l10n, 'Permission', 'صلاحية');
+String rolePermissionEntityLabel(AppLocalizations l10n) => _t(l10n, 'Role permission', 'صلاحية دور');
+String userPermissionEntityLabel(AppLocalizations l10n) => _t(l10n, 'User permission', 'صلاحية مستخدم');
 String storeSupplierEntityLabel(AppLocalizations l10n) => _t(l10n, 'Store supplier', 'مورد المتجر');
 String storeClientEntityLabel(AppLocalizations l10n) => _t(l10n, 'Store client', 'عميل المتجر');
 String storeUserEntityLabel(AppLocalizations l10n) => _t(l10n, 'Store user', 'مستخدم المتجر');
@@ -2296,6 +2401,10 @@ const Set<String> _ownerScopedTables = <String>{
   'category',
   'tags',
   'roles',
+  'pages',
+  'permissions',
+  'role_permissions',
+  'user_permissions',
   'store_invoice',
   'store_payment_voucher',
   'store_return',

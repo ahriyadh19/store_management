@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/models/inventory_movement.dart';
+import 'package:store_management/models/access_page.dart';
+import 'package:store_management/models/access_permission.dart';
 import 'package:store_management/models/inventory_batch.dart';
 import 'package:store_management/models/inventory_transaction.dart';
 import 'package:store_management/models/branch_product.dart';
@@ -9,6 +11,7 @@ import 'package:store_management/models/payment_allocation.dart';
 import 'package:store_management/models/purchase_order.dart';
 import 'package:store_management/models/purchase_order_item.dart';
 import 'package:store_management/models/promotion_rule.dart';
+import 'package:store_management/models/role_permission.dart';
 import 'package:store_management/models/sales_invoice.dart';
 import 'package:store_management/models/sales_order.dart';
 import 'package:store_management/models/sales_return.dart';
@@ -24,6 +27,7 @@ import 'package:store_management/models/store_user.dart';
 import 'package:store_management/models/supplier_invoice.dart';
 import 'package:store_management/models/transfer_order.dart';
 import 'package:store_management/models/transfer_order_item.dart';
+import 'package:store_management/models/user_permission.dart';
 import 'package:store_management/models/user_roles.dart';
 import 'package:store_management/services/inventory_transaction_service.dart';
 import 'package:store_management/services/owner_scope_service.dart';
@@ -421,7 +425,7 @@ class _InventoryPageState extends State<InventoryPage> {
   List<Tab> _relationTabsForGroup(_InventoryRelationsGroup group) {
     switch (group) {
       case _InventoryRelationsGroup.access:
-        return const [Tab(text: 'User Roles'), Tab(text: 'Store Users')];
+        return const [Tab(text: 'Pages'), Tab(text: 'Permissions'), Tab(text: 'Role Permissions'), Tab(text: 'User Permissions'), Tab(text: 'User Roles'), Tab(text: 'Store Users')];
       case _InventoryRelationsGroup.partners:
         return const [Tab(text: 'Store Suppliers'), Tab(text: 'Store Clients')];
       case _InventoryRelationsGroup.structure:
@@ -435,6 +439,38 @@ class _InventoryPageState extends State<InventoryPage> {
     switch (group) {
       case _InventoryRelationsGroup.access:
         return [
+          ModelCrudPage<AccessPage>(
+            title: 'Pages',
+            entityLabel: accessPageEntityLabel(l10n),
+            description: 'Define the page catalog that can be shown in menus and route guards.',
+            icon: Icons.web_asset_rounded,
+            highlights: const ['Page catalog', 'Route mapping', 'Menu visibility'],
+            formDefinition: accessPageFormDefinition(l10n),
+          ),
+          ModelCrudPage<AccessPermission>(
+            title: 'Permissions',
+            entityLabel: accessPermissionEntityLabel(l10n),
+            description: 'Register permission keys that roles and users can be granted or denied.',
+            icon: Icons.key_rounded,
+            highlights: const ['Permission keys', 'Action mapping', 'Catalog control'],
+            formDefinition: accessPermissionFormDefinition(l10n),
+          ),
+          ModelCrudPage<RolePermission>(
+            title: 'Role Permissions',
+            entityLabel: rolePermissionEntityLabel(l10n),
+            description: 'Assign page and action permissions to roles with explicit allow or deny decisions.',
+            icon: Icons.admin_panel_settings_rounded,
+            highlights: const ['Role grants', 'Deny overrides', 'Tenant policy'],
+            formDefinition: rolePermissionFormDefinition(l10n),
+          ),
+          ModelCrudPage<UserPermission>(
+            title: 'User Permissions',
+            entityLabel: userPermissionEntityLabel(l10n),
+            description: 'Grant or deny targeted permissions directly to individual users.',
+            icon: Icons.manage_accounts_rounded,
+            highlights: const ['Direct overrides', 'Staff exceptions', 'Access tuning'],
+            formDefinition: userPermissionFormDefinition(l10n),
+          ),
           ModelCrudPage<UserRoles>(
             title: 'User Roles',
             entityLabel: userRoleEntityLabel(l10n),

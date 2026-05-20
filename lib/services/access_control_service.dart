@@ -246,6 +246,14 @@ class AccessControlService extends ChangeNotifier {
         }
       }
 
+      final roleUuids = roleRows.map((row) => row['uuid']).whereType<String>().where((value) => value.trim().isNotEmpty).toSet();
+
+      final normalizedRoleGrants = await _loadRolePermissionGrants(roleUuids: roleUuids, ownerUuid: ownerUuid);
+      _applyExplicitPermissionGrants(allowPermissions: allowPermissions, denyPermissions: denyPermissions, grants: normalizedRoleGrants);
+
+      final normalizedUserGrants = await _loadUserPermissionGrants(userUuid: userUuid, ownerUuid: ownerUuid);
+      _applyExplicitPermissionGrants(allowPermissions: allowPermissions, denyPermissions: denyPermissions, grants: normalizedUserGrants);
+
       final hasPrivilegedRole =
           membershipRoles.any(_isPrivilegedRoleName) || roleNames.any(_isPrivilegedRoleName);
       if (hasPrivilegedRole) {
@@ -334,19 +342,14 @@ class AccessControlService extends ChangeNotifier {
       return const <Map<String, dynamic>>[];
     }
 
-    dynamic query = _client
+    final rows = await _client
         .from('roles')
         .select('uuid,name,permissionsJson,ownerUuid,status,deletedAt')
         .inFilter('uuid', roleUuids.toList(growable: false))
         .eq('status', 1)
         .isFilter('deletedAt', null);
 
-    if (ownerUuid != null && ownerUuid.trim().isNotEmpty) {
-      query = query.eq('ownerUuid', ownerUuid);
-    }
-
-    final rows = await query;
-    return (rows as List<dynamic>).map(_normalizeRow).toList(growable: false);
+    return _filterRoleRowsForOwner(rows: (rows as List<dynamic>).map(_normalizeRow).toList(growable: false), ownerUuid: ownerUuid);
   }
 
   Future<List<Map<String, dynamic>>> _loadPermissionScopeRows(Set<String> membershipUuids) async {
@@ -358,6 +361,68 @@ class AccessControlService extends ChangeNotifier {
         .isFilter('deletedAt', null);
 
     return (rows as List<dynamic>).map(_normalizeRow).toList(growable: false);
+  }
+
+  Future<List<_ExplicitPermissionGrant>> _loadRolePermissionGrants({required Set<String> roleUuids, required String? ownerUuid}) async {
+    if (roleUuids.isEmpty) {
+      return const <_ExplicitPermissionGrant>[];
+    }
+
+    dynamic query = _client.from('role_permissions').select('permissionUuid,isAllowed,ownerUuid,status,deletedAt').inFilter('roleUuid', roleUuids.toList(growable: false)).eq('status', 1).isFilter('deletedAt', null);
+
+    if (ownerUuid != null && ownerUuid.trim().isNotEmpty) {
+      query = query.eq('ownerUuid', ownerUuid);
+    }
+
+    final rows = await query;
+    return _resolveExplicitPermissionGrants(rows as List<dynamic>);
+  }
+
+  Future<List<_ExplicitPermissionGrant>> _loadUserPermissionGrants({required String userUuid, required String? ownerUuid}) async {
+    dynamic query = _client.from('user_permissions').select('permissionUuid,isAllowed,ownerUuid,status,deletedAt').eq('userUuid', userUuid).eq('status', 1).isFilter('deletedAt', null);
+
+    if (ownerUuid != null && ownerUuid.trim().isNotEmpty) {
+      query = query.eq('ownerUuid', ownerUuid);
+    }
+
+    final rows = await query;
+    return _resolveExplicitPermissionGrants(rows as List<dynamic>);
+  }
+
+  Future<List<_ExplicitPermissionGrant>> _resolveExplicitPermissionGrants(List<dynamic> rawRows) async {
+    final rows = rawRows.map(_normalizeRow).toList(growable: false);
+    final permissionUuids = rows.map((row) => row['permissionUuid']).whereType<String>().where((value) => value.trim().isNotEmpty).toSet();
+
+    if (permissionUuids.isEmpty) {
+      return const <_ExplicitPermissionGrant>[];
+    }
+
+    final permissionRows = await _client.from('permissions').select('uuid,key,status,deletedAt').inFilter('uuid', permissionUuids.toList(growable: false)).eq('status', 1).isFilter('deletedAt', null);
+
+    final permissionByUuid = <String, String>{
+      for (final row in (permissionRows as List<dynamic>).map(_normalizeRow))
+        if (row['uuid'] is String && row['key'] is String) row['uuid'] as String: row['key'] as String,
+    };
+
+    final grants = <_ExplicitPermissionGrant>[];
+    for (final row in rows) {
+      final permissionUuid = row['permissionUuid']?.toString();
+      if (permissionUuid == null || permissionUuid.trim().isEmpty) {
+        continue;
+      }
+
+      final permissionKey = permissionByUuid[permissionUuid];
+      final normalizedPermission = _normalizePermissionKey(permissionKey ?? '');
+      if (normalizedPermission.isEmpty) {
+        continue;
+      }
+
+      grants.add(
+        _ExplicitPermissionGrant(permission: normalizedPermission, isAllowed: row['isAllowed'] == null ? true : (row['isAllowed'] == true || row['isAllowed'] == 1 || row['isAllowed'].toString().toLowerCase() == 'true')),
+      );
+    }
+
+    return grants;
   }
 
   static Map<String, dynamic> _normalizeRow(dynamic row) {
@@ -428,6 +493,10 @@ class PermissionCatalog {
   static const List<String> tableActions = <String>['read', 'create', 'update', 'delete', 'sync'];
 
   static const List<String> managedTables = <String>[
+    'pages',
+    'permissions',
+    'role_permissions',
+    'user_permissions',
     'users',
     'roles',
     'user_roles',
@@ -561,6 +630,10 @@ class PermissionCatalog {
 
   static String? moduleManagePermissionFromTable(String tableName) {
     return switch (_normalizePermissionKey(tableName)) {
+      'pages' => permissionsManage,
+      'permissions' => permissionsManage,
+      'role_permissions' => permissionsManage,
+      'user_permissions' => permissionsManage,
       'users' => usersManage,
       'roles' => rolesManage,
       'user_roles' => permissionsManage,
@@ -636,6 +709,37 @@ class _PermissionSet {
 
   final Set<String> allow;
   final Set<String> deny;
+}
+
+class _ExplicitPermissionGrant {
+  const _ExplicitPermissionGrant({required this.permission, required this.isAllowed});
+
+  final String permission;
+  final bool isAllowed;
+}
+
+void _applyExplicitPermissionGrants({required Set<String> allowPermissions, required Set<String> denyPermissions, required Iterable<_ExplicitPermissionGrant> grants}) {
+  for (final grant in grants) {
+    _applyExplicitPermissionGrant(allowPermissions: allowPermissions, denyPermissions: denyPermissions, permission: grant.permission, isAllowed: grant.isAllowed);
+  }
+}
+
+void _applyExplicitPermissionGrant({required Set<String> allowPermissions, required Set<String> denyPermissions, required String permission, required bool isAllowed}) {
+  final normalizedPermission = _normalizePermissionKey(permission);
+  if (normalizedPermission.isEmpty) {
+    return;
+  }
+
+  if (isAllowed) {
+    allowPermissions.add(normalizedPermission);
+    for (final candidate in _permissionCandidates(normalizedPermission)) {
+      denyPermissions.remove(candidate);
+    }
+    return;
+  }
+
+  denyPermissions.add(normalizedPermission);
+  allowPermissions.remove(normalizedPermission);
 }
 
 _PermissionSet _parsePermissions(dynamic value) {
@@ -736,8 +840,41 @@ String _normalizePermissionKey(String value) {
   return value.trim().replaceAll(' ', '').replaceAll('/', '.').toLowerCase();
 }
 
+List<Map<String, dynamic>> _filterRoleRowsForOwner({required List<Map<String, dynamic>> rows, required String? ownerUuid}) {
+  final normalizedOwnerUuid = ownerUuid?.trim() ?? '';
+  if (normalizedOwnerUuid.isEmpty || rows.isEmpty) {
+    return rows;
+  }
+
+  final compatibleRows = rows
+      .where((row) {
+        final roleOwnerUuid = row['ownerUuid']?.toString().trim() ?? '';
+        return roleOwnerUuid.isEmpty || roleOwnerUuid == normalizedOwnerUuid;
+      })
+      .toList(growable: false);
+
+  if (compatibleRows.isNotEmpty) {
+    return compatibleRows;
+  }
+
+  return rows;
+}
+
 @visibleForTesting
 String canonicalSystemRoleForTesting(String role) => _canonicalSystemRole(role);
+
+@visibleForTesting
+List<Map<String, dynamic>> filterRoleRowsForOwnerForTesting({required List<Map<String, dynamic>> rows, required String? ownerUuid}) {
+  return _filterRoleRowsForOwner(rows: rows, ownerUuid: ownerUuid);
+}
+
+@visibleForTesting
+Map<String, Set<String>> applyExplicitPermissionGrantForTesting({required Set<String> allowPermissions, required Set<String> denyPermissions, required String permission, required bool isAllowed}) {
+  final nextAllow = Set<String>.from(allowPermissions);
+  final nextDeny = Set<String>.from(denyPermissions);
+  _applyExplicitPermissionGrant(allowPermissions: nextAllow, denyPermissions: nextDeny, permission: permission, isAllowed: isAllowed);
+  return <String, Set<String>>{'allow': nextAllow, 'deny': nextDeny};
+}
 
 String _canonicalSystemRole(String role) {
   final normalized = _normalizePermissionKey(role);

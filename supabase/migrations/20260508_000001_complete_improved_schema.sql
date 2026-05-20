@@ -1655,6 +1655,7 @@ create or replace function public.current_user_uuid()
 returns uuid
 language sql
 stable
+security definer set search_path = public
 as $$
   select u.uuid from public.users u where u.auth_user_id = auth.uid() limit 1;
 $$;
@@ -1663,6 +1664,7 @@ create or replace function public.user_has_owner_access(target_owner uuid)
 returns boolean
 language sql
 stable
+security definer set search_path = public
 as $$
   select exists (
     select 1
@@ -2324,3 +2326,474 @@ $$;
 
 select public.rebuild_rbac_baseline();
 
+-- Permission catalog and normalized access grants.
+
+create table if not exists public.pages (
+    id bigint generated always as identity primary key,
+    uuid uuid not null default gen_random_uuid () unique,
+    "ownerUuid" uuid not null references public.owner_account (uuid) on delete cascade,
+    key text not null,
+    title text not null,
+    "routeKey" text not null default '',
+    module text not null default '',
+    description text not null default '',
+    icon text not null default '',
+    status integer not null default 1 check (status in (0, 1)),
+    "createdAt" bigint not null default public.now_millis (),
+    "updatedAt" bigint not null default public.now_millis (),
+    synced boolean not null default false,
+    "deletedAt" bigint,
+    "syncedAt" bigint,
+    constraint pages_owner_key_unique unique ("ownerUuid", key)
+);
+
+create table if not exists public.permissions (
+    id bigint generated always as identity primary key,
+    uuid uuid not null default gen_random_uuid () unique,
+    "ownerUuid" uuid not null references public.owner_account (uuid) on delete cascade,
+    "pageUuid" uuid references public.pages (uuid) on delete set null,
+    key text not null,
+    action text not null default 'view',
+    description text not null default '',
+    status integer not null default 1 check (status in (0, 1)),
+    "createdAt" bigint not null default public.now_millis (),
+    "updatedAt" bigint not null default public.now_millis (),
+    synced boolean not null default false,
+    "deletedAt" bigint,
+    "syncedAt" bigint,
+    constraint permissions_owner_key_unique unique ("ownerUuid", key)
+);
+
+create table if not exists public.role_permissions (
+    id bigint generated always as identity primary key,
+    uuid uuid not null default gen_random_uuid () unique,
+    "ownerUuid" uuid not null references public.owner_account (uuid) on delete cascade,
+    "roleUuid" uuid not null references public.roles (uuid) on delete cascade,
+    "permissionUuid" uuid not null references public.permissions (uuid) on delete cascade,
+    "isAllowed" boolean not null default true,
+    status integer not null default 1 check (status in (0, 1)),
+    "createdAt" bigint not null default public.now_millis (),
+    "updatedAt" bigint not null default public.now_millis (),
+    synced boolean not null default false,
+    "deletedAt" bigint,
+    "syncedAt" bigint,
+    constraint role_permissions_owner_role_permission_unique unique (
+        "ownerUuid",
+        "roleUuid",
+        "permissionUuid"
+    )
+);
+
+create table if not exists public.user_permissions (
+    id bigint generated always as identity primary key,
+    uuid uuid not null default gen_random_uuid () unique,
+    "ownerUuid" uuid not null references public.owner_account (uuid) on delete cascade,
+    "userUuid" uuid not null references public.users (uuid) on delete cascade,
+    "permissionUuid" uuid not null references public.permissions (uuid) on delete cascade,
+    "isAllowed" boolean not null default true,
+    status integer not null default 1 check (status in (0, 1)),
+    "createdAt" bigint not null default public.now_millis (),
+    "updatedAt" bigint not null default public.now_millis (),
+    synced boolean not null default false,
+    "deletedAt" bigint,
+    "syncedAt" bigint,
+    constraint user_permissions_owner_user_permission_unique unique (
+        "ownerUuid",
+        "userUuid",
+        "permissionUuid"
+    )
+);
+
+create index if not exists idx_pages_owner_uuid on public.pages ("ownerUuid");
+
+create index if not exists idx_pages_module on public.pages (module);
+
+create index if not exists idx_permissions_owner_uuid on public.permissions ("ownerUuid");
+
+create index if not exists idx_permissions_page_uuid on public.permissions ("pageUuid");
+
+create index if not exists idx_role_permissions_role_uuid on public.role_permissions ("roleUuid");
+
+create index if not exists idx_role_permissions_permission_uuid on public.role_permissions ("permissionUuid");
+
+create index if not exists idx_user_permissions_user_uuid on public.user_permissions ("userUuid");
+
+create index if not exists idx_user_permissions_permission_uuid on public.user_permissions ("permissionUuid");
+
+alter table public.pages enable row level security;
+
+alter table public.permissions enable row level security;
+
+alter table public.role_permissions enable row level security;
+
+alter table public.user_permissions enable row level security;
+
+select public.create_owner_policy ('pages');
+
+select public.create_owner_policy ('permissions');
+
+select public.create_owner_policy ('role_permissions');
+
+select public.create_owner_policy ('user_permissions');
+
+insert into public.pages ("ownerUuid", key, title, "routeKey", module, description, icon, status)
+select
+  oa.uuid,
+  seed.key,
+  seed.title,
+  seed."routeKey",
+  seed.module,
+  seed.description,
+  seed.icon,
+  1
+from public.owner_account oa
+cross join (
+  values
+    ('dashboard', 'Dashboard', 'dashboard', 'core', 'Workspace landing page.', 'dashboard_rounded'),
+    ('reports', 'Reports', 'reports', 'core', 'Reporting and analytics center.', 'bar_chart_rounded'),
+    ('stores', 'Stores', 'stores', 'operations', 'Store structure management.', 'store_mall_directory_rounded'),
+    ('branches', 'Branches', 'branches', 'operations', 'Branch setup and maintenance.', 'storefront_rounded'),
+    ('products', 'Products', 'products', 'catalog', 'Product catalog management.', 'inventory_2_rounded'),
+    ('categories', 'Categories', 'categories', 'catalog', 'Product category structure.', 'category_rounded'),
+    ('tags', 'Tags', 'tags', 'catalog', 'Tagging and product grouping.', 'sell_rounded'),
+    ('invoices', 'Invoices', 'invoices', 'sales', 'Invoice entry and review.', 'receipt_long_rounded'),
+    ('returns', 'Returns', 'returns', 'sales', 'Return workflow management.', 'assignment_return_rounded'),
+    ('paymentVouchers', 'Payment Vouchers', 'paymentVouchers', 'finance', 'Incoming and outgoing vouchers.', 'account_balance_wallet_rounded'),
+    ('clients', 'Clients', 'clients', 'partners', 'Client account management.', 'support_agent_rounded'),
+    ('suppliers', 'Suppliers', 'suppliers', 'partners', 'Supplier management.', 'apartment_rounded'),
+    ('users', 'Users', 'users', 'access', 'User account administration.', 'person_outline_rounded'),
+    ('roles', 'Roles', 'roles', 'access', 'Role and access structure management.', 'admin_panel_settings_rounded'),
+    ('inventory', 'Inventory', 'inventory', 'operations', 'Inventory operations and tracking.', 'warehouse_rounded'),
+    ('transactions', 'Transactions', 'transactions', 'finance', 'Financial and operational transaction feed.', 'sync_alt_rounded'),
+    ('settings', 'Settings', 'settings', 'core', 'Application preferences and configuration.', 'settings_rounded')
+) as seed(key, title, "routeKey", module, description, icon)
+on conflict ("ownerUuid", key) do nothing;
+
+insert into public.permissions ("ownerUuid", "pageUuid", key, action, description, status)
+select
+  p."ownerUuid",
+  p.uuid,
+  lower('page.' || p.key || '.view'),
+  'view',
+  'Allows navigation to the ' || p.title || ' page.',
+  1
+from public.pages p
+where p."deletedAt" is null
+on conflict ("ownerUuid", key) do nothing;
+
+insert into
+    public.permissions (
+        "ownerUuid",
+        key,
+        action,
+        description,
+        status
+    )
+select oa.uuid, seed.key, seed.action, seed.description, 1
+from public.owner_account oa
+    cross join (
+        values (
+                'users.manage', 'manage', 'Manage user administration tasks.'
+            ), (
+                'roles.manage', 'manage', 'Manage roles and role assignments.'
+            ), (
+                'permissions.manage', 'manage', 'Manage permission catalog and grants.'
+            )
+    ) as seed (key, action, description) on conflict ("ownerUuid", key) do nothing;
+
+create or replace function public.permission_catalog_action(permission_key text)
+returns text
+language sql
+immutable
+as $$
+  select case
+    when permission_key is null or btrim(permission_key) = '' then 'view'
+    when btrim(permission_key) = '*' then 'all'
+    else (string_to_array(lower(btrim(permission_key)), '.'))[array_length(string_to_array(lower(btrim(permission_key)), '.'), 1)]
+  end;
+$$;
+
+create or replace function public.permission_catalog_page_key(permission_key text)
+returns text
+language sql
+immutable
+as $$
+  select case
+    when lower(coalesce(permission_key, '')) like 'page.%.view' then split_part(lower(permission_key), '.', 2)
+    else null
+  end;
+$$;
+
+create or replace function public.permission_json_entries(payload jsonb)
+returns table(permission_key text, is_allowed boolean)
+language plpgsql
+immutable
+as $$
+declare
+  entry record;
+  list_item jsonb;
+  normalized_value text;
+begin
+  if payload is null or payload = '{}'::jsonb then
+    return;
+  end if;
+
+  if jsonb_typeof(payload) <> 'object' then
+    return;
+  end if;
+
+  for entry in select * from jsonb_each(payload)
+  loop
+    if lower(entry.key) = 'allow' and jsonb_typeof(entry.value) = 'array' then
+      for list_item in select value from jsonb_array_elements(entry.value)
+      loop
+        permission_key := lower(trim(both '"' from list_item::text));
+        is_allowed := true;
+        if permission_key <> '' then
+          return next;
+        end if;
+      end loop;
+      continue;
+    end if;
+
+    if lower(entry.key) = 'deny' and jsonb_typeof(entry.value) = 'array' then
+      for list_item in select value from jsonb_array_elements(entry.value)
+      loop
+        permission_key := lower(trim(both '"' from list_item::text));
+        is_allowed := false;
+        if permission_key <> '' then
+          return next;
+        end if;
+      end loop;
+      continue;
+    end if;
+
+    normalized_value := lower(trim(both '"' from entry.value::text));
+    if normalized_value in ('true', '1', 'allow') then
+      permission_key := lower(entry.key);
+      is_allowed := true;
+      return next;
+    elsif normalized_value in ('false', '0', 'deny') then
+      permission_key := lower(entry.key);
+      is_allowed := false;
+      return next;
+    end if;
+  end loop;
+end;
+$$;
+
+create or replace function public.default_permission_payload_for_role(role_name text)
+returns jsonb
+language plpgsql
+immutable
+as $$
+declare
+  normalized_role text;
+begin
+  normalized_role := lower(coalesce(role_name, ''));
+
+  if normalized_role in ('owner', 'admin') then
+    return public.default_owner_permissions();
+  elsif normalized_role = 'manager' then
+    return public.default_manager_permissions();
+  elsif normalized_role = 'staff' then
+    return public.default_staff_permissions();
+  elsif normalized_role = 'viewer' then
+    return public.default_viewer_permissions();
+  elsif normalized_role = 'accountant' then
+    return public.default_accountant_permissions();
+  end if;
+
+  return '{}'::jsonb;
+end;
+$$;
+
+create or replace function public.ensure_permission_catalog_entry(target_owner_uuid uuid, permission_key text)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  normalized_permission text;
+  matched_permission_uuid uuid;
+  matched_page_uuid uuid;
+begin
+  normalized_permission := lower(btrim(coalesce(permission_key, '')));
+  if target_owner_uuid is null or normalized_permission = '' then
+    return null;
+  end if;
+
+  select p.uuid into matched_permission_uuid
+  from public.permissions p
+  where p."ownerUuid" = target_owner_uuid
+    and lower(p.key) = normalized_permission
+  limit 1;
+
+  if matched_permission_uuid is not null then
+    return matched_permission_uuid;
+  end if;
+
+  select pg.uuid into matched_page_uuid
+  from public.pages pg
+  where pg."ownerUuid" = target_owner_uuid
+    and lower(pg.key) = public.permission_catalog_page_key(normalized_permission)
+    and pg."deletedAt" is null
+  limit 1;
+
+  insert into public.permissions (
+    "ownerUuid",
+    "pageUuid",
+    key,
+    action,
+    description,
+    status
+  )
+  values (
+    target_owner_uuid,
+    matched_page_uuid,
+    normalized_permission,
+    public.permission_catalog_action(normalized_permission),
+    'Generated from legacy role permission payload.',
+    1
+  )
+  on conflict ("ownerUuid", key)
+  do update set
+    "pageUuid" = coalesce(public.permissions."pageUuid", excluded."pageUuid"),
+    action = excluded.action,
+    status = 1,
+    "deletedAt" = null,
+    "updatedAt" = public.now_millis()
+  returning uuid into matched_permission_uuid;
+
+  return matched_permission_uuid;
+end;
+$$;
+
+create or replace function public.sync_role_permission_catalog(target_role_uuid uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  role_row record;
+  effective_payload jsonb;
+  current_permission_uuids uuid[] := array[]::uuid[];
+  resolved_permission_uuid uuid;
+  entry record;
+begin
+  if target_role_uuid is null then
+    return;
+  end if;
+
+  select r.uuid, r."ownerUuid", r.name, r."permissionsJson", r.status, r."deletedAt"
+    into role_row
+  from public.roles r
+  where r.uuid = target_role_uuid
+  limit 1;
+
+  if role_row.uuid is null then
+    return;
+  end if;
+
+  if role_row."ownerUuid" is null then
+    return;
+  end if;
+
+  if role_row."deletedAt" is not null or coalesce(role_row.status, 0) <> 1 then
+    update public.role_permissions rp
+    set status = 0,
+        "deletedAt" = coalesce(rp."deletedAt", public.now_millis()),
+        "updatedAt" = public.now_millis()
+    where rp."roleUuid" = target_role_uuid;
+    return;
+  end if;
+
+  effective_payload := coalesce(role_row."permissionsJson", '{}'::jsonb);
+  if effective_payload = '{}'::jsonb then
+    effective_payload := public.default_permission_payload_for_role(role_row.name);
+  end if;
+
+  for entry in
+    select permission_key, is_allowed
+    from public.permission_json_entries(effective_payload)
+  loop
+    resolved_permission_uuid := public.ensure_permission_catalog_entry(role_row."ownerUuid", entry.permission_key);
+    if resolved_permission_uuid is null then
+      continue;
+    end if;
+
+    current_permission_uuids := array_append(current_permission_uuids, resolved_permission_uuid);
+
+    insert into public.role_permissions (
+      "ownerUuid",
+      "roleUuid",
+      "permissionUuid",
+      "isAllowed",
+      status
+    )
+    values (
+      role_row."ownerUuid",
+      role_row.uuid,
+      resolved_permission_uuid,
+      entry.is_allowed,
+      1
+    )
+    on conflict ("ownerUuid", "roleUuid", "permissionUuid")
+    do update set
+      "isAllowed" = excluded."isAllowed",
+      status = 1,
+      "deletedAt" = null,
+      "updatedAt" = public.now_millis();
+  end loop;
+
+  update public.role_permissions rp
+  set status = 0,
+      "deletedAt" = coalesce(rp."deletedAt", public.now_millis()),
+      "updatedAt" = public.now_millis()
+  where rp."roleUuid" = role_row.uuid
+    and (
+      cardinality(current_permission_uuids) = 0
+      or rp."permissionUuid" <> all(current_permission_uuids)
+    );
+end;
+$$;
+
+create or replace function public.sync_all_role_permission_catalog()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  role_row record;
+begin
+  for role_row in
+    select r.uuid
+    from public.roles r
+  loop
+    perform public.sync_role_permission_catalog(role_row.uuid);
+  end loop;
+end;
+$$;
+
+create or replace function public.handle_role_permission_catalog_sync()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform public.sync_role_permission_catalog(new.uuid);
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_sync_role_permission_catalog on public.roles;
+
+create trigger trg_sync_role_permission_catalog
+after insert or update of name, "ownerUuid", "permissionsJson", status, "deletedAt" on public.roles
+for each row execute function public.handle_role_permission_catalog_sync();
+
+select public.sync_all_role_permission_catalog ();
