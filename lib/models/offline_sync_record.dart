@@ -1,4 +1,3 @@
-import 'package:store_management/local_entity_annotations.dart';
 
 class OfflineSyncState {
   static const int synced = 0;
@@ -10,7 +9,6 @@ class OfflineSyncState {
   }
 }
 
-@Entity()
 class OfflineSyncRecord {
   OfflineSyncRecord({
     this.id = 0,
@@ -25,10 +23,8 @@ class OfflineSyncRecord {
     this.isDeleted = false,
   });
 
-  @Id()
   int id;
 
-  @Unique(onConflict: ConflictStrategy.replace)
   String cacheKey;
 
   String modelType;

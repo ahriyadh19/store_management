@@ -2,12 +2,10 @@
 import 'dart:convert';
 
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/local_entity_annotations.dart';
 import 'package:store_management/services/uuid.dart';
 class StoreUser {
   static const Object _unset = Object();
 
-  @Id()
   int id = 0;
   String uuid;
   String storeUuid;

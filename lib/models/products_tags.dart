@@ -2,10 +2,8 @@
 import 'dart:convert';
 
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/local_entity_annotations.dart';
 import 'package:store_management/services/uuid.dart';
 class ProductsTags {
-  @Id()
   int id = 0;
   String uuid;
   String productUuid;

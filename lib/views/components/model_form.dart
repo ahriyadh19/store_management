@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:store_management/data/entity_mapper.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/views/components/permission_visual_editor_dialog.dart';
 
@@ -82,8 +83,7 @@ class ModelFormDefinition<T extends Object> {
   const ModelFormDefinition({
     this.tableName,
     required this.fields,
-    required this.fromMap,
-    required this.toMap,
+    required this.mapper,
     required this.sampleModel,
     this.tableFieldPriorityKeys = const <String>[],
     this.queryDelegate,
@@ -96,8 +96,7 @@ class ModelFormDefinition<T extends Object> {
 
   final String? tableName;
   final List<ModelFormFieldDefinition> fields;
-  final T Function(Map<String, dynamic> map) fromMap;
-  final Map<String, dynamic> Function(T model) toMap;
+  final EntityMapper<T> mapper;
   final T sampleModel;
   final List<String> tableFieldPriorityKeys;
   final ModelQueryDelegate<T>? queryDelegate;
@@ -107,11 +106,15 @@ class ModelFormDefinition<T extends Object> {
   final ModelAfterCreateHook<T>? afterCreateHook;
   final ModelPrepareCreateValuesHook? prepareCreateValues;
 
+  T Function(Map<String, dynamic> map) get fromMap => mapper.fromDomainMap;
+
+  Map<String, dynamic> Function(T model) get toMap => mapper.toDomainMap;
+
   T buildModel(Map<String, dynamic> values, {T? existingModel}) {
     final now = DateTime.now().millisecondsSinceEpoch;
-    final existingData = existingModel == null ? const <String, dynamic>{} : toMap(existingModel);
+    final existingData = existingModel == null ? const <String, dynamic>{} : mapper.toDomainMap(existingModel);
 
-    return fromMap({
+    return mapper.fromDomainMap({
       ...existingData,
       ...values,
       'id': values['id'] ?? existingData['id'] ?? 0,

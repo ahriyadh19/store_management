@@ -83,6 +83,7 @@ For rollout details, see:
 
 - docs/operating-model-upgrade.md
 - docs/project-tracking.md
+- docs/data-architecture.md
 
 ## Requirements
 

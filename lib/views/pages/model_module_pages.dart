@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
+import 'package:store_management/data/entity_mapper.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/models/access_page.dart';
 import 'package:store_management/models/access_permission.dart';
@@ -1363,20 +1364,20 @@ ModelFormDefinition<T> _serverBackedDefinition<T extends Object>({
   List<String> tableFieldPriorityKeys = const <String>[],
   ModelAfterCreateHook<T>? afterCreateHook,
 }) {
-  final supabaseQuery = _supabaseQueryDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap);
-  final supabaseCreate = _supabaseCreateDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap);
-  final supabaseUpdate = _supabaseUpdateDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap);
-  final supabaseDelete = _supabaseDeleteDelegate(tableName: tableName, toMap: toMap);
-  final localQuery = _localQueryDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap);
-  final localCreate = _localCreateDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap);
-  final localUpdate = _localUpdateDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap);
-  final localDelete = _localDeleteDelegate(tableName: tableName, toMap: toMap);
+  final mapper = EntityMapper<T>(fromDataMap: fromMap, toDataMap: toMap);
+  final supabaseQuery = _supabaseQueryDelegate(tableName: tableName, mapper: mapper);
+  final supabaseCreate = _supabaseCreateDelegate(tableName: tableName, mapper: mapper);
+  final supabaseUpdate = _supabaseUpdateDelegate(tableName: tableName, mapper: mapper);
+  final supabaseDelete = _supabaseDeleteDelegate(tableName: tableName, mapper: mapper);
+  final localQuery = _localQueryDelegate(tableName: tableName, mapper: mapper);
+  final localCreate = _localCreateDelegate(tableName: tableName, mapper: mapper);
+  final localUpdate = _localUpdateDelegate(tableName: tableName, mapper: mapper);
+  final localDelete = _localDeleteDelegate(tableName: tableName, mapper: mapper);
 
   return ModelFormDefinition<T>(
     tableName: tableName,
     fields: fields,
-    fromMap: fromMap,
-    toMap: toMap,
+    mapper: mapper,
     sampleModel: sampleModel,
     tableFieldPriorityKeys: tableFieldPriorityKeys,
     afterCreateHook: afterCreateHook,
@@ -1389,7 +1390,7 @@ ModelFormDefinition<T> _serverBackedDefinition<T extends Object>({
           return localQuery(request);
         case StoragePreference.hybrid:
           try {
-            return await _hybridQueryDelegate(tableName: tableName, fromMap: fromMap, toMap: toMap)(request);
+            return await _hybridQueryDelegate(tableName: tableName, mapper: mapper)(request);
           } catch (_) {
             return localQuery(request);
           }
@@ -1449,28 +1450,28 @@ ModelFormDefinition<T> _serverBackedDefinition<T extends Object>({
   );
 }
 
-ModelQueryDelegate<T> _supabaseQueryDelegate<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) {
+ModelQueryDelegate<T> _supabaseQueryDelegate<T extends Object>({required String tableName, required EntityMapper<T> mapper}) {
   return (request) async {
-    final records = await _fetchSupabaseRecords(tableName: tableName, fromMap: fromMap, toMap: toMap);
-    return _buildQueryResult(records: records, request: request, toMap: toMap);
+    final records = await _fetchSupabaseRecords(tableName: tableName, mapper: mapper);
+    return _buildQueryResult(records: records, request: request, toMap: mapper.toDomainMap);
   };
 }
 
-ModelQueryDelegate<T> _hybridQueryDelegate<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) {
+ModelQueryDelegate<T> _hybridQueryDelegate<T extends Object>({required String tableName, required EntityMapper<T> mapper}) {
   return (request) async {
-    final remoteRecords = await _fetchSupabaseRecords(tableName: tableName, fromMap: fromMap, toMap: toMap);
-    final mergedRecords = _mergePendingLocalRecords(tableName: tableName, remoteRecords: remoteRecords, fromMap: fromMap, toMap: toMap);
-    return _buildQueryResult(records: mergedRecords, request: request, toMap: toMap);
+    final remoteRecords = await _fetchSupabaseRecords(tableName: tableName, mapper: mapper);
+    final mergedRecords = _mergePendingLocalRecords(tableName: tableName, remoteRecords: remoteRecords, mapper: mapper);
+    return _buildQueryResult(records: mergedRecords, request: request, toMap: mapper.toDomainMap);
   };
 }
 
-ModelCreateDelegate<T> _supabaseCreateDelegate<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) {
+ModelCreateDelegate<T> _supabaseCreateDelegate<T extends Object>({required String tableName, required EntityMapper<T> mapper}) {
   return (model) async {
     final client = Supabase.instance.client;
     final scope = await _resolveOwnerScope();
     final payload = _enforceTenantPayloadScope(
       tableName,
-      Map<String, dynamic>.from(toMap(model))
+      Map<String, dynamic>.from(mapper.toRemotePayload(model))
       ..remove('id')
         ..removeWhere((key, value) => value == null),
       scope,
@@ -1484,15 +1485,15 @@ ModelCreateDelegate<T> _supabaseCreateDelegate<T extends Object>({required Strin
       }
     }
     final normalizedInserted = _applySyncMetadataToPayload(Map<String, dynamic>.from(inserted), syncState: OfflineSyncState.synced, fallbackUpdatedAtMillis: DateTime.now().millisecondsSinceEpoch);
-    return fromMap(normalizedInserted);
+    return mapper.fromRemotePayload(normalizedInserted);
   };
 }
 
-ModelUpdateDelegate<T> _supabaseUpdateDelegate<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) {
+ModelUpdateDelegate<T> _supabaseUpdateDelegate<T extends Object>({required String tableName, required EntityMapper<T> mapper}) {
   return (model) async {
     final client = Supabase.instance.client;
     final scope = await _resolveOwnerScope();
-    final payload = _enforceTenantPayloadScope(tableName, Map<String, dynamic>.from(toMap(model))..removeWhere((key, value) => value == null), scope);
+    final payload = _enforceTenantPayloadScope(tableName, Map<String, dynamic>.from(mapper.toRemotePayload(model))..removeWhere((key, value) => value == null), scope);
 
     final updatedAt = DateTime.now().millisecondsSinceEpoch;
     payload['updatedAt'] = updatedAt;
@@ -1520,15 +1521,15 @@ ModelUpdateDelegate<T> _supabaseUpdateDelegate<T extends Object>({required Strin
       return model;
     }
     final normalizedUpdated = _applySyncMetadataToPayload(Map<String, dynamic>.from(updated), syncState: OfflineSyncState.synced, fallbackUpdatedAtMillis: DateTime.now().millisecondsSinceEpoch);
-    return fromMap(normalizedUpdated);
+    return mapper.fromRemotePayload(normalizedUpdated);
   };
 }
 
-ModelDeleteDelegate<T> _supabaseDeleteDelegate<T extends Object>({required String tableName, required Map<String, dynamic> Function(T model) toMap}) {
+ModelDeleteDelegate<T> _supabaseDeleteDelegate<T extends Object>({required String tableName, required EntityMapper<T> mapper}) {
   return (model) async {
     final client = Supabase.instance.client;
     final scope = await _resolveOwnerScope();
-    final data = _enforceTenantPayloadScope(tableName, toMap(model), scope);
+    final data = _enforceTenantPayloadScope(tableName, mapper.toRemotePayload(model), scope);
     final uuid = data['uuid'];
     final id = data['id'];
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -1553,7 +1554,7 @@ ModelDeleteDelegate<T> _supabaseDeleteDelegate<T extends Object>({required Strin
   };
 }
 
-ModelQueryDelegate<T> _localQueryDelegate<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) {
+ModelQueryDelegate<T> _localQueryDelegate<T extends Object>({required String tableName, required EntityMapper<T> mapper}) {
   return (request) async {
     final database = _requireLocalDatabase();
     final records = <T>[];
@@ -1565,21 +1566,21 @@ ModelQueryDelegate<T> _localQueryDelegate<T extends Object>({required String tab
         if (deletedAt != null) {
           continue;
         }
-        records.add(fromMap(payload));
+        records.add(mapper.fromLocalPayload(payload));
       } catch (_) {
         // Ignore malformed cached records.
       }
     }
 
-    return _buildQueryResult(records: records, request: request, toMap: toMap);
+    return _buildQueryResult(records: records, request: request, toMap: mapper.toDomainMap);
   };
 }
 
-Future<T> Function(T model, {int syncState}) _localCreateDelegate<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) {
+Future<T> Function(T model, {int syncState}) _localCreateDelegate<T extends Object>({required String tableName, required EntityMapper<T> mapper}) {
   return (model, {int syncState = OfflineSyncState.pendingUpsert}) async {
     final database = _requireLocalDatabase();
     final now = DateTime.now().millisecondsSinceEpoch;
-    final payload = Map<String, dynamic>.from(toMap(model))
+    final payload = Map<String, dynamic>.from(mapper.toLocalPayload(model))
       ..remove('id')
       ..removeWhere((key, value) => value == null);
 
@@ -1607,15 +1608,15 @@ Future<T> Function(T model, {int syncState}) _localCreateDelegate<T extends Obje
       }
     }
 
-    return fromMap(normalizedPayload);
+    return mapper.fromLocalPayload(normalizedPayload);
   };
 }
 
-Future<T> Function(T model, {int syncState}) _localUpdateDelegate<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) {
+Future<T> Function(T model, {int syncState}) _localUpdateDelegate<T extends Object>({required String tableName, required EntityMapper<T> mapper}) {
   return (model, {int syncState = OfflineSyncState.pendingUpsert}) async {
     final database = _requireLocalDatabase();
     final now = DateTime.now().millisecondsSinceEpoch;
-    final payload = Map<String, dynamic>.from(toMap(model))..removeWhere((key, value) => value == null);
+    final payload = Map<String, dynamic>.from(mapper.toLocalPayload(model))..removeWhere((key, value) => value == null);
 
     payload['updatedAt'] = now;
     payload['deletedAt'] = null;
@@ -1640,15 +1641,15 @@ Future<T> Function(T model, {int syncState}) _localUpdateDelegate<T extends Obje
       }
     }
 
-    return fromMap(normalizedPayload);
+    return mapper.fromLocalPayload(normalizedPayload);
   };
 }
 
-Future<void> Function(T model, {int syncState}) _localDeleteDelegate<T extends Object>({required String tableName, required Map<String, dynamic> Function(T model) toMap}) {
+Future<void> Function(T model, {int syncState}) _localDeleteDelegate<T extends Object>({required String tableName, required EntityMapper<T> mapper}) {
   return (model, {int syncState = OfflineSyncState.pendingDelete}) async {
     final database = _requireLocalDatabase();
     final now = DateTime.now().millisecondsSinceEpoch;
-    final payload = Map<String, dynamic>.from(toMap(model))
+    final payload = Map<String, dynamic>.from(mapper.toLocalPayload(model))
       ..removeWhere((key, value) => value == null)
       ..['updatedAt'] = now;
 
@@ -1750,8 +1751,7 @@ void _recalculatePurchaseOrderTotalLocal({required String purchaseOrderUuid, req
 List<T> _mergePendingLocalRecords<T extends Object>({
   required String tableName,
   required List<T> remoteRecords,
-  required T Function(Map<String, dynamic> map) fromMap,
-  required Map<String, dynamic> Function(T model) toMap,
+  required EntityMapper<T> mapper,
 }) {
   final database = LocalDatabase.current;
   if (database == null || !database.isAvailable) {
@@ -1761,7 +1761,7 @@ List<T> _mergePendingLocalRecords<T extends Object>({
   final recordByKey = <String, T>{};
   final remoteUpdatedAtByKey = <String, int?>{};
   for (final record in remoteRecords) {
-    final payload = toMap(record);
+    final payload = mapper.toRemotePayload(record);
     final recordUuid = _recordUuidFromPayload(payload, fallback: payload.toString());
     recordByKey[recordUuid] = record;
     remoteUpdatedAtByKey[recordUuid] = _updatedAtMillisOrNullFromPayload(payload);
@@ -1788,7 +1788,7 @@ List<T> _mergePendingLocalRecords<T extends Object>({
     }
 
     try {
-      recordByKey[localRecord.recordUuid] = fromMap(Map<String, dynamic>.from(payload));
+      recordByKey[localRecord.recordUuid] = mapper.fromLocalPayload(Map<String, dynamic>.from(payload));
     } catch (_) {
       // Ignore malformed pending records.
     }
@@ -1829,7 +1829,7 @@ ModelQueryResult<T> _buildQueryResult<T extends Object>({required List<T> record
   return ModelQueryResult<T>(records: paged, totalCount: totalCount, overallCount: overallCount);
 }
 
-Future<List<T>> _fetchSupabaseRecords<T extends Object>({required String tableName, required T Function(Map<String, dynamic> map) fromMap, required Map<String, dynamic> Function(T model) toMap}) async {
+Future<List<T>> _fetchSupabaseRecords<T extends Object>({required String tableName, required EntityMapper<T> mapper}) async {
   final client = Supabase.instance.client;
   final scope = await _resolveOwnerScope();
   dynamic query = client.from(tableName).select();
@@ -1845,17 +1845,17 @@ Future<List<T>> _fetchSupabaseRecords<T extends Object>({required String tableNa
       if (deletedAt != null) {
         continue;
       }
-      records.add(fromMap(normalizedRow));
+      records.add(mapper.fromRemotePayload(normalizedRow));
     } catch (_) {
       // Skip malformed rows so one bad record does not break the full list.
     }
   }
 
-  _cacheRemoteRecords(tableName: tableName, records: records, toMap: toMap);
+  _cacheRemoteRecords(tableName: tableName, records: records, mapper: mapper);
   return records;
 }
 
-void _cacheRemoteRecords<T extends Object>({required String tableName, required List<T> records, required Map<String, dynamic> Function(T model) toMap}) {
+void _cacheRemoteRecords<T extends Object>({required String tableName, required List<T> records, required EntityMapper<T> mapper}) {
   final database = LocalDatabase.current;
   if (database == null || !database.isAvailable) {
     return;
@@ -1864,7 +1864,7 @@ void _cacheRemoteRecords<T extends Object>({required String tableName, required 
   final remoteRecordUuids = <String>{};
   for (final record in records) {
     final payload = _applySyncMetadataToPayload(
-      Map<String, dynamic>.from(toMap(record))..removeWhere((key, value) => value == null),
+      Map<String, dynamic>.from(mapper.toRemotePayload(record))..removeWhere((key, value) => value == null),
       syncState: OfflineSyncState.synced,
       fallbackUpdatedAtMillis: DateTime.now().millisecondsSinceEpoch,
     );
