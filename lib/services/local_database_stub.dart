@@ -71,6 +71,10 @@ class LocalDatabase {
 
   List<OfflineSyncRecord> getRecordsForType(String modelType) => const [];
 
+  Map<String, dynamic>? getRow({required String modelType, required String recordUuid}) => null;
+
+  List<Map<String, dynamic>> getRowsForType(String modelType) => const [];
+
   List<OfflineSyncRecord> getConflictedRecords() => const [];
 
   bool removeRecord({required String modelType, required String recordUuid}) => false;

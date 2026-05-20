@@ -217,7 +217,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(called, 0);
-    expect(find.text('Enter a valid number'), findsOneWidget);
+    expect(find.text('Unit cost must be a number'), findsOneWidget);
   });
 
   testWidgets('purchase receiving blocks submit when required field is empty', (tester) async {

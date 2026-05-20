@@ -138,14 +138,21 @@ class AccessControlSnapshot {
 }
 
 class AccessControlService extends ChangeNotifier {
-  AccessControlService({SupabaseClient? client}) : _client = client ?? Supabase.instance.client;
+  AccessControlService({SupabaseClient? client}) : _client = client ?? _tryResolveSupabaseClient() {
+    if (_client == null) {
+      _snapshot = AccessControlSnapshot.initial().copyWith(lastError: _supabaseUnavailableError);
+    }
+  }
 
   static final AccessControlService instance = AccessControlService();
+  static const String _supabaseUnavailableError = 'Supabase client is not initialized.';
 
-  final SupabaseClient _client;
+  SupabaseClient? _client;
   AccessControlSnapshot _snapshot = AccessControlSnapshot.initial();
 
   AccessControlSnapshot get snapshot => _snapshot;
+
+  bool get isSupabaseUnavailable => _snapshot.lastError == _supabaseUnavailableError;
 
   bool can(String permission) => _snapshot.can(permission);
 
@@ -156,10 +163,17 @@ class AccessControlService extends ChangeNotifier {
   bool canTableAction(String tableName, String action) => _snapshot.canTableAction(tableName, action);
 
   Future<void> refresh({bool provisionIfNeeded = false}) async {
+    final client = _resolveClient();
+    if (client == null) {
+      _snapshot = AccessControlSnapshot.initial().copyWith(lastError: _supabaseUnavailableError);
+      notifyListeners();
+      return;
+    }
+
     _snapshot = _snapshot.copyWith(isLoading: true, clearError: true);
     notifyListeners();
 
-    final authUser = _client.auth.currentUser;
+    final authUser = client.auth.currentUser;
     if (authUser == null) {
       _snapshot = AccessControlSnapshot.initial();
       notifyListeners();
@@ -289,14 +303,14 @@ class AccessControlService extends ChangeNotifier {
 
   Future<void> _bootstrapCurrentUserAccessBestEffort() async {
     try {
-      await _client.rpc('bootstrap_current_user_access');
+      await _requireClient().rpc('bootstrap_current_user_access');
     } catch (_) {
       // Bootstrap is best-effort. Existing systems may use a custom provisioning process.
     }
   }
 
   Future<String?> _loadCurrentUserUuid(String authUserId) async {
-    final rows = await _client.from('users').select('uuid').eq('auth_user_id', authUserId).limit(1);
+    final rows = await _requireClient().from('users').select('uuid').eq('auth_user_id', authUserId).limit(1);
     final list = rows as List<dynamic>;
     if (list.isEmpty) {
       return null;
@@ -312,7 +326,7 @@ class AccessControlService extends ChangeNotifier {
   }
 
   Future<List<dynamic>> _loadMembershipRows(String userUuid) async {
-    final rows = await _client
+    final rows = await _requireClient()
         .from('owner_user_membership')
         .select('uuid,ownerUuid,role,permissionsJson,status,deletedAt,createdAt')
         .eq('userUuid', userUuid)
@@ -324,7 +338,7 @@ class AccessControlService extends ChangeNotifier {
   }
 
   Future<List<Map<String, dynamic>>> _loadRoleRowsForUser({required String userUuid, required String? ownerUuid}) async {
-    final userRoleRows = await _client
+    final userRoleRows = await _requireClient()
         .from('user_roles')
         .select('roleUuid,status,deletedAt')
         .eq('userUuid', userUuid)
@@ -342,7 +356,7 @@ class AccessControlService extends ChangeNotifier {
       return const <Map<String, dynamic>>[];
     }
 
-    final rows = await _client
+    final rows = await _requireClient()
         .from('roles')
         .select('uuid,name,permissionsJson,ownerUuid,status,deletedAt')
         .inFilter('uuid', roleUuids.toList(growable: false))
@@ -353,7 +367,7 @@ class AccessControlService extends ChangeNotifier {
   }
 
   Future<List<Map<String, dynamic>>> _loadPermissionScopeRows(Set<String> membershipUuids) async {
-    final rows = await _client
+    final rows = await _requireClient()
         .from('owner_permission_scope')
         .select('permission,status,deletedAt')
         .inFilter('ownerMembershipUuid', membershipUuids.toList(growable: false))
@@ -368,7 +382,12 @@ class AccessControlService extends ChangeNotifier {
       return const <_ExplicitPermissionGrant>[];
     }
 
-    dynamic query = _client.from('role_permissions').select('permissionUuid,isAllowed,ownerUuid,status,deletedAt').inFilter('roleUuid', roleUuids.toList(growable: false)).eq('status', 1).isFilter('deletedAt', null);
+    dynamic query = _requireClient()
+        .from('role_permissions')
+        .select('permissionUuid,isAllowed,ownerUuid,status,deletedAt')
+        .inFilter('roleUuid', roleUuids.toList(growable: false))
+        .eq('status', 1)
+        .isFilter('deletedAt', null);
 
     if (ownerUuid != null && ownerUuid.trim().isNotEmpty) {
       query = query.eq('ownerUuid', ownerUuid);
@@ -379,7 +398,7 @@ class AccessControlService extends ChangeNotifier {
   }
 
   Future<List<_ExplicitPermissionGrant>> _loadUserPermissionGrants({required String userUuid, required String? ownerUuid}) async {
-    dynamic query = _client.from('user_permissions').select('permissionUuid,isAllowed,ownerUuid,status,deletedAt').eq('userUuid', userUuid).eq('status', 1).isFilter('deletedAt', null);
+    dynamic query = _requireClient().from('user_permissions').select('permissionUuid,isAllowed,ownerUuid,status,deletedAt').eq('userUuid', userUuid).eq('status', 1).isFilter('deletedAt', null);
 
     if (ownerUuid != null && ownerUuid.trim().isNotEmpty) {
       query = query.eq('ownerUuid', ownerUuid);
@@ -397,7 +416,7 @@ class AccessControlService extends ChangeNotifier {
       return const <_ExplicitPermissionGrant>[];
     }
 
-    final permissionRows = await _client.from('permissions').select('uuid,key,status,deletedAt').inFilter('uuid', permissionUuids.toList(growable: false)).eq('status', 1).isFilter('deletedAt', null);
+    final permissionRows = await _requireClient().from('permissions').select('uuid,key,status,deletedAt').inFilter('uuid', permissionUuids.toList(growable: false)).eq('status', 1).isFilter('deletedAt', null);
 
     final permissionByUuid = <String, String>{
       for (final row in (permissionRows as List<dynamic>).map(_normalizeRow))
@@ -433,6 +452,40 @@ class AccessControlService extends ChangeNotifier {
       return Map<String, dynamic>.from(row);
     }
     return const <String, dynamic>{};
+  }
+
+  SupabaseClient? _resolveClient() {
+    final existingClient = _client;
+    if (existingClient != null) {
+      return existingClient;
+    }
+
+    final resolvedClient = _tryResolveSupabaseClient();
+    if (resolvedClient != null) {
+      _client = resolvedClient;
+      if (_snapshot.lastError == _supabaseUnavailableError) {
+        _snapshot = _snapshot.copyWith(clearError: true);
+      }
+    }
+    return resolvedClient;
+  }
+
+  SupabaseClient _requireClient() {
+    final client = _resolveClient();
+    if (client == null) {
+      throw StateError(_supabaseUnavailableError);
+    }
+    return client;
+  }
+
+  static SupabaseClient? _tryResolveSupabaseClient() {
+    try {
+      return Supabase.instance.client;
+    } on AssertionError {
+      return null;
+    } catch (_) {
+      return null;
+    }
   }
 }
 

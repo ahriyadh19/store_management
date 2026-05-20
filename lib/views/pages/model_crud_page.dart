@@ -1434,7 +1434,11 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   bool get _canDeleteRecords => _canTableAction('delete');
 
   bool _canTableAction(String action) {
-    final accessSnapshot = AccessControlService.instance.snapshot;
+    final accessService = AccessControlService.instance;
+    final accessSnapshot = accessService.snapshot;
+    if (accessService.isSupabaseUnavailable) {
+      return true;
+    }
     if (accessSnapshot.isLoading || accessSnapshot.lastError != null) {
       return action == 'read';
     }

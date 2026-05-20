@@ -38,6 +38,51 @@ class _LocalStoreDatabase extends _$_LocalStoreDatabase {
 class LocalDatabase {
   static const String branchModelType = 'branch';
   static const String storeBranchesModelType = 'store_branches';
+  static const Set<String> managedModelTypes = <String>{
+    'store',
+    'branch',
+    'products',
+    'category',
+    'tags',
+    'client',
+    'supplier',
+    'users',
+    'roles',
+    'user_roles',
+    'pages',
+    'permissions',
+    'role_permissions',
+    'user_permissions',
+    'store_supplier',
+    'store_client',
+    'store_user',
+    'store_branches',
+    'branch_product',
+    'store_invoice_item',
+    'payment_allocation',
+    'store_return_item',
+    'store_invoice',
+    'store_return',
+    'store_payment_voucher',
+    'inventory_movement',
+    'store_financial_transaction',
+    'purchase_order',
+    'purchase_order_item',
+    'supplier_invoice',
+    'inventory_batch',
+    'inventory_transaction',
+    'transfer_order',
+    'transfer_order_item',
+    'sales_order',
+    'sales_invoice',
+    'sales_return',
+    'branch_price',
+    'promotion_rule',
+    'staff_shift',
+    'staff_attendance',
+    'staff_activity_log',
+  };
+  static const String _recordUuidColumn = '__record_uuid';
 
   LocalDatabase._(this._database, this._databaseFile);
 
@@ -48,6 +93,9 @@ class LocalDatabase {
   final _LocalStoreDatabase _database;
   final File _databaseFile;
   final Map<String, OfflineSyncRecord> _recordsByCacheKey = <String, OfflineSyncRecord>{};
+  final Map<String, Map<String, Map<String, dynamic>>> _rowsByTable = <String, Map<String, Map<String, dynamic>>>{};
+  final Map<String, Set<String>> _tableColumns = <String, Set<String>>{};
+  final Map<String, Map<String, String>> _tableColumnTypes = <String, Map<String, String>>{};
   int _nextId = 1;
   bool _isClosed = false;
 
@@ -61,6 +109,8 @@ class LocalDatabase {
     final databaseFile = File(p.join(databaseDirectory.path, 'store_management.sqlite'));
     final database = _LocalStoreDatabase(NativeDatabase.createInBackground(databaseFile));
     final localDatabase = LocalDatabase._(database, databaseFile);
+    await localDatabase._initializeBusinessTables();
+    await localDatabase._hydrateRowCache();
     await localDatabase._hydrateCache();
     _current = localDatabase;
     return localDatabase;
@@ -94,6 +144,7 @@ class LocalDatabase {
     );
 
     _recordsByCacheKey[cacheKey] = record;
+    _cacheBusinessRow(modelType: modelType, recordUuid: recordUuid, payloadJson: payloadJson);
     unawaited(_upsertRecord(record));
     return _cloneRecord(record);
   }
@@ -144,6 +195,26 @@ class LocalDatabase {
         .toList(growable: false);
   }
 
+  Map<String, dynamic>? getRow({required String modelType, required String recordUuid}) {
+    final tableRows = _rowsByTable[modelType];
+    if (tableRows == null) {
+      return null;
+    }
+    final row = tableRows[recordUuid];
+    if (row == null) {
+      return null;
+    }
+    return _clonePayload(row);
+  }
+
+  List<Map<String, dynamic>> getRowsForType(String modelType) {
+    final tableRows = _rowsByTable[modelType];
+    if (tableRows == null) {
+      return const <Map<String, dynamic>>[];
+    }
+    return tableRows.values.map(_clonePayload).toList(growable: false);
+  }
+
   bool removeRecord({required String modelType, required String recordUuid}) {
     final cacheKey = _cacheKey(modelType, recordUuid);
     final removed = _recordsByCacheKey.remove(cacheKey);
@@ -151,21 +222,23 @@ class LocalDatabase {
       return false;
     }
 
+    _rowsByTable[modelType]?.remove(recordUuid);
     unawaited((_database.delete(_database.syncRecords)..where((tbl) => tbl.cacheKey.equals(cacheKey))).go());
+    unawaited(_deleteBusinessRow(modelType: modelType, recordUuid: recordUuid));
     return true;
   }
 
   Branch? getBranch(String branchUuid) {
-    final record = getRecord(modelType: branchModelType, recordUuid: branchUuid);
-    if (record == null || record.isDeleted) {
+    final row = getRow(modelType: branchModelType, recordUuid: branchUuid);
+    if (row == null) {
       return null;
     }
 
-    return Branch.fromJson(record.payloadJson);
+    return Branch.fromMap(row);
   }
 
   List<Branch> getBranches() {
-    return getRecordsForType(branchModelType).where((record) => !record.isDeleted).map((record) => Branch.fromJson(record.payloadJson)).toList(growable: false);
+    return getRowsForType(branchModelType).where((row) => row['deletedAt'] == null && row['deleted_at'] == null).map(Branch.fromMap).toList(growable: false);
   }
 
   bool removeBranch(String branchUuid) {
@@ -173,16 +246,16 @@ class LocalDatabase {
   }
 
   StoreBranches? getStoreBranches(String storeBranchesUuid) {
-    final record = getRecord(modelType: storeBranchesModelType, recordUuid: storeBranchesUuid);
-    if (record == null || record.isDeleted) {
+    final row = getRow(modelType: storeBranchesModelType, recordUuid: storeBranchesUuid);
+    if (row == null) {
       return null;
     }
 
-    return StoreBranches.fromJson(record.payloadJson);
+    return StoreBranches.fromMap(row);
   }
 
   List<StoreBranches> getStoreBranchesList() {
-    return getRecordsForType(storeBranchesModelType).where((record) => !record.isDeleted).map((record) => StoreBranches.fromJson(record.payloadJson)).toList(growable: false);
+    return getRowsForType(storeBranchesModelType).where((row) => row['deletedAt'] == null && row['deleted_at'] == null).map(StoreBranches.fromMap).toList(growable: false);
   }
 
   bool removeStoreBranches(String storeBranchesUuid) {
@@ -192,7 +265,13 @@ class LocalDatabase {
   int clearAllRecords() {
     final count = _recordsByCacheKey.length;
     _recordsByCacheKey.clear();
+    for (final tableRows in _rowsByTable.values) {
+      tableRows.clear();
+    }
     unawaited(_database.delete(_database.syncRecords).go());
+    for (final modelType in managedModelTypes) {
+      unawaited(_database.customStatement('DELETE FROM ${_quotedIdentifier(modelType)}'));
+    }
     return count;
   }
 
@@ -270,6 +349,111 @@ class LocalDatabase {
     _nextId = _recordsByCacheKey.values.map((record) => record.id).reduce((left, right) => left > right ? left : right) + 1;
   }
 
+  Future<void> _initializeBusinessTables() async {
+    for (final modelType in managedModelTypes) {
+      await _ensureBusinessTable(modelType);
+    }
+  }
+
+  Future<void> _hydrateRowCache() async {
+    for (final modelType in managedModelTypes) {
+      await _ensureBusinessTable(modelType);
+      final rows = await _database.customSelect('SELECT * FROM ${_quotedIdentifier(modelType)}').get();
+      final columnTypes = _tableColumnTypes[modelType] ?? const <String, String>{};
+      final tableRows = <String, Map<String, dynamic>>{};
+
+      for (final row in rows) {
+        final data = Map<String, dynamic>.from(row.data);
+        final recordUuid = data.remove(_recordUuidColumn)?.toString();
+        if (recordUuid == null || recordUuid.isEmpty) {
+          continue;
+        }
+
+        final payload = <String, dynamic>{};
+        data.forEach((key, value) {
+          payload[key] = _restoreStoredValue(value, declaredType: columnTypes[key]);
+        });
+        tableRows[recordUuid] = payload;
+      }
+
+      _rowsByTable[modelType] = tableRows;
+    }
+  }
+
+  Future<void> _ensureBusinessTable(String modelType) async {
+    if (_tableColumns.containsKey(modelType)) {
+      _rowsByTable.putIfAbsent(modelType, () => <String, Map<String, dynamic>>{});
+      return;
+    }
+
+    await _database.customStatement('CREATE TABLE IF NOT EXISTS ${_quotedIdentifier(modelType)} (${_quotedIdentifier(_recordUuidColumn)} TEXT NOT NULL UNIQUE)');
+
+    final pragmaRows = await _database.customSelect('PRAGMA table_info(${_quotedIdentifier(modelType)})').get();
+    final columns = <String>{};
+    final columnTypes = <String, String>{};
+    for (final pragmaRow in pragmaRows) {
+      final data = pragmaRow.data;
+      final name = data['name']?.toString();
+      if (name == null || name.isEmpty) {
+        continue;
+      }
+      columns.add(name);
+      columnTypes[name] = (data['type']?.toString() ?? 'TEXT').toUpperCase();
+    }
+
+    _tableColumns[modelType] = columns;
+    _tableColumnTypes[modelType] = columnTypes;
+    _rowsByTable.putIfAbsent(modelType, () => <String, Map<String, dynamic>>{});
+  }
+
+  void _cacheBusinessRow({required String modelType, required String recordUuid, required String payloadJson}) {
+    try {
+      final payload = Map<String, dynamic>.from(jsonDecode(payloadJson) as Map);
+      _rowsByTable.putIfAbsent(modelType, () => <String, Map<String, dynamic>>{})[recordUuid] = _clonePayload(payload);
+      unawaited(_upsertBusinessRow(modelType: modelType, recordUuid: recordUuid, payload: payload));
+    } catch (_) {
+      // Ignore malformed payloads in the sync metadata cache.
+    }
+  }
+
+  Future<void> _upsertBusinessRow({required String modelType, required String recordUuid, required Map<String, dynamic> payload}) async {
+    await _ensureBusinessTable(modelType);
+    await _ensureBusinessColumns(modelType, payload);
+
+    final columns = <String>[_recordUuidColumn, ...payload.keys];
+    final placeholders = List<String>.filled(columns.length, '?').join(', ');
+    final assignments = payload.keys.map((column) => '${_quotedIdentifier(column)} = excluded.${_quotedIdentifier(column)}').join(', ');
+    final values = <Object?>[recordUuid, ...payload.keys.map((key) => _toStoredValue(payload[key]))];
+
+    await _database.customStatement(
+      'INSERT INTO ${_quotedIdentifier(modelType)} (${columns.map(_quotedIdentifier).join(', ')}) VALUES ($placeholders) '
+      'ON CONFLICT(${_quotedIdentifier(_recordUuidColumn)}) DO UPDATE SET $assignments',
+      values,
+    );
+  }
+
+  Future<void> _ensureBusinessColumns(String modelType, Map<String, dynamic> payload) async {
+    await _ensureBusinessTable(modelType);
+    final existingColumns = _tableColumns[modelType]!;
+    final existingTypes = _tableColumnTypes[modelType]!;
+
+    for (final entry in payload.entries) {
+      if (existingColumns.contains(entry.key)) {
+        continue;
+      }
+
+      final sqliteType = _sqliteTypeForValue(entry.value);
+      await _database.customStatement('ALTER TABLE ${_quotedIdentifier(modelType)} ADD COLUMN ${_quotedIdentifier(entry.key)} $sqliteType');
+      existingColumns.add(entry.key);
+      existingTypes[entry.key] = sqliteType;
+    }
+  }
+
+  Future<void> _deleteBusinessRow({required String modelType, required String recordUuid}) async {
+    await _ensureBusinessTable(modelType);
+    await _database.customStatement('DELETE FROM ${_quotedIdentifier(modelType)} WHERE ${_quotedIdentifier(_recordUuidColumn)} = ?', <Object?>[recordUuid]);
+  }
+
   Future<void> _upsertRecord(OfflineSyncRecord record) {
     return _database.into(_database.syncRecords).insertOnConflictUpdate(
       SyncRecordsCompanion.insert(
@@ -300,6 +484,81 @@ class LocalDatabase {
       syncState: record.syncState,
       isDeleted: record.isDeleted,
     );
+  }
+
+  Map<String, dynamic> _clonePayload(Map<String, dynamic> payload) {
+    return Map<String, dynamic>.from(jsonDecode(jsonEncode(payload)) as Map);
+  }
+
+  Object? _toStoredValue(Object? value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is bool) {
+      return value ? 1 : 0;
+    }
+    if (value is int || value is double || value is num || value is String) {
+      return value;
+    }
+    if (value is Map || value is List) {
+      return jsonEncode(value);
+    }
+    return value.toString();
+  }
+
+  Object? _restoreStoredValue(Object? value, {String? declaredType}) {
+    if (value == null) {
+      return null;
+    }
+
+    final normalizedType = (declaredType ?? 'TEXT').toUpperCase();
+    if (normalizedType.contains('BOOL')) {
+      if (value is bool) {
+        return value;
+      }
+      if (value is num) {
+        return value != 0;
+      }
+    }
+
+    if (normalizedType.contains('JSON') && value is String) {
+      try {
+        final decoded = jsonDecode(value);
+        if (decoded is Map<String, dynamic>) {
+          return decoded;
+        }
+        if (decoded is Map) {
+          return Map<String, dynamic>.from(decoded);
+        }
+        if (decoded is List) {
+          return List<dynamic>.from(decoded);
+        }
+      } catch (_) {
+        return value;
+      }
+    }
+
+    return value;
+  }
+
+  String _sqliteTypeForValue(Object? value) {
+    if (value is bool) {
+      return 'BOOLEAN_INT';
+    }
+    if (value is int) {
+      return 'INTEGER';
+    }
+    if (value is double || value is num) {
+      return 'REAL';
+    }
+    if (value is Map || value is List) {
+      return 'JSON_TEXT';
+    }
+    return 'TEXT';
+  }
+
+  String _quotedIdentifier(String identifier) {
+    return '"${identifier.replaceAll('"', '""')}"';
   }
 
   String _cacheKey(String modelType, String recordUuid) => '$modelType:$recordUuid';

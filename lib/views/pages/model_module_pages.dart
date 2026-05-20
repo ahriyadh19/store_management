@@ -1558,13 +1558,9 @@ ModelQueryDelegate<T> _localQueryDelegate<T extends Object>({required String tab
     final database = _requireLocalDatabase();
     final records = <T>[];
 
-    for (final record in database.getRecordsForType(tableName)) {
-      if (record.isDeleted) {
-        continue;
-      }
-
+    for (final row in database.getRowsForType(tableName)) {
       try {
-        final payload = _applySyncMetadataToPayload(Map<String, dynamic>.from(jsonDecode(record.payloadJson) as Map), syncState: record.syncState, fallbackUpdatedAtMillis: record.updatedAtMillis);
+        final payload = Map<String, dynamic>.from(row);
         final deletedAt = payload['deletedAt'] ?? payload['deleted_at'];
         if (deletedAt != null) {
           continue;
@@ -1717,61 +1713,88 @@ void _recalculatePurchaseOrderTotalLocal({required String purchaseOrderUuid, req
   final totalSyncState = sourceSyncState == OfflineSyncState.synced ? OfflineSyncState.synced : OfflineSyncState.pendingUpsert;
 
   var total = Decimal.zero;
-  for (final localRecord in database.getRecordsForType('purchase_order_item')) {
-    if (localRecord.isDeleted) {
+  for (final payload in database.getRowsForType('purchase_order_item')) {
+    final deletedAt = payload['deletedAt'] ?? payload['deleted_at'];
+    if (deletedAt != null) {
+      continue;
+    }
+
+    if (payload['purchaseOrderUuid']?.toString() != purchaseOrderUuid) {
+      continue;
+    }
+    total += _decimalOrZero(payload['lineTotal']);
+  }
+
+  final purchaseOrderPayload = database.getRow(modelType: 'purchase_order', recordUuid: purchaseOrderUuid);
+  if (purchaseOrderPayload == null) {
+    return;
+  }
+
+  final existingRecord = database.getRecord(modelType: 'purchase_order', recordUuid: purchaseOrderUuid);
+  final now = DateTime.now().millisecondsSinceEpoch;
+  final payload = Map<String, dynamic>.from(purchaseOrderPayload);
+  payload['totalAmount'] = total.toString();
+  payload['updatedAt'] = now;
+  final normalizedPayload = _applySyncMetadataToPayload(payload, syncState: totalSyncState, fallbackUpdatedAtMillis: now);
+  database.putRecord(
+    modelType: 'purchase_order',
+    recordUuid: purchaseOrderUuid,
+    payloadJson: jsonEncode(normalizedPayload),
+    updatedAtMillis: now,
+    remoteUpdatedAtMillis: _baselineRemoteUpdatedAtMillisForPendingWrite(existingRecord),
+    syncState: totalSyncState,
+    isDeleted: false,
+  );
+}
+
+List<T> _mergePendingLocalRecords<T extends Object>({
+  required String tableName,
+  required List<T> remoteRecords,
+  required T Function(Map<String, dynamic> map) fromMap,
+  required Map<String, dynamic> Function(T model) toMap,
+}) {
+  final database = LocalDatabase.current;
+  if (database == null || !database.isAvailable) {
+    return remoteRecords;
+  }
+
+  final recordByKey = <String, T>{};
+  final remoteUpdatedAtByKey = <String, int?>{};
+  for (final record in remoteRecords) {
+    final payload = toMap(record);
+    final recordUuid = _recordUuidFromPayload(payload, fallback: payload.toString());
+    recordByKey[recordUuid] = record;
+    remoteUpdatedAtByKey[recordUuid] = _updatedAtMillisOrNullFromPayload(payload);
+  }
+
+  for (final localRecord in database.getRecordsForType(tableName)) {
+    if (localRecord.syncState == OfflineSyncState.synced) {
+      continue;
+    }
+
+    if (localRecord.isDeleted || localRecord.syncState == OfflineSyncState.pendingDelete) {
+      recordByKey.remove(localRecord.recordUuid);
+      continue;
+    }
+
+    final remoteUpdatedAtMillis = remoteUpdatedAtByKey[localRecord.recordUuid];
+    if (!shouldUsePendingLocalRecordInHybridMerge(localRecord: localRecord, remoteUpdatedAtMillis: remoteUpdatedAtMillis)) {
+      continue;
+    }
+
+    final payload = database.getRow(modelType: tableName, recordUuid: localRecord.recordUuid);
+    if (payload == null) {
       continue;
     }
 
     try {
-      final payload = Map<String, dynamic>.from(jsonDecode(localRecord.payloadJson) as Map);
-      if (payload['purchaseOrderUuid']?.toString() != purchaseOrderUuid) {
-        continue;
-      }
-      total += _decimalOrZero(payload['lineTotal']);
+      recordByKey[localRecord.recordUuid] = fromMap(Map<String, dynamic>.from(payload));
     } catch (_) {
-      // Ignore malformed local records.
+      // Ignore malformed pending records.
     }
   }
 
-  for (final purchaseOrderRecord in database.getRecordsForType('purchase_order')) {
-    try {
-      final payload = Map<String, dynamic>.from(jsonDecode(purchaseOrderRecord.payloadJson) as Map);
-      if (payload['uuid']?.toString() != purchaseOrderUuid) {
-        continue;
-      }
-
-      final now = DateTime.now().millisecondsSinceEpoch;
-      payload['totalAmount'] = total.toString();
-      payload['updatedAt'] = now;
-      final normalizedPayload = _applySyncMetadataToPayload(payload, syncState: totalSyncState, fallbackUpdatedAtMillis: now);
-      database.putRecord(
-        modelType: 'purchase_order',
-        recordUuid: purchaseOrderRecord.recordUuid,
-        payloadJson: jsonEncode(normalizedPayload),
-        updatedAtMillis: now,
-        remoteUpdatedAtMillis: _baselineRemoteUpdatedAtMillisForPendingWrite(purchaseOrderRecord),
-        syncState: totalSyncState,
-        isDeleted: false,
-      );
-      return;
-    } catch (_) {
-      // Ignore malformed local records.
-    }
-  }
-}
-
-Decimal _decimalOrZero(Object? value) {
-  if (value is Decimal) {
-    return value;
-  }
-  if (value is num) {
-    return Decimal.parse(value.toString());
-  }
-  final normalized = value?.toString().trim();
-  if (normalized == null || normalized.isEmpty) {
-    return Decimal.zero;
-  }
-  return Decimal.tryParse(normalized) ?? Decimal.zero;
+  return recordByKey.values.toList(growable: false);
 }
 
 ModelQueryResult<T> _buildQueryResult<T extends Object>({required List<T> records, required ModelQueryRequest request, required Map<String, dynamic> Function(T model) toMap}) {
@@ -1832,52 +1855,6 @@ Future<List<T>> _fetchSupabaseRecords<T extends Object>({required String tableNa
   return records;
 }
 
-List<T> _mergePendingLocalRecords<T extends Object>({
-  required String tableName,
-  required List<T> remoteRecords,
-  required T Function(Map<String, dynamic> map) fromMap,
-  required Map<String, dynamic> Function(T model) toMap,
-}) {
-  final database = LocalDatabase.current;
-  if (database == null || !database.isAvailable) {
-    return remoteRecords;
-  }
-
-  final recordByKey = <String, T>{};
-  final remoteUpdatedAtByKey = <String, int?>{};
-  for (final record in remoteRecords) {
-    final payload = toMap(record);
-    final recordUuid = _recordUuidFromPayload(payload, fallback: payload.toString());
-    recordByKey[recordUuid] = record;
-    remoteUpdatedAtByKey[recordUuid] = _updatedAtMillisOrNullFromPayload(payload);
-  }
-
-  for (final localRecord in database.getRecordsForType(tableName)) {
-    if (localRecord.syncState == OfflineSyncState.synced) {
-      continue;
-    }
-
-    if (localRecord.isDeleted || localRecord.syncState == OfflineSyncState.pendingDelete) {
-      recordByKey.remove(localRecord.recordUuid);
-      continue;
-    }
-
-    final remoteUpdatedAtMillis = remoteUpdatedAtByKey[localRecord.recordUuid];
-    if (!shouldUsePendingLocalRecordInHybridMerge(localRecord: localRecord, remoteUpdatedAtMillis: remoteUpdatedAtMillis)) {
-      continue;
-    }
-
-    try {
-      final payload = _applySyncMetadataToPayload(Map<String, dynamic>.from(jsonDecode(localRecord.payloadJson) as Map), syncState: localRecord.syncState, fallbackUpdatedAtMillis: localRecord.updatedAtMillis);
-      recordByKey[localRecord.recordUuid] = fromMap(payload);
-    } catch (_) {
-      // Ignore malformed pending records.
-    }
-  }
-
-  return recordByKey.values.toList(growable: false);
-}
-
 void _cacheRemoteRecords<T extends Object>({required String tableName, required List<T> records, required Map<String, dynamic> Function(T model) toMap}) {
   final database = LocalDatabase.current;
   if (database == null || !database.isAvailable) {
@@ -1925,6 +1902,20 @@ void _cacheRemoteRecords<T extends Object>({required String tableName, required 
       database.removeRecord(modelType: tableName, recordUuid: localRecord.recordUuid);
     }
   }
+}
+
+Decimal _decimalOrZero(Object? value) {
+  if (value is Decimal) {
+    return value;
+  }
+  if (value is num) {
+    return Decimal.parse(value.toString());
+  }
+  final normalized = value?.toString().trim();
+  if (normalized == null || normalized.isEmpty) {
+    return Decimal.zero;
+  }
+  return Decimal.tryParse(normalized) ?? Decimal.zero;
 }
 
 Map<String, dynamic> _applySyncMetadataToPayload(Map<String, dynamic> payload, {required int syncState, int? fallbackUpdatedAtMillis}) {
@@ -2489,13 +2480,14 @@ List<ModelFormSelectOption> _clientOptions(AppLocalizations l10n, {required Stri
   final optionsByUuid = <String, ModelFormSelectOption>{};
   final database = LocalDatabase.current;
   if (database != null) {
-    for (final record in database.getRecordsForType('client')) {
-      if (record.isDeleted) {
+    for (final payload in database.getRowsForType('client')) {
+      final deletedAt = payload['deletedAt'] ?? payload['deleted_at'];
+      if (deletedAt != null) {
         continue;
       }
 
       try {
-        final client = Client.fromJson(record.payloadJson);
+        final client = Client.fromMap(payload);
         optionsByUuid[client.uuid] = ModelFormSelectOption(label: client.name, value: client.uuid);
       } catch (_) {
         continue;
