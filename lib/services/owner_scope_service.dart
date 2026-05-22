@@ -12,11 +12,11 @@ class OwnerScope {
 }
 
 class OwnerScopeService {
-  OwnerScopeService({SupabaseClient? client}) : _client = client ?? Supabase.instance.client;
+  OwnerScopeService({SupabaseClient? client}) : _client = client;
 
   static const Duration _cacheTtl = Duration(seconds: 20);
 
-  final SupabaseClient _client;
+  final SupabaseClient? _client;
   _CachedScope? _cached;
 
   Future<OwnerScope> resolveCurrentScope({bool forceRefresh = false}) async {
@@ -25,13 +25,18 @@ class OwnerScopeService {
       return _cached!.scope;
     }
 
-    final authUser = _client.auth.currentUser;
+    final client = _resolveClient();
+    if (client == null) {
+      return _cache(const OwnerScope(userUuid: null, ownerUuid: null, storeUuids: <String>{}, branchUuids: <String>{}));
+    }
+
+    final authUser = client.auth.currentUser;
     if (authUser == null) {
       return _cache(const OwnerScope(userUuid: null, ownerUuid: null, storeUuids: <String>{}, branchUuids: <String>{}));
     }
 
     try {
-      final usersRows = await _client
+      final usersRows = await client
           .from('users')
           .select('uuid')
           .eq('auth_user_id', authUser.id)
@@ -49,7 +54,7 @@ class OwnerScopeService {
 
       String? ownerUuid;
       try {
-        final memberships = await _client
+        final memberships = await client
             .from('owner_user_membership')
             .select('ownerUuid,status,deletedAt,createdAt')
             .eq('userUuid', userUuid)
@@ -72,7 +77,7 @@ class OwnerScopeService {
         return _cache(OwnerScope(userUuid: userUuid, ownerUuid: null, storeUuids: const <String>{}, branchUuids: const <String>{}));
       }
 
-        final membershipRowsForScope = (await _client
+      final membershipRowsForScope = (await client
             .from('owner_user_membership')
             .select('uuid')
             .eq('userUuid', userUuid)
@@ -88,7 +93,7 @@ class OwnerScopeService {
 
         final scopeRows = membershipUuids.isEmpty
           ? <dynamic>[]
-          : await _client
+          : await client
             .from('owner_permission_scope')
             .select('scopeType,scopeUuid,status,deletedAt')
             .eq('status', 1)
@@ -114,7 +119,7 @@ class OwnerScopeService {
 
       // Fallback to all owner stores/branches when no explicit scope rows exist.
       if (storeUuids.isEmpty) {
-        final storeRows = await _client.from('store').select('uuid').eq('ownerUuid', ownerUuid).isFilter('deletedAt', null);
+        final storeRows = await client.from('store').select('uuid').eq('ownerUuid', ownerUuid).isFilter('deletedAt', null);
         for (final raw in storeRows as List<dynamic>) {
           final uuid = (raw as Map<String, dynamic>)['uuid']?.toString();
           if (uuid != null && uuid.isNotEmpty) {
@@ -126,7 +131,7 @@ class OwnerScopeService {
       if (branchUuids.isEmpty) {
         final storeBranchRows = storeUuids.isEmpty
             ? const <dynamic>[]
-            : await _client.from('store_branches').select('branchUuid,status,deletedAt').eq('status', 1).isFilter('deletedAt', null).inFilter('storeUuid', storeUuids.toList(growable: false));
+            : await client.from('store_branches').select('branchUuid,status,deletedAt').eq('status', 1).isFilter('deletedAt', null).inFilter('storeUuid', storeUuids.toList(growable: false));
         branchUuids.addAll(extractBranchUuidsFromStoreBranchRowsForTesting(storeBranchRows));
       }
 
@@ -141,9 +146,28 @@ class OwnerScopeService {
     return scope;
   }
 
-  Future<String?> _resolveOwnerUuidFromAssignedRoles(String userUuid) async {
+  SupabaseClient? _resolveClient() {
+    if (_client != null) {
+      return _client;
+    }
+
     try {
-      final userRoleRows = (await _client
+      return Supabase.instance.client;
+    } on AssertionError {
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<String?> _resolveOwnerUuidFromAssignedRoles(String userUuid) async {
+    final client = _resolveClient();
+    if (client == null) {
+      return null;
+    }
+
+    try {
+      final userRoleRows = (await client
           .from('user_roles')
           .select('roleUuid,status,deletedAt')
           .eq('userUuid', userUuid)
@@ -160,7 +184,8 @@ class OwnerScopeService {
         return null;
       }
 
-      final roleRows = (await _client
+      final roleRows =
+          (await client
           .from('roles')
           .select('ownerUuid,status,deletedAt,createdAt')
           .inFilter('uuid', roleUuids)

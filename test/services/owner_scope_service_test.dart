@@ -2,6 +2,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:store_management/services/owner_scope_service.dart';
 
 void main() {
+  test('resolveCurrentScope returns an empty scope before Supabase initialization', () async {
+    final scope = await OwnerScopeService().resolveCurrentScope();
+
+    expect(scope.userUuid, isNull);
+    expect(scope.ownerUuid, isNull);
+    expect(scope.storeUuids, isEmpty);
+    expect(scope.branchUuids, isEmpty);
+  });
+
   test('extractBranchUuidsFromStoreBranchRowsForTesting collects distinct branch UUIDs', () {
     final branchUuids = extractBranchUuidsFromStoreBranchRowsForTesting(<dynamic>[
       <String, dynamic>{'branchUuid': 'branch-a', 'status': 1, 'deletedAt': null},
