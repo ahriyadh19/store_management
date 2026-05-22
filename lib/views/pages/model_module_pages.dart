@@ -57,6 +57,9 @@ import 'package:store_management/services/sync_conflict_resolution.dart';
 import 'package:store_management/views/components/model_form.dart';
 import 'package:store_management/views/index/index_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
+import 'package:uuid/uuid.dart';
+
+const Uuid _uuid = Uuid();
 
 ModelFormDefinition<Store> storeFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Store>(
   tableName: 'store',
@@ -1852,7 +1855,7 @@ Future<T> Function(T model, {int syncState}) _localCreateDelegate<T extends Obje
     payload['deletedAt'] = null;
 
     final normalizedPayload = _applySyncMetadataToPayload(payload, syncState: syncState, fallbackUpdatedAtMillis: now);
-    final recordUuid = _recordUuidFromPayload(normalizedPayload, fallback: 'local-$now');
+    final recordUuid = _recordUuidFromPayload(normalizedPayload, fallback: _uuid.v4());
     final existingRecord = database.getRecord(modelType: tableName, recordUuid: recordUuid);
     database.putRecord(
       modelType: tableName,
@@ -1885,7 +1888,7 @@ Future<T> Function(T model, {int syncState}) _localUpdateDelegate<T extends Obje
     payload['deletedAt'] = null;
 
     final normalizedPayload = _applySyncMetadataToPayload(payload, syncState: syncState, fallbackUpdatedAtMillis: now);
-    final recordUuid = _recordUuidFromPayload(normalizedPayload, fallback: 'local-$now');
+    final recordUuid = _recordUuidFromPayload(normalizedPayload, fallback: _uuid.v4());
     final existingRecord = database.getRecord(modelType: tableName, recordUuid: recordUuid);
     database.putRecord(
       modelType: tableName,
@@ -1922,7 +1925,7 @@ Future<void> Function(T model, {int syncState}) _localDeleteDelegate<T extends O
     }
 
     final normalizedPayload = _applySyncMetadataToPayload(payload, syncState: syncState, fallbackUpdatedAtMillis: now);
-    final recordUuid = _recordUuidFromPayload(normalizedPayload, fallback: 'local-$now');
+    final recordUuid = _recordUuidFromPayload(normalizedPayload, fallback: _uuid.v4());
     final existingRecord = database.getRecord(modelType: tableName, recordUuid: recordUuid);
     if (supportsSoftDelete) {
       database.putRecord(

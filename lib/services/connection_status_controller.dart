@@ -98,7 +98,7 @@ class ConnectionStatusController extends ChangeNotifier {
   }
 
   Future<ConnectionIndicatorState> _checkLocalDatabaseConnection() async {
-    final database = _localDatabase;
+    final database = LocalDatabase.current ?? _localDatabase;
     if (database == null || !database.isAvailable) {
       return ConnectionIndicatorState.failed;
     }

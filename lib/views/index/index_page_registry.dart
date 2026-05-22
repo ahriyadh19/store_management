@@ -3,13 +3,20 @@ import 'package:store_management/controllers/auth_controller.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/localization/locale_controller.dart';
 import 'package:store_management/services/app_preferences_controller.dart';
+import 'package:store_management/services/local_database_management_controller.dart';
 import 'package:store_management/views/index/dashboard_home_page.dart';
 import 'package:store_management/views/index/index_page.dart';
 import 'package:store_management/views/pages/main_module_pages.dart';
 import 'package:store_management/views/pages/reports_page.dart';
 import 'package:store_management/views/pages/settings_page.dart';
 
-Map<IndexPage, IndexPageDefinition> buildIndexPageDefinitions(BuildContext context, AuthState authState, {required LocaleController localeController, required AppPreferencesController appPreferencesController}) {
+Map<IndexPage, IndexPageDefinition> buildIndexPageDefinitions(
+  BuildContext context,
+  AuthState authState, {
+  required LocaleController localeController,
+  required AppPreferencesController appPreferencesController,
+  LocalDatabaseManagementController? localDatabaseManagementController,
+}) {
   final l10n = context.l10n;
   final definitions = <IndexPage, IndexPageDefinition>{};
 
@@ -25,7 +32,11 @@ Map<IndexPage, IndexPageDefinition> buildIndexPageDefinitions(BuildContext conte
       IndexPage.reports => IndexPageDefinition(title: title, bodyBuilder: (_) => const ReportsPage()),
       IndexPage.settings => IndexPageDefinition(
         title: title,
-        bodyBuilder: (_) => SettingsPage(localeController: localeController, appPreferencesController: appPreferencesController),
+        bodyBuilder: (_) => SettingsPage(
+          localeController: localeController,
+          appPreferencesController: appPreferencesController,
+          localDatabaseManagementController: localDatabaseManagementController,
+        ),
       ),
       _ => IndexPageDefinition(
         title: title,

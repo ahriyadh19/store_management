@@ -14,6 +14,7 @@ import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/services/access_control_service.dart';
 import 'package:store_management/services/connection_status_controller.dart';
 import 'package:store_management/services/local_database.dart';
+import 'package:store_management/services/local_database_management_controller.dart';
 import 'package:store_management/views/index/index_page.dart';
 import 'package:store_management/views/index/index_page_registry.dart';
 import 'package:window_manager/window_manager.dart';
@@ -157,10 +158,11 @@ String _initialsForUser(String? name, String? email) {
 }
 
 class Index extends StatefulWidget {
-  const Index({super.key, required this.localeController, required this.appPreferencesController});
+  const Index({super.key, required this.localeController, required this.appPreferencesController, this.localDatabaseManagementController});
 
   final LocaleController localeController;
   final AppPreferencesController appPreferencesController;
+  final LocalDatabaseManagementController? localDatabaseManagementController;
 
   @override
   State<Index> createState() => _IndexState();
@@ -430,7 +432,13 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
     }
 
     final authState = context.read<AuthController>().state;
-    final pageDefinitions = buildIndexPageDefinitions(context, authState, localeController: widget.localeController, appPreferencesController: widget.appPreferencesController);
+    final pageDefinitions = buildIndexPageDefinitions(
+      context,
+      authState,
+      localeController: widget.localeController,
+      appPreferencesController: widget.appPreferencesController,
+      localDatabaseManagementController: widget.localDatabaseManagementController,
+    );
     final l10n = context.l10n;
     final tabTitle = pageDefinitions[tab.page]?.title ?? tab.page.name;
     final colorScheme = Theme.of(context).colorScheme;
@@ -464,7 +472,13 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
     }
 
     final authState = context.read<AuthController>().state;
-    final pageDefinitions = buildIndexPageDefinitions(context, authState, localeController: widget.localeController, appPreferencesController: widget.appPreferencesController);
+    final pageDefinitions = buildIndexPageDefinitions(
+      context,
+      authState,
+      localeController: widget.localeController,
+      appPreferencesController: widget.appPreferencesController,
+      localDatabaseManagementController: widget.localDatabaseManagementController,
+    );
     final colorScheme = Theme.of(context).colorScheme;
 
     final shouldClose = await showDialog<bool>(
@@ -803,7 +817,13 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthController>().state;
-    final allPageDefinitions = buildIndexPageDefinitions(context, authState, localeController: widget.localeController, appPreferencesController: widget.appPreferencesController);
+    final allPageDefinitions = buildIndexPageDefinitions(
+      context,
+      authState,
+      localeController: widget.localeController,
+      appPreferencesController: widget.appPreferencesController,
+      localDatabaseManagementController: widget.localDatabaseManagementController,
+    );
     final pageDefinitions = <IndexPage, IndexPageDefinition>{
       for (final entry in allPageDefinitions.entries)
         if (_canAccessPage(entry.key)) entry.key: entry.value,

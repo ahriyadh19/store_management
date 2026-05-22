@@ -3,8 +3,12 @@ import 'package:store_management/models/offline_sync_record.dart';
 import 'package:store_management/models/store_branches.dart';
 
 class LocalDatabase {
+  static const int schemaVersionValue = 1;
+  static const String defaultDirectoryName = 'drift';
+  static const String defaultFileName = 'store_management.sqlite';
   static const String branchModelType = 'branch';
   static const String storeBranchesModelType = 'store_branches';
+  static const Set<String> managedModelTypes = <String>{'branch', 'store_branches'};
 
   LocalDatabase._();
 
@@ -12,13 +16,20 @@ class LocalDatabase {
 
   static LocalDatabase? get current => _current;
 
-  static Future<LocalDatabase> create() async {
+  static Future<LocalDatabase> create({String? databasePath}) async {
     final database = LocalDatabase._();
     _current = database;
     return database;
   }
 
+  static Future<String> defaultDatabaseDirectoryPath() async => '';
+
+  static Future<String> defaultDatabasePath() async => defaultFileName;
+
   bool get isAvailable => false;
+  int get schemaVersion => schemaVersionValue;
+  String get databasePath => '';
+  String get databaseFileName => defaultFileName;
 
   OfflineSyncRecord putRecord({
     required String modelType,
@@ -91,9 +102,15 @@ class LocalDatabase {
 
   bool removeStoreBranches(String storeBranchesUuid) => false;
 
+  int clearAllRecords() => 0;
+
   int reconcileSyncMetadata() => 0;
 
   bool ping() => false;
+
+  Future<int> fileSizeBytes() async => 0;
+
+  Future<DateTime?> lastModified() async => null;
 
   Future<void> close() async {}
 }

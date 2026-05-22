@@ -36,6 +36,9 @@ class _LocalStoreDatabase extends _$_LocalStoreDatabase {
 }
 
 class LocalDatabase {
+  static const int schemaVersionValue = 1;
+  static const String defaultDirectoryName = 'drift';
+  static const String defaultFileName = 'store_management.sqlite';
   static const String branchModelType = 'branch';
   static const String storeBranchesModelType = 'store_branches';
   static const Set<String> managedModelTypes = <String>{
@@ -99,14 +102,16 @@ class LocalDatabase {
   int _nextId = 1;
   bool _isClosed = false;
 
-  static Future<LocalDatabase> create() async {
-    final appDirectory = await getApplicationDocumentsDirectory();
-    final databaseDirectory = Directory(p.join(appDirectory.path, 'drift'));
-    if (!await databaseDirectory.exists()) {
-      await databaseDirectory.create(recursive: true);
+  static Future<LocalDatabase> create({String? databasePath}) async {
+    final databaseFile = await resolveDatabaseFile(databasePath: databasePath);
+    final existing = _current;
+    if (existing != null && !existing._isClosed) {
+      if (existing.databasePath == databaseFile.path) {
+        return existing;
+      }
+      await existing.close();
     }
 
-    final databaseFile = File(p.join(databaseDirectory.path, 'store_management.sqlite'));
     final database = _LocalStoreDatabase(NativeDatabase.createInBackground(databaseFile));
     final localDatabase = LocalDatabase._(database, databaseFile);
     await localDatabase._initializeBusinessTables();
@@ -116,7 +121,29 @@ class LocalDatabase {
     return localDatabase;
   }
 
+  static Future<String> defaultDatabaseDirectoryPath() async {
+    final appDirectory = await getApplicationDocumentsDirectory();
+    return p.join(appDirectory.path, defaultDirectoryName);
+  }
+
+  static Future<String> defaultDatabasePath() async {
+    return p.join(await defaultDatabaseDirectoryPath(), defaultFileName);
+  }
+
+  static Future<File> resolveDatabaseFile({String? databasePath}) async {
+    final normalizedPath = (databasePath == null || databasePath.trim().isEmpty) ? await defaultDatabasePath() : databasePath.trim();
+    final databaseFile = File(normalizedPath);
+    final databaseDirectory = databaseFile.parent;
+    if (!await databaseDirectory.exists()) {
+      await databaseDirectory.create(recursive: true);
+    }
+    return databaseFile;
+  }
+
   bool get isAvailable => !_isClosed;
+  int get schemaVersion => schemaVersionValue;
+  String get databasePath => _databaseFile.path;
+  String get databaseFileName => p.basename(_databaseFile.path);
 
   OfflineSyncRecord putRecord({
     required String modelType,
@@ -307,6 +334,20 @@ class LocalDatabase {
 
   bool ping() {
     return !_isClosed && _databaseFile.existsSync();
+  }
+
+  Future<int> fileSizeBytes() async {
+    if (!await _databaseFile.exists()) {
+      return 0;
+    }
+    return _databaseFile.length();
+  }
+
+  Future<DateTime?> lastModified() async {
+    if (!await _databaseFile.exists()) {
+      return null;
+    }
+    return _databaseFile.lastModified();
   }
 
   Future<void> close() async {

@@ -14,6 +14,7 @@ import 'package:store_management/localization/locale_controller.dart';
 import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/services/auth_repository.dart';
 import 'package:store_management/services/local_database.dart';
+import 'package:store_management/services/local_database_management_controller.dart';
 import 'package:store_management/services/supabase_auth_storage.dart';
 import 'package:store_management/views/auth_view.dart';
 import 'package:window_manager/window_manager.dart';
@@ -31,6 +32,7 @@ Future<void> main() async {
   final localeController = await LocaleController.create();
   final appPreferencesController = await AppPreferencesController.create();
   final localDatabase = await LocalDatabase.create();
+  final localDatabaseManagementController = await LocalDatabaseManagementController.create(appPreferencesController: appPreferencesController, localDatabase: localDatabase);
   final reconciledRecordCount = localDatabase.reconcileSyncMetadata();
   if (kDebugMode && reconciledRecordCount > 0) {
     debugPrint('Reconciled sync metadata for $reconciledRecordCount local records.');
@@ -47,7 +49,18 @@ Future<void> main() async {
     startupStackTrace = stackTrace;
   }
 
-  runApp(MyApp(localeController: localeController, appPreferencesController: appPreferencesController, localDatabase: localDatabase, startupError: startupError, startupStackTrace: startupStackTrace));
+  localDatabaseManagementController.startSyncMonitoring();
+
+  runApp(
+    MyApp(
+      localeController: localeController,
+      appPreferencesController: appPreferencesController,
+      localDatabase: localDatabase,
+      localDatabaseManagementController: localDatabaseManagementController,
+      startupError: startupError,
+      startupStackTrace: startupStackTrace,
+    ),
+  );
 }
 
 Future<void> _prepareDesktopWindow() async {
@@ -122,12 +135,13 @@ class _SupabaseConfig {
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({super.key, this.authRepository, this.localDatabase, this.startupError, this.startupStackTrace, LocaleController? localeController, AppPreferencesController? appPreferencesController})
+  MyApp({super.key, this.authRepository, this.localDatabase, this.localDatabaseManagementController, this.startupError, this.startupStackTrace, LocaleController? localeController, AppPreferencesController? appPreferencesController})
     : localeController = localeController ?? LocaleController(),
       appPreferencesController = appPreferencesController ?? AppPreferencesController();
 
   final AuthRepository? authRepository;
   final LocalDatabase? localDatabase;
+  final LocalDatabaseManagementController? localDatabaseManagementController;
   final Object? startupError;
   final StackTrace? startupStackTrace;
   final LocaleController localeController;
@@ -166,7 +180,13 @@ class MyApp extends StatelessWidget {
               themeMode: appPreferencesController.themeMode,
               theme: buildAppTheme(brightness: Brightness.light, locale: appLocale),
               darkTheme: buildAppTheme(brightness: Brightness.dark, locale: appLocale),
-              home: startupError == null ? AuthGate(localeController: localeController, appPreferencesController: appPreferencesController) : StartupErrorView(error: startupError!, stackTrace: startupStackTrace),
+              home: startupError == null
+                  ? AuthGate(
+                      localeController: localeController,
+                      appPreferencesController: appPreferencesController,
+                      localDatabaseManagementController: localDatabaseManagementController,
+                    )
+                  : StartupErrorView(error: startupError!, stackTrace: startupStackTrace),
             );
           },
         ),
@@ -176,17 +196,22 @@ class MyApp extends StatelessWidget {
 }
 
 class AuthGate extends StatelessWidget {
-  const AuthGate({super.key, required this.localeController, required this.appPreferencesController});
+  const AuthGate({super.key, required this.localeController, required this.appPreferencesController, this.localDatabaseManagementController});
 
   final LocaleController localeController;
   final AppPreferencesController appPreferencesController;
+  final LocalDatabaseManagementController? localDatabaseManagementController;
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthController, AuthState>(
       builder: (context, state) {
         if (state.isAuthenticated) {
-          return Index(localeController: localeController, appPreferencesController: appPreferencesController);
+          return Index(
+            localeController: localeController,
+            appPreferencesController: appPreferencesController,
+            localDatabaseManagementController: localDatabaseManagementController,
+          );
         }
 
         return AuthView(localeController: localeController, appPreferencesController: appPreferencesController);
