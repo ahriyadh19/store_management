@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/views/index/index_page.dart';
 
 class AccessControlSnapshot {
@@ -620,39 +621,37 @@ class PermissionCatalog {
     'owner_permission_scope',
   ];
 
-  static List<PermissionGroupDefinition> permissionGroups() {
+  static List<PermissionGroupDefinition> permissionGroups(AppLocalizations l10n) {
     final pagePermissions = <PermissionOptionDefinition>[];
     for (final page in IndexPage.values) {
       final key = pageViewPermission(page);
       pagePermissions.add(
         PermissionOptionDefinition(
           key: key,
-          label: 'View ${_humanize(page.name)}',
-          description: 'Controls navigation and page visibility for ${_humanize(page.name)}.',
+          label: l10n.pick('View ${_humanize(page.name)}', 'عرض ${_humanize(page.name)}'),
+          description: l10n.pick('Controls navigation and page visibility for ${_humanize(page.name)}.', 'يتحكم في التنقل وإظهار الصفحة لـ ${_humanize(page.name)}.'),
         ),
       );
     }
 
     final systemPermissions = <PermissionOptionDefinition>[
-      const PermissionOptionDefinition(
+      PermissionOptionDefinition(
         key: usersManage,
-        label: 'Manage Users',
-        description: 'Grant broad user administration capabilities.',
+        label: l10n.pick('Manage Users', 'إدارة المستخدمين'), description: l10n.pick('Grant broad user administration capabilities.', 'منح صلاحيات واسعة لإدارة المستخدمين.'),
       ),
-      const PermissionOptionDefinition(
+      PermissionOptionDefinition(
         key: rolesManage,
-        label: 'Manage Roles',
-        description: 'Grant role creation/editing management access.',
+        label: l10n.pick('Manage Roles', 'إدارة الأدوار'), description: l10n.pick('Grant role creation/editing management access.', 'منح صلاحية إنشاء الأدوار وتعديلها.'),
       ),
-      const PermissionOptionDefinition(
+      PermissionOptionDefinition(
         key: permissionsManage,
-        label: 'Manage Permissions',
-        description: 'Grant permission scope and assignment administration.',
+        label: l10n.pick('Manage Permissions', 'إدارة الصلاحيات'),
+        description: l10n.pick('Grant permission scope and assignment administration.', 'منح صلاحية إدارة نطاقات الصلاحيات وتعيينها.'),
       ),
-      const PermissionOptionDefinition(
+      PermissionOptionDefinition(
         key: '*',
-        label: 'Full Access (*)',
-        description: 'Allows all pages and actions across the platform.',
+        label: l10n.pick('Full Access (*)', 'وصول كامل (*)'),
+        description: l10n.pick('Allows all pages and actions across the platform.', 'يسمح بجميع الصفحات والإجراءات على مستوى المنصة.'),
       ),
     ];
 
@@ -663,24 +662,24 @@ class PermissionCatalog {
         tablePermissions.add(
           PermissionOptionDefinition(
             key: key,
-            label: '${_humanize(action)} ${_humanize(tableName)}',
-            description: 'Controls ${_humanize(action).toLowerCase()} on table $tableName.',
+            label: l10n.pick('${_humanize(action)} ${_humanize(tableName)}', '${_humanize(action)} ${_humanize(tableName)}'),
+            description: l10n.pick('Controls ${_humanize(action).toLowerCase()} on table $tableName.', 'يتحكم في ${_humanize(action).toLowerCase()} على جدول $tableName.'),
           ),
         );
       }
       tablePermissions.add(
         PermissionOptionDefinition(
           key: 'table.$tableName.*',
-          label: 'All ${_humanize(tableName)} Actions',
-          description: 'Allows all CRUD and sync actions on $tableName.',
+          label: l10n.pick('All ${_humanize(tableName)} Actions', 'كل إجراءات ${_humanize(tableName)}'),
+          description: l10n.pick('Allows all CRUD and sync actions on $tableName.', 'يسمح بكل إجراءات الإنشاء والقراءة والتعديل والحذف والمزامنة على $tableName.'),
         ),
       );
     }
 
     return <PermissionGroupDefinition>[
-      PermissionGroupDefinition(key: 'pages', title: 'Page Visibility', options: pagePermissions),
-      PermissionGroupDefinition(key: 'system', title: 'System Management', options: systemPermissions),
-      PermissionGroupDefinition(key: 'tables', title: 'Table Actions', options: tablePermissions),
+      PermissionGroupDefinition(key: 'pages', title: l10n.pick('Page Visibility', 'إظهار الصفحات'), options: pagePermissions),
+      PermissionGroupDefinition(key: 'system', title: l10n.pick('System Management', 'إدارة النظام'), options: systemPermissions),
+      PermissionGroupDefinition(key: 'tables', title: l10n.pick('Table Actions', 'إجراءات الجداول'), options: tablePermissions),
     ];
   }
 

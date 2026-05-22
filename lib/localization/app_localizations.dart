@@ -11,6 +11,20 @@ generated.AppLocalizations appLocalizationsFor(Locale locale) {
   return generated.lookupAppLocalizations(locale);
 }
 
+generated.AppLocalizations appLocalizationsForLocaleOrFallback(Locale? locale) {
+  if (locale == null) {
+    return appLocalizationsFor(appLocalizationFallbackLocale);
+  }
+
+  for (final supportedLocale in generated.AppLocalizations.supportedLocales) {
+    if (supportedLocale.languageCode == locale.languageCode) {
+      return appLocalizationsFor(supportedLocale);
+    }
+  }
+
+  return appLocalizationsFor(appLocalizationFallbackLocale);
+}
+
 enum AppMessageKey {
   authOperationFailed,
   nameRequired,
@@ -38,6 +52,8 @@ enum AppMessageKey {
 
 extension AppLocalizationsCompat on generated.AppLocalizations {
   bool get isArabic => localeName.startsWith('ar');
+
+  String pick(String english, String arabic) => isArabic ? arabic : english;
 
   String message(AppMessageKey key, {String? email}) {
     switch (key) {

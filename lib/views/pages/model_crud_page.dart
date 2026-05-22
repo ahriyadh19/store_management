@@ -49,6 +49,8 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   List<_RecordSnapshot<T>>? _cachedRecordSnapshots;
   late _CachedCrudViewState<T> _viewState;
 
+  AppLocalizations get _nonContextL10n => appLocalizationsForLocaleOrFallback(WidgetsBinding.instance.platformDispatcher.locale);
+
   @override
   void initState() {
     super.initState();
@@ -204,10 +206,11 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     const listHorizontalPadding = 52.0;
     const cardHorizontalPadding = 52.0;
     final availableTableWidth = math.max(constraints.maxWidth - listHorizontalPadding - cardHorizontalPadding, 280.0);
-    final columns = _buildColumns(availableTableWidth, isCompactLayout: isCompactLayout);
+    final localizedVisibleFields = _visibleFieldsForDisplay(l10n);
+    final columns = _buildColumns(availableTableWidth, isCompactLayout: isCompactLayout, visibleFields: localizedVisibleFields, l10n: l10n);
     final dataSource = _CrudDataGridSource<T>(
       records: visibleRecords,
-      visibleFields: _visibleFields,
+      visibleFields: localizedVisibleFields,
       toMap: widget.formDefinition.toMap,
       formatCellValue: _formatCellValueForField,
       isCompactLayout: isCompactLayout,
@@ -371,14 +374,14 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     );
   }
 
-  List<GridColumn> _buildColumns(double tableWidth, {required bool isCompactLayout}) {
-    final resolvedWidths = _resolvedColumnWidths(tableWidth, isCompactLayout: isCompactLayout);
+  List<GridColumn> _buildColumns(double tableWidth, {required bool isCompactLayout, required List<ModelFormFieldDefinition> visibleFields, required AppLocalizations l10n}) {
+    final resolvedWidths = _resolvedColumnWidths(tableWidth, isCompactLayout: isCompactLayout, visibleFields: visibleFields);
     final dataColumnMinimumWidth = isCompactLayout ? 110.0 : 160.0;
     final actionsColumnMinimumWidth = isCompactLayout ? 132.0 : 236.0;
     final actionsColumnWidth = isCompactLayout ? 132.0 : 236.0;
 
     return [
-      for (final field in _visibleFields)
+      for (final field in visibleFields)
         GridColumn(
           columnName: field.key,
           minimumWidth: dataColumnMinimumWidth,
@@ -389,17 +392,17 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
         columnName: _actionsColumnName,
         minimumWidth: actionsColumnMinimumWidth,
         width: actionsColumnWidth,
-        label: _GridHeaderCell(label: context.l10n.actions),
+        label: _GridHeaderCell(label: l10n.actions),
       ),
     ];
   }
 
-  Map<String, double> _resolvedColumnWidths(double tableWidth, {required bool isCompactLayout}) {
+  Map<String, double> _resolvedColumnWidths(double tableWidth, {required bool isCompactLayout, required List<ModelFormFieldDefinition> visibleFields}) {
     final defaultActionsWidth = isCompactLayout ? 132.0 : 236.0;
-    final dataColumnCount = _visibleFields.length;
+    final dataColumnCount = visibleFields.length;
     final minimumDataWidth = isCompactLayout ? 110.0 : 160.0;
     final computedDataWidth = dataColumnCount == 0 ? minimumDataWidth : ((tableWidth - defaultActionsWidth) / dataColumnCount).clamp(minimumDataWidth, isCompactLayout ? 180.0 : 260.0);
-    final widths = <String, double>{for (final field in _visibleFields) field.key: _columnWidths[field.key] ?? computedDataWidth};
+    final widths = <String, double>{for (final field in visibleFields) field.key: _columnWidths[field.key] ?? computedDataWidth};
     if (dataColumnCount == 0) {
       widths[_actionsColumnName] = defaultActionsWidth;
       return widths;
@@ -412,11 +415,48 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     }
 
     final extraPerColumn = (tableWidth - totalWidth) / dataColumnCount;
-    for (final field in _visibleFields) {
+    for (final field in visibleFields) {
       widths[field.key] = (widths[field.key] ?? computedDataWidth) + extraPerColumn;
     }
     widths[_actionsColumnName] = defaultActionsWidth;
     return widths;
+  }
+
+  List<ModelFormFieldDefinition> _visibleFieldsForDisplay(AppLocalizations l10n) {
+    return _visibleFields
+        .map((field) {
+          if (field.key == 'synced') {
+            return _cloneFieldWithLabel(field, l10n.pick('Synced', 'تمت المزامنة'));
+          }
+
+          if (field.key == 'syncedAt') {
+            return _cloneFieldWithLabel(field, l10n.pick('Date Synced', 'تاريخ المزامنة'));
+          }
+
+          return field;
+        })
+        .toList(growable: false);
+  }
+
+  ModelFormFieldDefinition _cloneFieldWithLabel(ModelFormFieldDefinition field, String label) {
+    return ModelFormFieldDefinition(
+      key: field.key,
+      label: label,
+      type: field.type,
+      hintText: field.hintText,
+      helperText: field.helperText,
+      required: field.required,
+      readOnly: field.readOnly,
+      options: field.options,
+      searchable: field.searchable,
+      searchButtonLabel: field.searchButtonLabel,
+      addNewButtonLabel: field.addNewButtonLabel,
+      onCreateOption: field.onCreateOption,
+      transformValue: field.transformValue,
+      formatValue: field.formatValue,
+      validator: field.validator,
+      usePermissionVisualEditor: field.usePermissionVisualEditor,
+    );
   }
 
   List<ModelFormFieldDefinition> get _visibleFields {
@@ -464,14 +504,15 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     final selected = List<ModelFormFieldDefinition>.from(fields);
     final hasSynced = selected.any((field) => field.key == 'synced');
     final hasSyncedAt = selected.any((field) => field.key == 'syncedAt');
+    final l10n = _nonContextL10n;
 
     if (!hasSynced && sampleData.containsKey('synced')) {
-      selected.add(const ModelFormFieldDefinition(key: 'synced', label: 'Synced', type: ModelFormFieldType.text, readOnly: true));
+      selected.add(ModelFormFieldDefinition(key: 'synced', label: l10n.pick('Synced', 'تمت المزامنة'), type: ModelFormFieldType.text, readOnly: true));
     }
 
     final hasSyncedDate = sampleData.containsKey('syncedAt') || sampleData.containsKey('synced_at');
     if (!hasSyncedAt && hasSyncedDate) {
-      selected.add(const ModelFormFieldDefinition(key: 'syncedAt', label: 'Date Synced', type: ModelFormFieldType.text, readOnly: true));
+      selected.add(ModelFormFieldDefinition(key: 'syncedAt', label: l10n.pick('Date Synced', 'تاريخ المزامنة'), type: ModelFormFieldType.text, readOnly: true));
     }
 
     return selected;
@@ -689,7 +730,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
               'index': snapshot.index,
               'recordKey': snapshot.recordKey,
               'searchBlob': snapshot.searchBlob,
-              'sortValue': _toIsolateSortValue(modelFieldSortValue(fields: widget.formDefinition.fields, fieldKey: _sortColumnName, value: snapshot.data[_sortColumnName], rowData: snapshot.data)),
+              'sortValue': _toIsolateSortValue(modelFieldSortValue(fields: widget.formDefinition.fields, fieldKey: _sortColumnName, value: snapshot.data[_sortColumnName], rowData: snapshot.data, l10n: _nonContextL10n)),
             },
           )
           .toList(growable: false),
@@ -734,8 +775,8 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
     final sortColumnName = _sortColumnName;
     if (sortColumnName != null) {
       sortedSnapshots.sort((left, right) {
-        final leftValue = modelFieldSortValue(fields: widget.formDefinition.fields, fieldKey: sortColumnName, value: left.data[sortColumnName], rowData: left.data);
-        final rightValue = modelFieldSortValue(fields: widget.formDefinition.fields, fieldKey: sortColumnName, value: right.data[sortColumnName], rowData: right.data);
+        final leftValue = modelFieldSortValue(fields: widget.formDefinition.fields, fieldKey: sortColumnName, value: left.data[sortColumnName], rowData: left.data, l10n: _nonContextL10n);
+        final rightValue = modelFieldSortValue(fields: widget.formDefinition.fields, fieldKey: sortColumnName, value: right.data[sortColumnName], rowData: right.data, l10n: _nonContextL10n);
         final result = _compareSortValues(leftValue, rightValue);
         return _sortAscending ? result : -result;
       });
@@ -785,7 +826,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
           record: record,
           data: data,
           recordKey: _recordIdentityFromMap(data),
-          searchBlob: buildModelSearchBlob(fields: visibleFields.isEmpty ? widget.formDefinition.fields : widget.formDefinition.fields, rowData: data),
+          searchBlob: buildModelSearchBlob(fields: visibleFields.isEmpty ? widget.formDefinition.fields : widget.formDefinition.fields, rowData: data, l10n: _nonContextL10n),
         ),
       );
     }
@@ -1294,12 +1335,12 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   String _formatCellValueForField({required String? fieldKey, required Object? value, required Map<String, dynamic> rowData}) {
-    return formatModelFieldDisplayValue(fields: widget.formDefinition.fields, fieldKey: fieldKey, value: value, rowData: rowData);
+    return formatModelFieldDisplayValue(fields: widget.formDefinition.fields, fieldKey: fieldKey, value: value, rowData: rowData, l10n: context.l10n);
   }
 
   String? _resolveLinkedValueLabel({required String fieldKey, required Map<String, dynamic> rowData}) {
     final value = rowData[fieldKey];
-    final formatted = formatModelFieldDisplayValue(fields: widget.formDefinition.fields, fieldKey: fieldKey, value: value, rowData: rowData);
+    final formatted = formatModelFieldDisplayValue(fields: widget.formDefinition.fields, fieldKey: fieldKey, value: value, rowData: rowData, l10n: context.l10n);
     final compactIdentifier = value == null ? null : _compactIdentifier(value.toString().trim());
     if (compactIdentifier == null || formatted == compactIdentifier || formatted == '$compactIdentifier ($compactIdentifier)') {
       return null;

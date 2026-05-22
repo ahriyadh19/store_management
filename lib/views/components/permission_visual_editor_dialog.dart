@@ -45,7 +45,7 @@ class _PermissionVisualEditorDialogState extends State<PermissionVisualEditorDia
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final groups = PermissionCatalog.permissionGroups();
+    final groups = PermissionCatalog.permissionGroups(l10n);
     final query = _searchController.text.trim().toLowerCase();
     final mediaSize = MediaQuery.of(context).size;
     final dialogWidth = mediaSize.width > 960 ? 880.0 : mediaSize.width * 0.92;

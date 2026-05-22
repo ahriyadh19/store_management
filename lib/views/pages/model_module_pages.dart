@@ -61,6 +61,28 @@ import 'package:uuid/uuid.dart';
 
 const Uuid _uuid = Uuid();
 
+String _sampleStoreLabel(AppLocalizations l10n) => _t(l10n, 'Central Store', 'المتجر المركزي');
+
+String _sampleBranchLabel(AppLocalizations l10n) => _t(l10n, 'North Branch', 'الفرع الشمالي');
+
+String _sampleProductLabel(AppLocalizations l10n) => _t(l10n, 'Premium Flour 25kg', 'دقيق ممتاز 25 كجم');
+
+String _sampleClientLabel(AppLocalizations l10n) => _t(l10n, 'Blue Market', 'السوق الأزرق');
+
+String _sampleSupplierLabel(AppLocalizations l10n) => _t(l10n, 'Al Noor Trading', 'تجارة النور');
+
+String _sampleUserLabel(AppLocalizations l10n) => _t(l10n, 'Operations Manager', 'مدير العمليات');
+
+String _sampleCategoryLabel(AppLocalizations l10n) => _t(l10n, 'Bakery Supplies', 'مستلزمات المخابز');
+
+String _sampleTagLabel(AppLocalizations l10n) => _t(l10n, 'Fast moving', 'سريع الدوران');
+
+String _sampleRoleLabel(AppLocalizations l10n) => _t(l10n, 'Store Supervisor', 'مشرف المتجر');
+
+String _sampleUsersPageLabel(AppLocalizations l10n) => _t(l10n, 'Users', 'المستخدمون');
+
+String _samplePromotionLabel(AppLocalizations l10n) => _t(l10n, 'Weekend Promo', 'عرض نهاية الأسبوع');
+
 ModelFormDefinition<Store> storeFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Store>(
   tableName: 'store',
   tableFieldPriorityKeys: const <String>['name', 'phone', 'email', 'address', 'ownerUserUuid'],
@@ -76,7 +98,7 @@ ModelFormDefinition<Store> storeFormDefinition(AppLocalizations l10n) => _server
   toMap: (store) => store.toMap(),
   sampleModel: Store(
     ownerUserUuid: '11111111-1111-4111-8111-111111111111',
-    name: 'Central Store',
+    name: _sampleStoreLabel(l10n),
     description: _t(l10n, 'Primary retail location and stock coordination point.', 'موقع البيع الرئيسي ونقطة تنسيق المخزون.'),
     address: '12 Commerce Ave, Downtown',
     phone: '+967700000001',
@@ -98,7 +120,7 @@ ModelFormDefinition<Branch> branchFormDefinition(AppLocalizations l10n) => _serv
   fromMap: Branch.fromMap,
   toMap: (branch) => branch.toMap(),
   sampleModel: Branch(
-    name: 'North Branch',
+    name: _sampleBranchLabel(l10n),
     description: _t(l10n, 'Regional storefront for walk-in sales.', 'واجهة بيع إقليمية للمبيعات المباشرة.'),
     address: '45 Market Road, North District',
     phone: '+967700000002',
@@ -120,7 +142,7 @@ ModelFormDefinition<Product> productFormDefinition(AppLocalizations l10n) => _se
   fromMap: Product.fromMap,
   toMap: (product) => product.toMap(),
   sampleModel: Product(
-    name: 'Premium Flour 25kg',
+    name: _sampleProductLabel(l10n),
     description: _t(l10n, 'Bulk flour package used by regular wholesale customers.', 'عبوة دقيق كبيرة يستخدمها عملاء الجملة بشكل منتظم.'),
     status: RecordStatus.active.code,
     createdAt: _createdAt,
@@ -140,7 +162,7 @@ ModelFormDefinition<Categories> categoryFormDefinition(AppLocalizations l10n) =>
   fromMap: Categories.fromMap,
   toMap: (category) => category.toMap(),
   sampleModel: Categories(
-    name: 'Bakery Supplies',
+    name: _sampleCategoryLabel(l10n),
     description: _t(l10n, 'Flour, sugar, yeast, and baking accessories.', 'الدقيق والسكر والخميرة وإكسسوارات الخبز.'),
     status: RecordStatus.active.code,
     parentUuid: null,
@@ -159,7 +181,7 @@ ModelFormDefinition<Tags> tagFormDefinition(AppLocalizations l10n) => _serverBac
   fromMap: Tags.fromMap,
   toMap: (tag) => tag.toMap(),
   sampleModel: Tags(
-    name: 'Fast moving',
+    name: _sampleTagLabel(l10n),
     description: _t(l10n, 'Products with high turnover and replenishment priority.', 'منتجات ذات دوران مرتفع وأولوية في إعادة التزويد.'),
     status: RecordStatus.active.code,
     createdAt: _createdAt,
@@ -184,7 +206,7 @@ ModelFormDefinition<Client> clientFormDefinition(AppLocalizations l10n) => _serv
   fromMap: Client.fromMap,
   toMap: (client) => client.toMap(),
   sampleModel: Client(
-    name: 'Blue Market',
+    name: _sampleClientLabel(l10n),
     description: _t(l10n, 'High-volume client with monthly billing terms.', 'عميل بحجم تعامل مرتفع وبشروط فوترة شهرية.'),
     email: 'accounts@bluemarket.com',
     phone: '+967700000010',
@@ -209,7 +231,7 @@ ModelFormDefinition<Supplier> supplierFormDefinition(AppLocalizations l10n) => _
   fromMap: Supplier.fromMap,
   toMap: (supplier) => supplier.toMap(),
   sampleModel: Supplier(
-    name: 'Al Noor Trading',
+    name: _sampleSupplierLabel(l10n),
     description: _t(l10n, 'Primary supplier of packaged food and household items.', 'المورّد الرئيسي للمواد الغذائية المعبأة والمواد المنزلية.'),
     status: RecordStatus.active.code,
     createdAt: _createdAt,
@@ -229,7 +251,7 @@ ModelFormDefinition<User> userFormDefinition(AppLocalizations l10n) => _serverBa
   fromMap: User.fromMap,
   toMap: (user) => user.toMap(includePassword: false),
   sampleModel: User(
-    name: 'Operations Manager',
+    name: _sampleUserLabel(l10n),
     username: 'ops.manager',
     email: 'ops.manager@store.app',
     status: RecordStatus.active.code,
@@ -262,7 +284,7 @@ ModelFormDefinition<Roles> roleFormDefinition(AppLocalizations l10n) => _serverB
   fromMap: Roles.fromMap,
   toMap: (role) => role.toMap(),
   sampleModel: Roles(
-    name: 'Store Supervisor',
+    name: _sampleRoleLabel(l10n),
     description: _t(l10n, 'Can manage inventory updates, clients, and invoice approvals.', 'يمكنه إدارة تحديثات المخزون والعملاء واعتمادات الفواتير.'),
     permissionsJson: <String, dynamic>{
       'page.dashboard.view': true,
@@ -327,7 +349,7 @@ ModelFormDefinition<AccessPermission> accessPermissionFormDefinition(AppLocaliza
   tableFieldPriorityKeys: const <String>['key', 'action', 'pageUuid', 'status'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), hintText: _scopeAutoHint(l10n)),
-    _relationSelectionField('pageUuid', _t(l10n, 'Page', 'الصفحة'), tableName: 'pages', fallbackUuid: 'users', fallbackLabel: 'Users', searchable: true),
+    _relationSelectionField('pageUuid', _t(l10n, 'Page', 'الصفحة'), tableName: 'pages', fallbackUuid: 'users', fallbackLabel: _sampleUsersPageLabel(l10n), searchable: true),
     _textField('key', _t(l10n, 'Permission key', 'مفتاح الصلاحية'), required: true),
     _textField('action', _t(l10n, 'Action', 'الإجراء'), required: true),
     _multilineField('description', _t(l10n, 'Description', 'الوصف')),
@@ -409,8 +431,8 @@ ModelFormDefinition<StoreSupplier> storeSupplierFormDefinition(AppLocalizations 
   tableName: 'store_supplier',
   tableFieldPriorityKeys: const <String>['storeUuid', 'supplierUuid', 'status'],
   fields: [
-    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: 'store-central-001', fallbackLabel: 'Central Store', searchable: true, required: true),
-    _relationSelectionField('supplierUuid', _t(l10n, 'Supplier', 'المورد'), tableName: 'supplier', fallbackUuid: 'supplier-alnoor-001', fallbackLabel: 'Al Noor Trading', searchable: true, required: true),
+    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: 'store-central-001', fallbackLabel: _sampleStoreLabel(l10n), searchable: true, required: true),
+    _relationSelectionField('supplierUuid', _t(l10n, 'Supplier', 'المورد'), tableName: 'supplier', fallbackUuid: 'supplier-alnoor-001', fallbackLabel: _sampleSupplierLabel(l10n), searchable: true, required: true),
     _statusField(l10n),
   ],
   fromMap: StoreSupplier.fromMap,
@@ -422,11 +444,11 @@ ModelFormDefinition<StoreClient> storeClientFormDefinition(AppLocalizations l10n
   tableName: 'store_client',
   tableFieldPriorityKeys: const <String>['storeUuid', 'clientUuid', 'status'],
   fields: [
-    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: 'store-central-001', fallbackLabel: 'Central Store', searchable: true, required: true),
+    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: 'store-central-001', fallbackLabel: _sampleStoreLabel(l10n), searchable: true, required: true),
     _selectionField(
       'clientUuid',
       _t(l10n, 'Client', 'العميل'),
-      _clientOptions(l10n, fallbackUuid: 'client-blue-market-001', fallbackLabel: 'Blue Market'),
+      _clientOptions(l10n, fallbackUuid: 'client-blue-market-001', fallbackLabel: _sampleClientLabel(l10n)),
       searchable: true,
       required: true,
       searchButtonLabel: _t(l10n, 'Search client', 'بحث عميل'),
@@ -444,8 +466,8 @@ ModelFormDefinition<StoreUser> storeUserFormDefinition(AppLocalizations l10n) =>
   tableName: 'store_user',
   tableFieldPriorityKeys: const <String>['storeUuid', 'branchUuid', 'userUuid', 'userRoleUuid', 'status'],
   fields: [
-    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: 'store-central-001', fallbackLabel: 'Central Store', searchable: true, required: true),
-    _relationSelectionField('branchUuid', _t(l10n, 'Branch', 'الفرع'), tableName: 'branch', fallbackUuid: 'branch-north-001', fallbackLabel: 'North Branch', searchable: true),
+    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: 'store-central-001', fallbackLabel: _sampleStoreLabel(l10n), searchable: true, required: true),
+    _relationSelectionField('branchUuid', _t(l10n, 'Branch', 'الفرع'), tableName: 'branch', fallbackUuid: 'branch-north-001', fallbackLabel: _sampleBranchLabel(l10n), searchable: true),
     _relationSelectionField('userUuid', _t(l10n, 'User', 'المستخدم'), tableName: 'users', fallbackUuid: '33333333-3333-4333-8333-333333333333', searchable: true, required: true),
     _relationSelectionField('userRoleUuid', _t(l10n, 'Role', 'الدور'), tableName: 'roles', fallbackUuid: '55555555-5555-4555-8555-555555555555', searchable: true, required: true),
     _statusField(l10n),
@@ -467,8 +489,8 @@ ModelFormDefinition<StoreBranches> storeBranchesFormDefinition(AppLocalizations 
   tableName: 'store_branches',
   tableFieldPriorityKeys: const <String>['storeUuid', 'branchUuid', 'status'],
   fields: [
-    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: 'store-central-001', fallbackLabel: 'Central Store', searchable: true, required: true),
-    _relationSelectionField('branchUuid', _t(l10n, 'Branch', 'الفرع'), tableName: 'branch', fallbackUuid: 'branch-north-001', fallbackLabel: 'North Branch', searchable: true, required: true),
+    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: 'store-central-001', fallbackLabel: _sampleStoreLabel(l10n), searchable: true, required: true),
+    _relationSelectionField('branchUuid', _t(l10n, 'Branch', 'الفرع'), tableName: 'branch', fallbackUuid: 'branch-north-001', fallbackLabel: _sampleBranchLabel(l10n), searchable: true, required: true),
     _statusField(l10n),
   ],
   fromMap: StoreBranches.fromMap,
@@ -480,9 +502,9 @@ ModelFormDefinition<BranchProduct> branchProductFormDefinition(AppLocalizations 
   tableName: 'branch_product',
   tableFieldPriorityKeys: const <String>['branchUuid', 'productUuid', 'stock', 'reorderLevel', 'status'],
   fields: [
-    _relationSelectionField('branchUuid', _t(l10n, 'Branch', 'الفرع'), tableName: 'branch', fallbackUuid: 'branch-north-001', fallbackLabel: 'North Branch', searchable: true, required: true),
+    _relationSelectionField('branchUuid', _t(l10n, 'Branch', 'الفرع'), tableName: 'branch', fallbackUuid: 'branch-north-001', fallbackLabel: _sampleBranchLabel(l10n), searchable: true, required: true),
     _textField('supplierProductUuid', _t(l10n, 'Supplier product UUID', 'معرّف منتج المورد UUID'), required: true),
-    _relationSelectionField('productUuid', _t(l10n, 'Product', 'المنتج'), tableName: 'products', fallbackUuid: 'product-flour-001', fallbackLabel: 'Premium Flour 25kg', searchable: true, required: true),
+    _relationSelectionField('productUuid', _t(l10n, 'Product', 'المنتج'), tableName: 'products', fallbackUuid: 'product-flour-001', fallbackLabel: _sampleProductLabel(l10n), searchable: true, required: true),
     _integerField('stock', _t(l10n, 'Stock', 'المخزون'), required: true),
     _integerField('reservedQuantity', _t(l10n, 'Reserved quantity', 'الكمية المحجوزة')),
     _integerField('reorderLevel', _t(l10n, 'Reorder level', 'حد إعادة الطلب')),
@@ -520,7 +542,7 @@ ModelFormDefinition<StoreInvoiceItem> storeInvoiceItemFormDefinition(AppLocaliza
       labelKeys: const <String>['invoiceNumber'],
     ),
     _textField('supplierProductUuid', _t(l10n, 'Supplier product UUID', 'معرّف منتج المورد UUID'), required: true),
-    _relationSelectionField('productUuid', _t(l10n, 'Product', 'المنتج'), tableName: 'products', fallbackUuid: 'product-flour-001', fallbackLabel: 'Premium Flour 25kg', searchable: true, required: true),
+    _relationSelectionField('productUuid', _t(l10n, 'Product', 'المنتج'), tableName: 'products', fallbackUuid: 'product-flour-001', fallbackLabel: _sampleProductLabel(l10n), searchable: true, required: true),
     _integerField('quantity', _t(l10n, 'Quantity', 'الكمية'), required: true),
     _decimalField('unitPrice', _t(l10n, 'Unit price', 'سعر الوحدة'), required: true),
     _decimalField('discountAmount', _t(l10n, 'Discount amount', 'مبلغ الخصم'), required: true),
@@ -602,7 +624,7 @@ ModelFormDefinition<StoreReturnItem> storeReturnItemFormDefinition(AppLocalizati
     ),
     _relationSelectionField('invoiceItemUuid', _t(l10n, 'Invoice item', 'عنصر الفاتورة'), tableName: 'store_invoice_item', fallbackUuid: 'invoice-item-001', searchable: true, labelBuilder: _invoiceItemOptionLabel),
     _textField('supplierProductUuid', _t(l10n, 'Supplier product UUID', 'معرّف منتج المورد UUID'), required: true),
-    _relationSelectionField('productUuid', _t(l10n, 'Product', 'المنتج'), tableName: 'products', fallbackUuid: 'product-flour-001', fallbackLabel: 'Premium Flour 25kg', searchable: true, required: true),
+    _relationSelectionField('productUuid', _t(l10n, 'Product', 'المنتج'), tableName: 'products', fallbackUuid: 'product-flour-001', fallbackLabel: _sampleProductLabel(l10n), searchable: true, required: true),
     _integerField('quantity', _t(l10n, 'Quantity', 'الكمية'), required: true),
     _decimalField('unitPrice', _t(l10n, 'Unit price', 'سعر الوحدة'), required: true),
     _decimalField('lineTotal', _t(l10n, 'Line total', 'إجمالي السطر'), required: true),
@@ -631,12 +653,12 @@ ModelFormDefinition<StoreInvoice> invoiceFormDefinition(AppLocalizations l10n) =
   tableFieldPriorityKeys: const <String>['invoiceNumber', 'clientUuid', 'storeUuid', 'totalAmount', 'status'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), hintText: _scopeAutoHint(l10n)),
-    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: 'store-central-001', fallbackLabel: 'Central Store', hintText: _scopeAutoHint(l10n), searchable: true),
-    _relationSelectionField('branchUuid', _t(l10n, 'Branch', 'الفرع'), tableName: 'branch', fallbackUuid: 'branch-north-001', fallbackLabel: 'North Branch', hintText: _scopeAutoHint(l10n), searchable: true),
+    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: 'store-central-001', fallbackLabel: _sampleStoreLabel(l10n), hintText: _scopeAutoHint(l10n), searchable: true),
+    _relationSelectionField('branchUuid', _t(l10n, 'Branch', 'الفرع'), tableName: 'branch', fallbackUuid: 'branch-north-001', fallbackLabel: _sampleBranchLabel(l10n), hintText: _scopeAutoHint(l10n), searchable: true),
     _selectionField(
       'clientUuid',
       _t(l10n, 'Client', 'العميل'),
-      _clientOptions(l10n, fallbackUuid: 'client-blue-market-001', fallbackLabel: 'Blue Market'),
+      _clientOptions(l10n, fallbackUuid: 'client-blue-market-001', fallbackLabel: _sampleClientLabel(l10n)),
       required: true,
       searchable: true,
       searchButtonLabel: _t(l10n, 'Search client', 'بحث عميل'),
@@ -644,11 +666,11 @@ ModelFormDefinition<StoreInvoice> invoiceFormDefinition(AppLocalizations l10n) =
       onCreateOption: (query) => _createClientOptionFromQuery(query: query, l10n: l10n),
     ),
     _textField('invoiceNumber', _t(l10n, 'Invoice number', 'رقم الفاتورة'), required: true),
-    _relationSelectionField('productUuid', _t(l10n, 'Product', 'المنتج'), tableName: 'products', fallbackUuid: 'product-flour-001', fallbackLabel: 'Premium Flour 25kg', searchable: true),
+    _relationSelectionField('productUuid', _t(l10n, 'Product', 'المنتج'), tableName: 'products', fallbackUuid: 'product-flour-001', fallbackLabel: _sampleProductLabel(l10n), searchable: true),
     _integerField('quantity', _t(l10n, 'Quantity', 'الكمية')),
     _decimalField('unitPrice', _t(l10n, 'Unit price', 'سعر الوحدة')),
     _selectionField('batchSelectionStrategy', _t(l10n, 'Batch strategy', 'استراتيجية اختيار الدفعة'), _batchStrategyOptions(l10n)),
-    _relationSelectionField('createdByUserUuid', _t(l10n, 'Created by user', 'المستخدم المنشئ'), tableName: 'users', fallbackUuid: 'user-ops-manager-001', fallbackLabel: 'Operations Manager', searchable: true),
+    _relationSelectionField('createdByUserUuid', _t(l10n, 'Created by user', 'المستخدم المنشئ'), tableName: 'users', fallbackUuid: 'user-ops-manager-001', fallbackLabel: _sampleUserLabel(l10n), searchable: true),
     _selectionField('invoiceType', _t(l10n, 'Invoice type', 'نوع الفاتورة'), _invoiceTypeOptions(l10n), required: true),
     _integerField('itemCount', _t(l10n, 'Item count', 'عدد العناصر'), required: true),
     _decimalField('totalAmount', _t(l10n, 'Total amount', 'المبلغ الإجمالي'), required: true),
@@ -708,11 +730,11 @@ ModelFormDefinition<StoreReturn> returnFormDefinition(AppLocalizations l10n) => 
   tableName: 'store_return',
   tableFieldPriorityKeys: const <String>['returnNumber', 'clientUuid', 'storeUuid', 'totalAmount', 'status'],
   fields: [
-    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: 'store-central-001', fallbackLabel: 'Central Store', hintText: _scopeAutoHint(l10n), searchable: true),
+    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: 'store-central-001', fallbackLabel: _sampleStoreLabel(l10n), hintText: _scopeAutoHint(l10n), searchable: true),
     _selectionField(
       'clientUuid',
       _t(l10n, 'Client', 'العميل'),
-      _clientOptions(l10n, fallbackUuid: 'client-blue-market-001', fallbackLabel: 'Blue Market'),
+      _clientOptions(l10n, fallbackUuid: 'client-blue-market-001', fallbackLabel: _sampleClientLabel(l10n)),
       required: true,
       searchable: true,
       searchButtonLabel: _t(l10n, 'Search client', 'بحث عميل'),
@@ -748,11 +770,11 @@ ModelFormDefinition<StorePaymentVoucher> paymentVoucherFormDefinition(AppLocaliz
   tableName: 'store_payment_voucher',
   tableFieldPriorityKeys: const <String>['voucherNumber', 'clientUuid', 'payeeName', 'amount', 'transactionDate'],
   fields: [
-    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: 'store-central-001', fallbackLabel: 'Central Store', hintText: _scopeAutoHint(l10n), searchable: true),
+    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: 'store-central-001', fallbackLabel: _sampleStoreLabel(l10n), hintText: _scopeAutoHint(l10n), searchable: true),
     _selectionField(
       'clientUuid',
       _t(l10n, 'Client', 'العميل'),
-      _clientOptions(l10n, fallbackUuid: 'client-blue-market-001', fallbackLabel: 'Blue Market'),
+      _clientOptions(l10n, fallbackUuid: 'client-blue-market-001', fallbackLabel: _sampleClientLabel(l10n)),
       required: true,
       searchable: true,
       searchButtonLabel: _t(l10n, 'Search client', 'بحث عميل'),
@@ -774,7 +796,7 @@ ModelFormDefinition<StorePaymentVoucher> paymentVoucherFormDefinition(AppLocaliz
     storeUuid: 'store-central-001',
     clientUuid: 'client-blue-market-001',
     voucherNumber: 'PV-2024-0011',
-    payeeName: 'Blue Market',
+    payeeName: _sampleClientLabel(l10n),
     amount: Decimal.parse('300'),
     paymentMethod: StorePaymentMethod.bankTransfer,
     referenceNumber: 'TRX-4488',
@@ -791,9 +813,9 @@ ModelFormDefinition<InventoryMovement> inventoryMovementFormDefinition(AppLocali
   tableFieldPriorityKeys: const <String>['movementType', 'productUuid', 'branchUuid', 'quantityDelta', 'referenceUuid'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID')),
-    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: 'store-central-001', fallbackLabel: 'Central Store', searchable: true),
-    _relationSelectionField('branchUuid', _t(l10n, 'Branch', 'الفرع'), tableName: 'branch', fallbackUuid: 'branch-north-001', fallbackLabel: 'North Branch', searchable: true),
-    _relationSelectionField('supplierUuid', _t(l10n, 'Supplier', 'المورد'), tableName: 'supplier', fallbackUuid: 'supplier-alnoor-001', fallbackLabel: 'Al Noor Trading', searchable: true),
+    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: 'store-central-001', fallbackLabel: _sampleStoreLabel(l10n), searchable: true),
+    _relationSelectionField('branchUuid', _t(l10n, 'Branch', 'الفرع'), tableName: 'branch', fallbackUuid: 'branch-north-001', fallbackLabel: _sampleBranchLabel(l10n), searchable: true),
+    _relationSelectionField('supplierUuid', _t(l10n, 'Supplier', 'المورد'), tableName: 'supplier', fallbackUuid: 'supplier-alnoor-001', fallbackLabel: _sampleSupplierLabel(l10n), searchable: true),
     _relationSelectionField(
       'supplierInvoiceUuid',
       _t(l10n, 'Supplier invoice', 'فاتورة المورد'),
@@ -806,7 +828,7 @@ ModelFormDefinition<InventoryMovement> inventoryMovementFormDefinition(AppLocali
     _textField('batchNumber', _t(l10n, 'Batch number', 'رقم الدفعة')),
     _dateTimeField('expiryDate', _t(l10n, 'Expiry date', 'تاريخ الانتهاء')),
     _textField('supplierProductUuid', _t(l10n, 'Supplier product UUID', 'معرّف منتج الشركة UUID'), required: true),
-    _relationSelectionField('productUuid', _t(l10n, 'Product', 'المنتج'), tableName: 'products', fallbackUuid: 'product-flour-001', fallbackLabel: 'Premium Flour 25kg', searchable: true, required: true),
+    _relationSelectionField('productUuid', _t(l10n, 'Product', 'المنتج'), tableName: 'products', fallbackUuid: 'product-flour-001', fallbackLabel: _sampleProductLabel(l10n), searchable: true, required: true),
     _selectionField('movementType', _t(l10n, 'Movement type', 'نوع الحركة'), _movementTypeOptions(l10n), required: true),
     _integerField('quantityDelta', _t(l10n, 'Quantity delta', 'تغير الكمية'), required: true),
     _integerField('balanceAfter', _t(l10n, 'Balance after', 'الرصيد بعد الحركة'), required: true),
@@ -814,7 +836,7 @@ ModelFormDefinition<InventoryMovement> inventoryMovementFormDefinition(AppLocali
     _selectionField('referenceType', _t(l10n, 'Reference type', 'نوع المرجع'), _referenceTypeOptions(l10n), required: true),
     _textField('referenceUuid', _t(l10n, 'Reference UUID', 'معرّف المرجع UUID')),
     _multilineField('note', _t(l10n, 'Note', 'ملاحظة'), required: true),
-    _relationSelectionField('createdByUserUuid', _t(l10n, 'Created by user', 'المستخدم المنشئ'), tableName: 'users', fallbackUuid: 'user-ops-manager-001', fallbackLabel: 'Operations Manager', searchable: true),
+    _relationSelectionField('createdByUserUuid', _t(l10n, 'Created by user', 'المستخدم المنشئ'), tableName: 'users', fallbackUuid: 'user-ops-manager-001', fallbackLabel: _sampleUserLabel(l10n), searchable: true),
   ],
   fromMap: InventoryMovement.fromMap,
   toMap: (movement) => movement.toMap(),
@@ -873,11 +895,11 @@ ModelFormDefinition<StoreFinancialTransaction> transactionFormDefinition(AppLoca
   tableFieldPriorityKeys: const <String>['transactionNumber', 'clientUuid', 'sourceUuid', 'amount', 'transactionDate'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID')),
-    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: 'store-central-001', fallbackLabel: 'Central Store', searchable: true, required: true),
+    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: 'store-central-001', fallbackLabel: _sampleStoreLabel(l10n), searchable: true, required: true),
     _selectionField(
       'clientUuid',
       _t(l10n, 'Client', 'العميل'),
-      _clientOptions(l10n, fallbackUuid: 'client-blue-market-001', fallbackLabel: 'Blue Market'),
+      _clientOptions(l10n, fallbackUuid: 'client-blue-market-001', fallbackLabel: _sampleClientLabel(l10n)),
       searchable: true,
       required: true,
       searchButtonLabel: _t(l10n, 'Search client', 'بحث عميل'),
@@ -893,11 +915,11 @@ ModelFormDefinition<StoreFinancialTransaction> transactionFormDefinition(AppLoca
     _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
     _relationSelectionField('sourceBranchUuid', _t(l10n, 'Source branch', 'الفرع المصدر'), tableName: 'branch', fallbackUuid: 'source-branch-sample', searchable: true),
     _relationSelectionField('destinationBranchUuid', _t(l10n, 'Destination branch', 'الفرع الوجهة'), tableName: 'branch', fallbackUuid: 'destination-branch-sample', searchable: true),
-    _relationSelectionField('productUuid', _t(l10n, 'Product', 'المنتج'), tableName: 'products', fallbackUuid: 'product-flour-001', fallbackLabel: 'Premium Flour 25kg', searchable: true),
+    _relationSelectionField('productUuid', _t(l10n, 'Product', 'المنتج'), tableName: 'products', fallbackUuid: 'product-flour-001', fallbackLabel: _sampleProductLabel(l10n), searchable: true),
     _relationSelectionField('batchUuid', _t(l10n, 'Batch', 'الدفعة'), tableName: 'inventory_batch', fallbackUuid: 'batch-sample-001', searchable: true, labelKeys: const <String>['batchNumber']),
     _integerField('quantity', _t(l10n, 'Quantity', 'الكمية')),
     _decimalField('unitCost', _t(l10n, 'Unit cost', 'تكلفة الوحدة')),
-    _relationSelectionField('createdByUserUuid', _t(l10n, 'Created by user', 'المستخدم المنشئ'), tableName: 'users', fallbackUuid: 'user-ops-manager-001', fallbackLabel: 'Operations Manager', searchable: true),
+    _relationSelectionField('createdByUserUuid', _t(l10n, 'Created by user', 'المستخدم المنشئ'), tableName: 'users', fallbackUuid: 'user-ops-manager-001', fallbackLabel: _sampleUserLabel(l10n), searchable: true),
     _dateTimeField('transactionDate', _t(l10n, 'Transaction date', 'تاريخ العملية'), required: true),
     _statusField(l10n),
   ],
@@ -953,13 +975,13 @@ ModelFormDefinition<PurchaseOrder> purchaseOrderFormDefinition(AppLocalizations 
   tableFieldPriorityKeys: const <String>['poNumber', 'supplierUuid', 'storeUuid', 'totalAmount', 'status'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), required: true),
-    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: '22222222-2222-4222-8222-222222222222', fallbackLabel: 'Central Store', searchable: true, required: true),
+    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: '22222222-2222-4222-8222-222222222222', fallbackLabel: _sampleStoreLabel(l10n), searchable: true, required: true),
     _relationSelectionField(
       'supplierUuid',
       _t(l10n, 'Supplier', 'المورد'),
       tableName: 'supplier',
       fallbackUuid: '33333333-3333-4333-8333-333333333333',
-      fallbackLabel: 'Al Noor Trading',
+      fallbackLabel: _sampleSupplierLabel(l10n),
       searchable: true,
       required: true,
     ),
@@ -975,7 +997,7 @@ ModelFormDefinition<PurchaseOrder> purchaseOrderFormDefinition(AppLocalizations 
       _t(l10n, 'Created by user', 'المستخدم المنشئ'),
       tableName: 'users',
       fallbackUuid: '44444444-4444-4444-8444-444444444444',
-      fallbackLabel: 'Operations Manager',
+      fallbackLabel: _sampleUserLabel(l10n),
       searchable: true,
     ),
   ],
@@ -1017,7 +1039,7 @@ ModelFormDefinition<PurchaseOrderItem> purchaseOrderItemFormDefinition(AppLocali
       _t(l10n, 'Product', 'المنتج'),
       tableName: 'products',
       fallbackUuid: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-      fallbackLabel: 'Premium Flour 25kg',
+      fallbackLabel: _sampleProductLabel(l10n),
       searchable: true,
       required: true,
     ),
@@ -1052,11 +1074,11 @@ ModelFormDefinition<SupplierInvoice> supplierInvoiceFormDefinition(AppLocalizati
       _t(l10n, 'Supplier', 'المورد'),
       tableName: 'supplier',
       fallbackUuid: '33333333-3333-4333-8333-333333333333',
-      fallbackLabel: 'Al Noor Trading',
+      fallbackLabel: _sampleSupplierLabel(l10n),
       searchable: true,
       required: true,
     ),
-    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: '22222222-2222-4222-8222-222222222222', fallbackLabel: 'Central Store', searchable: true, required: true),
+    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: '22222222-2222-4222-8222-222222222222', fallbackLabel: _sampleStoreLabel(l10n), searchable: true, required: true),
     _relationSelectionField(
       'purchaseOrderUuid',
       _t(l10n, 'Purchase order', 'أمر الشراء'),
@@ -1100,14 +1122,14 @@ ModelFormDefinition<InventoryBatch> inventoryBatchFormDefinition(AppLocalization
   tableFieldPriorityKeys: const <String>['batchNumber', 'productUuid', 'remainingQuantity', 'unitCost', 'expiryDate'],
   fields: [
     _textField('ownerUuid', _t(l10n, 'Owner UUID', 'معرّف المالك UUID'), required: true),
-    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: '22222222-2222-4222-8222-222222222222', fallbackLabel: 'Central Store', searchable: true, required: true),
-    _relationSelectionField('supplierUuid', _t(l10n, 'Supplier', 'المورد'), tableName: 'supplier', fallbackUuid: '33333333-3333-4333-8333-333333333333', fallbackLabel: 'Al Noor Trading', searchable: true),
+    _relationSelectionField('storeUuid', _t(l10n, 'Store', 'المتجر'), tableName: 'store', fallbackUuid: '22222222-2222-4222-8222-222222222222', fallbackLabel: _sampleStoreLabel(l10n), searchable: true, required: true),
+    _relationSelectionField('supplierUuid', _t(l10n, 'Supplier', 'المورد'), tableName: 'supplier', fallbackUuid: '33333333-3333-4333-8333-333333333333', fallbackLabel: _sampleSupplierLabel(l10n), searchable: true),
     _relationSelectionField(
       'productUuid',
       _t(l10n, 'Product', 'المنتج'),
       tableName: 'products',
       fallbackUuid: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-      fallbackLabel: 'Premium Flour 25kg',
+      fallbackLabel: _sampleProductLabel(l10n),
       searchable: true,
       required: true,
     ),
@@ -1160,7 +1182,7 @@ ModelFormDefinition<InventoryTransaction> inventoryTransactionFormDefinition(App
       _t(l10n, 'Product', 'المنتج'),
       tableName: 'products',
       fallbackUuid: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-      fallbackLabel: 'Premium Flour 25kg',
+      fallbackLabel: _sampleProductLabel(l10n),
       searchable: true,
       required: true,
     ),
@@ -1258,7 +1280,7 @@ ModelFormDefinition<TransferOrderItem> transferOrderItemFormDefinition(AppLocali
       _t(l10n, 'Product', 'المنتج'),
       tableName: 'products',
       fallbackUuid: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-      fallbackLabel: 'Premium Flour 25kg',
+      fallbackLabel: _sampleProductLabel(l10n),
       searchable: true,
       required: true,
     ),
@@ -1281,7 +1303,7 @@ ModelFormDefinition<SalesOrder> salesOrderFormDefinition(AppLocalizations l10n) 
       _t(l10n, 'Store', 'المتجر'),
       tableName: 'store',
       fallbackUuid: '22222222-2222-4222-8222-222222222222',
-      fallbackLabel: 'Central Store',
+      fallbackLabel: _sampleStoreLabel(l10n),
       hintText: _scopeAutoHint(l10n),
       searchable: true,
     ),
@@ -1289,7 +1311,7 @@ ModelFormDefinition<SalesOrder> salesOrderFormDefinition(AppLocalizations l10n) 
     _selectionField(
       'customerUuid',
       _t(l10n, 'Client', 'العميل'),
-      _clientOptions(l10n, fallbackUuid: '44444444-4444-4444-8444-444444444444'),
+      _clientOptions(l10n, fallbackUuid: '44444444-4444-4444-8444-444444444444', fallbackLabel: _sampleClientLabel(l10n)),
       searchable: true,
       searchButtonLabel: _t(l10n, 'Search client', 'بحث عميل'),
       addNewButtonLabel: _t(l10n, 'Add new client', 'إضافة عميل جديد'),
@@ -1328,7 +1350,7 @@ ModelFormDefinition<SalesInvoice> salesInvoiceFormDefinition(AppLocalizations l1
       _t(l10n, 'Store', 'المتجر'),
       tableName: 'store',
       fallbackUuid: '22222222-2222-4222-8222-222222222222',
-      fallbackLabel: 'Central Store',
+      fallbackLabel: _sampleStoreLabel(l10n),
       hintText: _scopeAutoHint(l10n),
       searchable: true,
     ),
@@ -1345,7 +1367,7 @@ ModelFormDefinition<SalesInvoice> salesInvoiceFormDefinition(AppLocalizations l1
     _selectionField(
       'customerUuid',
       _t(l10n, 'Client', 'العميل'),
-      _clientOptions(l10n, fallbackUuid: '44444444-4444-4444-8444-444444444444'),
+      _clientOptions(l10n, fallbackUuid: '44444444-4444-4444-8444-444444444444', fallbackLabel: _sampleClientLabel(l10n)),
       searchable: true,
       searchButtonLabel: _t(l10n, 'Search client', 'بحث عميل'),
       addNewButtonLabel: _t(l10n, 'Add new client', 'إضافة عميل جديد'),
@@ -1472,7 +1494,7 @@ ModelFormDefinition<PromotionRule> promotionRuleFormDefinition(AppLocalizations 
   toMap: (promotionRule) => promotionRule.toMap(),
   sampleModel: PromotionRule(
     ownerUuid: '11111111-1111-4111-8111-111111111111',
-    name: 'Weekend Promo',
+    name: _samplePromotionLabel(l10n),
     branchUuid: '22222222-2222-4222-8222-222222222222',
     productUuid: '33333333-3333-4333-8333-333333333333',
     discountType: 'percent',

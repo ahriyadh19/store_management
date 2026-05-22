@@ -72,20 +72,21 @@ bool isModelRelationLikeField(String key) {
   return key.endsWith('Uuid') || key == 'uuid' || key.endsWith('Id') || key == 'id';
 }
 
-String formatModelFieldDisplayValue({required List<ModelFormFieldDefinition> fields, required String? fieldKey, required Object? value, required Map<String, dynamic> rowData}) {
+String formatModelFieldDisplayValue({required List<ModelFormFieldDefinition> fields, required String? fieldKey, required Object? value, required Map<String, dynamic> rowData, AppLocalizations? l10n}) {
   final key = fieldKey;
+  final emptyLabel = l10n?.pick('-', '-') ?? '-';
   if (key == 'synced') {
     final boolValue = _boolFromValue(value);
     if (boolValue == null) {
-      return value?.toString() ?? '-';
+      return value?.toString() ?? emptyLabel;
     }
-    return boolValue ? 'Yes' : 'No';
+    return boolValue ? (l10n?.pick('Yes', 'نعم') ?? 'Yes') : (l10n?.pick('No', 'لا') ?? 'No');
   }
 
   if (key == 'syncedAt') {
     final resolvedValue = value ?? rowData['synced_at'];
     if (resolvedValue == null) {
-      return '-';
+      return emptyLabel;
     }
     final millis = _millisecondsFromValue(resolvedValue);
     if (millis == null) {
@@ -100,14 +101,14 @@ String formatModelFieldDisplayValue({required List<ModelFormFieldDefinition> fie
   }
 
   if (value == null) {
-    return '-';
+    return emptyLabel;
   }
 
   final optionLabel = key == null ? null : _resolveModelFieldOptionLabel(fields: fields, fieldKey: key, value: value);
   if (key != null && isModelRelationLikeField(key)) {
     final raw = value.toString().trim();
     if (raw.isEmpty) {
-      return '-';
+      return emptyLabel;
     }
 
     final linkedLabel = _resolveModelLinkedValueLabel(fields: fields, fieldKey: key, rowData: rowData, fallbackOptionLabel: optionLabel);
@@ -138,19 +139,19 @@ String formatModelFieldDisplayValue({required List<ModelFormFieldDefinition> fie
   return value.toString();
 }
 
-Object? modelFieldSortValue({required List<ModelFormFieldDefinition> fields, required String? fieldKey, required Object? value, required Map<String, dynamic> rowData}) {
+Object? modelFieldSortValue({required List<ModelFormFieldDefinition> fields, required String? fieldKey, required Object? value, required Map<String, dynamic> rowData, AppLocalizations? l10n}) {
   final key = fieldKey;
   if (key == null) {
     return value;
   }
 
   if (key == 'syncedAt') {
-    return _millisecondsFromValue(value ?? rowData['synced_at']) ?? formatModelFieldDisplayValue(fields: fields, fieldKey: key, value: value, rowData: rowData).toLowerCase();
+    return _millisecondsFromValue(value ?? rowData['synced_at']) ?? formatModelFieldDisplayValue(fields: fields, fieldKey: key, value: value, rowData: rowData, l10n: l10n).toLowerCase();
   }
 
   final field = findModelFormFieldDefinition(fields, key);
   if (field?.type == ModelFormFieldType.selection || isModelRelationLikeField(key)) {
-    return formatModelFieldDisplayValue(fields: fields, fieldKey: key, value: value, rowData: rowData).toLowerCase();
+    return formatModelFieldDisplayValue(fields: fields, fieldKey: key, value: value, rowData: rowData, l10n: l10n).toLowerCase();
   }
 
   if (value is DateTime) {
@@ -160,7 +161,7 @@ Object? modelFieldSortValue({required List<ModelFormFieldDefinition> fields, req
   return value;
 }
 
-String buildModelSearchBlob({required List<ModelFormFieldDefinition> fields, required Map<String, dynamic> rowData}) {
+String buildModelSearchBlob({required List<ModelFormFieldDefinition> fields, required Map<String, dynamic> rowData, AppLocalizations? l10n}) {
   final searchBuffer = StringBuffer();
   final visitedKeys = <String>{};
 
@@ -169,7 +170,7 @@ String buildModelSearchBlob({required List<ModelFormFieldDefinition> fields, req
     final value = rowData[field.key];
     searchBuffer
       ..write(' ')
-      ..write(formatModelFieldDisplayValue(fields: fields, fieldKey: field.key, value: value, rowData: rowData).toLowerCase())
+      ..write(formatModelFieldDisplayValue(fields: fields, fieldKey: field.key, value: value, rowData: rowData, l10n: l10n).toLowerCase())
       ..write(' ')
       ..write(value?.toString().toLowerCase() ?? '');
   }

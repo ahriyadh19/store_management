@@ -230,9 +230,10 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
   }
 
   Future<void> _pickDatabaseDirectory() async {
+    final l10n = context.l10n;
     final selectedPath = await getDirectoryPath(
       initialDirectory: _databaseDirectoryController.text.trim().isEmpty ? null : _databaseDirectoryController.text.trim(),
-      confirmButtonText: 'Select folder',
+      confirmButtonText: l10n.pick('Select folder', 'اختر مجلد'),
     );
     if (!mounted || selectedPath == null || selectedPath.trim().isEmpty) {
       return;
@@ -241,9 +242,10 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
   }
 
   Future<void> _pickDatabaseFile() async {
+    final l10n = context.l10n;
     final selectedFile = await openFile(
-      acceptedTypeGroups: const <XTypeGroup>[sqliteDatabaseTypeGroup],
-      confirmButtonText: 'Select database',
+      acceptedTypeGroups: <XTypeGroup>[sqliteDatabaseTypeGroup(l10n)],
+      confirmButtonText: l10n.pick('Select database', 'اختر قاعدة البيانات'),
       initialDirectory: _databaseDirectoryController.text.trim().isEmpty ? null : _databaseDirectoryController.text.trim(),
     );
     if (!mounted || selectedFile == null) {
@@ -254,9 +256,10 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
   }
 
   Future<void> _pickBackupDirectory() async {
+    final l10n = context.l10n;
     final selectedPath = await getDirectoryPath(
       initialDirectory: _backupDirectoryController.text.trim().isEmpty ? null : _backupDirectoryController.text.trim(),
-      confirmButtonText: 'Select folder',
+      confirmButtonText: l10n.pick('Select folder', 'اختر مجلد'),
     );
     if (!mounted || selectedPath == null || selectedPath.trim().isEmpty) {
       return;
@@ -265,9 +268,10 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
   }
 
   Future<void> _pickImportSourceFile() async {
+    final l10n = context.l10n;
     final selectedFile = await openFile(
-      acceptedTypeGroups: const <XTypeGroup>[sqliteDatabaseTypeGroup],
-      confirmButtonText: 'Select database',
+      acceptedTypeGroups: <XTypeGroup>[sqliteDatabaseTypeGroup(l10n)],
+      confirmButtonText: l10n.pick('Select database', 'اختر قاعدة البيانات'),
       initialDirectory: _importPathController.text.trim().isEmpty ? null : p.dirname(_importPathController.text.trim()),
     );
     if (!mounted || selectedFile == null) {
@@ -277,11 +281,12 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
   }
 
   Future<void> _pickExportDatabasePath() async {
+    final l10n = context.l10n;
     final location = await getSaveLocation(
-      acceptedTypeGroups: const <XTypeGroup>[sqliteDatabaseTypeGroup],
+      acceptedTypeGroups: <XTypeGroup>[sqliteDatabaseTypeGroup(l10n)],
       suggestedName: p.basename(_exportDatabasePathController.text.trim().isEmpty ? '${p.basenameWithoutExtension(widget.controller.databaseFileName)}_export.sqlite' : _exportDatabasePathController.text.trim()),
       initialDirectory: _exportDatabasePathController.text.trim().isEmpty ? widget.controller.backupDirectoryPath : p.dirname(_exportDatabasePathController.text.trim()),
-      confirmButtonText: 'Save export',
+      confirmButtonText: l10n.pick('Save export', 'احفظ ملف التصدير'),
     );
     if (!mounted || location == null || location.path.trim().isEmpty) {
       return;
@@ -290,11 +295,12 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
   }
 
   Future<void> _pickExportJsonPath() async {
+    final l10n = context.l10n;
     final location = await getSaveLocation(
-      acceptedTypeGroups: const <XTypeGroup>[jsonExportTypeGroup],
+      acceptedTypeGroups: <XTypeGroup>[jsonExportTypeGroup(l10n)],
       suggestedName: p.basename(_exportJsonPathController.text.trim().isEmpty ? '${p.basenameWithoutExtension(widget.controller.databaseFileName)}_snapshot.json' : _exportJsonPathController.text.trim()),
       initialDirectory: _exportJsonPathController.text.trim().isEmpty ? widget.controller.backupDirectoryPath : p.dirname(_exportJsonPathController.text.trim()),
-      confirmButtonText: 'Save export',
+      confirmButtonText: l10n.pick('Save export', 'احفظ ملف التصدير'),
     );
     if (!mounted || location == null || location.path.trim().isEmpty) {
       return;
@@ -339,6 +345,7 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final controller = widget.controller;
@@ -355,10 +362,13 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Local Database Management', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+          Text(l10n.pick('Local Database Management', 'إدارة قاعدة البيانات المحلية'), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 6),
           Text(
-            'Manage the local SQLite file, backup lifecycle, restore safety, storage location, and synchronization behavior from one place.',
+            l10n.pick(
+              'Manage the local SQLite file, backup lifecycle, restore safety, storage location, and synchronization behavior from one place.',
+              'أدر ملف SQLite المحلي ودورة النسخ الاحتياطي وسلامة الاستعادة وموقع التخزين وسلوك المزامنة من مكان واحد.',
+            ),
             style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 16),
@@ -366,11 +376,11 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
             contentPadding: EdgeInsets.zero,
             value: controller.isLocalDatabaseEnabled,
             onChanged: isBusy ? null : (value) => _runAction(() => controller.setLocalDatabaseEnabled(value)),
-            title: const Text('Enable local database usage'),
+            title: Text(l10n.pick('Enable local database usage', 'تفعيل استخدام قاعدة البيانات المحلية')),
             subtitle: Text(
               widget.appPreferencesController.storagePreference == StoragePreference.onlineOnly
-                  ? 'Remote-only mode is active.'
-                  : 'Current storage mode: ${widget.appPreferencesController.storagePreference.name}.',
+                  ? l10n.pick('Remote-only mode is active.', 'وضع الاتصال البعيد فقط نشط.')
+                  : '${l10n.pick('Current storage mode', 'وضع التخزين الحالي')}: ${widget.appPreferencesController.storagePreference.name}.',
             ),
           ),
           const SizedBox(height: 12),
@@ -379,7 +389,7 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
               Expanded(
                 child: DropdownButtonFormField<LocalDatabaseSyncBehavior>(
                   initialValue: controller.syncBehavior,
-                  decoration: const InputDecoration(labelText: 'Synchronization behavior', border: OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: l10n.pick('Synchronization behavior', 'سلوك المزامنة'), border: const OutlineInputBorder()),
                   onChanged: (!controller.isLocalDatabaseEnabled || isBusy)
                       ? null
                       : (value) {
@@ -393,9 +403,9 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
                           value: value,
                           child: Text(
                             switch (value) {
-                              LocalDatabaseSyncBehavior.automatic => 'Automatic',
-                              LocalDatabaseSyncBehavior.manual => 'Manual',
-                              LocalDatabaseSyncBehavior.paused => 'Paused',
+                            LocalDatabaseSyncBehavior.automatic => l10n.pick('Automatic', 'تلقائي'),
+                            LocalDatabaseSyncBehavior.manual => l10n.pick('Manual', 'يدوي'),
+                            LocalDatabaseSyncBehavior.paused => l10n.pick('Paused', 'متوقف'),
                             },
                           ),
                         ),
@@ -407,7 +417,7 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
               Expanded(
                 child: DropdownButtonFormField<AutomaticBackupInterval>(
                   initialValue: controller.automaticBackupInterval,
-                  decoration: const InputDecoration(labelText: 'Automatic backup interval', border: OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: l10n.pick('Automatic backup interval', 'فاصل النسخ الاحتياطي التلقائي'), border: const OutlineInputBorder()),
                   onChanged: isBusy
                       ? null
                       : (value) {
@@ -421,10 +431,10 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
                           value: value,
                           child: Text(
                             switch (value) {
-                              AutomaticBackupInterval.disabled => 'Disabled',
-                              AutomaticBackupInterval.daily => 'Daily',
-                              AutomaticBackupInterval.weekly => 'Weekly',
-                              AutomaticBackupInterval.monthly => 'Monthly',
+                            AutomaticBackupInterval.disabled => l10n.pick('Disabled', 'معطل'),
+                            AutomaticBackupInterval.daily => l10n.pick('Daily', 'يومي'),
+                            AutomaticBackupInterval.weekly => l10n.pick('Weekly', 'أسبوعي'),
+                            AutomaticBackupInterval.monthly => l10n.pick('Monthly', 'شهري'),
                             },
                           ),
                         ),
@@ -438,10 +448,10 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
           _PathField(
             controller: _databaseDirectoryController,
             focusNode: _databaseDirectoryFocusNode,
-            label: 'Database folder',
+            label: l10n.pick('Database folder', 'مجلد قاعدة البيانات'),
             hint: '/path/to/database/folder',
             suffixIcon: IconButton(
-              tooltip: 'Choose folder',
+              tooltip: l10n.pick('Choose folder', 'اختر مجلد'),
               onPressed: isBusy ? null : _pickDatabaseDirectory,
               icon: const Icon(Icons.folder_open_rounded),
             ),
@@ -450,10 +460,10 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
           _PathField(
             controller: _databaseFileController,
             focusNode: _databaseFileFocusNode,
-            label: 'Database file name',
+            label: l10n.pick('Database file name', 'اسم ملف قاعدة البيانات'),
             hint: 'store_management.sqlite',
             suffixIcon: IconButton(
-              tooltip: 'Choose existing database file',
+              tooltip: l10n.pick('Choose existing database file', 'اختر ملف قاعدة بيانات موجود'),
               onPressed: isBusy ? null : _pickDatabaseFile,
               icon: const Icon(Icons.insert_drive_file_rounded),
             ),
@@ -462,10 +472,10 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
           _PathField(
             controller: _backupDirectoryController,
             focusNode: _backupDirectoryFocusNode,
-            label: 'Backup destination folder',
+            label: l10n.pick('Backup destination folder', 'مجلد وجهة النسخ الاحتياطي'),
             hint: '/path/to/backup/folder',
             suffixIcon: IconButton(
-              tooltip: 'Choose backup folder',
+              tooltip: l10n.pick('Choose backup folder', 'اختر مجلد النسخ الاحتياطي'),
               onPressed: isBusy ? null : _pickBackupDirectory,
               icon: const Icon(Icons.folder_copy_rounded),
             ),
@@ -474,10 +484,10 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
           _PathField(
             controller: _importPathController,
             focusNode: _importPathFocusNode,
-            label: 'Import or restore source file',
+            label: l10n.pick('Import or restore source file', 'ملف الاستيراد أو الاستعادة'),
             hint: '/path/to/database.sqlite',
             suffixIcon: IconButton(
-              tooltip: 'Choose database file',
+              tooltip: l10n.pick('Choose database file', 'اختر ملف قاعدة البيانات'),
               onPressed: isBusy ? null : _pickImportSourceFile,
               icon: const Icon(Icons.attach_file_rounded),
             ),
@@ -486,10 +496,10 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
           _PathField(
             controller: _exportDatabasePathController,
             focusNode: _exportDatabasePathFocusNode,
-            label: 'Database export file',
+            label: l10n.pick('Database export file', 'ملف تصدير قاعدة البيانات'),
             hint: '/path/to/export.sqlite',
             suffixIcon: IconButton(
-              tooltip: 'Choose export location',
+              tooltip: l10n.pick('Choose export location', 'اختر موقع التصدير'),
               onPressed: isBusy ? null : _pickExportDatabasePath,
               icon: const Icon(Icons.save_alt_rounded),
             ),
@@ -498,10 +508,10 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
           _PathField(
             controller: _exportJsonPathController,
             focusNode: _exportJsonPathFocusNode,
-            label: 'Portable JSON export file',
+            label: l10n.pick('Portable JSON export file', 'ملف تصدير JSON قابل للنقل'),
             hint: '/path/to/export.json',
             suffixIcon: IconButton(
-              tooltip: 'Choose export location',
+              tooltip: l10n.pick('Choose export location', 'اختر موقع التصدير'),
               onPressed: isBusy ? null : _pickExportJsonPath,
               icon: const Icon(Icons.save_alt_rounded),
             ),
@@ -519,7 +529,7 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
                         await controller.openOrCreateDatabase();
                       }),
                 icon: const Icon(Icons.storage_rounded),
-                label: const Text('Open or create database'),
+                label: Text(l10n.pick('Open or create database', 'افتح أو أنشئ قاعدة البيانات')),
               ),
               OutlinedButton.icon(
                 onPressed: isBusy
@@ -529,7 +539,7 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
                         await controller.changeDatabaseLocation();
                       }),
                 icon: const Icon(Icons.drive_file_move_rounded),
-                label: const Text('Move database'),
+                label: Text(l10n.pick('Move database', 'انقل قاعدة البيانات')),
               ),
               OutlinedButton.icon(
                 onPressed: isBusy
@@ -537,23 +547,23 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
                     : () => _runAction(() async {
                         await controller.restoreDefaultPaths();
                         _syncTextControllers();
-                      }, successMessage: 'Default database paths restored.'),
+                      }, successMessage: l10n.pick('Default database paths restored.', 'تمت استعادة مسارات قاعدة البيانات الافتراضية.')),
                 icon: const Icon(Icons.restore_rounded),
-                label: const Text('Restore default paths'),
+                label: Text(l10n.pick('Restore default paths', 'استعادة المسارات الافتراضية')),
               ),
               OutlinedButton.icon(
                 onPressed: isBusy
                     ? null
                     : () => _runAction(() => controller.createManualBackup().then((_) {})),
                 icon: const Icon(Icons.backup_rounded),
-                label: const Text('Create backup'),
+                label: Text(l10n.pick('Create backup', 'إنشاء نسخة احتياطية')),
               ),
               OutlinedButton.icon(
                 onPressed: isBusy || widget.appPreferencesController.storagePreference != StoragePreference.hybrid
                     ? null
-                    : () => _runAction(() => controller.syncNow(force: true), successMessage: 'Synchronization completed.'),
+                    : () => _runAction(() => controller.syncNow(force: true), successMessage: l10n.pick('Synchronization completed.', 'اكتملت المزامنة.')),
                 icon: controller.isSynchronizing ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.sync_rounded),
-                label: const Text('Sync now'),
+                label: Text(l10n.pick('Sync now', 'زامن الآن')),
               ),
               OutlinedButton.icon(
                 onPressed: isBusy
@@ -563,17 +573,17 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
                         await controller.importDatabaseCopy(_importPathController.text);
                       }),
                 icon: const Icon(Icons.upload_file_rounded),
-                label: const Text('Import database file'),
+                label: Text(l10n.pick('Import database file', 'استيراد ملف قاعدة البيانات')),
               ),
               OutlinedButton.icon(
                 onPressed: isBusy ? null : () => _runAction(() => controller.exportDatabaseCopy(_exportDatabasePathController.text)),
                 icon: const Icon(Icons.download_rounded),
-                label: const Text('Export database copy'),
+                label: Text(l10n.pick('Export database copy', 'تصدير نسخة من قاعدة البيانات')),
               ),
               OutlinedButton.icon(
                 onPressed: isBusy ? null : () => _runAction(() => controller.exportPortableSnapshot(_exportJsonPathController.text)),
                 icon: const Icon(Icons.data_object_rounded),
-                label: const Text('Export JSON snapshot'),
+                label: Text(l10n.pick('Export JSON snapshot', 'تصدير لقطة JSON')),
               ),
               OutlinedButton.icon(
                 onPressed: isBusy ? null : () => _runAction(controller.refreshStatus),
@@ -585,8 +595,11 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
                     ? null
                     : () async {
                         final confirmed = await _confirmAction(
-                          title: 'Reset local storage?',
-                          message: 'A backup will be created first when automatic backups allow it, then local cached records will be cleared.',
+                          title: l10n.pick('Reset local storage?', 'إعادة تعيين التخزين المحلي؟'),
+                          message: l10n.pick(
+                            'A backup will be created first when automatic backups allow it, then local cached records will be cleared.',
+                            'سيتم إنشاء نسخة احتياطية أولًا عندما تسمح إعدادات النسخ الاحتياطي التلقائي، ثم سيتم مسح السجلات المخزنة محليًا.',
+                          ),
                         );
                         if (!confirmed) {
                           return;
@@ -594,15 +607,18 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
                         await _runAction(controller.resetLocalStorage);
                       },
                 icon: const Icon(Icons.delete_sweep_rounded),
-                label: const Text('Reset local storage'),
+                label: Text(l10n.pick('Reset local storage', 'إعادة تعيين التخزين المحلي')),
               ),
               OutlinedButton.icon(
                 onPressed: isBusy
                     ? null
                     : () async {
                         final confirmed = await _confirmAction(
-                          title: 'Delete and recreate database?',
-                          message: 'Use this only when the current local database is corrupted or cannot be opened safely.',
+                          title: l10n.pick('Delete and recreate database?', 'حذف قاعدة البيانات وإعادة إنشائها؟'),
+                          message: l10n.pick(
+                            'Use this only when the current local database is corrupted or cannot be opened safely.',
+                            'استخدم هذا فقط عندما تكون قاعدة البيانات المحلية الحالية تالفة أو لا يمكن فتحها بأمان.',
+                          ),
                         );
                         if (!confirmed) {
                           return;
@@ -610,7 +626,7 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
                         await _runAction(controller.deleteCorruptedDatabase);
                       },
                 icon: const Icon(Icons.delete_forever_rounded),
-                label: const Text('Delete and recreate database'),
+                label: Text(l10n.pick('Delete and recreate database', 'حذف قاعدة البيانات وإعادة إنشائها')),
               ),
             ],
           ),
@@ -644,10 +660,10 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
             ),
           ],
           const SizedBox(height: 16),
-          Text('Backup history', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+          Text(l10n.pick('Backup history', 'سجل النسخ الاحتياطية'), style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
           if (controller.backupHistory.isEmpty)
-            Text('No backups have been created yet.', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant))
+            Text(l10n.pick('No backups have been created yet.', 'لم يتم إنشاء أي نسخ احتياطية بعد.'), style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant))
           else
             Column(
               children: controller.backupHistory
@@ -658,20 +674,23 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         title: Text(p.basename(record.path), maxLines: 1, overflow: TextOverflow.ellipsis),
                         subtitle: Text(
-                          '${record.path}\n${controller.formatBytes(record.sizeBytes)} • ${record.automatic ? 'Automatic' : 'Manual'} • ${DateTime.fromMillisecondsSinceEpoch(record.createdAtMillis).toLocal().toIso8601String()}',
+                          '${record.path}\n${controller.formatBytes(record.sizeBytes)} • ${record.automatic ? l10n.pick('Automatic', 'تلقائي') : l10n.pick('Manual', 'يدوي')} • ${DateTime.fromMillisecondsSinceEpoch(record.createdAtMillis).toLocal().toIso8601String()}',
                         ),
                         isThreeLine: true,
                         trailing: Wrap(
                           spacing: 6,
                           children: [
                             IconButton(
-                              tooltip: 'Restore backup',
+                              tooltip: l10n.pick('Restore backup', 'استعادة النسخة الاحتياطية'),
                               onPressed: isBusy
                                   ? null
                                   : () async {
                                       final confirmed = await _confirmAction(
-                                        title: 'Restore backup?',
-                                        message: 'The current database will be replaced after validation. A rollback backup will be kept if restore fails.',
+                                        title: l10n.pick('Restore backup?', 'استعادة النسخة الاحتياطية؟'),
+                                        message: l10n.pick(
+                                          'The current database will be replaced after validation. A rollback backup will be kept if restore fails.',
+                                          'سيتم استبدال قاعدة البيانات الحالية بعد التحقق. سيتم الاحتفاظ بنسخة تراجع إذا فشلت الاستعادة.',
+                                        ),
                                       );
                                       if (!confirmed) {
                                         return;
@@ -681,7 +700,7 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
                               icon: const Icon(Icons.restore_page_rounded),
                             ),
                             IconButton(
-                              tooltip: 'Delete backup',
+                              tooltip: l10n.pick('Delete backup', 'حذف النسخة الاحتياطية'),
                               onPressed: isBusy
                                   ? null
                                   : () => _runAction(() => controller.deleteBackupRecord(record)),
@@ -743,23 +762,26 @@ class _StatusPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Database status', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+          Text(context.l10n.pick('Database status', 'حالة قاعدة البيانات'), style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 10),
-          _StatusRow(label: 'Path', value: status.databasePath),
-          _StatusRow(label: 'Exists', value: status.exists ? 'Yes' : 'No'),
-          _StatusRow(label: 'Connected', value: status.isConnected ? 'Healthy' : 'Unavailable'),
-          _StatusRow(label: 'Size', value: controller.formatBytes(status.sizeBytes)),
-          _StatusRow(label: 'Last modified', value: status.lastModified?.toLocal().toIso8601String() ?? 'Unknown'),
-          _StatusRow(label: 'Synchronization state', value: status.syncState),
-          _StatusRow(label: 'Pending sync queue', value: controller.pendingSynchronizationCount.toString()),
-          _StatusRow(label: 'Last pushed records', value: controller.lastPushedCount.toString()),
-          _StatusRow(label: 'Last pulled rows', value: controller.lastPulledCount.toString()),
-          _StatusRow(label: 'Last synchronization', value: controller.lastSynchronizationAt?.toLocal().toIso8601String() ?? 'Never'),
-          _StatusRow(label: 'Backups', value: status.backupCount.toString()),
+          _StatusRow(label: context.l10n.pick('Path', 'المسار'), value: status.databasePath),
+          _StatusRow(label: context.l10n.pick('Exists', 'موجود'), value: status.exists ? context.l10n.pick('Yes', 'نعم') : context.l10n.pick('No', 'لا')),
+          _StatusRow(label: context.l10n.pick('Connected', 'متصل'), value: status.isConnected ? context.l10n.pick('Healthy', 'سليم') : context.l10n.pick('Unavailable', 'غير متاح')),
+          _StatusRow(label: context.l10n.pick('Size', 'الحجم'), value: controller.formatBytes(status.sizeBytes)),
+          _StatusRow(label: context.l10n.pick('Last modified', 'آخر تعديل'), value: status.lastModified?.toLocal().toIso8601String() ?? context.l10n.unknown),
+          _StatusRow(label: context.l10n.pick('Synchronization state', 'حالة المزامنة'), value: status.syncState),
+          _StatusRow(label: context.l10n.pick('Pending sync queue', 'طابور المزامنة المعلق'), value: controller.pendingSynchronizationCount.toString()),
+          _StatusRow(label: context.l10n.pick('Last pushed records', 'آخر السجلات المرسلة'), value: controller.lastPushedCount.toString()),
+          _StatusRow(label: context.l10n.pick('Last pulled rows', 'آخر الصفوف المسحوبة'), value: controller.lastPulledCount.toString()),
+          _StatusRow(label: context.l10n.pick('Last synchronization', 'آخر مزامنة'), value: controller.lastSynchronizationAt?.toLocal().toIso8601String() ?? context.l10n.pick('Never', 'أبدًا')),
+          _StatusRow(label: context.l10n.pick('Backups', 'النسخ الاحتياطية'), value: status.backupCount.toString()),
           if (controller.storageSizeWarning) ...[
             const SizedBox(height: 8),
             Text(
-              'Storage warning: the local database is larger than 100 MB. Review backup cadence and export older copies if needed.',
+              context.l10n.pick(
+                'Storage warning: the local database is larger than 100 MB. Review backup cadence and export older copies if needed.',
+                'تحذير تخزين: قاعدة البيانات المحلية أكبر من 100 ميجابايت. راجع وتيرة النسخ الاحتياطي وصدّر النسخ الأقدم إذا لزم الأمر.',
+              ),
               style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.error),
             ),
           ],

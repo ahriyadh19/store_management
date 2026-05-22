@@ -414,11 +414,14 @@ class _InventoryPageState extends State<InventoryPage> {
   }
 
   List<_InventoryModule> _modulesForSection(AppLocalizations l10n, _InventorySection section) {
+    String tr(String english, String arabic) => l10n.pick(english, arabic);
+    List<String> trList(List<String> english, List<String> arabic) => l10n.isArabic ? arabic : english;
+
     switch (section) {
       case _InventorySection.operations:
         return [
           _InventoryModule(
-            label: 'Movements',
+            label: tr('Movements', 'الحركات'),
             tableName: 'inventory_movement',
             child: Column(
               children: [
@@ -437,26 +440,26 @@ class _InventoryPageState extends State<InventoryPage> {
             ),
           ),
           _InventoryModule(
-            label: 'Batches',
+            label: tr('Batches', 'الدفعات'),
             tableName: 'inventory_batch',
             child: ModelCrudPage<InventoryBatch>(
-              title: 'Inventory Batches',
+              title: tr('Inventory Batches', 'دفعات المخزون'),
               entityLabel: inventoryBatchEntityLabel(l10n),
-              description: 'Track item batches and their remaining quantities.',
+              description: tr('Track item batches and their remaining quantities.', 'تتبع دفعات الأصناف والكميات المتبقية منها.'),
               icon: Icons.layers_rounded,
-              highlights: const ['Batch life-cycle', 'Expiry tracking', 'Cost layers'],
+              highlights: trList(const ['Batch life-cycle', 'Expiry tracking', 'Cost layers'], const ['دورة حياة الدفعة', 'تتبع الانتهاء', 'طبقات التكلفة']),
               formDefinition: inventoryBatchFormDefinition(l10n),
             ),
           ),
           _InventoryModule(
-            label: 'Transactions',
+            label: tr('Transactions', 'المعاملات'),
             tableName: 'inventory_transaction',
             child: ModelCrudPage<InventoryTransaction>(
-              title: 'Inventory Transactions',
+              title: tr('Inventory Transactions', 'معاملات المخزون'),
               entityLabel: inventoryTransactionEntityLabel(l10n),
-              description: 'Track detailed inventory ledger entries and references.',
+              description: tr('Track detailed inventory ledger entries and references.', 'تتبع قيود دفتر المخزون التفصيلية والمراجع المرتبطة بها.'),
               icon: Icons.receipt_long_rounded,
-              highlights: const ['Ledger entries', 'Reference linking', 'Holder movements'],
+              highlights: trList(const ['Ledger entries', 'Reference linking', 'Holder movements'], const ['قيود الدفتر', 'ربط المراجع', 'حركات الحائز']),
               formDefinition: inventoryTransactionFormDefinition(l10n),
             ),
           ),
@@ -464,38 +467,38 @@ class _InventoryPageState extends State<InventoryPage> {
       case _InventorySection.procurement:
         return [
           _InventoryModule(
-            label: 'Purchase Orders',
+            label: tr('Purchase Orders', 'أوامر الشراء'),
             tableName: 'purchase_order',
             child: ModelCrudPage<PurchaseOrder>(
-              title: 'Purchase Orders',
+              title: tr('Purchase Orders', 'أوامر الشراء'),
               entityLabel: purchaseOrderEntityLabel(l10n),
-              description: 'Manage purchase orders and procurement lifecycle records.',
+              description: tr('Manage purchase orders and procurement lifecycle records.', 'إدارة أوامر الشراء وسجلات دورة حياة التوريد.'),
               icon: Icons.shopping_cart_checkout_rounded,
-              highlights: const ['Procurement', 'Approval flow', 'Expected delivery'],
+              highlights: trList(const ['Procurement', 'Approval flow', 'Expected delivery'], const ['التوريد', 'مسار الموافقة', 'التسليم المتوقع']),
               formDefinition: purchaseOrderFormDefinition(l10n),
             ),
           ),
           _InventoryModule(
-            label: 'Order Items',
+            label: tr('Order Items', 'عناصر الطلب'),
             tableName: 'purchase_order_item',
             child: ModelCrudPage<PurchaseOrderItem>(
-              title: 'Purchase Order Items',
+              title: tr('Purchase Order Items', 'عناصر أمر الشراء'),
               entityLabel: purchaseOrderItemEntityLabel(l10n),
-              description: 'Manage line items for purchase orders and received quantities.',
+              description: tr('Manage line items for purchase orders and received quantities.', 'إدارة عناصر أوامر الشراء والكميات المستلمة.'),
               icon: Icons.playlist_add_check_circle_rounded,
-              highlights: const ['Line totals', 'Received quantity', 'Offer linkage'],
+              highlights: trList(const ['Line totals', 'Received quantity', 'Offer linkage'], const ['إجماليات البنود', 'الكمية المستلمة', 'ربط العرض']),
               formDefinition: purchaseOrderItemFormDefinition(l10n),
             ),
           ),
           _InventoryModule(
-            label: 'Supplier Invoices',
+            label: tr('Supplier Invoices', 'فواتير الموردين'),
             tableName: 'supplier_invoice',
             child: ModelCrudPage<SupplierInvoice>(
-              title: 'Supplier Invoices',
+              title: tr('Supplier Invoices', 'فواتير الموردين'),
               entityLabel: supplierInvoiceEntityLabel(l10n),
-              description: 'Manage supplier invoices and payment status visibility.',
+              description: tr('Manage supplier invoices and payment status visibility.', 'إدارة فواتير الموردين وإظهار حالة الدفع.'),
               icon: Icons.request_quote_rounded,
-              highlights: const ['Invoice matching', 'Due dates', 'Open balance'],
+              highlights: trList(const ['Invoice matching', 'Due dates', 'Open balance'], const ['مطابقة الفواتير', 'تواريخ الاستحقاق', 'الرصيد المفتوح']),
               formDefinition: supplierInvoiceFormDefinition(l10n),
             ),
           ),
@@ -503,26 +506,26 @@ class _InventoryPageState extends State<InventoryPage> {
       case _InventorySection.transfer:
         return [
           _InventoryModule(
-            label: 'Transfer Orders',
+            label: tr('Transfer Orders', 'أوامر التحويل'),
             tableName: 'transfer_order',
             child: ModelCrudPage<TransferOrder>(
-              title: 'Transfer Orders',
+              title: tr('Transfer Orders', 'أوامر التحويل'),
               entityLabel: transferOrderEntityLabel(l10n),
-              description: 'Manage inter-branch stock transfer requests and lifecycle.',
+              description: tr('Manage inter-branch stock transfer requests and lifecycle.', 'إدارة طلبات تحويل المخزون بين الفروع ودورة حياتها.'),
               icon: Icons.compare_arrows_rounded,
-              highlights: const ['Source to destination', 'Transfer status', 'Requested and received tracking'],
+              highlights: trList(const ['Source to destination', 'Transfer status', 'Requested and received tracking'], const ['من المصدر إلى الوجهة', 'حالة التحويل', 'تتبع المطلوب والمستلم']),
               formDefinition: transferOrderFormDefinition(l10n),
             ),
           ),
           _InventoryModule(
-            label: 'Transfer Items',
+            label: tr('Transfer Items', 'عناصر التحويل'),
             tableName: 'transfer_order_item',
             child: ModelCrudPage<TransferOrderItem>(
-              title: 'Transfer Order Items',
+              title: tr('Transfer Order Items', 'عناصر أمر التحويل'),
               entityLabel: transferOrderItemEntityLabel(l10n),
-              description: 'Manage transfer order line items and shipped/received quantities.',
+              description: tr('Manage transfer order line items and shipped/received quantities.', 'إدارة بنود أوامر التحويل وكميات الشحن والاستلام.'),
               icon: Icons.format_list_numbered_rounded,
-              highlights: const ['Line quantities', 'Shipping progress', 'Receiving progress'],
+              highlights: trList(const ['Line quantities', 'Shipping progress', 'Receiving progress'], const ['كميات البنود', 'تقدم الشحن', 'تقدم الاستلام']),
               formDefinition: transferOrderItemFormDefinition(l10n),
             ),
           ),
@@ -530,38 +533,38 @@ class _InventoryPageState extends State<InventoryPage> {
       case _InventorySection.sales:
         return [
           _InventoryModule(
-            label: 'Sales Orders',
+            label: tr('Sales Orders', 'أوامر البيع'),
             tableName: 'sales_order',
             child: ModelCrudPage<SalesOrder>(
-              title: 'Sales Orders',
+              title: tr('Sales Orders', 'أوامر البيع'),
               entityLabel: salesOrderEntityLabel(l10n),
-              description: 'Manage customer sales orders and pricing strategy decisions.',
+              description: tr('Manage customer sales orders and pricing strategy decisions.', 'إدارة أوامر بيع العملاء وقرارات استراتيجية التسعير.'),
               icon: Icons.shopping_bag_rounded,
-              highlights: const ['Order pipeline', 'Pricing strategy', 'Customer linkage'],
+              highlights: trList(const ['Order pipeline', 'Pricing strategy', 'Customer linkage'], const ['مسار الطلب', 'استراتيجية التسعير', 'ربط العميل']),
               formDefinition: salesOrderFormDefinition(l10n),
             ),
           ),
           _InventoryModule(
-            label: 'Sales Invoices',
+            label: tr('Sales Invoices', 'فواتير البيع'),
             tableName: 'sales_invoice',
             child: ModelCrudPage<SalesInvoice>(
-              title: 'Sales Invoices',
+              title: tr('Sales Invoices', 'فواتير البيع'),
               entityLabel: salesInvoiceEntityLabel(l10n),
-              description: 'Manage sales invoices, totals, and payment progress.',
+              description: tr('Manage sales invoices, totals, and payment progress.', 'إدارة فواتير البيع والإجماليات وتقدم الدفع.'),
               icon: Icons.receipt_rounded,
-              highlights: const ['Invoice lifecycle', 'Outstanding balances', 'Payment status'],
+              highlights: trList(const ['Invoice lifecycle', 'Outstanding balances', 'Payment status'], const ['دورة حياة الفاتورة', 'الأرصدة المستحقة', 'حالة الدفع']),
               formDefinition: salesInvoiceFormDefinition(l10n),
             ),
           ),
           _InventoryModule(
-            label: 'Sales Returns',
+            label: tr('Sales Returns', 'مرتجعات البيع'),
             tableName: 'sales_return',
             child: ModelCrudPage<SalesReturn>(
-              title: 'Sales Returns',
+              title: tr('Sales Returns', 'مرتجعات البيع'),
               entityLabel: salesReturnEntityLabel(l10n),
-              description: 'Track sales returns, reasons, and refund processing.',
+              description: tr('Track sales returns, reasons, and refund processing.', 'تتبع مرتجعات البيع والأسباب ومعالجة الاسترداد.'),
               icon: Icons.assignment_return_rounded,
-              highlights: const ['Return reason', 'Refund amount', 'Approval status'],
+              highlights: trList(const ['Return reason', 'Refund amount', 'Approval status'], const ['سبب الإرجاع', 'مبلغ الاسترداد', 'حالة الموافقة']),
               formDefinition: salesReturnFormDefinition(l10n),
             ),
           ),
@@ -569,26 +572,26 @@ class _InventoryPageState extends State<InventoryPage> {
       case _InventorySection.pricing:
         return [
           _InventoryModule(
-            label: 'Branch Prices',
+            label: tr('Branch Prices', 'أسعار الفروع'),
             tableName: 'branch_price',
             child: ModelCrudPage<BranchPrice>(
-              title: 'Branch Prices',
+              title: tr('Branch Prices', 'أسعار الفروع'),
               entityLabel: branchPriceEntityLabel(l10n),
-              description: 'Configure branch-level product prices and validity windows.',
+              description: tr('Configure branch-level product prices and validity windows.', 'تهيئة أسعار المنتجات على مستوى الفرع وفترات الصلاحية.'),
               icon: Icons.price_change_rounded,
-              highlights: const ['Price tiers', 'Effective dates', 'Priority handling'],
+              highlights: trList(const ['Price tiers', 'Effective dates', 'Priority handling'], const ['شرائح الأسعار', 'تواريخ السريان', 'معالجة الأولوية']),
               formDefinition: branchPriceFormDefinition(l10n),
             ),
           ),
           _InventoryModule(
-            label: 'Promotions',
+            label: tr('Promotions', 'العروض الترويجية'),
             tableName: 'promotion_rule',
             child: ModelCrudPage<PromotionRule>(
-              title: 'Promotion Rules',
+              title: tr('Promotion Rules', 'قواعد العروض الترويجية'),
               entityLabel: promotionRuleEntityLabel(l10n),
-              description: 'Define discount promotions per branch or product scope.',
+              description: tr('Define discount promotions per branch or product scope.', 'تحديد العروض والخصومات حسب نطاق الفرع أو المنتج.'),
               icon: Icons.local_offer_rounded,
-              highlights: const ['Discount rules', 'Date windows', 'Scope targeting'],
+              highlights: trList(const ['Discount rules', 'Date windows', 'Scope targeting'], const ['قواعد الخصم', 'نوافذ التاريخ', 'استهداف النطاق']),
               formDefinition: promotionRuleFormDefinition(l10n),
             ),
           ),
@@ -596,38 +599,38 @@ class _InventoryPageState extends State<InventoryPage> {
       case _InventorySection.workforce:
         return [
           _InventoryModule(
-            label: 'Staff Shifts',
+            label: tr('Staff Shifts', 'ورديات الموظفين'),
             tableName: 'staff_shift',
             child: ModelCrudPage<StaffShift>(
-              title: 'Staff Shifts',
+              title: tr('Staff Shifts', 'ورديات الموظفين'),
               entityLabel: staffShiftEntityLabel(l10n),
-              description: 'Plan and track employee shift schedules and completion.',
+              description: tr('Plan and track employee shift schedules and completion.', 'تخطيط وتتبع جداول ورديات الموظفين وإتمامها.'),
               icon: Icons.badge_rounded,
-              highlights: const ['Scheduling', 'Coverage', 'Shift status'],
+              highlights: trList(const ['Scheduling', 'Coverage', 'Shift status'], const ['الجدولة', 'التغطية', 'حالة الوردية']),
               formDefinition: staffShiftFormDefinition(l10n),
             ),
           ),
           _InventoryModule(
-            label: 'Attendance',
+            label: tr('Attendance', 'الحضور'),
             tableName: 'staff_attendance',
             child: ModelCrudPage<StaffAttendance>(
-              title: 'Staff Attendance',
+              title: tr('Staff Attendance', 'حضور الموظفين'),
               entityLabel: staffAttendanceEntityLabel(l10n),
-              description: 'Track check-ins, check-outs, and worked minutes.',
+              description: tr('Track check-ins, check-outs, and worked minutes.', 'تتبع تسجيلات الدخول والخروج والدقائق المنجزة.'),
               icon: Icons.fact_check_rounded,
-              highlights: const ['Presence records', 'Time worked', 'Attendance status'],
+              highlights: trList(const ['Presence records', 'Time worked', 'Attendance status'], const ['سجلات الحضور', 'الوقت المنجز', 'حالة الحضور']),
               formDefinition: staffAttendanceFormDefinition(l10n),
             ),
           ),
           _InventoryModule(
-            label: 'Activity Logs',
+            label: tr('Activity Logs', 'سجلات النشاط'),
             tableName: 'staff_activity_log',
             child: ModelCrudPage<StaffActivityLog>(
-              title: 'Staff Activity Logs',
+              title: tr('Staff Activity Logs', 'سجلات نشاط الموظفين'),
               entityLabel: staffActivityLogEntityLabel(l10n),
-              description: 'Audit user actions across operational entities.',
+              description: tr('Audit user actions across operational entities.', 'تدقيق إجراءات المستخدمين عبر الكيانات التشغيلية.'),
               icon: Icons.history_rounded,
-              highlights: const ['Action traceability', 'Entity references', 'Metadata logs'],
+              highlights: trList(const ['Action traceability', 'Entity references', 'Metadata logs'], const ['تتبع الإجراءات', 'مراجع الكيانات', 'سجلات البيانات الوصفية']),
               formDefinition: staffActivityLogFormDefinition(l10n),
             ),
           ),
@@ -638,78 +641,81 @@ class _InventoryPageState extends State<InventoryPage> {
   }
 
   List<_InventoryModule> _modulesForRelationGroup(AppLocalizations l10n, _InventoryRelationsGroup group) {
+    String tr(String english, String arabic) => l10n.pick(english, arabic);
+    List<String> trList(List<String> english, List<String> arabic) => l10n.isArabic ? arabic : english;
+
     switch (group) {
       case _InventoryRelationsGroup.access:
         return [
           _InventoryModule(
-            label: 'Pages',
+            label: tr('Pages', 'الصفحات'),
             tableName: 'pages',
             child: ModelCrudPage<AccessPage>(
-              title: 'Pages',
+              title: tr('Pages', 'الصفحات'),
               entityLabel: accessPageEntityLabel(l10n),
-              description: 'Define the page catalog that can be shown in menus and route guards.',
+              description: tr('Define the page catalog that can be shown in menus and route guards.', 'حدد فهرس الصفحات التي يمكن إظهارها في القوائم وحمايات المسارات.'),
               icon: Icons.web_asset_rounded,
-              highlights: const ['Page catalog', 'Route mapping', 'Menu visibility'],
+              highlights: trList(const ['Page catalog', 'Route mapping', 'Menu visibility'], const ['فهرس الصفحات', 'ربط المسارات', 'إظهار القوائم']),
               formDefinition: accessPageFormDefinition(l10n),
             ),
           ),
           _InventoryModule(
-            label: 'Permissions',
+            label: tr('Permissions', 'الصلاحيات'),
             tableName: 'permissions',
             child: ModelCrudPage<AccessPermission>(
-              title: 'Permissions',
+              title: tr('Permissions', 'الصلاحيات'),
               entityLabel: accessPermissionEntityLabel(l10n),
-              description: 'Register permission keys that roles and users can be granted or denied.',
+              description: tr('Register permission keys that roles and users can be granted or denied.', 'سجل مفاتيح الصلاحيات التي يمكن منحها أو منعها للأدوار والمستخدمين.'),
               icon: Icons.key_rounded,
-              highlights: const ['Permission keys', 'Action mapping', 'Catalog control'],
+              highlights: trList(const ['Permission keys', 'Action mapping', 'Catalog control'], const ['مفاتيح الصلاحيات', 'ربط الإجراءات', 'التحكم في الفهرس']),
               formDefinition: accessPermissionFormDefinition(l10n),
             ),
           ),
           _InventoryModule(
-            label: 'Role Permissions',
+            label: tr('Role Permissions', 'صلاحيات الأدوار'),
             tableName: 'role_permissions',
             child: ModelCrudPage<RolePermission>(
-              title: 'Role Permissions',
+              title: tr('Role Permissions', 'صلاحيات الأدوار'),
               entityLabel: rolePermissionEntityLabel(l10n),
-              description: 'Assign page and action permissions to roles with explicit allow or deny decisions.',
+              description: tr('Assign page and action permissions to roles with explicit allow or deny decisions.', 'عيّن صلاحيات الصفحات والإجراءات للأدوار مع قرارات صريحة بالسماح أو المنع.'),
               icon: Icons.admin_panel_settings_rounded,
-              highlights: const ['Role grants', 'Deny overrides', 'Tenant policy'],
+              highlights: trList(const ['Role grants', 'Deny overrides', 'Tenant policy'], const ['منح الأدوار', 'تجاوزات المنع', 'سياسة المستأجر']),
               formDefinition: rolePermissionFormDefinition(l10n),
             ),
           ),
           _InventoryModule(
-            label: 'User Permissions',
+            label: tr('User Permissions', 'صلاحيات المستخدمين'),
             tableName: 'user_permissions',
             child: ModelCrudPage<UserPermission>(
-              title: 'User Permissions',
+              title: tr('User Permissions', 'صلاحيات المستخدمين'),
               entityLabel: userPermissionEntityLabel(l10n),
-              description: 'Grant or deny targeted permissions directly to individual users.',
+              description: tr('Grant or deny targeted permissions directly to individual users.', 'امنح أو امنع صلاحيات محددة مباشرةً للمستخدمين الأفراد.'),
               icon: Icons.manage_accounts_rounded,
-              highlights: const ['Direct overrides', 'Staff exceptions', 'Access tuning'],
+              highlights: trList(const ['Direct overrides', 'Staff exceptions', 'Access tuning'], const ['تجاوزات مباشرة', 'استثناءات الموظفين', 'ضبط الوصول']),
               formDefinition: userPermissionFormDefinition(l10n),
             ),
           ),
           _InventoryModule(
-            label: 'User Roles',
+            label: tr('User Roles', 'أدوار المستخدمين'),
             tableName: 'user_roles',
             child: ModelCrudPage<UserRoles>(
-              title: 'User Roles',
+              title: tr('User Roles', 'أدوار المستخدمين'),
               entityLabel: userRoleEntityLabel(l10n),
-              description: 'Manage role assignments between users and permission roles.',
+              description: tr('Manage role assignments between users and permission roles.', 'إدارة تعيينات الأدوار بين المستخدمين وأدوار الصلاحيات.'),
               icon: Icons.verified_user_rounded,
-              highlights: const ['Role assignment', 'Status tracking', 'Access mapping'],
+              highlights: trList(const ['Role assignment', 'Status tracking', 'Access mapping'], const ['تعيين الأدوار', 'تتبع الحالة', 'ربط الوصول']),
               formDefinition: userRolesFormDefinition(l10n),
             ),
           ),
           _InventoryModule(
-            label: 'Store Users',
+            label: tr('Store Users', 'مستخدمو المتجر'),
             tableName: 'store_user',
             child: ModelCrudPage<StoreUser>(
-              title: 'Store Users',
+              title: tr('Store Users', 'مستخدمو المتجر'),
               entityLabel: storeUserEntityLabel(l10n),
-              description: 'Map users to stores and optional branches with role context.',
+              description: tr('Map users to stores and optional branches with role context.', 'اربط المستخدمين بالمتاجر والفروع الاختيارية ضمن سياق الدور.'),
               icon: Icons.group_rounded,
-              highlights: const ['Store membership', 'Branch assignment', 'Role link'],
+              highlights: trList(const ['Store membership', 'Branch assignment', 'Role link'], const ['عضوية المتجر', 'تعيين الفرع', 'ربط الدور']),
               formDefinition: storeUserFormDefinition(l10n),
             ),
           ),
@@ -717,26 +723,26 @@ class _InventoryPageState extends State<InventoryPage> {
       case _InventoryRelationsGroup.partners:
         return [
           _InventoryModule(
-            label: 'Store Suppliers',
+            label: tr('Store Suppliers', 'موردو المتجر'),
             tableName: 'store_supplier',
             child: ModelCrudPage<StoreSupplier>(
-              title: 'Store Suppliers',
+              title: tr('Store Suppliers', 'موردو المتجر'),
               entityLabel: storeSupplierEntityLabel(l10n),
-              description: 'Map suppliers to stores for procurement and fulfillment scope.',
+              description: tr('Map suppliers to stores for procurement and fulfillment scope.', 'اربط الموردين بالمتاجر ضمن نطاق التوريد والتنفيذ.'),
               icon: Icons.factory_rounded,
-              highlights: const ['Store links', 'Supplier scope', 'Activation state'],
+              highlights: trList(const ['Store links', 'Supplier scope', 'Activation state'], const ['روابط المتجر', 'نطاق المورد', 'حالة التفعيل']),
               formDefinition: storeSupplierFormDefinition(l10n),
             ),
           ),
           _InventoryModule(
-            label: 'Store Clients',
+            label: tr('Store Clients', 'عملاء المتجر'),
             tableName: 'store_client',
             child: ModelCrudPage<StoreClient>(
-              title: 'Store Clients',
+              title: tr('Store Clients', 'عملاء المتجر'),
               entityLabel: storeClientEntityLabel(l10n),
-              description: 'Map clients to stores for sales and credit workflows.',
+              description: tr('Map clients to stores for sales and credit workflows.', 'اربط العملاء بالمتاجر ضمن عمليات البيع والائتمان.'),
               icon: Icons.handshake_rounded,
-              highlights: const ['Client scope', 'Store visibility', 'Status lifecycle'],
+              highlights: trList(const ['Client scope', 'Store visibility', 'Status lifecycle'], const ['نطاق العميل', 'إظهار المتجر', 'دورة الحالة']),
               formDefinition: storeClientFormDefinition(l10n),
             ),
           ),
@@ -744,26 +750,26 @@ class _InventoryPageState extends State<InventoryPage> {
       case _InventoryRelationsGroup.structure:
         return [
           _InventoryModule(
-            label: 'Store Branches',
+            label: tr('Store Branches', 'فروع المتجر'),
             tableName: 'store_branches',
             child: ModelCrudPage<StoreBranches>(
-              title: 'Store Branch Links',
+              title: tr('Store Branch Links', 'روابط فروع المتجر'),
               entityLabel: storeBranchEntityLabel(l10n),
-              description: 'Link stores and branches for operational scoping.',
+              description: tr('Link stores and branches for operational scoping.', 'اربط المتاجر والفروع لتحديد النطاق التشغيلي.'),
               icon: Icons.hub_rounded,
-              highlights: const ['Store/branch mapping', 'Operational scope', 'Status control'],
+              highlights: trList(const ['Store/branch mapping', 'Operational scope', 'Status control'], const ['ربط المتجر والفرع', 'النطاق التشغيلي', 'التحكم في الحالة']),
               formDefinition: storeBranchesFormDefinition(l10n),
             ),
           ),
           _InventoryModule(
-            label: 'Branch Products',
+            label: tr('Branch Products', 'منتجات الفروع'),
             tableName: 'branch_product',
             child: ModelCrudPage<BranchProduct>(
-              title: 'Branch Products',
+              title: tr('Branch Products', 'منتجات الفروع'),
               entityLabel: branchProductEntityLabel(l10n),
-              description: 'Track branch-level product stock, reserves, and reorder thresholds.',
+              description: tr('Track branch-level product stock, reserves, and reorder thresholds.', 'تتبع مخزون المنتجات على مستوى الفرع والاحتياطي وحدود إعادة الطلب.'),
               icon: Icons.inventory_rounded,
-              highlights: const ['Stock position', 'Reserved quantity', 'Reorder levels'],
+              highlights: trList(const ['Stock position', 'Reserved quantity', 'Reorder levels'], const ['موضع المخزون', 'الكمية المحجوزة', 'مستويات إعادة الطلب']),
               formDefinition: branchProductFormDefinition(l10n),
             ),
           ),
@@ -771,38 +777,38 @@ class _InventoryPageState extends State<InventoryPage> {
       case _InventoryRelationsGroup.financials:
         return [
           _InventoryModule(
-            label: 'Invoice Items',
+            label: tr('Invoice Items', 'عناصر الفاتورة'),
             tableName: 'store_invoice_item',
             child: ModelCrudPage<StoreInvoiceItem>(
-              title: 'Store Invoice Items',
+              title: tr('Store Invoice Items', 'عناصر فاتورة المتجر'),
               entityLabel: invoiceItemEntityLabel(l10n),
-              description: 'Manage line items for store invoices including taxes and discounts.',
+              description: tr('Manage line items for store invoices including taxes and discounts.', 'إدارة بنود فواتير المتجر بما في ذلك الضرائب والخصومات.'),
               icon: Icons.receipt_long_rounded,
-              highlights: const ['Line totals', 'Discount/tax', 'Product linkage'],
+              highlights: trList(const ['Line totals', 'Discount/tax', 'Product linkage'], const ['إجماليات البنود', 'الخصم والضريبة', 'ربط المنتج']),
               formDefinition: storeInvoiceItemFormDefinition(l10n),
             ),
           ),
           _InventoryModule(
-            label: 'Payment Allocations',
+            label: tr('Payment Allocations', 'تخصيصات الدفع'),
             tableName: 'payment_allocation',
             child: ModelCrudPage<PaymentAllocation>(
-              title: 'Payment Allocations',
+              title: tr('Payment Allocations', 'تخصيصات الدفع'),
               entityLabel: paymentAllocationEntityLabel(l10n),
-              description: 'Allocate payment vouchers to invoices with dated allocations.',
+              description: tr('Allocate payment vouchers to invoices with dated allocations.', 'خصص سندات الدفع للفواتير مع تسجيل التخصيصات بتاريخها.'),
               icon: Icons.account_balance_wallet_rounded,
-              highlights: const ['Voucher matching', 'Allocation amount', 'Allocation date'],
+              highlights: trList(const ['Voucher matching', 'Allocation amount', 'Allocation date'], const ['مطابقة السند', 'مبلغ التخصيص', 'تاريخ التخصيص']),
               formDefinition: paymentAllocationFormDefinition(l10n),
             ),
           ),
           _InventoryModule(
-            label: 'Return Items',
+            label: tr('Return Items', 'عناصر المرتجع'),
             tableName: 'store_return_item',
             child: ModelCrudPage<StoreReturnItem>(
-              title: 'Store Return Items',
+              title: tr('Store Return Items', 'عناصر مرتجع المتجر'),
               entityLabel: returnItemEntityLabel(l10n),
-              description: 'Manage line items returned against invoices and products.',
+              description: tr('Manage line items returned against invoices and products.', 'إدارة البنود المرتجعة مقابل الفواتير والمنتجات.'),
               icon: Icons.assignment_return_rounded,
-              highlights: const ['Return linkage', 'Reason tracking', 'Line totals'],
+              highlights: trList(const ['Return linkage', 'Reason tracking', 'Line totals'], const ['ربط المرتجع', 'تتبع السبب', 'إجماليات البنود']),
               formDefinition: storeReturnItemFormDefinition(l10n),
             ),
           ),
@@ -813,12 +819,17 @@ class _InventoryPageState extends State<InventoryPage> {
   Widget _buildPurchaseReceiptCard(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final storeOptions = _relationOptions(tableName: 'store', fallbackValue: 'store-central-001', fallbackLabel: 'Central Store', labelKeys: const <String>['name']);
-    final branchOptions = _relationOptions(tableName: 'branch', fallbackValue: 'branch-north-001', fallbackLabel: 'North Branch', labelKeys: const <String>['name']);
-    final supplierOptions = _relationOptions(tableName: 'supplier', fallbackValue: 'supplier-alnoor-001', fallbackLabel: 'Al Noor Trading', labelKeys: const <String>['name']);
+    final storeOptions = _relationOptions(tableName: 'store', fallbackValue: 'store-central-001', fallbackLabel: l10n.pick('Central Store', 'المتجر المركزي'), labelKeys: const <String>['name']);
+    final branchOptions = _relationOptions(tableName: 'branch', fallbackValue: 'branch-north-001', fallbackLabel: l10n.pick('North Branch', 'الفرع الشمالي'), labelKeys: const <String>['name']);
+    final supplierOptions = _relationOptions(tableName: 'supplier', fallbackValue: 'supplier-alnoor-001', fallbackLabel: l10n.pick('Al Noor Trading', 'تجارة النور'), labelKeys: const <String>['name']);
     final supplierInvoiceOptions = _relationOptions(tableName: 'supplier_invoice', fallbackValue: 'supplier-invoice-sample-001', fallbackLabel: 'SI-2026-0012', labelKeys: const <String>['supplierInvoiceNumber']);
-    final productOptions = _relationOptions(tableName: 'products', fallbackValue: 'product-flour-001', fallbackLabel: 'Premium Flour 25kg', labelKeys: const <String>['name']);
-    final userOptions = _relationOptions(tableName: 'users', fallbackValue: 'user-ops-manager-001', fallbackLabel: 'Operations Manager', labelKeys: const <String>['name', 'username', 'email']);
+    final productOptions = _relationOptions(tableName: 'products', fallbackValue: 'product-flour-001', fallbackLabel: l10n.pick('Premium Flour 25kg', 'دقيق ممتاز 25 كجم'), labelKeys: const <String>['name']);
+    final userOptions = _relationOptions(
+      tableName: 'users',
+      fallbackValue: 'user-ops-manager-001',
+      fallbackLabel: l10n.pick('Operations Manager', 'مدير العمليات'),
+      labelKeys: const <String>['name', 'username', 'email'],
+    );
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
