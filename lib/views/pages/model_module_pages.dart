@@ -2865,14 +2865,14 @@ String _invoiceItemOptionLabel(Map<String, dynamic> row) {
   final quantity = _stringOrNull(row['quantity']);
   final invoiceLabel = invoiceUuid == null ? 'Invoice item' : 'Invoice ${_compactOptionUuid(invoiceUuid)}';
   final productLabel = productUuid == null ? null : _compactOptionUuid(productUuid);
-  return [invoiceLabel, if (productLabel != null) productLabel, if (quantity != null) 'Qty $quantity'].join(' • ');
+  return [invoiceLabel, ?productLabel, if (quantity != null) 'Qty $quantity'].join(' • ');
 }
 
 String _staffShiftOptionLabel(Map<String, dynamic> row) {
   final shiftDate = _dateOptionLabel(row['shiftDate'] ?? row['shift_date']);
   final userUuid = _stringOrNull(row['userUuid']) ?? _stringOrNull(row['user_uuid']);
   final userLabel = userUuid == null ? null : _compactOptionUuid(userUuid);
-  return [if (shiftDate != null) shiftDate, if (userLabel != null) userLabel].join(' • ');
+  return [?shiftDate, ?userLabel].join(' • ');
 }
 
 String? _dateOptionLabel(Object? value) {

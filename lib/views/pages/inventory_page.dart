@@ -902,7 +902,7 @@ class _InventoryPageState extends State<InventoryPage> {
       width: 260,
       child: DropdownButtonFormField<String>(
         key: Key('purchase-receipt-$fieldKey'),
-        value: hasCurrentValue ? currentValue : (allowEmpty ? '' : null),
+        initialValue: hasCurrentValue ? currentValue : (allowEmpty ? '' : null),
         isExpanded: true,
         decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
         items: dropdownItems,
