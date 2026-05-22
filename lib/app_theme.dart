@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:store_management/localization/app_localizations.dart';
+import 'package:store_management/lang/localizations_registry.dart';
 
 ThemeData buildAppTheme({required Brightness brightness, required Locale locale}) {
   final isDark = brightness == Brightness.dark;
@@ -9,28 +9,36 @@ ThemeData buildAppTheme({required Brightness brightness, required Locale locale}
     scaffoldBackgroundColor: isDark ? const Color(0xFF09141A) : const Color(0xFFF4F7FB),
     useMaterial3: true,
   );
-  final l10n = AppLocalizations(locale);
+  final fontFamilies = _fontFamiliesFor(locale);
 
-  return baseTheme.copyWith(textTheme: _buildTextTheme(baseTheme.textTheme, l10n), primaryTextTheme: _buildTextTheme(baseTheme.primaryTextTheme, l10n));
+  return baseTheme.copyWith(textTheme: _buildTextTheme(baseTheme.textTheme, fontFamilies), primaryTextTheme: _buildTextTheme(baseTheme.primaryTextTheme, fontFamilies));
 }
 
-TextTheme _buildTextTheme(TextTheme base, AppLocalizations l10n) {
+Map<String, String> _fontFamiliesFor(Locale locale) {
+  final localized = appLocalizationRegistry[locale.languageCode];
+  return localized ?? appLocalizationRegistry[appLocalizationFallbackLocaleCode] ?? const <String, String>{};
+}
+
+TextTheme _buildTextTheme(TextTheme base, Map<String, String> fontFamilies) {
+  final displayFontFamily = fontFamilies['displayFontFamily'] ?? '';
+  final bodyFontFamily = fontFamilies['bodyFontFamily'] ?? '';
+
   return base.copyWith(
-    displayLarge: _font(base.displayLarge, l10n.displayFontFamily),
-    displayMedium: _font(base.displayMedium, l10n.displayFontFamily),
-    displaySmall: _font(base.displaySmall, l10n.displayFontFamily),
-    headlineLarge: _font(base.headlineLarge, l10n.displayFontFamily),
-    headlineMedium: _font(base.headlineMedium, l10n.displayFontFamily),
-    headlineSmall: _font(base.headlineSmall, l10n.displayFontFamily),
-    titleLarge: _font(base.titleLarge, l10n.displayFontFamily),
-    titleMedium: _font(base.titleMedium, l10n.displayFontFamily),
-    titleSmall: _font(base.titleSmall, l10n.displayFontFamily),
-    bodyLarge: _font(base.bodyLarge, l10n.bodyFontFamily),
-    bodyMedium: _font(base.bodyMedium, l10n.bodyFontFamily),
-    bodySmall: _font(base.bodySmall, l10n.bodyFontFamily),
-    labelLarge: _font(base.labelLarge, l10n.bodyFontFamily),
-    labelMedium: _font(base.labelMedium, l10n.bodyFontFamily),
-    labelSmall: _font(base.labelSmall, l10n.bodyFontFamily),
+    displayLarge: _font(base.displayLarge, displayFontFamily),
+    displayMedium: _font(base.displayMedium, displayFontFamily),
+    displaySmall: _font(base.displaySmall, displayFontFamily),
+    headlineLarge: _font(base.headlineLarge, displayFontFamily),
+    headlineMedium: _font(base.headlineMedium, displayFontFamily),
+    headlineSmall: _font(base.headlineSmall, displayFontFamily),
+    titleLarge: _font(base.titleLarge, displayFontFamily),
+    titleMedium: _font(base.titleMedium, displayFontFamily),
+    titleSmall: _font(base.titleSmall, displayFontFamily),
+    bodyLarge: _font(base.bodyLarge, bodyFontFamily),
+    bodyMedium: _font(base.bodyMedium, bodyFontFamily),
+    bodySmall: _font(base.bodySmall, bodyFontFamily),
+    labelLarge: _font(base.labelLarge, bodyFontFamily),
+    labelMedium: _font(base.labelMedium, bodyFontFamily),
+    labelSmall: _font(base.labelSmall, bodyFontFamily),
   );
 }
 

@@ -1,0 +1,422 @@
+{
+  "@@locale": "en",
+  "accessDeniedActionNotAllowed": "Access denied: your role does not allow this action.",
+  "accessDeniedPageUnavailable": "Access denied: this page is not available for your role.",
+  "accountCreatedConfirmEmail": "Account created. Confirm your email before signing in.",
+  "accountCreatedSuccessfully": "Account created successfully.",
+  "actions": "Actions",
+  "actionsColumnHint": "View, edit, and delete are in the last column.",
+  "activeModules": "Active modules",
+  "addEntityToTable": "Add a new {entity} to the table.",
+  "@addEntityToTable": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "fieldRequired": "{field} is required",
+  "@fieldRequired": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "addNew": "Add new",
+  "appBarBehavior": "App bar behavior",
+  "appTitle": "Store Management",
+  "apply": "Apply",
+  "arabic": "العربية",
+  "authOperationFailed": "Authentication failed. Please try again.",
+  "availablePlatformsSubtitle": "Continue your work across desktop, mobile, and web using the same account.",
+  "availablePlatformsTitle": "Available at",
+  "backToSignIn": "Back to sign in",
+  "batchNumberLabel": "Batch number",
+  "bodyFontFamily": "Mulish",
+  "branchUuidLabel": "Branch UUID",
+  "branches": "Branches",
+  "cancel": "Cancel",
+  "catalog": "Catalog",
+  "catalogSummary": "Keep products, categories, tags, and supplier-specific inventory organized from one place.",
+  "categories": "Categories",
+  "clearSearch": "Clear search",
+  "clients": "Clients",
+  "close": "Close",
+  "closeAll": "Close all",
+  "closeAllTabsQuestion": "Danger: Close all tabs?",
+  "closeAllUnpinnedTabs": "Close all unpinned tabs",
+  "closeAnyway": "Close anyway",
+  "closeApplicationQuestion": "Close application?",
+  "closeApplicationWarning": "Any unsaved data will be lost if you close the app now.",
+  "closeTabAction": "Close tab",
+  "closeTabQuestion": "Close tab?",
+  "closeTabWarning": "\"{tab}\" will be closed and data in this tab may be unsaved.",
+  "@closeTabWarning": {
+    "placeholders": {
+      "tab": {}
+    }
+  },
+  "closeTabsToRight": "Close tabs to the right",
+  "collapseAll": "Collapse all",
+  "completeConfirmation": "Complete confirmation",
+  "completeResetPassword": "Update password",
+  "confirmEmailDescription": "We sent a confirmation link to {email}. Open the link in your email to verify your account.",
+  "@confirmEmailDescription": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "confirmEmailPasteHint": "If confirmation does not complete automatically, copy the final link from your browser and paste it here.",
+  "confirmPassword": "Confirm password",
+  "confirmPasswordHint": "Re-enter your password",
+  "confirmYourEmail": "Confirm your email",
+  "confirmationEmailResent": "Confirmation email sent again to {email}.",
+  "@confirmationEmailResent": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "confirmationLink": "Confirmation link",
+  "confirmationLinkFullRequired": "Paste the full confirmation link from your email.",
+  "confirmationLinkHint": "https://...token_hash=... or https://...code=...",
+  "confirmationLinkMissingDetails": "The confirmation link is missing the required verification details.",
+  "confirmationLinkRequired": "Paste the confirmation link from your email.",
+  "conflictedRecords": "Conflicted records: {count}",
+  "@conflictedRecords": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "connectedWorkspace": "Your workspace now surfaces the full product, sales, people, and operations stack from one compact control center.",
+  "connectionSQLite": "SQLite (Drift)",
+  "connectionStatusChecking": "Checking",
+  "connectionStatusConnected": "Connected",
+  "connectionStatusDisconnected": "Disconnected",
+  "connectionStatusTooltip": "{source}: {status}",
+  "@connectionStatusTooltip": {
+    "placeholders": {
+      "source": {},
+      "status": {}
+    }
+  },
+  "connectionSupabase": "Supabase",
+  "continueLabel": "Continue",
+  "createAccount": "Create account",
+  "createEntity": "Create {entity}",
+  "@createEntity": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "createdAt": "Created at",
+  "customers": "Customers",
+  "dangerCloseAllUnpinnedTabsQuestion": "Danger: Close all unpinned tabs?",
+  "dangerCloseAllUnpinnedTabsWarning": "These pages will be closed:",
+  "darkMode": "Dark mode",
+  "dashboard": "Dashboard",
+  "dataTableTitle": "{title} Datatable",
+  "@dataTableTitle": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "deleteLabel": "Delete",
+  "deleteEntityMessage": "The selected {entity} will be removed.",
+  "@deleteEntityMessage": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "deleteEntityQuestion": "Delete {entity}?",
+  "@deleteEntityQuestion": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "deletedEntitySuccessfully": "Deleted {entity} successfully.",
+  "@deletedEntitySuccessfully": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "displayFontFamily": "Mulish",
+  "editEntity": "Edit {entity}",
+  "@editEntity": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "email": "Email",
+  "emailAndPasswordRequired": "Email and password are required.",
+  "emailConfirmedSignIn": "Email confirmed. Sign in to continue.",
+  "emailConfirmedSuccessfully": "Email confirmed successfully.",
+  "emailHint": "name@store.com",
+  "english": "English",
+  "entityDetails": "{entity} Details",
+  "@entityDetails": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "expandAll": "Expand all",
+  "expiryDateFormatError": "Expiry date must use YYYY-MM-DD format.",
+  "expiryDateLabel": "Expiry date (YYYY-MM-DD)",
+  "fieldMustBeInteger": "{field} must be an integer",
+  "@fieldMustBeInteger": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "fieldMustBeNumber": "{field} must be a number",
+  "@fieldMustBeNumber": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "fieldMustUseDateTimeFormat": "{field} must use YYYY-MM-DD or YYYY-MM-DD HH:MM",
+  "@fieldMustUseDateTimeFormat": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "forgotPasswordAction": "Forgot password?",
+  "forgotPasswordDescription": "Enter your email address and we will send you a link to reset your password.",
+  "forgotPasswordTitle": "Forgot password?",
+  "hideAppBarOnScroll": "Hide app bar on scroll down",
+  "hideCreate": "Hide create",
+  "inventory": "Inventory",
+  "invoiceItems": "Invoice items",
+  "invoices": "Invoices",
+  "language": "Language",
+  "latestConflictAt": "Latest conflict at: {dateTime}",
+  "@latestConflictAt": {
+    "placeholders": {
+      "dateTime": {}
+    }
+  },
+  "lightMode": "Light mode",
+  "logout": "Logout",
+  "logoutQuestion": "Sign out?",
+  "logoutWarning": "You will need to sign in again to continue using the workspace.",
+  "menu": "Menu",
+  "moduleContentEmpty": "Empty",
+  "moduleContentEmptyCaption": "Add forms, tables, and filters here next.",
+  "moduleContentTitle": "Content",
+  "modulePlannedSections": "Planned sections",
+  "moduleStatusReady": "Ready",
+  "moduleStatusReadyCaption": "Navigation is active and this screen is connected.",
+  "moduleStatusTitle": "Status",
+  "moveTabLeft": "Move tab left",
+  "moveTabRight": "Move tab right",
+  "name": "Name",
+  "nameHint": "Store owner name",
+  "nameRequired": "Name is required.",
+  "nextPage": "Next page",
+  "noDataAvailable": "No data available.",
+  "noMatchingRecords": "No records match the current search.",
+  "noSyncDelegateAvailable": "No sync delegate available for {entity}.",
+  "@noSyncDelegateAvailable": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "noValueSelected": "No value selected",
+  "openDashboard": "Open dashboard",
+  "openTabsTooltip": "Open tabs ({count})",
+  "@openTabsTooltip": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "openVisualPermissionEditor": "Open visual permission editor",
+  "operations": "Operations",
+  "operationsSummary": "Monitor stock movement, financial activity, stores, and reporting from the same dashboard.",
+  "overview": "Overview",
+  "ownerUuidLabel": "Owner UUID",
+  "password": "Password",
+  "passwordHint": "At least 6 characters",
+  "passwordResetInstructionsSent": "Password reset instructions sent to {email}.",
+  "@passwordResetInstructionsSent": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "passwordTooShort": "Password must be at least 6 characters.",
+  "passwordUpdatedSuccessfully": "Password updated successfully.",
+  "passwordsDoNotMatch": "Passwords do not match.",
+  "paymentAllocations": "Payment allocations",
+  "paymentVouchers": "Payment vouchers",
+  "people": "People",
+  "peopleSummary": "Manage customers, clients, users, and role assignments as one connected team layer.",
+  "permissionEditorTitle": "Permission editor",
+  "pinTab": "Pin tab",
+  "platformAndroid": "Android",
+  "platformIos": "iOS",
+  "platformLinux": "Linux",
+  "platformMacos": "macOS",
+  "platformWeb": "Web",
+  "platformWindows": "Windows",
+  "postPurchaseReceipt": "Post purchase receipt",
+  "posting": "Posting...",
+  "previousPage": "Previous page",
+  "productUuidLabel": "Product UUID",
+  "products": "Products",
+  "purchaseReceiptPostFailed": "Failed to post purchase receipt: {error}",
+  "@purchaseReceiptPostFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "purchaseReceiptPosted": "Purchase receipt posted. Batch: {batchUuid}",
+  "@purchaseReceiptPosted": {
+    "placeholders": {
+      "batchUuid": {}
+    }
+  },
+  "purchaseReceiving": "Purchase receiving",
+  "purchaseReceivingDescription": "Create inventory batch and post purchase receipt in one action.",
+  "quantityLabel": "Quantity",
+  "quickActions": "Quick actions",
+  "readyToManage": "Ready to manage",
+  "recentEmails": "Recent emails",
+  "recommended": "Recommended",
+  "recommendedLabel": "Recommended:",
+  "recordSyncedSuccessfully": "Record synced successfully.",
+  "recordsHeader": "{entity} records",
+  "@recordsHeader": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "refresh": "Refresh",
+  "reports": "Reports",
+  "resendEmail": "Resend email",
+  "reset": "Reset",
+  "resetLink": "Reset link",
+  "resetLinkFullRequired": "Paste the full password reset link from your email.",
+  "resetLinkHint": "https://...token_hash=... or https://...code=...",
+  "resetLinkMissingDetails": "The password reset link is missing the required verification details.",
+  "resetLinkRequired": "Paste the password reset link from your email.",
+  "resetPassword": "Reset password",
+  "resetPasswordPasteHint": "Paste the password reset link from your email, then choose a new password.",
+  "resetPasswordSentDescription": "A reset link was sent to {email}. Use the link in your email to choose a new password.",
+  "@resetPasswordSentDescription": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "returnItems": "Return items",
+  "returns": "Returns",
+  "roles": "Roles",
+  "rows": "Rows",
+  "rowsPerPage": "Rows per page",
+  "sales": "Sales",
+  "salesSummary": "Track invoices, returns, and payment workflows without digging through separate screens.",
+  "saveEntity": "Save {entity}",
+  "@saveEntity": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "savedEntitySuccessfully": "Saved {entity} successfully.",
+  "@savedEntitySuccessfully": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "scrollLeft": "Scroll left",
+  "scrollRight": "Scroll right",
+  "searchAction": "Search",
+  "searchPermissions": "Search permissions",
+  "searchPermissionsHint": "Search by key or label",
+  "searchTable": "Search table",
+  "searchTableHint": "Search across the visible columns.",
+  "sendAgain": "Send again",
+  "sendResetLink": "Send reset link",
+  "settings": "Settings",
+  "showCreate": "Show create",
+  "showOrHideCreateForm": "Show or hide the create form.",
+  "signIn": "Sign in",
+  "signInFooter": "Sign in with your email and password.",
+  "signInSubtitle": "Use your email and password to continue.",
+  "signUp": "Sign up",
+  "signUpFooter": "Enter your details below to create your account.",
+  "signUpSubtitle": "Create your account to get started.",
+  "signedInAs": "Signed in as",
+  "signedInFallback": "You are signed in.",
+  "signedInSuccessfully": "Signed in successfully.",
+  "stackTraceLabel": "Stack trace",
+  "staffUserUuidLabel": "Staff user UUID",
+  "startupConfigurationError": "Startup configuration error",
+  "startupRecoveryDesktop": "On desktop, keeping .env.local.json in the project root also works as a runtime fallback.",
+  "startupRecoveryMobile": "On mobile, the app cannot read .env.local.json directly from the project root at runtime.",
+  "startupRecoveryMobileHint": "Use the VS Code launch profile \"store_management (env)\" or pass --dart-define/--dart-define-from-file manually.",
+  "startupRecoveryProvideKeys": "Provide SUPABASE_URL and SUPABASE_ANON_KEY at launch time.",
+  "stickyAppBar": "Sticky app bar",
+  "storageHybrid": "Online + local",
+  "storageHybridDescription": "Supabase stays authoritative for auth and sync while SQLite caches locally for offline-first access. Connectivity failures queue local changes for later reconciliation, and this is the recommended mode.",
+  "storageLocalOnly": "Local only",
+  "storageLocalOnlyDescription": "Keep data only on this device in SQLite. This is fastest and fully offline, but it has no cross-device sync, real-time updates, or centralized control.",
+  "storageOnlineOnly": "Online only",
+  "storageOnlineOnlyDescription": "Supabase is the single source of truth. This simplifies storage flow, but it depends on network access and can add latency on larger operations.",
+  "storagePreference": "Storage preference",
+  "storeBranches": "Store branches",
+  "storeSuppliers": "Store suppliers",
+  "storeUsers": "Store users",
+  "storeUuidLabel": "Store UUID",
+  "stores": "Stores",
+  "supplierInvoiceUuidLabel": "Supplier invoice UUID",
+  "supplierProducts": "Supplier products",
+  "supplierUuidLabel": "Supplier UUID",
+  "suppliers": "Suppliers",
+  "sync": "Sync",
+  "syncAll": "Sync all",
+  "syncConflictDiagnostics": "Sync conflict diagnostics",
+  "syncConflictOverrodePendingLocalEdits": "Remote changes overrode pending local edits.",
+  "synced": "Synced",
+  "syncedRecords": "Synced {count} records.",
+  "@syncedRecords": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "systemMode": "System mode",
+  "tags": "Tags",
+  "theme": "Theme",
+  "transactions": "Transactions",
+  "unauthorizedSectionMessage": "You do not have permission to access this section.",
+  "unitCostLabel": "Unit cost",
+  "unknown": "Unknown",
+  "unpinTab": "Unpin tab",
+  "updateEntity": "Update {entity}",
+  "@updateEntity": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "updatedAt": "Updated at",
+  "updatedEntitySuccessfully": "Updated {entity} successfully.",
+  "@updatedEntitySuccessfully": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "userRoles": "User roles",
+  "username": "Username",
+  "usernameHint": "store_owner",
+  "usernameInvalid": "Username can use letters, numbers, and underscores only.",
+  "usernameRequired": "Username is required.",
+  "users": "Users",
+  "validEmailRequired": "Enter a valid email address.",
+  "validField": "Enter a valid {field}",
+  "@validField": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "validPositiveNumbersRequired": "Quantity and unit cost must be valid positive numbers.",
+  "viewEntity": "View {entity}",
+  "@viewEntity": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "welcomeTitle": "Welcome to Store Management!"
+}

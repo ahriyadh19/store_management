@@ -1,0 +1,422 @@
+{
+  "@@locale": "ar",
+  "accessDeniedActionNotAllowed": "تم رفض الوصول: دورك لا يسمح بهذا الإجراء.",
+  "accessDeniedPageUnavailable": "تم رفض الوصول: هذه الصفحة غير متاحة لدورك.",
+  "accountCreatedConfirmEmail": "تم إنشاء الحساب. أكد بريدك الإلكتروني قبل تسجيل الدخول.",
+  "accountCreatedSuccessfully": "تم إنشاء الحساب بنجاح.",
+  "actions": "الإجراءات",
+  "actionsColumnHint": "العرض والتعديل والحذف موجودة في العمود الأخير.",
+  "activeModules": "الوحدات النشطة",
+  "addEntityToTable": "أضف {entity} جديدًا إلى الجدول.",
+  "@addEntityToTable": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "fieldRequired": "{field} مطلوب",
+  "@fieldRequired": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "addNew": "إضافة جديد",
+  "appBarBehavior": "سلوك شريط التطبيق",
+  "appTitle": "إدارة المتجر",
+  "apply": "تطبيق",
+  "arabic": "العربية",
+  "authOperationFailed": "فشلت المصادقة. يرجى المحاولة مرة أخرى.",
+  "availablePlatformsSubtitle": "تابع عملك على سطح المكتب والجوال والويب باستخدام الحساب نفسه.",
+  "availablePlatformsTitle": "متاح على",
+  "backToSignIn": "العودة لتسجيل الدخول",
+  "batchNumberLabel": "رقم الدفعة",
+  "bodyFontFamily": "Cairo",
+  "branchUuidLabel": "معرف الفرع",
+  "branches": "الفروع",
+  "cancel": "إلغاء",
+  "catalog": "الكتالوج",
+  "catalogSummary": "نظّم المنتجات والفئات والوسوم ومخزون الشركة من مكان واحد.",
+  "categories": "الفئات",
+  "clearSearch": "مسح البحث",
+  "clients": "العملاء المحتملون",
+  "close": "إغلاق",
+  "closeAll": "إغلاق الكل",
+  "closeAllTabsQuestion": "تحذير: إغلاق جميع علامات التبويب؟",
+  "closeAllUnpinnedTabs": "إغلاق جميع علامات التبويب غير المثبتة",
+  "closeAnyway": "إغلاق على أي حال",
+  "closeApplicationQuestion": "إغلاق التطبيق؟",
+  "closeApplicationWarning": "ستفقد أي بيانات غير محفوظة إذا أغلقت التطبيق الآن.",
+  "closeTabAction": "إغلاق علامة التبويب",
+  "closeTabQuestion": "إغلاق علامة التبويب؟",
+  "closeTabWarning": "سيتم إغلاق \"{tab}\" وقد تكون بيانات هذه العلامة غير محفوظة.",
+  "@closeTabWarning": {
+    "placeholders": {
+      "tab": {}
+    }
+  },
+  "closeTabsToRight": "إغلاق علامات التبويب إلى اليمين",
+  "collapseAll": "طي الكل",
+  "completeConfirmation": "إكمال التأكيد",
+  "completeResetPassword": "تحديث كلمة المرور",
+  "confirmEmailDescription": "أرسلنا رابط تأكيد إلى {email}. افتح الرابط في بريدك الإلكتروني لتأكيد حسابك.",
+  "@confirmEmailDescription": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "confirmEmailPasteHint": "إذا لم يكتمل التأكيد تلقائيًا، انسخ الرابط النهائي من المتصفح والصقه هنا.",
+  "confirmPassword": "تأكيد كلمة المرور",
+  "confirmPasswordHint": "أعد إدخال كلمة المرور",
+  "confirmYourEmail": "أكد بريدك الإلكتروني",
+  "confirmationEmailResent": "تمت إعادة إرسال رسالة التأكيد إلى {email}.",
+  "@confirmationEmailResent": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "confirmationLink": "رابط التأكيد",
+  "confirmationLinkFullRequired": "الصق رابط التأكيد الكامل من بريدك الإلكتروني.",
+  "confirmationLinkHint": "https://...token_hash=... أو https://...code=...",
+  "confirmationLinkMissingDetails": "رابط التأكيد لا يحتوي على بيانات التحقق المطلوبة.",
+  "confirmationLinkRequired": "الصق رابط التأكيد من بريدك الإلكتروني.",
+  "conflictedRecords": "السجلات المتعارضة: {count}",
+  "@conflictedRecords": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "connectedWorkspace": "تعرض مساحة العمل الآن كامل طبقات المنتجات والمبيعات والأشخاص والعمليات من مركز تحكم واحد مضغوط.",
+  "connectionSQLite": "SQLite (Drift)",
+  "connectionStatusChecking": "جارٍ التحقق",
+  "connectionStatusConnected": "متصل",
+  "connectionStatusDisconnected": "غير متصل",
+  "connectionStatusTooltip": "{source}: {status}",
+  "@connectionStatusTooltip": {
+    "placeholders": {
+      "source": {},
+      "status": {}
+    }
+  },
+  "connectionSupabase": "Supabase",
+  "continueLabel": "متابعة",
+  "createAccount": "إنشاء حساب",
+  "createEntity": "إنشاء {entity}",
+  "@createEntity": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "createdAt": "تاريخ الإنشاء",
+  "customers": "العملاء",
+  "dangerCloseAllUnpinnedTabsQuestion": "تحذير: إغلاق جميع علامات التبويب غير المثبتة؟",
+  "dangerCloseAllUnpinnedTabsWarning": "سيتم إغلاق الصفحات التالية:",
+  "darkMode": "الوضع الداكن",
+  "dashboard": "لوحة التحكم",
+  "dataTableTitle": "جدول {title}",
+  "@dataTableTitle": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "deleteLabel": "حذف",
+  "deleteEntityMessage": "سيتم حذف {entity} المحدد.",
+  "@deleteEntityMessage": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "deleteEntityQuestion": "حذف {entity}؟",
+  "@deleteEntityQuestion": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "deletedEntitySuccessfully": "تم حذف {entity} بنجاح.",
+  "@deletedEntitySuccessfully": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "displayFontFamily": "Cairo",
+  "editEntity": "تعديل {entity}",
+  "@editEntity": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "email": "البريد الإلكتروني",
+  "emailAndPasswordRequired": "البريد الإلكتروني وكلمة المرور مطلوبان.",
+  "emailConfirmedSignIn": "تم تأكيد البريد الإلكتروني. سجّل الدخول للمتابعة.",
+  "emailConfirmedSuccessfully": "تم تأكيد البريد الإلكتروني بنجاح.",
+  "emailHint": "name@store.com",
+  "english": "English",
+  "entityDetails": "تفاصيل {entity}",
+  "@entityDetails": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "expandAll": "توسيع الكل",
+  "expiryDateFormatError": "يجب أن يستخدم تاريخ الانتهاء التنسيق YYYY-MM-DD.",
+  "expiryDateLabel": "تاريخ الانتهاء (YYYY-MM-DD)",
+  "fieldMustBeInteger": "يجب أن يكون {field} عددًا صحيحًا",
+  "@fieldMustBeInteger": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "fieldMustBeNumber": "يجب أن يكون {field} رقمًا",
+  "@fieldMustBeNumber": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "fieldMustUseDateTimeFormat": "يجب أن يستخدم {field} التنسيق YYYY-MM-DD أو YYYY-MM-DD HH:MM",
+  "@fieldMustUseDateTimeFormat": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "forgotPasswordAction": "نسيت كلمة المرور؟",
+  "forgotPasswordDescription": "أدخل بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيين كلمة المرور.",
+  "forgotPasswordTitle": "نسيت كلمة المرور؟",
+  "hideAppBarOnScroll": "إخفاء شريط التطبيق عند التمرير لأسفل",
+  "hideCreate": "إخفاء الإنشاء",
+  "inventory": "المخزون",
+  "invoiceItems": "عناصر الفاتورة",
+  "invoices": "الفواتير",
+  "language": "اللغة",
+  "latestConflictAt": "آخر تعارض في: {dateTime}",
+  "@latestConflictAt": {
+    "placeholders": {
+      "dateTime": {}
+    }
+  },
+  "lightMode": "الوضع الفاتح",
+  "logout": "تسجيل الخروج",
+  "logoutQuestion": "تسجيل الخروج؟",
+  "logoutWarning": "ستحتاج إلى تسجيل الدخول مرة أخرى لمتابعة استخدام مساحة العمل.",
+  "menu": "القائمة",
+  "moduleContentEmpty": "فارغ",
+  "moduleContentEmptyCaption": "أضف النماذج والجداول والفلاتر هنا لاحقًا.",
+  "moduleContentTitle": "المحتوى",
+  "modulePlannedSections": "الأقسام المخطط لها",
+  "moduleStatusReady": "جاهز",
+  "moduleStatusReadyCaption": "التنقل نشط وهذه الشاشة متصلة.",
+  "moduleStatusTitle": "الحالة",
+  "moveTabLeft": "نقل علامة التبويب لليسار",
+  "moveTabRight": "نقل علامة التبويب لليمين",
+  "name": "الاسم",
+  "nameHint": "اسم صاحب المتجر",
+  "nameRequired": "الاسم مطلوب.",
+  "nextPage": "الصفحة التالية",
+  "noDataAvailable": "لا توجد بيانات.",
+  "noMatchingRecords": "لا توجد سجلات تطابق البحث الحالي.",
+  "noSyncDelegateAvailable": "لا توجد آلية مزامنة متاحة لـ {entity}.",
+  "@noSyncDelegateAvailable": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "noValueSelected": "لم يتم تحديد قيمة",
+  "openDashboard": "فتح لوحة التحكم",
+  "openTabsTooltip": "علامات التبويب المفتوحة ({count})",
+  "@openTabsTooltip": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "openVisualPermissionEditor": "فتح محرر الصلاحيات المرئي",
+  "operations": "العمليات",
+  "operationsSummary": "راقب حركة المخزون والنشاط المالي والمتاجر والتقارير من نفس اللوحة.",
+  "overview": "نظرة عامة",
+  "ownerUuidLabel": "معرف المالك",
+  "password": "كلمة المرور",
+  "passwordHint": "6 أحرف على الأقل",
+  "passwordResetInstructionsSent": "تم إرسال تعليمات إعادة تعيين كلمة المرور إلى {email}.",
+  "@passwordResetInstructionsSent": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "passwordTooShort": "يجب أن تكون كلمة المرور 6 أحرف على الأقل.",
+  "passwordUpdatedSuccessfully": "تم تحديث كلمة المرور بنجاح.",
+  "passwordsDoNotMatch": "كلمتا المرور غير متطابقتين.",
+  "paymentAllocations": "تخصيصات الدفع",
+  "paymentVouchers": "سندات الدفع",
+  "people": "الأشخاص",
+  "peopleSummary": "أدر العملاء والمستخدمين وتعيينات الأدوار كطبقة فريق مترابطة.",
+  "permissionEditorTitle": "محرر الصلاحيات",
+  "pinTab": "تثبيت علامة التبويب",
+  "platformAndroid": "أندرويد",
+  "platformIos": "iOS",
+  "platformLinux": "لينكس",
+  "platformMacos": "macOS",
+  "platformWeb": "الويب",
+  "platformWindows": "ويندوز",
+  "postPurchaseReceipt": "ترحيل استلام الشراء",
+  "posting": "جارٍ الترحيل...",
+  "previousPage": "الصفحة السابقة",
+  "productUuidLabel": "معرف المنتج",
+  "products": "المنتجات",
+  "purchaseReceiptPostFailed": "فشل ترحيل استلام الشراء: {error}",
+  "@purchaseReceiptPostFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "purchaseReceiptPosted": "تم ترحيل استلام الشراء. الدفعة: {batchUuid}",
+  "@purchaseReceiptPosted": {
+    "placeholders": {
+      "batchUuid": {}
+    }
+  },
+  "purchaseReceiving": "استلام المشتريات",
+  "purchaseReceivingDescription": "أنشئ دفعة مخزون وسجّل استلام الشراء في إجراء واحد.",
+  "quantityLabel": "الكمية",
+  "quickActions": "إجراءات سريعة",
+  "readyToManage": "جاهز للإدارة",
+  "recentEmails": "رسائل البريد الأخيرة",
+  "recommended": "موصى به",
+  "recommendedLabel": "الموصى به:",
+  "recordSyncedSuccessfully": "تمت مزامنة السجل بنجاح.",
+  "recordsHeader": "سجلات {entity}",
+  "@recordsHeader": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "refresh": "تحديث",
+  "reports": "التقارير",
+  "resendEmail": "إعادة إرسال البريد",
+  "reset": "إعادة تعيين",
+  "resetLink": "رابط إعادة التعيين",
+  "resetLinkFullRequired": "الصق رابط إعادة تعيين كلمة المرور الكامل من بريدك الإلكتروني.",
+  "resetLinkHint": "https://...token_hash=... أو https://...code=...",
+  "resetLinkMissingDetails": "رابط إعادة تعيين كلمة المرور لا يحتوي على بيانات التحقق المطلوبة.",
+  "resetLinkRequired": "الصق رابط إعادة تعيين كلمة المرور من بريدك الإلكتروني.",
+  "resetPassword": "إعادة تعيين كلمة المرور",
+  "resetPasswordPasteHint": "الصق رابط إعادة تعيين كلمة المرور من بريدك الإلكتروني، ثم اختر كلمة مرور جديدة.",
+  "resetPasswordSentDescription": "تم إرسال رابط إعادة التعيين إلى {email}. استخدم الرابط في بريدك الإلكتروني لاختيار كلمة مرور جديدة.",
+  "@resetPasswordSentDescription": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "returnItems": "عناصر المرتجع",
+  "returns": "المرتجعات",
+  "roles": "الأدوار",
+  "rows": "الصفوف",
+  "rowsPerPage": "عدد الصفوف في الصفحة",
+  "sales": "المبيعات",
+  "salesSummary": "تابع الفواتير والمرتجعات وتدفقات الدفع بدون التنقل بين شاشات منفصلة.",
+  "saveEntity": "حفظ {entity}",
+  "@saveEntity": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "savedEntitySuccessfully": "تم حفظ {entity} بنجاح.",
+  "@savedEntitySuccessfully": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "scrollLeft": "التمرير لليسار",
+  "scrollRight": "التمرير لليمين",
+  "searchAction": "بحث",
+  "searchPermissions": "بحث في الصلاحيات",
+  "searchPermissionsHint": "ابحث بالمفتاح أو التسمية",
+  "searchTable": "بحث في الجدول",
+  "searchTableHint": "ابحث في جميع الأعمدة الظاهرة.",
+  "sendAgain": "إرسال مرة أخرى",
+  "sendResetLink": "إرسال رابط إعادة التعيين",
+  "settings": "الإعدادات",
+  "showCreate": "إظهار الإنشاء",
+  "showOrHideCreateForm": "إظهار أو إخفاء نموذج الإنشاء.",
+  "signIn": "تسجيل الدخول",
+  "signInFooter": "سجّل الدخول باستخدام بريدك الإلكتروني وكلمة المرور.",
+  "signInSubtitle": "استخدم بريدك الإلكتروني وكلمة المرور للمتابعة.",
+  "signUp": "إنشاء حساب",
+  "signUpFooter": "أدخل بياناتك أدناه لإنشاء حسابك.",
+  "signUpSubtitle": "أنشئ حسابك للبدء.",
+  "signedInAs": "تم تسجيل الدخول باسم",
+  "signedInFallback": "تم تسجيل دخولك.",
+  "signedInSuccessfully": "تم تسجيل الدخول بنجاح.",
+  "stackTraceLabel": "تتبّع المكدس",
+  "staffUserUuidLabel": "معرف الموظف",
+  "startupConfigurationError": "خطأ في إعدادات التشغيل",
+  "startupRecoveryDesktop": "على سطح المكتب، يمكن أيضًا استخدام .env.local.json من جذر المشروع كخيار احتياطي أثناء التشغيل.",
+  "startupRecoveryMobile": "على الهاتف المحمول، لا يمكن للتطبيق قراءة .env.local.json مباشرة من جذر المشروع أثناء التشغيل.",
+  "startupRecoveryMobileHint": "استخدم ملف التشغيل في VS Code \"store_management (env)\" أو مرر --dart-define/--dart-define-from-file يدويًا.",
+  "startupRecoveryProvideKeys": "وفّر SUPABASE_URL و SUPABASE_ANON_KEY عند التشغيل.",
+  "stickyAppBar": "شريط تطبيق ثابت",
+  "storageHybrid": "عبر الإنترنت + محلي",
+  "storageHybridDescription": "يبقى Supabase المصدر المعتمد للمصادقة والمزامنة بينما تعمل SQLite كذاكرة محلية للوصول دون اتصال. أعطال الاتصال تضع التغييرات في قائمة مزامنة لاحقة، وهذا هو الخيار الموصى به.",
+  "storageLocalOnly": "تخزين محلي",
+  "storageLocalOnlyDescription": "احتفظ بالبيانات على هذا الجهاز فقط داخل SQLite. هذا أسرع ويعمل بالكامل دون اتصال، لكنه لا يوفّر مزامنة بين الأجهزة أو تحديثات لحظية أو تحكمًا مركزيًا.",
+  "storageOnlineOnly": "عبر الإنترنت فقط",
+  "storageOnlineOnlyDescription": "يكون Supabase هو المصدر الوحيد للحقيقة. هذا يبسّط مسار التخزين لكنه يعتمد على الشبكة وقد يزيد زمن الاستجابة في العمليات الكبيرة.",
+  "storagePreference": "تفضيل التخزين",
+  "storeBranches": "فروع المتاجر",
+  "storeSuppliers": "موردو المتجر",
+  "storeUsers": "مستخدمو المتجر",
+  "storeUuidLabel": "معرف المتجر",
+  "stores": "المتاجر",
+  "supplierInvoiceUuidLabel": "معرف فاتورة المورد",
+  "supplierProducts": "منتجات المورد",
+  "supplierUuidLabel": "معرف المورد",
+  "suppliers": "الموردون",
+  "sync": "مزامنة",
+  "syncAll": "مزامنة الكل",
+  "syncConflictDiagnostics": "تشخيص تعارضات المزامنة",
+  "syncConflictOverrodePendingLocalEdits": "تجاوزت التغييرات البعيدة التعديلات المحلية المعلقة.",
+  "synced": "متزامن",
+  "syncedRecords": "تمت مزامنة {count} سجلات.",
+  "@syncedRecords": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "systemMode": "وضع النظام",
+  "tags": "الوسوم",
+  "theme": "المظهر",
+  "transactions": "المعاملات",
+  "unauthorizedSectionMessage": "ليست لديك صلاحية الوصول إلى هذا القسم.",
+  "unitCostLabel": "تكلفة الوحدة",
+  "unknown": "غير معروف",
+  "unpinTab": "إلغاء تثبيت علامة التبويب",
+  "updateEntity": "تحديث {entity}",
+  "@updateEntity": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "updatedAt": "تاريخ التحديث",
+  "updatedEntitySuccessfully": "تم تحديث {entity} بنجاح.",
+  "@updatedEntitySuccessfully": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "userRoles": "أدوار المستخدمين",
+  "username": "اسم المستخدم",
+  "usernameHint": "store_owner",
+  "usernameInvalid": "يمكن أن يحتوي اسم المستخدم على أحرف وأرقام وشرطة سفلية فقط.",
+  "usernameRequired": "اسم المستخدم مطلوب.",
+  "users": "المستخدمون",
+  "validEmailRequired": "أدخل بريدًا إلكترونيًا صالحًا.",
+  "validField": "أدخل {field} صالحًا",
+  "@validField": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "validPositiveNumbersRequired": "يجب أن تكون الكمية وتكلفة الوحدة أرقامًا موجبة صالحة.",
+  "viewEntity": "عرض {entity}",
+  "@viewEntity": {
+    "placeholders": {
+      "entity": {}
+    }
+  },
+  "welcomeTitle": "مرحبًا بك في إدارة المتجر!"
+}

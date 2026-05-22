@@ -17,7 +17,7 @@ void main() {
   });
 
   test('invoice-related client fields use dropdown selections', () {
-    final english = AppLocalizations(const Locale('en'));
+    final english = appLocalizationsFor(const Locale('en'));
 
     expect(fieldUsesSelectionForTesting(invoiceFormDefinition(english), 'clientUuid'), isTrue);
     expect(fieldUsesSelectionForTesting(returnFormDefinition(english), 'clientUuid'), isTrue);
@@ -32,7 +32,7 @@ void main() {
   });
 
   test('access and relation management fields use searchable selections', () {
-    final english = AppLocalizations(const Locale('en'));
+    final english = appLocalizationsFor(const Locale('en'));
 
     expect(fieldUsesSelectionForTesting(storeFormDefinition(english), 'ownerUserUuid'), isTrue);
     expect(fieldUsesSelectionForTesting(userRolesFormDefinition(english), 'userUuid'), isTrue);
@@ -54,7 +54,7 @@ void main() {
   });
 
   test('access page and permission samples follow the shared users page catalog', () {
-    final english = AppLocalizations(const Locale('en'));
+    final english = appLocalizationsFor(const Locale('en'));
     final pageDefinition = accessPageFormDefinition(english);
     final permissionDefinition = accessPermissionFormDefinition(english);
     final pageSample = pageDefinition.sampleModel;
@@ -70,7 +70,7 @@ void main() {
   });
 
   test('operational relation fields use selections for stable foreign keys', () {
-    final english = AppLocalizations(const Locale('en'));
+    final english = appLocalizationsFor(const Locale('en'));
 
     expect(fieldUsesSelectionForTesting(paymentAllocationFormDefinition(english), 'paymentVoucherUuid'), isTrue);
     expect(fieldUsesSelectionForTesting(paymentAllocationFormDefinition(english), 'invoiceUuid'), isTrue);

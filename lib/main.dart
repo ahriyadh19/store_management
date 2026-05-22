@@ -135,9 +135,17 @@ class _SupabaseConfig {
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({super.key, this.authRepository, this.localDatabase, this.localDatabaseManagementController, this.startupError, this.startupStackTrace, LocaleController? localeController, AppPreferencesController? appPreferencesController})
-    : localeController = localeController ?? LocaleController(),
-      appPreferencesController = appPreferencesController ?? AppPreferencesController();
+  MyApp({
+    super.key,
+    this.authRepository,
+    this.localDatabase,
+    this.localDatabaseManagementController,
+    this.startupError,
+    this.startupStackTrace,
+    LocaleController? localeController,
+    AppPreferencesController? appPreferencesController,
+  }) : localeController = localeController ?? LocaleController(),
+       appPreferencesController = appPreferencesController ?? AppPreferencesController();
 
   final AuthRepository? authRepository;
   final LocalDatabase? localDatabase;
@@ -156,7 +164,7 @@ class MyApp extends StatelessWidget {
         child: AnimatedBuilder(
           animation: Listenable.merge([localeController, appPreferencesController]),
           builder: (context, child) {
-            final appLocale = localeController.locale ?? AppLocalizations.supportedLocales.first;
+            final appLocale = localeController.locale ?? appLocalizationFallbackLocale;
 
             return MaterialApp(
               debugShowCheckedModeBanner: false,
@@ -165,7 +173,7 @@ class MyApp extends StatelessWidget {
               localizationsDelegates: const [AppLocalizations.delegate, GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
               localeResolutionCallback: (locale, supportedLocales) {
                 if (locale == null) {
-                  return supportedLocales.first;
+                  return appLocalizationFallbackLocale;
                 }
 
                 for (final supportedLocale in supportedLocales) {
@@ -174,18 +182,14 @@ class MyApp extends StatelessWidget {
                   }
                 }
 
-                return supportedLocales.first;
+                return appLocalizationFallbackLocale;
               },
               onGenerateTitle: (context) => context.l10n.appTitle,
               themeMode: appPreferencesController.themeMode,
               theme: buildAppTheme(brightness: Brightness.light, locale: appLocale),
               darkTheme: buildAppTheme(brightness: Brightness.dark, locale: appLocale),
               home: startupError == null
-                  ? AuthGate(
-                      localeController: localeController,
-                      appPreferencesController: appPreferencesController,
-                      localDatabaseManagementController: localDatabaseManagementController,
-                    )
+                  ? AuthGate(localeController: localeController, appPreferencesController: appPreferencesController, localDatabaseManagementController: localDatabaseManagementController)
                   : StartupErrorView(error: startupError!, stackTrace: startupStackTrace),
             );
           },
@@ -207,11 +211,7 @@ class AuthGate extends StatelessWidget {
     return BlocBuilder<AuthController, AuthState>(
       builder: (context, state) {
         if (state.isAuthenticated) {
-          return Index(
-            localeController: localeController,
-            appPreferencesController: appPreferencesController,
-            localDatabaseManagementController: localDatabaseManagementController,
-          );
+          return Index(localeController: localeController, appPreferencesController: appPreferencesController, localDatabaseManagementController: localDatabaseManagementController);
         }
 
         return AuthView(localeController: localeController, appPreferencesController: appPreferencesController);
