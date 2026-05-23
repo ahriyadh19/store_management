@@ -35,6 +35,7 @@ class ModelFormFieldDefinition {
     this.formatValue,
     this.validator,
     this.usePermissionVisualEditor = false,
+    this.relationTableName,
   });
 
   final String key;
@@ -53,6 +54,7 @@ class ModelFormFieldDefinition {
   final String Function(Object? value)? formatValue;
   final String? Function(String? value)? validator;
   final bool usePermissionVisualEditor;
+  final String? relationTableName;
 }
 
 ModelFormFieldDefinition? findModelFormFieldDefinition(List<ModelFormFieldDefinition> fields, String? key) {

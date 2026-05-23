@@ -2445,6 +2445,7 @@ ModelFormFieldDefinition _selectionField(
   String? searchButtonLabel,
   String? addNewButtonLabel,
   ModelFormCreateOptionDelegate? onCreateOption,
+  String? relationTableName,
 }) {
   return ModelFormFieldDefinition(
     key: key,
@@ -2458,6 +2459,7 @@ ModelFormFieldDefinition _selectionField(
     searchButtonLabel: searchButtonLabel,
     addNewButtonLabel: addNewButtonLabel,
     onCreateOption: onCreateOption,
+    relationTableName: relationTableName,
   );
 }
 
@@ -2489,6 +2491,7 @@ ModelFormFieldDefinition _relationSelectionField(
     searchButtonLabel: searchButtonLabel,
     addNewButtonLabel: addNewButtonLabel,
     onCreateOption: onCreateOption,
+    relationTableName: tableName,
   );
 }
 

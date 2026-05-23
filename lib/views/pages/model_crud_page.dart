@@ -9,6 +9,8 @@ import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/services/access_control_service.dart';
 import 'package:store_management/services/status.dart';
 import 'package:store_management/views/components/model_form.dart';
+import 'package:store_management/views/index/index_page.dart';
+import 'package:store_management/views/pages/main_module_pages.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 
 class ModelCrudPage<T extends Object> extends StatefulWidget {
@@ -229,6 +231,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       isRecordSynced: _isRecordSynced,
       actionsColumnName: _actionsColumnName,
       errorColor: Theme.of(context).colorScheme.error,
+      onOpenRelation: (field, rowData) => _openRelationPage(field: field, rowData: rowData),
     );
 
     return Card(
@@ -463,6 +466,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
       formatValue: field.formatValue,
       validator: field.validator,
       usePermissionVisualEditor: field.usePermissionVisualEditor,
+      relationTableName: field.relationTableName,
     );
   }
 
@@ -1587,6 +1591,103 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   void _showAccessDenied() {
     _showMessage(context.l10n.accessDeniedActionNotAllowed);
   }
+
+  void _openRelationPage({required ModelFormFieldDefinition field, required Map<String, dynamic> rowData}) {
+    final relationTableName = field.relationTableName;
+    if (relationTableName == null || relationTableName.trim().isEmpty) {
+      return;
+    }
+
+    final targetPage = _indexPageForRelationTable(relationTableName);
+    if (targetPage == null) {
+      return;
+    }
+
+    final accessService = AccessControlService.instance;
+    final snapshot = accessService.snapshot;
+    if (!accessService.isSupabaseUnavailable && !snapshot.isLoading && snapshot.lastError == null) {
+      final canOpen = targetPage == IndexPage.settings ? accessService.canUseSettings() : accessService.canViewPage(targetPage);
+      if (!canOpen) {
+        _showAccessDenied();
+        return;
+      }
+    }
+
+    final l10n = context.l10n;
+    final metadata = indexPageMetadata(targetPage);
+    final title = localizedIndexPageTitle(l10n, targetPage);
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => Scaffold(
+          appBar: AppBar(title: Text(title)),
+          body: buildMainModulePage(page: targetPage, title: title, description: localizedIndexPageDescription(l10n, targetPage), icon: metadata.icon, highlights: localizedIndexPageHighlights(l10n, targetPage)),
+        ),
+      ),
+    );
+  }
+}
+
+IndexPage? _indexPageForRelationTable(String tableName) {
+  switch (tableName) {
+    case 'store':
+      return IndexPage.stores;
+    case 'branch':
+      return IndexPage.branches;
+    case 'products':
+      return IndexPage.products;
+    case 'category':
+      return IndexPage.categories;
+    case 'tags':
+      return IndexPage.tags;
+    case 'client':
+      return IndexPage.clients;
+    case 'supplier':
+      return IndexPage.suppliers;
+    case 'users':
+      return IndexPage.users;
+    case 'roles':
+      return IndexPage.roles;
+    case 'store_invoice':
+    case 'sales_invoice':
+      return IndexPage.invoices;
+    case 'store_return':
+    case 'sales_return':
+      return IndexPage.returns;
+    case 'store_payment_voucher':
+      return IndexPage.paymentVouchers;
+    case 'store_financial_transaction':
+      return IndexPage.transactions;
+    case 'inventory_movement':
+    case 'inventory_batch':
+    case 'inventory_transaction':
+    case 'purchase_order':
+    case 'purchase_order_item':
+    case 'supplier_invoice':
+    case 'transfer_order':
+    case 'transfer_order_item':
+    case 'sales_order':
+    case 'branch_price':
+    case 'promotion_rule':
+    case 'staff_shift':
+    case 'staff_attendance':
+    case 'staff_activity_log':
+    case 'pages':
+    case 'permissions':
+    case 'role_permissions':
+    case 'user_permissions':
+    case 'user_roles':
+    case 'store_user':
+    case 'store_supplier':
+    case 'store_client':
+    case 'store_branches':
+    case 'branch_product':
+    case 'store_invoice_item':
+    case 'payment_allocation':
+    case 'store_return_item':
+      return IndexPage.inventory;
+    default:
+      return null;
+  }
 }
 
 class _CachedCrudViewState<T extends Object> {
@@ -1703,6 +1804,7 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
     required bool Function(T record) isRecordSynced,
     required String actionsColumnName,
     required Color errorColor,
+    required void Function(ModelFormFieldDefinition field, Map<String, dynamic> rowData) onOpenRelation,
   }) : _entries = records
            .map((record) {
              final data = toMap(record);
@@ -1715,6 +1817,7 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
              return _GridRowEntry<T>(record: record, row: row, recordKey: recordKeyBuilder(record), data: data);
            })
            .toList(growable: false),
+       _visibleFields = visibleFields,
        _formatCellValue = formatCellValue,
        _isCompactLayout = isCompactLayout,
        _selectedRecordKey = selectedRecordKey,
@@ -1731,6 +1834,7 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
        _isRecordSynced = isRecordSynced,
        _actionsColumnName = actionsColumnName,
        _errorColor = errorColor,
+       _onOpenRelation = onOpenRelation,
        _recordByRow = <DataGridRow, T>{},
        _entryByRow = <DataGridRow, _GridRowEntry<T>>{} {
     for (final entry in _entries) {
@@ -1741,6 +1845,7 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
 
   final List<_GridRowEntry<T>> _entries;
   late final List<DataGridRow> _rows = _entries.map((entry) => entry.row).toList(growable: false);
+  final List<ModelFormFieldDefinition> _visibleFields;
   final Map<DataGridRow, T> _recordByRow;
   final Map<DataGridRow, _GridRowEntry<T>> _entryByRow;
   final String Function({required String? fieldKey, required Object? value, required Map<String, dynamic> rowData}) _formatCellValue;
@@ -1759,6 +1864,7 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
   final bool Function(T record) _isRecordSynced;
   final String _actionsColumnName;
   final Color _errorColor;
+  final void Function(ModelFormFieldDefinition field, Map<String, dynamic> rowData) _onOpenRelation;
 
   @override
   void dispose() {
@@ -1797,17 +1903,64 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
               return _buildStatusCell(cell.value);
             }
 
+            final field = findModelFormFieldDefinition(_visibleFields, cell.columnName);
+            final rowData = entry?.data ?? const <String, dynamic>{};
+            if (field?.relationTableName != null) {
+              return _buildRelationCell(field: field!, value: cell.value, rowData: rowData);
+            }
+
             return Container(
               alignment: Alignment.centerLeft,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Text(
-                _formatCellValue(fieldKey: cell.columnName, value: cell.value, rowData: entry?.data ?? const <String, dynamic>{}),
+                _formatCellValue(fieldKey: cell.columnName, value: cell.value, rowData: rowData),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 2,
               ),
             );
           })
           .toList(growable: false),
+    );
+  }
+
+  Widget _buildRelationCell({required ModelFormFieldDefinition field, required Object? value, required Map<String, dynamic> rowData}) {
+    final displayValue = _formatCellValue(fieldKey: field.key, value: value, rowData: rowData);
+    final isPlaceholder = displayValue.trim().isEmpty || displayValue.trim() == '-';
+    if (isPlaceholder) {
+      return Container(
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Text(displayValue, overflow: TextOverflow.ellipsis, maxLines: 2),
+      );
+    }
+
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => _onOpenRelation(field, rowData),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    displayValue,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                    style: const TextStyle(decoration: TextDecoration.underline),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(Icons.open_in_new_rounded, size: 15),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 

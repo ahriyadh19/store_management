@@ -269,6 +269,83 @@ void main() {
     expect(find.text('Hide create'), findsOneWidget);
   });
 
+  testWidgets('selected row opens details when tapped again', (tester) async {
+    tester.view.physicalSize = const Size(1600, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final definition = ModelFormDefinition<_TableTestRecord>(
+      fields: const [ModelFormFieldDefinition(key: 'name', label: 'Name', type: ModelFormFieldType.text)],
+      mapper: EntityMapper<_TableTestRecord>(fromDataMap: _TableTestRecord.fromMap, toDataMap: (record) => record.toMap()),
+      sampleModel: const _TableTestRecord(uuid: 'sample', clientUuid: 'client-b', status: 'pending', name: 'Sample'),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [AppLocalizations.delegate, GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
+        home: Scaffold(
+          body: ModelCrudPage<_TableTestRecord>(title: 'Table Test Records', entityLabel: 'Record', description: 'Verify row reopening.', icon: Icons.table_rows_rounded, formDefinition: definition),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final sampleFinder = find.text('Sample').first;
+
+    await tester.tap(sampleFinder);
+    await tester.pumpAndSettle();
+    expect(find.text('Record Details'), findsNothing);
+
+    await tester.tap(sampleFinder);
+    await tester.pumpAndSettle();
+    expect(find.text('Record Details'), findsOneWidget);
+  });
+
+  testWidgets('relation cells open the mapped management page', (tester) async {
+    tester.view.physicalSize = const Size(1600, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final definition = ModelFormDefinition<_RelationTestRecord>(
+      fields: const [
+        ModelFormFieldDefinition(key: 'name', label: 'Name', type: ModelFormFieldType.text),
+        ModelFormFieldDefinition(
+          key: 'supplierUuid',
+          label: 'Supplier',
+          type: ModelFormFieldType.selection,
+          relationTableName: 'supplier',
+          options: [ModelFormSelectOption(label: 'Al Noor Trading', value: 'supplier-1')],
+        ),
+      ],
+      mapper: EntityMapper<_RelationTestRecord>(fromDataMap: _RelationTestRecord.fromMap, toDataMap: (record) => record.toMap()),
+      sampleModel: const _RelationTestRecord(uuid: 'sample', name: 'Assignment', supplierUuid: 'supplier-1', supplierName: 'Al Noor Trading'),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [AppLocalizations.delegate, GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
+        home: Scaffold(
+          body: ModelCrudPage<_RelationTestRecord>(title: 'Relation Test Records', entityLabel: 'Relation', description: 'Verify relation navigation.', icon: Icons.link_rounded, formDefinition: definition),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.textContaining('Al Noor Trading').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Suppliers'), findsWidgets);
+    expect(find.text('Create Supplier'), findsOneWidget);
+  });
+
   testWidgets('inventory module shows dedicated purchase receiving panel', (tester) async {
     tester.view.physicalSize = const Size(1600, 2200);
     tester.view.devicePixelRatio = 1.0;
@@ -322,5 +399,22 @@ class _TableTestRecord {
 
   static _TableTestRecord fromMap(Map<String, dynamic> map) {
     return _TableTestRecord(uuid: map['uuid']?.toString() ?? '', clientUuid: map['clientUuid']?.toString() ?? '', status: map['status']?.toString() ?? '', name: map['name']?.toString() ?? '');
+  }
+}
+
+class _RelationTestRecord {
+  const _RelationTestRecord({required this.uuid, required this.name, required this.supplierUuid, required this.supplierName});
+
+  final String uuid;
+  final String name;
+  final String supplierUuid;
+  final String supplierName;
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{'uuid': uuid, 'name': name, 'supplierUuid': supplierUuid, 'supplierName': supplierName};
+  }
+
+  static _RelationTestRecord fromMap(Map<String, dynamic> map) {
+    return _RelationTestRecord(uuid: map['uuid']?.toString() ?? '', name: map['name']?.toString() ?? '', supplierUuid: map['supplierUuid']?.toString() ?? '', supplierName: map['supplierName']?.toString() ?? '');
   }
 }
