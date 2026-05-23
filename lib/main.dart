@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,10 @@ import 'package:window_manager/window_manager.dart';
 
 const _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 const _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+const Size _desktopWindowSize = Size(1280, 800);
+const double _minimumSupportedWidth = 720;
+const double _minimumSupportedHeight = 600;
+const Size _desktopMinimumWindowSize = Size(_minimumSupportedWidth, _minimumSupportedHeight);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -64,7 +69,7 @@ Future<void> main() async {
 }
 
 Future<void> _prepareDesktopWindow() async {
-  const options = WindowOptions(center: true, backgroundColor: Colors.transparent, skipTaskbar: false, titleBarStyle: TitleBarStyle.normal);
+  const options = WindowOptions(size: _desktopWindowSize, minimumSize: _desktopMinimumWindowSize, center: true, backgroundColor: Colors.transparent, skipTaskbar: false, titleBarStyle: TitleBarStyle.normal);
 
   await windowManager.waitUntilReadyToShow(options, () async {
     await windowManager.show();
@@ -171,6 +176,9 @@ class MyApp extends StatelessWidget {
               locale: localeController.locale,
               supportedLocales: AppLocalizations.supportedLocales,
               localizationsDelegates: const [AppLocalizations.delegate, GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
+              builder: (context, child) {
+                return LargeScreenGate(child: child ?? const SizedBox.shrink());
+              },
               localeResolutionCallback: (locale, supportedLocales) {
                 if (locale == null) {
                   return appLocalizationFallbackLocale;
@@ -193,6 +201,65 @@ class MyApp extends StatelessWidget {
                   : StartupErrorView(error: startupError!, stackTrace: startupStackTrace),
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class LargeScreenGate extends StatelessWidget {
+  const LargeScreenGate({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final mediaSize = MediaQuery.sizeOf(context);
+
+    if (_supportsLargeScreenViewport(mediaSize)) {
+      return child;
+    }
+
+    return const UnsupportedScreenView();
+  }
+
+  bool _supportsLargeScreenViewport(Size size) {
+    final shortestSide = math.min(size.width, size.height);
+    return size.width >= _minimumSupportedWidth && size.height >= _minimumSupportedHeight && shortestSide >= _minimumSupportedHeight;
+  }
+}
+
+class UnsupportedScreenView extends StatelessWidget {
+  const UnsupportedScreenView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+
+    return Scaffold(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.largeScreenOnlyTitle, style: theme.textTheme.headlineSmall),
+                    const SizedBox(height: 12),
+                    Text(l10n.largeScreenOnlyMessage, style: theme.textTheme.bodyLarge),
+                    const SizedBox(height: 16),
+                    Text(l10n.largeScreenOnlyMinimumSize(_minimumSupportedWidth.toInt(), _minimumSupportedHeight.toInt()), style: theme.textTheme.bodyMedium),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );

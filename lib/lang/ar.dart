@@ -162,6 +162,9 @@ const Map<String, String> appLocalizationsAr = {
   'expandAll': 'توسيع الكل',
   'collapseAll': 'طي الكل',
   'startupConfigurationError': 'خطأ في إعدادات التشغيل',
+  'largeScreenOnlyTitle': 'يلزم استخدام شاشة كبيرة',
+  'largeScreenOnlyMessage': 'هذا التطبيق متاح فقط على الأجهزة اللوحية وسطح المكتب وعروض الويب الواسعة. كبّر حجم النافذة أو افتحه على شاشة أكبر للمتابعة.',
+  'largeScreenOnlyMinimumSize': 'الحد الأدنى المدعوم: {width} × {height} بكسل منطقي.',
   'stackTrace': 'تتبّع المكدس',
   'startupRecoveryProvideKeys':
       'وفّر SUPABASE_URL و SUPABASE_ANON_KEY عند التشغيل.',

@@ -185,6 +185,15 @@
   "invoiceItems": "عناصر الفاتورة",
   "invoices": "الفواتير",
   "language": "اللغة",
+  "largeScreenOnlyMessage": "هذا التطبيق متاح فقط على الأجهزة اللوحية وسطح المكتب وعروض الويب الواسعة. كبّر حجم النافذة أو افتحه على شاشة أكبر للمتابعة.",
+  "largeScreenOnlyMinimumSize": "الحد الأدنى المدعوم: {width} × {height} بكسل منطقي.",
+  "@largeScreenOnlyMinimumSize": {
+    "placeholders": {
+      "width": {},
+      "height": {}
+    }
+  },
+  "largeScreenOnlyTitle": "يلزم استخدام شاشة كبيرة",
   "latestConflictAt": "آخر تعارض في: {dateTime}",
   "@latestConflictAt": {
     "placeholders": {

@@ -185,6 +185,15 @@
   "invoiceItems": "Invoice items",
   "invoices": "Invoices",
   "language": "Language",
+  "largeScreenOnlyMessage": "This app is available only on tablet, desktop, and wide web layouts. Increase the window size or open it on a larger screen to continue.",
+  "largeScreenOnlyMinimumSize": "Minimum supported size: {width} x {height} logical pixels.",
+  "@largeScreenOnlyMinimumSize": {
+    "placeholders": {
+      "width": {},
+      "height": {}
+    }
+  },
+  "largeScreenOnlyTitle": "Large screen required",
   "latestConflictAt": "Latest conflict at: {dateTime}",
   "@latestConflictAt": {
     "placeholders": {

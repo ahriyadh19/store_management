@@ -352,16 +352,18 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
     final status = controller.statusSnapshot;
     final isBusy = controller.isBusy;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
+    return Material(
+      color: colorScheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.outlineVariant),
+        side: BorderSide(color: colorScheme.outlineVariant),
       ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           Text(l10n.pick('Local Database Management', 'إدارة قاعدة البيانات المحلية'), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 6),
           Text(
@@ -713,7 +715,8 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
                   )
                   .toList(growable: false),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }

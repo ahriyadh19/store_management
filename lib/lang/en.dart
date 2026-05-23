@@ -163,6 +163,9 @@ const Map<String, String> appLocalizationsEn = {
   'expandAll': 'Expand all',
   'collapseAll': 'Collapse all',
   'startupConfigurationError': 'Startup configuration error',
+  'largeScreenOnlyTitle': 'Large screen required',
+  'largeScreenOnlyMessage': 'This app is available only on tablet, desktop, and wide web layouts. Increase the window size or open it on a larger screen to continue.',
+  'largeScreenOnlyMinimumSize': 'Minimum supported size: {width} x {height} logical pixels.',
   'stackTrace': 'Stack trace',
   'startupRecoveryProvideKeys':
       'Provide SUPABASE_URL and SUPABASE_ANON_KEY at launch time.',

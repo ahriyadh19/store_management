@@ -1013,20 +1013,24 @@ class _DrawerSectionCard extends StatelessWidget {
           children: section.items.map((item) {
             final isActive = item.page == activePage;
 
-            return ListTile(
-              dense: true,
-              selected: isActive,
-              selectedTileColor: colorScheme.primaryContainer.withValues(alpha: 0.65),
-              visualDensity: const VisualDensity(horizontal: -2, vertical: -3),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-              leading: Icon(item.icon, size: 19, color: isActive ? colorScheme.primary : null),
-              title: Text(
-                item.label,
-                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: isActive ? FontWeight.w700 : FontWeight.w500, color: isActive ? colorScheme.primary : null),
-              ),
-              trailing: isActive ? Icon(Icons.arrow_outward_rounded, size: 18, color: colorScheme.primary) : null,
+            return Material(
+              color: isActive ? colorScheme.primaryContainer.withValues(alpha: 0.65) : Colors.transparent,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              onTap: () => onOpenPage(item.page),
+              clipBehavior: Clip.antiAlias,
+              child: ListTile(
+                dense: true,
+                selected: isActive,
+                visualDensity: const VisualDensity(horizontal: -2, vertical: -3),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                leading: Icon(item.icon, size: 19, color: isActive ? colorScheme.primary : null),
+                title: Text(
+                  item.label,
+                  style: theme.textTheme.bodyMedium?.copyWith(fontWeight: isActive ? FontWeight.w700 : FontWeight.w500, color: isActive ? colorScheme.primary : null),
+                ),
+                trailing: isActive ? Icon(Icons.arrow_outward_rounded, size: 18, color: colorScheme.primary) : null,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                onTap: () => onOpenPage(item.page),
+              ),
             );
           }).toList(),
         ),

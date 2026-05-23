@@ -358,6 +358,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get language => 'اللغة';
 
   @override
+  String get largeScreenOnlyMessage =>
+      'هذا التطبيق متاح فقط على الأجهزة اللوحية وسطح المكتب وعروض الويب الواسعة. كبّر حجم النافذة أو افتحه على شاشة أكبر للمتابعة.';
+
+  @override
+  String largeScreenOnlyMinimumSize(Object width, Object height) {
+    return 'الحد الأدنى المدعوم: $width × $height بكسل منطقي.';
+  }
+
+  @override
+  String get largeScreenOnlyTitle => 'يلزم استخدام شاشة كبيرة';
+
+  @override
   String latestConflictAt(Object dateTime) {
     return 'آخر تعارض في: $dateTime';
   }

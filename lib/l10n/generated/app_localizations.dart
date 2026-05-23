@@ -692,6 +692,24 @@ abstract class AppLocalizations {
   /// **'Language'**
   String get language;
 
+  /// No description provided for @largeScreenOnlyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This app is available only on tablet, desktop, and wide web layouts. Increase the window size or open it on a larger screen to continue.'**
+  String get largeScreenOnlyMessage;
+
+  /// No description provided for @largeScreenOnlyMinimumSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum supported size: {width} x {height} logical pixels.'**
+  String largeScreenOnlyMinimumSize(Object width, Object height);
+
+  /// No description provided for @largeScreenOnlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Large screen required'**
+  String get largeScreenOnlyTitle;
+
   /// No description provided for @latestConflictAt.
   ///
   /// In en, this message translates to:

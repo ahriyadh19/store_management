@@ -355,6 +355,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get language => 'Language';
 
   @override
+  String get largeScreenOnlyMessage =>
+      'This app is available only on tablet, desktop, and wide web layouts. Increase the window size or open it on a larger screen to continue.';
+
+  @override
+  String largeScreenOnlyMinimumSize(Object width, Object height) {
+    return 'Minimum supported size: $width x $height logical pixels.';
+  }
+
+  @override
+  String get largeScreenOnlyTitle => 'Large screen required';
+
+  @override
   String latestConflictAt(Object dateTime) {
     return 'Latest conflict at: $dateTime';
   }
