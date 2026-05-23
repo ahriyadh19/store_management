@@ -167,6 +167,10 @@ class AuthGate extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthController, AuthState>(
       builder: (context, state) {
+        if (!state.isAuthenticated && !state.registrationAvailabilityResolved) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+
         if (state.isAuthenticated) {
           return Index(
             localeController: localeController,

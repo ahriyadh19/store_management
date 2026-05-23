@@ -27,6 +27,7 @@ class AuthFormPanel extends StatelessWidget {
     required this.onSwitchScreen,
     required this.onSubmit,
     required this.currentScreen,
+    required this.allowPublicRegistration,
   });
 
   final AppLocalizations l10n;
@@ -48,6 +49,7 @@ class AuthFormPanel extends StatelessWidget {
   final ValueChanged<AuthScreen> onSwitchScreen;
   final VoidCallback onSubmit;
   final AuthScreen currentScreen;
+  final bool allowPublicRegistration;
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +63,8 @@ class AuthFormPanel extends StatelessWidget {
     final headerIconSize = isCompactHeight ? 46.0 : 52.0;
     final recentEmails = appPreferencesController.recentEmails;
     final isDarkMode = theme.brightness == Brightness.dark;
+    final showSignUp = allowPublicRegistration && isSignUp;
+    final showSignIn = !showSignUp;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -95,32 +99,34 @@ class AuthFormPanel extends StatelessWidget {
               SizedBox(height: isCompactHeight ? 14 : 16),
               _AuthBrandHeader(
                 appTitle: l10n.appTitle,
-                subtitle: isSignIn ? l10n.signInFooter : l10n.signUpFooter,
+                subtitle: showSignIn ? l10n.signInFooter : l10n.signUpFooter,
                 iconSize: headerIconSize,
                 isCompactHeight: isCompactHeight,
               ),
               SizedBox(height: headerGap),
               Text(
-                isSignIn ? l10n.signIn : l10n.createAccount,
+                showSignIn ? l10n.signIn : l10n.createAccount,
                 style: (isCompactHeight ? theme.textTheme.headlineSmall : theme.textTheme.headlineMedium)?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 8),
               Text(
-                isSignIn ? l10n.signInSubtitle : l10n.signUpSubtitle,
+                showSignIn ? l10n.signInSubtitle : l10n.signUpSubtitle,
                 style: theme.textTheme.bodyLarge?.copyWith(color: const Color(0xFF5C6672)),
               ),
               SizedBox(height: sectionGap),
-              SegmentedButton<AuthScreen>(
-                style: ButtonStyle(padding: WidgetStateProperty.all(EdgeInsets.symmetric(vertical: isCompactHeight ? 10 : 12))),
-                segments: [
-                  ButtonSegment(value: AuthScreen.signIn, label: Text(l10n.signIn)),
-                  ButtonSegment(value: AuthScreen.signUp, label: Text(l10n.signUp)),
-                ],
-                selected: {currentScreen},
-                onSelectionChanged: (selection) => onSwitchScreen(selection.first),
-              ),
-              SizedBox(height: sectionGap),
-              if (isSignUp) ...[
+              if (allowPublicRegistration) ...[
+                SegmentedButton<AuthScreen>(
+                  style: ButtonStyle(padding: WidgetStateProperty.all(EdgeInsets.symmetric(vertical: isCompactHeight ? 10 : 12))),
+                  segments: [
+                    ButtonSegment(value: AuthScreen.signIn, label: Text(l10n.signIn)),
+                    ButtonSegment(value: AuthScreen.signUp, label: Text(l10n.signUp)),
+                  ],
+                  selected: {showSignUp ? AuthScreen.signUp : AuthScreen.signIn},
+                  onSelectionChanged: (selection) => onSwitchScreen(selection.first),
+                ),
+                SizedBox(height: sectionGap),
+              ],
+              if (showSignUp) ...[
                 TextField(
                   controller: nameController,
                   decoration: InputDecoration(labelText: l10n.name, hintText: l10n.nameHint, border: const OutlineInputBorder()),
@@ -137,7 +143,7 @@ class AuthFormPanel extends StatelessWidget {
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(labelText: l10n.email, hintText: l10n.emailHint, border: const OutlineInputBorder()),
               ),
-              if (!isSignUp && recentEmails.isNotEmpty) ...[
+              if (!showSignUp && recentEmails.isNotEmpty) ...[
                 SizedBox(height: fieldGap),
                 AuthRecentEmailSuggestions(
                   title: l10n.recentEmails,
@@ -156,7 +162,7 @@ class AuthFormPanel extends StatelessWidget {
                 hintText: l10n.passwordHint,
                 onToggleVisibility: onTogglePasswordVisibility,
               ),
-              if (isSignUp) ...[
+              if (showSignUp) ...[
                 SizedBox(height: fieldGap),
                 _AuthPasswordField(
                   controller: confirmPasswordController,
@@ -170,9 +176,9 @@ class AuthFormPanel extends StatelessWidget {
               FilledButton(
                 onPressed: isLoading ? null : onSubmit,
                 style: FilledButton.styleFrom(minimumSize: Size.fromHeight(isCompactHeight ? 52 : 56)),
-                child: isLoading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2.4)) : Text(isSignIn ? l10n.continueLabel : l10n.createAccount),
+                child: isLoading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2.4)) : Text(showSignIn ? l10n.continueLabel : l10n.createAccount),
               ),
-              if (isSignIn) ...[
+              if (showSignIn) ...[
                 SizedBox(height: isCompactHeight ? 8 : 12),
                 Align(
                   alignment: AlignmentDirectional.center,

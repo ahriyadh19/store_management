@@ -111,6 +111,21 @@ Widget _buildIndexDrawer(
                 ),
               ),
             ),
+            const SizedBox(height: 8),
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+                final controller = context.read<AuthController>();
+                final state = controller.state;
+                if (state.isLoading) {
+                  return;
+                }
+                final indexState = context.findAncestorStateOfType<_IndexState>();
+                indexState?._confirmSignOut();
+              },
+              icon: const Icon(Icons.logout_rounded),
+              label: Text(l10n.logout),
+            ),
           ],
         ),
       ),
@@ -889,29 +904,6 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: _ConnectionIndicators(controller: _connectionStatusController),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: VerticalDivider(width: 2, thickness: 3, indent: 12, endIndent: 12, color: Theme.of(context).dividerColor),
-                      ),
-                      IconButton(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        tooltip: context.l10n.settings,
-                        icon: const Icon(Icons.settings_rounded),
-                        onPressed: !_canAccessPage(IndexPage.settings)
-                            ? null
-                            : () {
-                          _openPageInTab(IndexPage.settings, pinned: true);
-                        },
-                      ),
-                      IconButton(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        color: Theme.of(context).colorScheme.error,
-                        tooltip: context.l10n.logout,
-                        icon: const Icon(Icons.logout_rounded),
-                        onPressed: () {
-                          _confirmSignOut();
-                        },
                       ),
                     ],
             ),

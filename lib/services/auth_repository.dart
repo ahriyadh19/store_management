@@ -34,6 +34,8 @@ abstract class AuthRepository {
   bool get hasCurrentSession;
   Stream<AuthSessionSnapshot> get authStateChanges;
 
+  Future<bool> isPublicRegistrationOpen();
+
   Future<User?> getCurrentUserProfile();
 
   Future<AuthSessionSnapshot?> restoreSessionFromIncomingLink();
@@ -107,6 +109,17 @@ class SupabaseAuthRepository implements AuthRepository {
   });
 
   @override
+  Future<bool> isPublicRegistrationOpen() async {
+    try {
+      final response = await _client.rpc('is_public_registration_open');
+      return _coerceRegistrationAvailability(response);
+    } catch (error) {
+      debugPrint('Public registration availability check failed: $error');
+      return false;
+    }
+  }
+
+  @override
   Future<User?> getCurrentUserProfile() async {
     final currentUser = _authClient.currentUser;
     if (currentUser == null) {
@@ -169,6 +182,10 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<AuthActionResult> signUp({required String name, required String email, required String password, required String username}) async {
+    if (!await isPublicRegistrationOpen()) {
+      throw AuthException(AppMessageKey.authOperationFailed.name);
+    }
+
     final normalizedUsername = _normalizeUsername(username);
     final emailRedirectTo = _resolveEmailRedirectTo();
     final response = await _authClient.signUp(
@@ -400,6 +417,31 @@ class SupabaseAuthRepository implements AuthRepository {
     return normalized.isEmpty ? 'user' : normalized;
   }
 
+  bool _coerceRegistrationAvailability(dynamic value) {
+    if (value is bool) {
+      return value;
+    }
+
+    if (value is num) {
+      return value != 0;
+    }
+
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      return normalized == 'true' || normalized == 't' || normalized == '1';
+    }
+
+    if (value is Map<String, dynamic>) {
+      for (final key in const <String>['is_public_registration_open', 'open', 'value']) {
+        if (value.containsKey(key)) {
+          return _coerceRegistrationAvailability(value[key]);
+        }
+      }
+    }
+
+    return false;
+  }
+
   String? _resolveEmailRedirectTo() {
     if (_authRedirectTo.isNotEmpty) {
       return _authRedirectTo;
@@ -506,12 +548,13 @@ class _CachedUserProfile {
 }
 
 class FakeAuthRepository implements AuthRepository {
-  FakeAuthRepository({this.seedEmail, this.seedName = 'Demo User', this.startupSnapshot});
+  FakeAuthRepository({this.seedEmail, this.seedName = 'Demo User', this.startupSnapshot, bool initialPublicRegistrationOpen = true}) : _publicRegistrationOpen = initialPublicRegistrationOpen;
 
   final String? seedEmail;
   final String seedName;
   final AuthSessionSnapshot? startupSnapshot;
   User? _currentUser;
+  bool _publicRegistrationOpen;
 
   final StreamController<AuthSessionSnapshot> _authStateChanges = StreamController<AuthSessionSnapshot>.broadcast();
 
@@ -523,6 +566,11 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Stream<AuthSessionSnapshot> get authStateChanges => _authStateChanges.stream;
+
+  @override
+  Future<bool> isPublicRegistrationOpen() async {
+    return _publicRegistrationOpen;
+  }
 
   @override
   Future<User?> getCurrentUserProfile() async {
@@ -544,7 +592,12 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<AuthActionResult> signUp({required String name, required String email, required String password, required String username}) async {
+    if (!await isPublicRegistrationOpen()) {
+      throw AuthException(AppMessageKey.authOperationFailed.name);
+    }
+
     _currentUser = _buildUser(email: email, name: name, username: username);
+    _publicRegistrationOpen = false;
 
     return AuthActionResult(status: AuthActionStatus.confirmEmail, user: _currentUser, email: email, messageKey: AppMessageKey.accountCreatedConfirmEmail);
   }
@@ -576,6 +629,10 @@ class FakeAuthRepository implements AuthRepository {
 
   void emitSession(AuthSessionSnapshot snapshot) {
     _authStateChanges.add(snapshot);
+  }
+
+  void setPublicRegistrationOpen(bool value) {
+    _publicRegistrationOpen = value;
   }
 
   User _buildUser({required String email, required String name, required String username}) {

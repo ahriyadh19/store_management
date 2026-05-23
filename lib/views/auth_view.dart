@@ -108,7 +108,7 @@ class _AuthViewState extends State<AuthView> {
                       child: BlocBuilder<AuthController, AuthState>(
                         builder: (context, state) {
                           final isSignIn = state.screen == AuthScreen.signIn;
-                          final isSignUp = state.screen == AuthScreen.signUp;
+                          final isSignUp = state.screen == AuthScreen.signUp && state.publicRegistrationEnabled;
 
                           if (state.screen == AuthScreen.confirmEmail) {
                             return _AuthStatusCard(
@@ -292,6 +292,7 @@ class _AuthViewState extends State<AuthView> {
                               context.read<AuthController>().add(AuthSubmitted(name: _nameController.text, username: _usernameController.text, email: _emailController.text, password: _passwordController.text));
                             },
                             currentScreen: state.screen,
+                            allowPublicRegistration: state.publicRegistrationEnabled,
                           );
                         },
                       ),

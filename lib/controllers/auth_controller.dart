@@ -78,6 +78,7 @@ final class AuthState {
 		this.messageKey,
 		this.userEmail,
 		this.user,
+    this.publicRegistrationEnabled = false, this.registrationAvailabilityResolved = false,
 	});
 
   final AuthScreen screen;
@@ -85,6 +86,8 @@ final class AuthState {
   final AppMessageKey? messageKey;
 	final String? userEmail;
   final User? user;
+  final bool publicRegistrationEnabled;
+  final bool registrationAvailabilityResolved;
 
 	bool get isLoading => status == AuthStatus.submitting;
 	bool get isAuthenticated => status == AuthStatus.authenticated;
@@ -97,6 +100,8 @@ final class AuthState {
 		String? userEmail,
 		bool clearUserEmail = false,
 		User? user, bool clearUser = false,
+    bool? publicRegistrationEnabled,
+    bool? registrationAvailabilityResolved,
 	}) {
 		return AuthState(
       screen: screen ?? this.screen,
@@ -104,6 +109,8 @@ final class AuthState {
       messageKey: clearMessage ? null : (messageKey ?? this.messageKey),
 			userEmail: clearUserEmail ? null : (userEmail ?? this.userEmail),
       user: clearUser ? null : (user ?? this.user),
+      publicRegistrationEnabled: publicRegistrationEnabled ?? this.publicRegistrationEnabled,
+      registrationAvailabilityResolved: registrationAvailabilityResolved ?? this.registrationAvailabilityResolved,
 		);
 	}
 }
@@ -141,6 +148,16 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
   late final StreamSubscription<AuthSessionSnapshot> _authStateChangesSubscription;
 
   Future<void> _onStarted(AuthStarted event, Emitter<AuthState> emit) async {
+    final publicRegistrationEnabled = await _loadPublicRegistrationAvailability();
+    emit(
+      state.copyWith(
+        screen: publicRegistrationEnabled && !_authRepository.hasCurrentSession ? AuthScreen.signUp : AuthScreen.signIn,
+        publicRegistrationEnabled: publicRegistrationEnabled,
+        registrationAvailabilityResolved: true,
+        clearMessage: true,
+      ),
+    );
+
     final incomingSnapshot = await _authRepository.restoreSessionFromIncomingLink();
     if (incomingSnapshot != null) {
       add(_AuthSessionChanged(incomingSnapshot));
@@ -158,10 +175,11 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
   }
 
   void _onScreenChanged(AuthScreenChanged event, Emitter<AuthState> emit) {
-    emit(state.copyWith(screen: event.screen,
+    final nextScreen = event.screen == AuthScreen.signUp && !state.publicRegistrationEnabled ? AuthScreen.signIn : event.screen;
+    emit(state.copyWith(screen: nextScreen,
 				status: AuthStatus.initial,
 				clearMessage: true,
-				clearUser: event.screen != AuthScreen.confirmEmail,
+        clearUser: nextScreen != AuthScreen.confirmEmail,
 			),
 		);
 	}
@@ -171,6 +189,11 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
     final username = event.username.trim();
 		final email = event.email.trim();
     final password = event.password;
+
+    if (state.screen == AuthScreen.signUp && !state.publicRegistrationEnabled) {
+      emit(state.copyWith(screen: AuthScreen.signIn, status: AuthStatus.initial, clearMessage: true, clearUser: true));
+      return;
+    }
 
     if (state.screen == AuthScreen.signUp && name.isEmpty) {
       emit(state.copyWith(status: AuthStatus.failure, messageKey: AppMessageKey.nameRequired));
@@ -359,11 +382,32 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
     switch (snapshot.status) {
       case AuthSessionStatus.signedIn:
         await AccessControlService.instance.refresh(provisionIfNeeded: true);
-        emit(state.copyWith(screen: AuthScreen.signIn, status: AuthStatus.authenticated, messageKey: snapshot.messageKey, clearMessage: snapshot.messageKey == null, userEmail: snapshot.email, user: snapshot.user));
+        emit(
+          state.copyWith(
+            screen: AuthScreen.signIn,
+            status: AuthStatus.authenticated,
+            messageKey: snapshot.messageKey,
+            clearMessage: snapshot.messageKey == null,
+            userEmail: snapshot.email,
+            user: snapshot.user,
+            registrationAvailabilityResolved: true,
+          ),
+        );
       case AuthSessionStatus.signedOut:
+        final publicRegistrationEnabled = await _loadPublicRegistrationAvailability();
         await AccessControlService.instance.refresh();
-        emit(state.copyWith(screen: AuthScreen.signIn, status: AuthStatus.initial,
-            messageKey: snapshot.messageKey, clearMessage: snapshot.messageKey == null, clearUserEmail: true, clearUser: true));
+        emit(
+          state.copyWith(
+            screen: publicRegistrationEnabled ? AuthScreen.signUp : AuthScreen.signIn,
+            status: AuthStatus.initial,
+            messageKey: snapshot.messageKey,
+            clearMessage: snapshot.messageKey == null,
+            clearUserEmail: true,
+            clearUser: true,
+            publicRegistrationEnabled: publicRegistrationEnabled,
+            registrationAvailabilityResolved: true,
+          ),
+        );
       case AuthSessionStatus.passwordRecovery:
         emit(
           state.copyWith(
@@ -375,6 +419,14 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
             user: snapshot.user,
           ),
         );
+    }
+  }
+
+  Future<bool> _loadPublicRegistrationAvailability() async {
+    try {
+      return await _authRepository.isPublicRegistrationOpen();
+    } catch (_) {
+      return false;
     }
   }
 
