@@ -7,6 +7,7 @@ import 'package:store_management/services/uuid.dart';
 class Branch {
   int id = 0;
   String uuid;
+  String ownerUuid;
   String name;
   String description;
   String address;
@@ -22,6 +23,7 @@ class Branch {
   Branch({
     this.id = 0,
     String? uuid,
+    this.ownerUuid = '',
     required this.name,
     required this.description,
     required this.address,
@@ -38,6 +40,7 @@ class Branch {
   Branch copyWith({
     int? id,
     String? uuid,
+    String? ownerUuid,
     String? name,
     String? description,
     String? address,
@@ -53,6 +56,7 @@ class Branch {
     return Branch(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
+      ownerUuid: ownerUuid ?? this.ownerUuid,
       name: name ?? this.name,
       description: description ?? this.description,
       address: address ?? this.address,
@@ -71,6 +75,7 @@ class Branch {
     return <String, dynamic>{
       'id': id,
       'uuid': uuid,
+      'ownerUuid': ownerUuid,
       'name': name,
       'description': description,
       'address': address,
@@ -89,6 +94,7 @@ class Branch {
     return Branch(
       id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(ModelParsing.value(map, 'uuid')),
+      ownerUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'ownerUuid')) ?? '',
       name: ModelParsing.stringOrThrow(ModelParsing.value(map, 'name'), 'name'),
       description: ModelParsing.stringOrThrow(ModelParsing.value(map, 'description'), 'description'),
       address: ModelParsing.stringOrThrow(ModelParsing.value(map, 'address'), 'address'),
@@ -109,7 +115,7 @@ class Branch {
 
   @override
   String toString() {
-    return 'Branch(id: $id, uuid: $uuid, name: $name, description: $description, address: $address, phone: $phone, email: $email, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
+    return 'Branch(id: $id, uuid: $uuid, ownerUuid: $ownerUuid, name: $name, description: $description, address: $address, phone: $phone, email: $email, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, synced: $synced, deletedAt: $deletedAt, syncedAt: $syncedAt)';
   }
 
   @override
@@ -118,6 +124,7 @@ class Branch {
 
     return other.id == id &&
         other.uuid == uuid &&
+        other.ownerUuid == ownerUuid &&
         other.name == name &&
         other.description == description &&
         other.address == address &&
@@ -135,6 +142,7 @@ class Branch {
   int get hashCode {
     return id.hashCode ^
         uuid.hashCode ^
+        ownerUuid.hashCode ^
         name.hashCode ^
         description.hashCode ^
         address.hashCode ^

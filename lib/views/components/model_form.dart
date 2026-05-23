@@ -824,19 +824,42 @@ class _ModelFormState extends State<ModelForm> {
       }
       widget.onSubmit(values);
     } catch (error) {
+      final theme = Theme.of(context);
+      final backgroundColor = theme.colorScheme.error;
+      final iconColor = theme.colorScheme.onError;
+      final message = error.toString();
+
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
-            content: Text(error.toString()),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            duration: const Duration(seconds: 6),
-            action: SnackBarAction(
-              label: 'Copy',
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: error.toString()));
-              },
+            content: Row(
+              children: [
+                Expanded(child: Text(message)),
+                IconButton(
+                  tooltip: 'Copy',
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                  padding: EdgeInsets.zero,
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: message));
+                  },
+                  icon: Icon(Icons.content_copy_rounded, size: 18, color: iconColor),
+                ),
+                IconButton(
+                  tooltip: 'Close',
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                  padding: EdgeInsets.zero,
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  },
+                  icon: Icon(Icons.close_rounded, size: 18, color: iconColor),
+                ),
+              ],
             ),
+            backgroundColor: backgroundColor,
+            duration: const Duration(seconds: 6),
           ),
         );
     }

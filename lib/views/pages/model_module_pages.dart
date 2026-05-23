@@ -117,6 +117,7 @@ ModelFormDefinition<Branch> branchFormDefinition(AppLocalizations l10n) {
         tableName: 'store',
         fallbackUuid: 'store-central-001',
         fallbackLabel: _sampleStoreLabel(l10n),
+        includeFallbackOption: false,
         required: true,
         searchable: true,
         hintText: _scopeAutoHint(l10n),
@@ -159,6 +160,12 @@ ModelFormDefinition<Branch> branchFormDefinition(AppLocalizations l10n) {
       if (storeUuid == null) {
         throw StateError(_t(l10n, 'Select a store before creating a branch.', 'اختر متجرا قبل إنشاء الفرع.'));
       }
+
+      final scope = await _resolveOwnerScope();
+      if (!scope.storeUuids.contains(storeUuid)) {
+        throw StateError(_t(l10n, 'Select a store from your current access scope before creating a branch.', 'اختر متجرا من نطاق الوصول الحالي قبل إنشاء الفرع.'));
+      }
+
       return prepared;
     },
     afterCreateHook: ({required model, required values}) async {
@@ -2460,6 +2467,7 @@ ModelFormFieldDefinition _relationSelectionField(
   required String tableName,
   required String fallbackUuid,
   String? fallbackLabel,
+  bool includeFallbackOption = true,
   bool required = false,
   bool searchable = true,
   String? hintText,
@@ -2473,7 +2481,7 @@ ModelFormFieldDefinition _relationSelectionField(
   return _selectionField(
     key,
     label,
-    _relationOptions(tableName: tableName, fallbackUuid: fallbackUuid, fallbackLabel: fallbackLabel, labelKeys: labelKeys, labelBuilder: labelBuilder),
+    _relationOptions(tableName: tableName, fallbackUuid: fallbackUuid, fallbackLabel: fallbackLabel, includeFallbackOption: includeFallbackOption, labelKeys: labelKeys, labelBuilder: labelBuilder),
     required: required,
     searchable: searchable,
     hintText: hintText,
@@ -2765,6 +2773,7 @@ final InventoryTransactionService _inventoryTransactionService = InventoryTransa
 
 const Set<String> _ownerScopedTables = <String>{
   'store',
+  'branch',
   'products',
   'supplier',
   'client',
@@ -2863,6 +2872,7 @@ List<ModelFormSelectOption> _relationOptions({
   required String tableName,
   required String fallbackUuid,
   String? fallbackLabel,
+  bool includeFallbackOption = true,
   List<String> labelKeys = const <String>[],
   String Function(Map<String, dynamic> row)? labelBuilder,
 }) {
@@ -2885,7 +2895,9 @@ List<ModelFormSelectOption> _relationOptions({
     }
   }
 
-  optionsByUuid.putIfAbsent(fallbackUuid, () => ModelFormSelectOption(label: fallbackLabel ?? fallbackUuid, value: fallbackUuid));
+  if (includeFallbackOption) {
+    optionsByUuid.putIfAbsent(fallbackUuid, () => ModelFormSelectOption(label: fallbackLabel ?? fallbackUuid, value: fallbackUuid));
+  }
 
   final options = optionsByUuid.values.toList(growable: false);
   options.sort((left, right) => left.label.toLowerCase().compareTo(right.label.toLowerCase()));

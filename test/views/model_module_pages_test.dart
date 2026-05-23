@@ -11,8 +11,8 @@ import 'package:store_management/views/pages/model_crud_page.dart';
 import 'package:store_management/views/pages/model_module_pages.dart';
 
 void main() {
-  test('branch table is not treated as owner-scoped for sync queries', () {
-    expect(tableUsesOwnerScopeForTesting('branch'), isFalse);
+  test('branch table is treated as owner-scoped for sync queries', () {
+    expect(tableUsesOwnerScopeForTesting('branch'), isTrue);
     expect(tableUsesOwnerScopeForTesting('store'), isTrue);
   });
 
@@ -117,6 +117,14 @@ void main() {
     expect(values['storeUuid'], 'store-1');
     expect(values['branchUuid'], 'branch-1');
     expect(values['createdByUserUuid'], 'user-1');
+  });
+
+  test('branch scope defaults auto-fill owner UUID', () {
+    const scope = OwnerScope(userUuid: 'user-1', ownerUuid: 'owner-1', storeUuids: <String>{'store-1'}, branchUuids: <String>{});
+
+    final values = applyScopeDefaultsForTesting(tableName: 'branch', values: <String, dynamic>{'ownerUuid': null, 'name': 'North'}, scope: scope);
+
+    expect(values['ownerUuid'], 'owner-1');
   });
 
   test('server query results search and sort by selection labels', () {
