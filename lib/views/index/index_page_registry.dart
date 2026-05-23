@@ -16,6 +16,7 @@ Map<IndexPage, IndexPageDefinition> buildIndexPageDefinitions(
   required LocaleController localeController,
   required AppPreferencesController appPreferencesController,
   LocalDatabaseManagementController? localDatabaseManagementController,
+  ValueChanged<IndexPage>? onOpenPage,
 }) {
   final l10n = context.l10n;
   final definitions = <IndexPage, IndexPageDefinition>{};
@@ -27,7 +28,7 @@ Map<IndexPage, IndexPageDefinition> buildIndexPageDefinitions(
     definitions[page] = switch (page) {
       IndexPage.dashboard => IndexPageDefinition(
         title: title,
-        bodyBuilder: (_) => DashboardHomePage(authState: authState),
+        bodyBuilder: (_) => DashboardHomePage(authState: authState, localDatabaseManagementController: localDatabaseManagementController, onOpenPage: onOpenPage),
       ),
       IndexPage.reports => IndexPageDefinition(title: title, bodyBuilder: (_) => const ReportsPage()),
       IndexPage.settings => IndexPageDefinition(

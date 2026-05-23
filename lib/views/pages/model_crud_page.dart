@@ -323,9 +323,16 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
                                   return;
                                 }
 
+                                final selectedRecordKey = visibleRecordKeys[rowIndex - 1];
+                                final reopenSelectedRecord = _selectedRecordKey == selectedRecordKey;
+
                                 setState(() {
-                                  _selectedRecordKey = visibleRecordKeys[rowIndex - 1];
+                                  _selectedRecordKey = selectedRecordKey;
                                 });
+
+                                if (reopenSelectedRecord) {
+                                  _openDetailsPage(visibleRecords[rowIndex - 1]);
+                                }
                               },
                               onCellDoubleTap: (details) {
                                 final rowIndex = details.rowColumnIndex.rowIndex;

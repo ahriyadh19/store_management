@@ -838,6 +838,7 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
       localeController: widget.localeController,
       appPreferencesController: widget.appPreferencesController,
       localDatabaseManagementController: widget.localDatabaseManagementController,
+      onOpenPage: _openPageInTab,
     );
     final pageDefinitions = <IndexPage, IndexPageDefinition>{
       for (final entry in allPageDefinitions.entries)
