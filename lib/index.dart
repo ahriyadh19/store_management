@@ -1159,7 +1159,7 @@ class _WorkspaceTabBar extends StatelessWidget {
                   scrollDirection: Axis.horizontal,
                   buildDefaultDragHandles: false,
                   itemCount: tabs.length,
-                  onReorder: onReorderTabs,
+                  onReorderItem: onReorderTabs,
                   proxyDecorator: (child, index, animation) {
                     return Material(color: Colors.transparent, elevation: 8, child: child);
                   },

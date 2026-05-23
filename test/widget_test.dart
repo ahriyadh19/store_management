@@ -8,8 +8,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:store_management/app/app.dart';
 import 'package:store_management/localization/locale_controller.dart';
-import 'package:store_management/main.dart';
 import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/services/auth_repository.dart';
 
