@@ -71,105 +71,136 @@ class DashboardHomePage extends StatelessWidget {
                   children: [
                     _AnimatedDashboardSection(
                       delay: 0,
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(28),
-                          gradient: LinearGradient(colors: [colorScheme.primaryContainer, colorScheme.tertiaryContainer], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                          boxShadow: [BoxShadow(color: colorScheme.shadow.withValues(alpha: 0.08), blurRadius: 24, offset: const Offset(0, 14))],
-                        ),
-                        child: _DashboardGrid(
-                          minChildWidth: 300,
-                          spacing: 16,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                  decoration: BoxDecoration(color: colorScheme.surface.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(999)),
-                                  child: Text(l10n.readyToManage, style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700)),
-                                ),
-                                const SizedBox(height: 12),
-                                Text(l10n.welcomeTitle, style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900, height: 1.05)),
-                                const SizedBox(height: 10),
-                                Text(l10n.connectedWorkspace, style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant, height: 1.45)),
-                                const SizedBox(height: 16),
-                                _DashboardGrid(minChildWidth: 140, spacing: 10, children: metrics.map((metric) => _DashboardMetricCard(metric: metric)).toList()),
-                              ],
-                            ),
-                            Builder(
-                              builder: (context) => Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.surface.withValues(alpha: 0.82),
-                                  borderRadius: BorderRadius.circular(22),
-                                  border: Border.all(color: colorScheme.outlineVariant),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 24,
-                                          backgroundColor: colorScheme.primary,
-                                          foregroundColor: colorScheme.onPrimary,
-                                          child: Text(_initialsForUser(user?.name, authState.userEmail),
-                                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                l10n.signedInAs, style: theme.textTheme.labelMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
-                                              const SizedBox(height: 3),
-                                              Text(
-                                                user?.name.isNotEmpty == true ? user!.name : (authState.userEmail ?? l10n.signedInFallback),
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    if (user != null) ...[
-                                      const SizedBox(height: 14),
-                                      Text(user.email, style: theme.textTheme.bodySmall),
-                                      const SizedBox(height: 4),
-                                      Text('@${user.username}', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
-                                    ],
-                                    const SizedBox(height: 14),
-                                    FilledButton.icon(
-                                      style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
-                                      onPressed: () => Scaffold.of(context).openDrawer(),
-                                      icon: const Icon(Icons.menu_open_rounded, size: 18),
-                                      label: Text(l10n.menu),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      child: _DashboardHeroSection(user: user, authState: authState, metrics: metrics),
                     ),
                     const SizedBox(height: 20),
                     Text(l10n.quickActions, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 12),
                     _AnimatedDashboardSection(
                       delay: 110,
-                      child: _DashboardGrid(minChildWidth: 220, spacing: 12, children: spotlights.map((spotlight) => _DashboardSpotlightCard(spotlight: spotlight)).toList()),
+                      child: _DashboardGrid(
+                        minChildWidth: 220, spacing: 12, children: spotlights.map((spotlight) => _DashboardSpotlightCard(spotlight: spotlight)).toList()),
                     ),
                   ],
                 ),
               ),
             ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _DashboardHeroSection extends StatelessWidget {
+  const _DashboardHeroSection({required this.user, required this.authState, required this.metrics});
+
+  final dynamic user;
+  final AuthState authState;
+  final List<_DashboardMetric> metrics;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final leadPanel = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(color: colorScheme.surface.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(999)),
+          child: Text(l10n.readyToManage, style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700)),
+        ),
+        const SizedBox(height: 12),
+        Text(l10n.welcomeTitle, style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900, height: 1.05)),
+        const SizedBox(height: 10),
+        Text(l10n.connectedWorkspace, style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant, height: 1.45)),
+        const SizedBox(height: 16),
+        _DashboardGrid(minChildWidth: 140, spacing: 10, children: metrics.map((metric) => _DashboardMetricCard(metric: metric)).toList()),
+      ],
+    );
+
+    final profilePanel = Builder(
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: colorScheme.surface.withValues(alpha: 0.82),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: colorScheme.outlineVariant),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                  child: Text(_initialsForUser(user?.name, authState.userEmail), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.signedInAs, style: theme.textTheme.labelMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
+                      const SizedBox(height: 3),
+                      Text(
+                        user?.name.isNotEmpty == true ? user!.name : (authState.userEmail ?? l10n.signedInFallback),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (user != null) ...[
+              const SizedBox(height: 14),
+              Text(user.email, style: theme.textTheme.bodySmall),
+              const SizedBox(height: 4),
+              Text('@${user.username}', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+            ],
+            const SizedBox(height: 14),
+            FilledButton.icon(
+              style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+              icon: const Icon(Icons.menu_open_rounded, size: 18),
+              label: Text(l10n.menu),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        gradient: LinearGradient(colors: [colorScheme.primaryContainer, colorScheme.tertiaryContainer], begin: Alignment.topLeft, end: Alignment.bottomRight,
+        ),
+        boxShadow: [BoxShadow(color: colorScheme.shadow.withValues(alpha: 0.08), blurRadius: 24, offset: const Offset(0, 14))],
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 840;
+          if (!isWide) {
+            return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [leadPanel, const SizedBox(height: 16), profilePanel]);
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 5, child: leadPanel),
+              const SizedBox(width: 16),
+              Expanded(flex: 3, child: profilePanel),
+            ],
           );
         },
       ),
@@ -279,7 +310,6 @@ class _DashboardMetricCard extends StatelessWidget {
         border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             width: 38,
@@ -288,13 +318,26 @@ class _DashboardMetricCard extends StatelessWidget {
             child: Icon(metric.icon, color: colorScheme.onPrimaryContainer),
           ),
           const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(metric.value, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-              const SizedBox(height: 2),
-              Text(metric.label, style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  metric.value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  metric.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                ),
+              ],
+            ),
           ),
         ],
       ),

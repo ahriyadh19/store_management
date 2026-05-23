@@ -649,22 +649,25 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
                 title: l10n.pick('Connection', 'الاتصال'),
                 child: Column(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerLow,
+                    Material(
+                      color: colorScheme.surfaceContainerLow,
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: colorScheme.outlineVariant),
+                        side: BorderSide(color: colorScheme.outlineVariant),
                       ),
-                      child: SwitchListTile.adaptive(
-                        contentPadding: EdgeInsets.zero,
-                        value: controller.isLocalDatabaseEnabled,
-                        onChanged: isBusy ? null : (value) => _runAction(() => controller.setLocalDatabaseEnabled(value)),
-                        title: Text(l10n.pick('Enable local database usage', 'تفعيل استخدام قاعدة البيانات المحلية')),
-                        subtitle: Text(
-                          widget.appPreferencesController.storagePreference == StoragePreference.onlineOnly
-                              ? l10n.pick('Remote-only mode is active.', 'وضع الاتصال البعيد فقط نشط.')
-                              : '${l10n.pick('Current storage mode', 'وضع التخزين الحالي')}: ${widget.appPreferencesController.storagePreference.name}.',
+                      clipBehavior: Clip.antiAlias,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        child: SwitchListTile.adaptive(
+                          contentPadding: EdgeInsets.zero,
+                          value: controller.isLocalDatabaseEnabled,
+                          onChanged: isBusy ? null : (value) => _runAction(() => controller.setLocalDatabaseEnabled(value)),
+                          title: Text(l10n.pick('Enable local database usage', 'تفعيل استخدام قاعدة البيانات المحلية')),
+                          subtitle: Text(
+                            widget.appPreferencesController.storagePreference == StoragePreference.onlineOnly
+                                ? l10n.pick('Remote-only mode is active.', 'وضع الاتصال البعيد فقط نشط.')
+                                : '${l10n.pick('Current storage mode', 'وضع التخزين الحالي')}: ${widget.appPreferencesController.storagePreference.name}.',
+                          ),
                         ),
                       ),
                     ),
@@ -827,8 +830,7 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
                     ),
                     OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12)),
-                      onPressed: isBusy ? null
-                          : () => _runAction(() => controller.createManualBackup().then((_) {})),
+                      onPressed: isBusy ? null : () => _runAction(() => controller.createManualBackup().then((_) {})),
                       icon: const Icon(Icons.backup_rounded, size: 18),
                       label: Text(l10n.pick('Backup', 'نسخة احتياطية')),
                     ),
@@ -919,18 +921,15 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
               ),
               if (controller.statusMessage != null) ...[
                 const SizedBox(height: 10),
-                _FeedbackBanner(icon: Icons.info_outline_rounded, color: colorScheme.primary,
-                  backgroundColor: colorScheme.primaryContainer.withValues(alpha: 0.45), message: controller.statusMessage!),
+                _FeedbackBanner(icon: Icons.info_outline_rounded, color: colorScheme.primary, backgroundColor: colorScheme.primaryContainer.withValues(alpha: 0.45), message: controller.statusMessage!),
               ],
               if (controller.lastError != null) ...[
                 const SizedBox(height: 10),
-                _FeedbackBanner(icon: Icons.error_outline_rounded, color: colorScheme.error,
-                  backgroundColor: colorScheme.errorContainer.withValues(alpha: 0.45), message: controller.lastError!),
+                _FeedbackBanner(icon: Icons.error_outline_rounded, color: colorScheme.error, backgroundColor: colorScheme.errorContainer.withValues(alpha: 0.45), message: controller.lastError!),
               ],
               if (controller.synchronizationError != null && controller.synchronizationError != controller.lastError) ...[
                 const SizedBox(height: 10),
-                _FeedbackBanner(icon: Icons.sync_problem_rounded, color: colorScheme.error,
-                  backgroundColor: colorScheme.errorContainer.withValues(alpha: 0.45), message: controller.synchronizationError!),
+                _FeedbackBanner(icon: Icons.sync_problem_rounded, color: colorScheme.error, backgroundColor: colorScheme.errorContainer.withValues(alpha: 0.45), message: controller.synchronizationError!),
               ],
               const SizedBox(height: 12),
               _SettingsSubsection(
@@ -979,8 +978,7 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
                                       ),
                                       IconButton(
                                         tooltip: l10n.pick('Delete backup', 'حذف النسخة الاحتياطية'),
-                                        onPressed: isBusy ? null
-                                            : () => _runAction(() => controller.deleteBackupRecord(record)),
+                                        onPressed: isBusy ? null : () => _runAction(() => controller.deleteBackupRecord(record)),
                                         icon: const Icon(Icons.delete_outline_rounded),
                                       ),
                                     ],
