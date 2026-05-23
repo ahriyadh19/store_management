@@ -106,30 +106,81 @@ ModelFormDefinition<Store> storeFormDefinition(AppLocalizations l10n) => _server
   ),
 );
 
-ModelFormDefinition<Branch> branchFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Branch>(
-  tableName: 'branch',
-  tableFieldPriorityKeys: const <String>['name', 'phone', 'email', 'address', 'status'],
-  fields: [
-    _textField('name', _t(l10n, 'Branch name', 'اسم الفرع'), required: true),
-    _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
-    _multilineField('address', _t(l10n, 'Address', 'العنوان'), required: true),
-    _textField('phone', _t(l10n, 'Phone', 'الهاتف'), type: ModelFormFieldType.phone, required: true),
-    _textField('email', _t(l10n, 'Email', 'البريد الإلكتروني'), type: ModelFormFieldType.email, required: true),
-    _statusField(l10n),
-  ],
-  fromMap: Branch.fromMap,
-  toMap: (branch) => branch.toMap(),
-  sampleModel: Branch(
-    name: _sampleBranchLabel(l10n),
-    description: _t(l10n, 'Regional storefront for walk-in sales.', 'واجهة بيع إقليمية للمبيعات المباشرة.'),
-    address: '45 Market Road, North District',
-    phone: '+967700000002',
-    email: 'north.branch@store.app',
-    status: RecordStatus.active.code,
-    createdAt: _createdAt,
-    updatedAt: _updatedAt,
-  ),
-);
+ModelFormDefinition<Branch> branchFormDefinition(AppLocalizations l10n) {
+  final baseDefinition = _serverBackedDefinition<Branch>(
+    tableName: 'branch',
+    tableFieldPriorityKeys: const <String>['name', 'phone', 'email', 'address', 'status'],
+    fields: [
+      _relationSelectionField(
+        'storeUuid',
+        _t(l10n, 'Store', 'المتجر'),
+        tableName: 'store',
+        fallbackUuid: 'store-central-001',
+        fallbackLabel: _sampleStoreLabel(l10n),
+        required: true,
+        searchable: true,
+        hintText: _scopeAutoHint(l10n),
+        helperText: _t(l10n, 'Required when creating a new branch so it can be linked to a store.', 'مطلوب عند إنشاء فرع جديد حتى يتم ربطه بمتجر.'),
+      ),
+      _textField('name', _t(l10n, 'Branch name', 'اسم الفرع'), required: true),
+      _multilineField('description', _t(l10n, 'Description', 'الوصف'), required: true),
+      _multilineField('address', _t(l10n, 'Address', 'العنوان'), required: true),
+      _textField('phone', _t(l10n, 'Phone', 'الهاتف'), type: ModelFormFieldType.phone, required: true),
+      _textField('email', _t(l10n, 'Email', 'البريد الإلكتروني'), type: ModelFormFieldType.email, required: true),
+      _statusField(l10n),
+    ],
+    fromMap: Branch.fromMap,
+    toMap: (branch) => branch.toMap(),
+    sampleModel: Branch(
+      name: _sampleBranchLabel(l10n),
+      description: _t(l10n, 'Regional storefront for walk-in sales.', 'واجهة بيع إقليمية للمبيعات المباشرة.'),
+      address: '45 Market Road, North District',
+      phone: '+967700000002',
+      email: 'north.branch@store.app',
+      status: RecordStatus.active.code,
+      createdAt: _createdAt,
+      updatedAt: _updatedAt,
+    ),
+  );
+
+  return ModelFormDefinition<Branch>(
+    tableName: baseDefinition.tableName,
+    fields: baseDefinition.fields,
+    mapper: baseDefinition.mapper,
+    sampleModel: baseDefinition.sampleModel,
+    tableFieldPriorityKeys: baseDefinition.tableFieldPriorityKeys,
+    queryDelegate: baseDefinition.queryDelegate,
+    createDelegate: baseDefinition.createDelegate,
+    updateDelegate: baseDefinition.updateDelegate,
+    deleteDelegate: baseDefinition.deleteDelegate,
+    prepareCreateValues: (values) async {
+      final prepared = baseDefinition.prepareCreateValues == null ? values : await baseDefinition.prepareCreateValues!(values);
+      final storeUuid = _stringOrNull(prepared['storeUuid']);
+      if (storeUuid == null) {
+        throw StateError(_t(l10n, 'Select a store before creating a branch.', 'اختر متجرا قبل إنشاء الفرع.'));
+      }
+      return prepared;
+    },
+    afterCreateHook: ({required model, required values}) async {
+      if (baseDefinition.afterCreateHook != null) {
+        await baseDefinition.afterCreateHook!(model: model, values: values);
+      }
+
+      final storeUuid = _stringOrNull(values['storeUuid']);
+      if (storeUuid == null) {
+        return;
+      }
+
+      final createStoreBranchLink = storeBranchesFormDefinition(l10n).createDelegate;
+      if (createStoreBranchLink == null) {
+        return;
+      }
+
+      final now = DateTime.now();
+      await createStoreBranchLink(StoreBranches(storeUuid: storeUuid, branchUuid: model.uuid, status: RecordStatus.active.code, createdAt: now, updatedAt: now));
+    },
+  );
+}
 
 ModelFormDefinition<Product> productFormDefinition(AppLocalizations l10n) => _serverBackedDefinition<Product>(
   tableName: 'products',

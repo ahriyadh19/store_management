@@ -35,6 +35,7 @@ void main() {
     final english = appLocalizationsFor(const Locale('en'));
 
     expect(fieldUsesSelectionForTesting(storeFormDefinition(english), 'ownerUserUuid'), isTrue);
+    expect(fieldUsesSelectionForTesting(branchFormDefinition(english), 'storeUuid'), isTrue);
     expect(fieldUsesSelectionForTesting(userRolesFormDefinition(english), 'userUuid'), isTrue);
     expect(fieldUsesSelectionForTesting(userRolesFormDefinition(english), 'roleUuid'), isTrue);
     expect(fieldUsesSelectionForTesting(accessPermissionFormDefinition(english), 'pageUuid'), isTrue);
@@ -48,9 +49,24 @@ void main() {
     expect(fieldUsesSelectionForTesting(storeUserFormDefinition(english), 'userRoleUuid'), isTrue);
 
     expect(fieldUsesSearchableSelectionForTesting(storeFormDefinition(english), 'ownerUserUuid'), isTrue);
+    expect(fieldUsesSearchableSelectionForTesting(branchFormDefinition(english), 'storeUuid'), isTrue);
     expect(fieldUsesSearchableSelectionForTesting(userRolesFormDefinition(english), 'userUuid'), isTrue);
     expect(fieldUsesSearchableSelectionForTesting(rolePermissionFormDefinition(english), 'permissionUuid'), isTrue);
     expect(fieldUsesSearchableSelectionForTesting(storeUserFormDefinition(english), 'userUuid'), isTrue);
+  });
+
+  test('branch definition keeps a create hook for the store link', () {
+    final english = appLocalizationsFor(const Locale('en'));
+
+    expect(branchFormDefinition(english).afterCreateHook, isNotNull);
+  });
+
+  test('branch store selection is required before save', () {
+    final english = appLocalizationsFor(const Locale('en'));
+    final definition = branchFormDefinition(english);
+    final storeField = definition.fields.firstWhere((field) => field.key == 'storeUuid');
+
+    expect(storeField.required, isTrue);
   });
 
   test('access page and permission samples follow the shared users page catalog', () {

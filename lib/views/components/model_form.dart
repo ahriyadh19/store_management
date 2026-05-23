@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:store_management/data/entity_mapper.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/views/components/permission_visual_editor_dialog.dart';
@@ -829,6 +830,13 @@ class _ModelFormState extends State<ModelForm> {
           SnackBar(
             content: Text(error.toString()),
             backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 6),
+            action: SnackBarAction(
+              label: 'Copy',
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: error.toString()));
+              },
+            ),
           ),
         );
     }

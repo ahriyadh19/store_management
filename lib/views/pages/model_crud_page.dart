@@ -1251,9 +1251,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   void _showError(Object error) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(error.toString()), backgroundColor: Theme.of(context).colorScheme.error));
+    _showMessage(error.toString(), backgroundColor: Theme.of(context).colorScheme.error);
   }
 
   void _openDetailsPage(T record) {
@@ -1314,9 +1312,25 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   void _showFeedback(String message) {
+    _showMessage(message);
+  }
+
+  void _showMessage(String message, {Color? backgroundColor}) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: backgroundColor,
+          duration: const Duration(seconds: 6),
+          action: SnackBarAction(
+            label: 'Copy',
+            onPressed: () {
+              unawaited(Clipboard.setData(ClipboardData(text: message)));
+            },
+          ),
+        ),
+      );
   }
 
   String _recordTitle(Map<String, dynamic> data) {
@@ -1543,9 +1557,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   void _showAccessDenied() {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(context.l10n.accessDeniedActionNotAllowed)));
+    _showMessage(context.l10n.accessDeniedActionNotAllowed);
   }
 }
 
