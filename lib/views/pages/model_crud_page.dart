@@ -1910,8 +1910,8 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
             }
 
             return Container(
-              alignment: Alignment.centerLeft,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              alignment: AlignmentDirectional.centerStart,
+              padding: const EdgeInsetsDirectional.symmetric(horizontal: 16, vertical: 10),
               child: Text(
                 _formatCellValue(fieldKey: cell.columnName, value: cell.value, rowData: rowData),
                 overflow: TextOverflow.ellipsis,
@@ -1928,15 +1928,15 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
     final isPlaceholder = displayValue.trim().isEmpty || displayValue.trim() == '-';
     if (isPlaceholder) {
       return Container(
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        alignment: AlignmentDirectional.centerStart,
+        padding: const EdgeInsetsDirectional.symmetric(horizontal: 16, vertical: 10),
         child: Text(displayValue, overflow: TextOverflow.ellipsis, maxLines: 2),
       );
     }
 
     return Container(
-      alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      alignment: AlignmentDirectional.centerStart,
+      padding: const EdgeInsetsDirectional.symmetric(horizontal: 12, vertical: 8),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -1968,8 +1968,8 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
     final statusCode = _statusCodeFromValue(value);
     if (statusCode == null) {
       return Container(
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        alignment: AlignmentDirectional.centerStart,
+        padding: const EdgeInsetsDirectional.symmetric(horizontal: 16, vertical: 10),
         child: Text(
           _formatCellValue(fieldKey: 'status', value: value, rowData: const <String, dynamic>{}),
           overflow: TextOverflow.ellipsis,
@@ -1982,8 +1982,8 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
     final label = statusLabelFor(statusCode, isArabic: _l10n.isArabic);
     final textColor = statusTextColorFor(statusCode);
     return Container(
-      alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      alignment: AlignmentDirectional.centerStart,
+      padding: const EdgeInsetsDirectional.symmetric(horizontal: 16, vertical: 10),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: statusBackgroundColorFor(statusCode),
@@ -2045,7 +2045,7 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
       }
 
       return Align(
-        alignment: Alignment.centerLeft,
+        alignment: AlignmentDirectional.centerStart,
         child: PopupMenuButton<_RowAction>(
           tooltip: _l10n.actions,
           icon: const Icon(Icons.more_horiz_rounded),
@@ -2067,7 +2067,7 @@ class _CrudDataGridSource<T extends Object> extends DataGridSource {
     }
 
     return Align(
-      alignment: Alignment.centerLeft,
+      alignment: AlignmentDirectional.centerStart,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

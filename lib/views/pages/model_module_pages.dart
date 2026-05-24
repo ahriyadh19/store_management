@@ -152,7 +152,11 @@ ModelFormDefinition<Branch> branchFormDefinition(AppLocalizations l10n) {
     tableFieldPriorityKeys: baseDefinition.tableFieldPriorityKeys,
     queryDelegate: baseDefinition.queryDelegate,
     createDelegate: baseDefinition.createDelegate,
-    updateDelegate: baseDefinition.updateDelegate,
+    updateDelegate: (model) async {
+      final updatedModel = baseDefinition.updateDelegate == null ? model : await baseDefinition.updateDelegate!(model);
+      await _syncBranchStoreLink(l10n: l10n, branch: updatedModel);
+      return updatedModel;
+    },
     deleteDelegate: baseDefinition.deleteDelegate,
     prepareCreateValues: (values) async {
       final prepared = baseDefinition.prepareCreateValues == null ? values : await baseDefinition.prepareCreateValues!(values);
@@ -173,18 +177,11 @@ ModelFormDefinition<Branch> branchFormDefinition(AppLocalizations l10n) {
         await baseDefinition.afterCreateHook!(model: model, values: values);
       }
 
-      final storeUuid = _stringOrNull(values['storeUuid']);
-      if (storeUuid == null) {
-        return;
-      }
-
-      final createStoreBranchLink = storeBranchesFormDefinition(l10n).createDelegate;
-      if (createStoreBranchLink == null) {
-        return;
-      }
-
-      final now = DateTime.now();
-      await createStoreBranchLink(StoreBranches(storeUuid: storeUuid, branchUuid: model.uuid, status: RecordStatus.active.code, createdAt: now, updatedAt: now));
+      final storeUuid = _stringOrNull(values['storeUuid']) ?? model.storeUuid;
+      await _syncBranchStoreLink(
+        l10n: l10n,
+        branch: model.copyWith(storeUuid: storeUuid),
+      );
     },
   );
 }
@@ -1838,7 +1835,6 @@ ModelUpdateDelegate<T> _supabaseUpdateDelegate<T extends Object>({required Strin
 
     final updatedAt = DateTime.now().millisecondsSinceEpoch;
     payload['updatedAt'] = updatedAt;
-    payload['updated_at'] = updatedAt;
 
     final uuid = payload['uuid'];
     final id = payload['id'];
@@ -1864,6 +1860,82 @@ ModelUpdateDelegate<T> _supabaseUpdateDelegate<T extends Object>({required Strin
     final normalizedUpdated = _applySyncMetadataToPayload(Map<String, dynamic>.from(updated), syncState: OfflineSyncState.synced, fallbackUpdatedAtMillis: DateTime.now().millisecondsSinceEpoch);
     return mapper.fromRemotePayload(normalizedUpdated);
   };
+}
+
+Future<void> _syncBranchStoreLink({required AppLocalizations l10n, required Branch branch}) async {
+  final storeUuid = _stringOrNull(branch.storeUuid);
+  if (storeUuid == null) {
+    return;
+  }
+
+  final definition = storeBranchesFormDefinition(l10n);
+  final existingLink = await _findActiveStoreBranchLink(branchUuid: branch.uuid);
+
+  if (existingLink == null) {
+    final createDelegate = definition.createDelegate;
+    if (createDelegate == null) {
+      return;
+    }
+
+    await createDelegate(StoreBranches(storeUuid: storeUuid, branchUuid: branch.uuid, status: RecordStatus.active.code, createdAt: branch.createdAt, updatedAt: branch.updatedAt));
+    return;
+  }
+
+  if (existingLink.storeUuid == storeUuid && existingLink.status == RecordStatus.active.code) {
+    return;
+  }
+
+  final updateDelegate = definition.updateDelegate;
+  if (updateDelegate == null) {
+    return;
+  }
+
+  await updateDelegate(existingLink.copyWith(storeUuid: storeUuid, status: RecordStatus.active.code, updatedAt: branch.updatedAt));
+}
+
+Future<StoreBranches?> _findActiveStoreBranchLink({required String branchUuid}) async {
+  final now = DateTime.now().millisecondsSinceEpoch;
+  final database = LocalDatabase.current;
+  if (database != null) {
+    for (final payload in database.getRowsForType('store_branches')) {
+      final normalizedPayload = _applySyncMetadataToPayload(Map<String, dynamic>.from(payload), syncState: OfflineSyncState.synced, fallbackUpdatedAtMillis: now);
+      final deletedAt = normalizedPayload['deletedAt'] ?? normalizedPayload['deleted_at'];
+      if (deletedAt != null) {
+        continue;
+      }
+      final linkedBranchUuid = _stringOrNull(normalizedPayload['branchUuid']) ?? _stringOrNull(normalizedPayload['branch_uuid']);
+      if (linkedBranchUuid != branchUuid) {
+        continue;
+      }
+
+      try {
+        return StoreBranches.fromMap(normalizedPayload);
+      } catch (_) {
+        return null;
+      }
+    }
+  }
+
+  if (_storagePreferenceOrDefault() == StoragePreference.localOnly) {
+    return null;
+  }
+
+  final client = Supabase.instance.client;
+  final scope = await _resolveOwnerScope();
+  dynamic query = client.from('store_branches').select().eq('branchUuid', branchUuid).limit(1);
+  query = _applyTenantQueryScope(query, 'store_branches', scope);
+  final row = await query.maybeSingle();
+  if (row == null) {
+    return null;
+  }
+
+  final normalizedRow = _applySyncMetadataToPayload(Map<String, dynamic>.from(row as Map), syncState: OfflineSyncState.synced, fallbackUpdatedAtMillis: now);
+  final deletedAt = normalizedRow['deletedAt'] ?? normalizedRow['deleted_at'];
+  if (deletedAt != null) {
+    return null;
+  }
+
+  return StoreBranches.fromMap(normalizedRow);
 }
 
 ModelDeleteDelegate<T> _supabaseDeleteDelegate<T extends Object>({required String tableName, required EntityMapper<T> mapper}) {

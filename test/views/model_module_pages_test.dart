@@ -305,6 +305,40 @@ void main() {
     expect(find.text('Record Details'), findsOneWidget);
   });
 
+  testWidgets('datatable data cells follow RTL locale direction', (tester) async {
+    tester.view.physicalSize = const Size(1600, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final definition = ModelFormDefinition<_TableTestRecord>(
+      fields: const [ModelFormFieldDefinition(key: 'name', label: 'الاسم', type: ModelFormFieldType.text)],
+      mapper: EntityMapper<_TableTestRecord>(fromDataMap: _TableTestRecord.fromMap, toDataMap: (record) => record.toMap()),
+      sampleModel: const _TableTestRecord(uuid: 'sample', clientUuid: 'client-b', status: 'pending', name: 'منتج تجريبي'),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ar'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [AppLocalizations.delegate, GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
+        home: Scaffold(
+          body: ModelCrudPage<_TableTestRecord>(title: 'سجل الاختبار', entityLabel: 'سجل', description: 'التحقق من اتجاه خلايا الجدول.', icon: Icons.table_rows_rounded, formDefinition: definition),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final sampleText = find.text('منتج تجريبي').first;
+    final sampleCell = find.ancestor(of: sampleText, matching: find.byWidgetPredicate((widget) => widget is Container && widget.alignment == AlignmentDirectional.centerStart)).first;
+
+    final cellContainer = tester.widget<Container>(sampleCell);
+    expect(Directionality.of(tester.element(sampleText)), TextDirection.rtl);
+    expect((cellContainer.alignment! as AlignmentDirectional).resolve(TextDirection.rtl), Alignment.centerRight);
+  });
+
   testWidgets('relation cells open the mapped management page', (tester) async {
     tester.view.physicalSize = const Size(1600, 1800);
     tester.view.devicePixelRatio = 1.0;

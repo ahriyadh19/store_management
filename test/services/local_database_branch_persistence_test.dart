@@ -15,6 +15,7 @@ void main() {
       final branch = Branch(
         id: 1,
         uuid: 'branch-uuid',
+      storeUuid: 'store-uuid',
         name: 'City Branch',
         description: 'Handles downtown customers',
         address: '1 Market Street',
@@ -36,6 +37,26 @@ void main() {
       expect(record.updatedAtMillis, updatedAt.millisecondsSinceEpoch);
     },
   );
+
+  test('branch map round-trip preserves storeUuid for edit forms', () {
+    final branch = Branch.fromMap(<String, dynamic>{
+      'id': 2,
+      'uuid': 'branch-uuid-2',
+      'ownerUuid': 'owner-uuid',
+      'storeUuid': 'store-uuid-2',
+      'name': 'North Branch',
+      'description': 'Handles regional orders',
+      'address': '2 Trade Street',
+      'phone': '+256700100201',
+      'email': 'north@example.com',
+      'status': 1,
+      'createdAt': createdAt.millisecondsSinceEpoch,
+      'updatedAt': updatedAt.millisecondsSinceEpoch,
+    });
+
+    expect(branch.storeUuid, 'store-uuid-2');
+    expect(branch.toMap()['storeUuid'], 'store-uuid-2');
+  });
 
   test(
     'stub local database stores StoreBranches payloads using store_branches model type',
