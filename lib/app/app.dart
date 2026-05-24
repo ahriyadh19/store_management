@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:store_management/app/bootstrap.dart';
-import 'package:store_management/app_theme.dart';
+import 'package:store_management/services/app_theme.dart';
 import 'package:store_management/controllers/auth_controller.dart';
 import 'package:store_management/index.dart';
 import 'package:store_management/localization/app_localizations.dart';
