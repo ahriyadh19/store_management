@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/services/access_control_service.dart';
 import 'package:store_management/services/status.dart';
+import 'package:store_management/views/components/app_notification.dart';
 import 'package:store_management/views/components/model_form.dart';
 import 'package:store_management/views/index/index_page.dart';
 import 'package:store_management/views/pages/main_module_pages.dart';
@@ -1262,7 +1263,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   void _showError(Object error) {
-    _showMessage(error.toString(), backgroundColor: Theme.of(context).colorScheme.error);
+    _showMessage(error.toString(), type: AppNotificationType.error);
   }
 
   void _openDetailsPage(T record) {
@@ -1323,46 +1324,11 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   void _showFeedback(String message) {
-    _showMessage(message);
+    _showMessage(message, type: AppNotificationType.success);
   }
 
-  void _showMessage(String message, {Color? backgroundColor}) {
-    final theme = Theme.of(context);
-    final iconColor = backgroundColor == null ? theme.colorScheme.onInverseSurface : (ThemeData.estimateBrightnessForColor(backgroundColor) == Brightness.dark ? Colors.white : Colors.black);
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Expanded(child: Text(message)),
-              IconButton(
-                tooltip: 'Copy',
-                visualDensity: VisualDensity.compact,
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                padding: EdgeInsets.zero,
-                onPressed: () {
-                  unawaited(Clipboard.setData(ClipboardData(text: message)));
-                },
-                icon: Icon(Icons.content_copy_rounded, size: 18, color: iconColor),
-              ),
-              IconButton(
-                tooltip: 'Close',
-                visualDensity: VisualDensity.compact,
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                padding: EdgeInsets.zero,
-                onPressed: () {
-                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                },
-                icon: Icon(Icons.close_rounded, size: 18, color: iconColor),
-              ),
-            ],
-          ),
-          backgroundColor: backgroundColor,
-          duration: const Duration(seconds: 6),
-        ),
-      );
+  void _showMessage(String message, {AppNotificationType type = AppNotificationType.unknown}) {
+    AppNotification.show(context, message: message, type: type);
   }
 
   String _recordTitle(Map<String, dynamic> data) {
@@ -1589,7 +1555,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   void _showAccessDenied() {
-    _showMessage(context.l10n.accessDeniedActionNotAllowed);
+    _showMessage(context.l10n.accessDeniedActionNotAllowed, type: AppNotificationType.warning);
   }
 
   void _openRelationPage({required ModelFormFieldDefinition field, required Map<String, dynamic> rowData}) {

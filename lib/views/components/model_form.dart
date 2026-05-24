@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:store_management/data/entity_mapper.dart';
 import 'package:store_management/localization/app_localizations.dart';
+import 'package:store_management/views/components/app_notification.dart';
 import 'package:store_management/views/components/permission_visual_editor_dialog.dart';
 
 enum ModelFormFieldType { text, multiline, email, phone, integer, decimal, dateTime, selection }
@@ -893,44 +893,7 @@ class _ModelFormState extends State<ModelForm> {
       }
       widget.onSubmit(values);
     } catch (error) {
-      final theme = Theme.of(context);
-      final backgroundColor = theme.colorScheme.error;
-      final iconColor = theme.colorScheme.onError;
-      final message = error.toString();
-
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Expanded(child: Text(message)),
-                IconButton(
-                  tooltip: 'Copy',
-                  visualDensity: VisualDensity.compact,
-                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                  padding: EdgeInsets.zero,
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: message));
-                  },
-                  icon: Icon(Icons.content_copy_rounded, size: 18, color: iconColor),
-                ),
-                IconButton(
-                  tooltip: 'Close',
-                  visualDensity: VisualDensity.compact,
-                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                  padding: EdgeInsets.zero,
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                  },
-                  icon: Icon(Icons.close_rounded, size: 18, color: iconColor),
-                ),
-              ],
-            ),
-            backgroundColor: backgroundColor,
-            duration: const Duration(seconds: 6),
-          ),
-        );
+      AppNotification.show(context, message: error.toString(), type: AppNotificationType.error);
     }
   }
 

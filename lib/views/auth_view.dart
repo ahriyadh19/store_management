@@ -4,6 +4,7 @@ import 'package:store_management/controllers/auth_controller.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/localization/locale_controller.dart';
 import 'package:store_management/services/app_preferences_controller.dart';
+import 'package:store_management/views/components/app_notification.dart';
 import 'package:store_management/views/components/auth_form_panel.dart';
 
 class AuthView extends StatefulWidget {
@@ -78,12 +79,7 @@ class _AuthViewState extends State<AuthView> {
         }
 
         final message = l10n.message(messageKey, email: state.userEmail ?? _emailController.text);
-
-        final color = state.status == AuthStatus.failure ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.primary;
-
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
+        AppNotification.show(context, message: message, type: _notificationTypeForAuthState(state));
       },
       child: Scaffold(
         body: DecoratedBox(
@@ -241,9 +237,7 @@ class _AuthViewState extends State<AuthView> {
                                       }
 
                                       if (_passwordController.text != _confirmPasswordController.text) {
-                                        ScaffoldMessenger.of(context)
-                                          ..hideCurrentSnackBar()
-                                          ..showSnackBar(SnackBar(content: Text(l10n.message(AppMessageKey.passwordsDoNotMatch)), backgroundColor: Theme.of(context).colorScheme.error));
+                                        AppNotification.show(context, message: l10n.message(AppMessageKey.passwordsDoNotMatch), type: AppNotificationType.error);
                                         return;
                                       }
 
@@ -283,9 +277,7 @@ class _AuthViewState extends State<AuthView> {
                             },
                             onSubmit: () {
                               if (isSignUp && _passwordController.text != _confirmPasswordController.text) {
-                                ScaffoldMessenger.of(context)
-                                  ..hideCurrentSnackBar()
-                                  ..showSnackBar(SnackBar(content: Text(l10n.message(AppMessageKey.passwordsDoNotMatch)), backgroundColor: Theme.of(context).colorScheme.error));
+                                AppNotification.show(context, message: l10n.message(AppMessageKey.passwordsDoNotMatch), type: AppNotificationType.error);
                                 return;
                               }
 
@@ -305,6 +297,35 @@ class _AuthViewState extends State<AuthView> {
         ),
       ),
     );
+  }
+}
+
+AppNotificationType _notificationTypeForAuthState(AuthState state) {
+  if (state.status == AuthStatus.failure) {
+    return AppNotificationType.error;
+  }
+
+  if (state.status == AuthStatus.authenticated || state.status == AuthStatus.passwordResetSent) {
+    return AppNotificationType.success;
+  }
+
+  if (state.status == AuthStatus.confirmEmailRequired) {
+    return AppNotificationType.warning;
+  }
+
+  switch (state.messageKey) {
+    case AppMessageKey.signedInSuccessfully:
+    case AppMessageKey.accountCreatedSuccessfully:
+    case AppMessageKey.passwordResetInstructionsSent:
+    case AppMessageKey.passwordUpdatedSuccessfully:
+    case AppMessageKey.emailConfirmedSignIn:
+    case AppMessageKey.emailConfirmedSuccessfully:
+      return AppNotificationType.success;
+    case AppMessageKey.accountCreatedConfirmEmail:
+    case AppMessageKey.confirmationEmailResent:
+      return AppNotificationType.warning;
+    default:
+      return AppNotificationType.unknown;
   }
 }
 

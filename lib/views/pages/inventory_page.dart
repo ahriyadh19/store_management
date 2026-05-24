@@ -33,6 +33,7 @@ import 'package:store_management/services/access_control_service.dart';
 import 'package:store_management/services/inventory_transaction_service.dart';
 import 'package:store_management/services/local_database.dart';
 import 'package:store_management/services/owner_scope_service.dart';
+import 'package:store_management/views/components/app_notification.dart';
 import 'package:store_management/views/pages/model_crud_page.dart';
 import 'package:store_management/views/pages/model_module_pages.dart';
 
@@ -971,7 +972,7 @@ class _InventoryPageState extends State<InventoryPage> {
     final quantity = int.tryParse(_quantityController.text.trim());
     final unitCost = num.tryParse(_unitCostController.text.trim());
     if (quantity == null || quantity <= 0 || unitCost == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.validPositiveNumbersRequired)));
+      AppNotification.show(context, message: context.l10n.validPositiveNumbersRequired, type: AppNotificationType.warning);
       return;
     }
 
@@ -981,7 +982,7 @@ class _InventoryPageState extends State<InventoryPage> {
       try {
         expiryDate = DateTime.parse(expiryRaw);
       } catch (_) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.expiryDateFormatError)));
+        AppNotification.show(context, message: context.l10n.expiryDateFormatError, type: AppNotificationType.warning);
         return;
       }
     }
@@ -1040,7 +1041,7 @@ class _InventoryPageState extends State<InventoryPage> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.purchaseReceiptPosted(batchUuid))));
+      AppNotification.show(context, message: context.l10n.purchaseReceiptPosted(batchUuid), type: AppNotificationType.success);
       _batchNumberController.text = 'BATCH-${DateTime.now().millisecondsSinceEpoch}';
       _quantityController.text = '1';
       _unitCostController.clear();
@@ -1049,7 +1050,7 @@ class _InventoryPageState extends State<InventoryPage> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.purchaseReceiptPostFailed(error.toString()))));
+      AppNotification.show(context, message: context.l10n.purchaseReceiptPostFailed(error.toString()), type: AppNotificationType.error);
     } finally {
       if (mounted) {
         setState(() {

@@ -1927,9 +1927,9 @@ Future<StoreBranches?> _findActiveStoreBranchLink({required String branchUuid}) 
 
   final client = Supabase.instance.client;
   final scope = await _resolveOwnerScope();
-  dynamic query = client.from('store_branches').select().eq('branchUuid', branchUuid).limit(1);
+  dynamic query = client.from('store_branches').select().eq('branchUuid', branchUuid);
   query = _applyTenantQueryScope(query, 'store_branches', scope);
-  final row = await query.maybeSingle();
+  final row = await query.limit(1).maybeSingle();
   if (row == null) {
     return null;
   }

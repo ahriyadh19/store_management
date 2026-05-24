@@ -8,6 +8,7 @@ import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/services/local_database.dart';
 import 'package:store_management/services/local_database_file_picker.dart';
 import 'package:store_management/services/local_database_management_controller.dart';
+import 'package:store_management/views/components/app_notification.dart';
 import 'package:store_management/views/components/language_switcher.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -599,13 +600,13 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
       }
       final resolvedMessage = widget.controller.statusMessage ?? successMessage;
       if (resolvedMessage != null && resolvedMessage.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(resolvedMessage)));
+        AppNotification.show(context, message: resolvedMessage, type: AppNotificationType.success);
       }
     } catch (error) {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+      AppNotification.show(context, message: error.toString(), type: AppNotificationType.error);
     }
   }
 

@@ -15,6 +15,7 @@ import 'package:store_management/services/access_control_service.dart';
 import 'package:store_management/services/connection_status_controller.dart';
 import 'package:store_management/services/local_database.dart';
 import 'package:store_management/services/local_database_management_controller.dart';
+import 'package:store_management/views/components/app_notification.dart';
 import 'package:store_management/views/index/index_page.dart';
 import 'package:store_management/views/index/index_page_registry.dart';
 import 'package:window_manager/window_manager.dart';
@@ -235,9 +236,10 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
     unawaited(_accessControlService.refresh(provisionIfNeeded: true));
     final restored = _restoreWorkspaceTabsFromPreferences();
     if (!restored) {
-      final initialPage = IndexPageStorage.fromStorageKey(widget.appPreferencesController.lastIndexPageKey);
+      final initialPage = _canAccessPage(IndexPage.dashboard) ? IndexPage.dashboard : IndexPageStorage.fromStorageKey(widget.appPreferencesController.lastIndexPageKey);
       _openPageInTab(initialPage, pinned: initialPage == IndexPage.dashboard, savePreference: false);
     }
+    _ensureDashboardLanding();
     _connectionStatusController = ConnectionStatusController(localDatabase: context.read<LocalDatabase?>());
     _connectionStatusController.start();
   }
@@ -359,15 +361,38 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
     _persistWorkspaceTabsState();
   }
 
+  void _ensureDashboardLanding() {
+    if (!_canAccessPage(IndexPage.dashboard)) {
+      return;
+    }
+
+    for (final tab in _tabs) {
+      if (tab.page != IndexPage.dashboard) {
+        continue;
+      }
+
+      _activeTabId = tab.id;
+      _isAppBarVisible = true;
+      widget.appPreferencesController.saveLastIndexPageKey(IndexPage.dashboard.storageKey);
+      _persistWorkspaceTabsState();
+      return;
+    }
+
+    final tabId = 'tab_${_nextTabSeed++}';
+    _tabs.insert(0, _WorkspaceTab(id: tabId, page: IndexPage.dashboard, pinned: true, group: _groupForPage(IndexPage.dashboard)));
+    _activeTabId = tabId;
+    _isAppBarVisible = true;
+    widget.appPreferencesController.saveLastIndexPageKey(IndexPage.dashboard.storageKey);
+    _persistWorkspaceTabsState();
+  }
+
   void _handleDrawerPageOpened(IndexPage page) async {
     await _accessControlService.refreshIfStale();
     if (!mounted) {
       return;
     }
     if (!_canAccessPage(page)) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(context.l10n.accessDeniedPageUnavailable)));
+      AppNotification.show(context, message: context.l10n.accessDeniedPageUnavailable, type: AppNotificationType.warning);
       return;
     }
 
