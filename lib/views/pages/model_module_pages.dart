@@ -150,7 +150,11 @@ ModelFormDefinition<Branch> branchFormDefinition(AppLocalizations l10n) {
     mapper: baseDefinition.mapper,
     sampleModel: baseDefinition.sampleModel,
     tableFieldPriorityKeys: baseDefinition.tableFieldPriorityKeys,
-    queryDelegate: baseDefinition.queryDelegate,
+    queryDelegate: (request) async {
+      final result = await baseDefinition.queryDelegate!(request);
+      final hydratedRecords = await _populateBranchStoreUuids(result.records);
+      return ModelQueryResult<Branch>(records: hydratedRecords, totalCount: result.totalCount, overallCount: result.overallCount);
+    },
     createDelegate: baseDefinition.createDelegate,
     updateDelegate: (model) async {
       final updatedModel = baseDefinition.updateDelegate == null ? model : await baseDefinition.updateDelegate!(model);
@@ -1833,11 +1837,12 @@ ModelUpdateDelegate<T> _supabaseUpdateDelegate<T extends Object>({required Strin
     final scope = await _resolveOwnerScope();
     final payload = _enforceTenantPayloadScope(tableName, Map<String, dynamic>.from(mapper.toRemotePayload(model))..removeWhere((key, value) => value == null), scope);
 
-    final updatedAt = DateTime.now().millisecondsSinceEpoch;
-    payload['updatedAt'] = updatedAt;
-
     final uuid = payload['uuid'];
     final id = payload['id'];
+    payload.remove('id');
+
+    final updatedAt = DateTime.now().millisecondsSinceEpoch;
+    payload['updatedAt'] = updatedAt;
 
     dynamic query = client.from(tableName).update(payload);
     query = _applyTenantQueryScope(query, tableName, scope);
@@ -1936,6 +1941,45 @@ Future<StoreBranches?> _findActiveStoreBranchLink({required String branchUuid}) 
   }
 
   return StoreBranches.fromMap(normalizedRow);
+}
+
+Future<List<Branch>> _populateBranchStoreUuids(List<Branch> branches) async {
+  if (branches.isEmpty) {
+    return branches;
+  }
+
+  final missingBranchUuids = branches.where((branch) => _stringOrNull(branch.storeUuid) == null).map((branch) => branch.uuid).where((uuid) => uuid.isNotEmpty).toSet();
+  if (missingBranchUuids.isEmpty) {
+    return branches;
+  }
+
+  final storeUuidsByBranchUuid = <String, String>{};
+  for (final branchUuid in missingBranchUuids) {
+    final link = await _findActiveStoreBranchLink(branchUuid: branchUuid);
+    final storeUuid = _stringOrNull(link?.storeUuid);
+    if (storeUuid != null) {
+      storeUuidsByBranchUuid[branchUuid] = storeUuid;
+    }
+  }
+
+  return applyBranchStoreUuidsForTesting(branches: branches, storeUuidsByBranchUuid: storeUuidsByBranchUuid);
+}
+
+List<Branch> applyBranchStoreUuidsForTesting({required List<Branch> branches, required Map<String, String> storeUuidsByBranchUuid}) {
+  return branches
+      .map((branch) {
+        if (_stringOrNull(branch.storeUuid) != null) {
+          return branch;
+        }
+
+        final storeUuid = storeUuidsByBranchUuid[branch.uuid];
+        if (storeUuid == null || storeUuid.isEmpty) {
+          return branch;
+        }
+
+        return branch.copyWith(storeUuid: storeUuid);
+      })
+      .toList(growable: false);
 }
 
 ModelDeleteDelegate<T> _supabaseDeleteDelegate<T extends Object>({required String tableName, required EntityMapper<T> mapper}) {

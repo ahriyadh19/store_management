@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:store_management/data/entity_mapper.dart';
 import 'package:store_management/localization/app_localizations.dart';
+import 'package:store_management/models/branch.dart';
 import 'package:store_management/services/owner_scope_service.dart';
 import 'package:store_management/views/components/model_form.dart';
 import 'package:store_management/views/index/index_page.dart';
@@ -67,6 +68,53 @@ void main() {
     final storeField = definition.fields.firstWhere((field) => field.key == 'storeUuid');
 
     expect(storeField.required, isTrue);
+  });
+
+  test('branch records inherit missing storeUuid from active store links', () {
+    final createdAt = DateTime.fromMillisecondsSinceEpoch(1713744000000);
+    final updatedAt = DateTime.fromMillisecondsSinceEpoch(1713830400000);
+    final branches = <Branch>[
+      Branch(id: 1, uuid: 'branch-1', name: 'North', description: 'North branch', address: 'North road', phone: '+111', email: 'north@example.com', status: 1, createdAt: createdAt, updatedAt: updatedAt),
+      Branch(
+        id: 2,
+        uuid: 'branch-2',
+        storeUuid: 'store-2',
+        name: 'South',
+        description: 'South branch',
+        address: 'South road',
+        phone: '+222',
+        email: 'south@example.com',
+        status: 1,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      ),
+    ];
+
+    final hydrated = applyBranchStoreUuidsForTesting(branches: branches, storeUuidsByBranchUuid: const <String, String>{'branch-1': 'store-1', 'branch-2': 'store-overwrite'});
+
+    expect(hydrated[0].storeUuid, 'store-1');
+    expect(hydrated[1].storeUuid, 'store-2');
+  });
+
+  testWidgets('searchable relation fields render the current value even when options are not preloaded', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [AppLocalizations.delegate, GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
+        home: Scaffold(
+          body: ModelForm(
+            definition: const [ModelFormFieldDefinition(key: 'storeUuid', label: 'Store', type: ModelFormFieldType.selection, searchable: true, options: <ModelFormSelectOption>[])],
+            initialData: const <String, dynamic>{'storeUuid': 'store-1'},
+            submitLabel: 'Save',
+            onSubmit: _noopSubmit,
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('store-1'), findsOneWidget);
   });
 
   test('access page and permission samples follow the shared users page catalog', () {
@@ -418,6 +466,8 @@ void main() {
     expect(find.widgetWithText(TextFormField, 'Unit cost'), findsOneWidget);
   });
 }
+
+void _noopSubmit(Map<String, dynamic> values) {}
 
 class _TableTestRecord {
   const _TableTestRecord({required this.uuid, required this.clientUuid, required this.status, required this.name});

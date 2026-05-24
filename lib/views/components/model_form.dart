@@ -430,7 +430,7 @@ class _ModelFormState extends State<ModelForm> {
     _selectedValues = {
       for (final field in widget.definition.where((field) => field.type == ModelFormFieldType.selection)) field.key: widget.initialData[field.key],
     };
-    _selectionOptions = {for (final field in widget.definition.where((field) => field.type == ModelFormFieldType.selection)) field.key: List<ModelFormSelectOption>.from(field.options)};
+    _selectionOptions = {for (final field in widget.definition.where((field) => field.type == ModelFormFieldType.selection)) field.key: _mergedSelectionOptions(field: field, initialData: widget.initialData)};
   }
 
   @override
@@ -443,6 +443,7 @@ class _ModelFormState extends State<ModelForm> {
     for (final field in widget.definition) {
       if (field.type == ModelFormFieldType.selection) {
         _selectedValues[field.key] = widget.initialData[field.key];
+        _selectionOptions[field.key] = _mergedSelectionOptions(field: field, initialData: widget.initialData);
         continue;
       }
 
@@ -688,6 +689,72 @@ class _ModelFormState extends State<ModelForm> {
   String _searchFieldPlaceholder(BuildContext context) {
     final l10n = context.l10n;
     return l10n.noValueSelected;
+  }
+
+  List<ModelFormSelectOption> _mergedSelectionOptions({required ModelFormFieldDefinition field, required Map<String, dynamic> initialData}) {
+    final options = List<ModelFormSelectOption>.from(field.options);
+    final selectedValue = initialData[field.key];
+    if (selectedValue == null) {
+      return options;
+    }
+
+    final alreadyPresent = options.any((option) => option.value == selectedValue || option.value.toString() == selectedValue.toString());
+    if (alreadyPresent) {
+      return options;
+    }
+
+    options.add(
+      ModelFormSelectOption(
+        label: _initialSelectionLabel(field: field, selectedValue: selectedValue, initialData: initialData),
+        value: selectedValue,
+      ),
+    );
+    options.sort((left, right) => left.label.toLowerCase().compareTo(right.label.toLowerCase()));
+    return options;
+  }
+
+  String _initialSelectionLabel({required ModelFormFieldDefinition field, required Object selectedValue, required Map<String, dynamic> initialData}) {
+    for (final option in field.options) {
+      if (option.value == selectedValue || option.value.toString() == selectedValue.toString()) {
+        return option.label;
+      }
+    }
+
+    final key = field.key;
+    var baseKey = key;
+    if (key.endsWith('Uuid')) {
+      baseKey = key.substring(0, key.length - 4);
+    } else if (key.endsWith('Id')) {
+      baseKey = key.substring(0, key.length - 2);
+    }
+
+    final candidateKeys = <String>[
+      '${baseKey}Name',
+      '${baseKey}Number',
+      '${baseKey}Code',
+      '${baseKey}Title',
+      '${baseKey}Username',
+      '${baseKey}Email',
+      '${baseKey}_name',
+      '${baseKey}_number',
+      '${baseKey}_code',
+      '${baseKey}_title',
+      '${baseKey}_username',
+      '${baseKey}_email',
+      'name',
+      'title',
+      'username',
+      'email',
+    ];
+
+    for (final candidate in candidateKeys) {
+      final value = initialData[candidate]?.toString().trim();
+      if (value != null && value.isNotEmpty) {
+        return value;
+      }
+    }
+
+    return selectedValue.toString();
   }
 
   Future<_SelectionSearchResult?> _showSelectionSearchDialog({required BuildContext context, required ModelFormFieldDefinition field, required List<ModelFormSelectOption> options}) async {

@@ -203,11 +203,12 @@ class LocalDatabaseSyncService extends ChangeNotifier {
       final inserted = await client.from(record.modelType).insert(normalizedPayload).select().single();
       syncedPayload = Map<String, dynamic>.from(inserted);
     } else {
+      final identityPayload = Map<String, dynamic>.from(normalizedPayload);
       normalizedPayload['updatedAt'] = now;
-      normalizedPayload['updated_at'] = now;
+      normalizedPayload.remove('id');
       dynamic query = client.from(record.modelType).update(normalizedPayload);
       query = _applyTenantQueryScope(query, record.modelType, scope);
-      query = _applyRecordIdentityFilter(query, normalizedPayload);
+      query = _applyRecordIdentityFilter(query, identityPayload);
       final updated = await query.select().maybeSingle();
       syncedPayload = updated == null ? normalizedPayload : Map<String, dynamic>.from(updated);
     }
