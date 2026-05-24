@@ -6,6 +6,7 @@ import 'package:store_management/models/users.dart';
 import 'package:store_management/services/access_control_service.dart';
 import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/services/auth_repository.dart';
+import 'package:store_management/services/branch_store_uuid_backfill_service.dart';
 
 enum AuthScreen { signIn, signUp, forgotPassword, confirmEmail, resetPassword }
 
@@ -382,6 +383,7 @@ class AuthController extends Bloc<AuthEvent, AuthState> {
     switch (snapshot.status) {
       case AuthSessionStatus.signedIn:
         await AccessControlService.instance.refresh(provisionIfNeeded: true);
+        await BranchStoreUuidBackfillService.instance.runForCurrentSessionBestEffort();
         emit(
           state.copyWith(
             screen: AuthScreen.signIn,
