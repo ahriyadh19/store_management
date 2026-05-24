@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/localization/locale_controller.dart';
 
-const _englishFlagAsset = 'lib/assets/icons/en.png';
-const _arabicFlagAsset = 'lib/assets/icons/ar.png';
-
 class LanguageSwitcher extends StatelessWidget {
   const LanguageSwitcher({super.key, required this.localeController});
 
@@ -18,19 +15,26 @@ class LanguageSwitcher extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _LanguageFlagButton(tooltip: l10n.english, assetPath: _englishFlagAsset, isSelected: currentCode == 'en', onPressed: () => localeController.setLocale(const Locale('en'))),
+        _LanguageFlagButton(
+          tooltip: l10n.english,
+          icon: Icons.language_rounded,
+          label: 'EN',
+          isSelected: currentCode == 'en',
+          onPressed: () => localeController.setLocale(const Locale('en')),
+        ),
         const SizedBox(width: 8),
-        _LanguageFlagButton(tooltip: l10n.arabic, assetPath: _arabicFlagAsset, isSelected: currentCode == 'ar', onPressed: () => localeController.setLocale(const Locale('ar'))),
+        _LanguageFlagButton(tooltip: l10n.arabic, icon: Icons.translate_rounded, label: 'AR', isSelected: currentCode == 'ar', onPressed: () => localeController.setLocale(const Locale('ar'))),
       ],
     );
   }
 }
 
 class _LanguageFlagButton extends StatelessWidget {
-  const _LanguageFlagButton({required this.tooltip, required this.assetPath, required this.isSelected, required this.onPressed});
+  const _LanguageFlagButton({required this.tooltip, required this.icon, required this.label, required this.isSelected, required this.onPressed});
 
   final String tooltip;
-  final String assetPath;
+  final IconData icon;
+  final String label;
   final bool isSelected;
   final VoidCallback onPressed;
 
@@ -48,7 +52,16 @@ class _LanguageFlagButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            child: Image.asset(assetPath, width: 22, height: 22, fit: BoxFit.contain,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 18, color: isSelected ? colorScheme.onPrimaryContainer : colorScheme.onSurfaceVariant),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700, color: isSelected ? colorScheme.onPrimaryContainer : colorScheme.onSurfaceVariant),
+                ),
+              ],
             ),
           ),
         ),

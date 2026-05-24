@@ -282,7 +282,7 @@ class _PlatformAvailabilitySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isCompactHeight = MediaQuery.sizeOf(context).height < 760;
-    const platformIcons = ['lib/assets/icons/android.png', 'lib/assets/icons/apple.png', 'lib/assets/icons/linux.png', 'lib/assets/icons/windows.png'];
+    const platformIcons = [Icons.android_rounded, Icons.apple, Icons.computer_rounded, Icons.desktop_windows_rounded];
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: isCompactHeight ? 14 : 18, vertical: isCompactHeight ? 12 : 16),
@@ -305,7 +305,7 @@ class _PlatformAvailabilitySection extends StatelessWidget {
               alignment: WrapAlignment.center,
               spacing: isCompactHeight ? 10 : 12,
               runSpacing: isCompactHeight ? 10 : 12,
-              children: [for (final assetPath in platformIcons) _PlatformPill(assetPath: assetPath)],
+              children: [for (final icon in platformIcons) _PlatformPill(icon: icon)],
             ),
           ),
         ],
@@ -315,9 +315,9 @@ class _PlatformAvailabilitySection extends StatelessWidget {
 }
 
 class _PlatformPill extends StatelessWidget {
-  const _PlatformPill({required this.assetPath});
+  const _PlatformPill({required this.icon});
 
-  final String assetPath;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -338,7 +338,7 @@ class _PlatformPill extends StatelessWidget {
           ),
         ],
       ),
-      child: Image.asset(assetPath, fit: BoxFit.contain),
+      child: Icon(icon, size: isCompactHeight ? 24 : 28, color: Theme.of(context).colorScheme.primary),
     );
   }
 }
