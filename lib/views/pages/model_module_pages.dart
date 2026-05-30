@@ -56,7 +56,7 @@ import 'package:store_management/services/sync_payload_normalizer.dart';
 import 'package:store_management/services/sync_conflict_resolution.dart';
 import 'package:store_management/views/components/model_form.dart';
 import 'package:store_management/views/index/index_page.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException, Supabase;
 import 'package:uuid/uuid.dart';
 
 const Uuid _uuid = Uuid();
@@ -1842,17 +1842,40 @@ ModelUpdateDelegate<T> _supabaseUpdateDelegate<T extends Object>({required Strin
     payload.remove('id');
 
     final updatedAt = DateTime.now().millisecondsSinceEpoch;
-    payload['updatedAt'] = updatedAt;
-
-    dynamic query = client.from(tableName).update(payload);
-    query = _applyTenantQueryScope(query, tableName, scope);
-    if (uuid != null && uuid.toString().isNotEmpty) {
-      query = query.eq('uuid', uuid);
-    } else if (id != null) {
-      query = query.eq('id', id);
+    if (_remoteSupportsUpdatedAt(tableName)) {
+      payload['updatedAt'] = updatedAt;
     }
 
-    final updated = await query.select().maybeSingle();
+    Map<String, dynamic>? updated;
+    try {
+      dynamic query = client.from(tableName).update(payload);
+      query = _applyTenantQueryScope(query, tableName, scope);
+      if (uuid != null && uuid.toString().isNotEmpty) {
+        query = query.eq('uuid', uuid);
+      } else if (id != null) {
+        query = query.eq('id', id);
+      }
+
+      final response = await query.select().maybeSingle();
+      updated = response == null ? null : Map<String, dynamic>.from(response);
+    } on PostgrestException catch (error) {
+      if (!_isMissingUpdatedAtColumnError(error, tableName) || !_containsUpdatedAtField(payload)) {
+        rethrow;
+      }
+
+      final fallbackPayload = _withoutUpdatedAtField(payload);
+      dynamic query = client.from(tableName).update(fallbackPayload);
+      query = _applyTenantQueryScope(query, tableName, scope);
+      if (uuid != null && uuid.toString().isNotEmpty) {
+        query = query.eq('uuid', uuid);
+      } else if (id != null) {
+        query = query.eq('id', id);
+      }
+
+      final response = await query.select().maybeSingle();
+      updated = response == null ? null : Map<String, dynamic>.from(response);
+    }
+
     if (tableName == 'purchase_order_item') {
       final purchaseOrderUuid = payload['purchaseOrderUuid']?.toString();
       if (purchaseOrderUuid != null && purchaseOrderUuid.isNotEmpty) {
@@ -1992,15 +2015,34 @@ ModelDeleteDelegate<T> _supabaseDeleteDelegate<T extends Object>({required Strin
     final now = DateTime.now().millisecondsSinceEpoch;
 
     final supportsSoftDelete = !_hardDeleteTables.contains(tableName);
-    dynamic query = supportsSoftDelete ? client.from(tableName).update({'deletedAt': now, 'updatedAt': now}) : client.from(tableName).delete();
-    query = _applyTenantQueryScope(query, tableName, scope);
-    if (uuid != null && uuid.toString().isNotEmpty) {
-      query = query.eq('uuid', uuid);
-    } else if (id != null) {
-      query = query.eq('id', id);
-    }
+    final deletePayload = <String, dynamic>{'deletedAt': now, if (_remoteSupportsUpdatedAt(tableName)) 'updatedAt': now};
 
-    await query;
+    try {
+      dynamic query = supportsSoftDelete ? client.from(tableName).update(deletePayload) : client.from(tableName).delete();
+      query = _applyTenantQueryScope(query, tableName, scope);
+      if (uuid != null && uuid.toString().isNotEmpty) {
+        query = query.eq('uuid', uuid);
+      } else if (id != null) {
+        query = query.eq('id', id);
+      }
+
+      await query;
+    } on PostgrestException catch (error) {
+      if (!supportsSoftDelete || !_isMissingUpdatedAtColumnError(error, tableName) || !_containsUpdatedAtField(deletePayload)) {
+        rethrow;
+      }
+
+      final fallbackPayload = _withoutUpdatedAtField(deletePayload);
+      dynamic query = client.from(tableName).update(fallbackPayload);
+      query = _applyTenantQueryScope(query, tableName, scope);
+      if (uuid != null && uuid.toString().isNotEmpty) {
+        query = query.eq('uuid', uuid);
+      } else if (id != null) {
+        query = query.eq('id', id);
+      }
+
+      await query;
+    }
 
     if (tableName == 'purchase_order_item') {
       final purchaseOrderUuid = data['purchaseOrderUuid']?.toString();
@@ -2147,6 +2189,32 @@ Future<void> Function(T model, {int syncState}) _localDeleteDelegate<T extends O
 }
 
 const Set<String> _hardDeleteTables = <String>{'purchase_order_item', 'transfer_order_item', 'staff_attendance', 'staff_activity_log'};
+
+const Set<String> _remoteTablesWithoutUpdatedAt = <String>{'store'};
+
+bool _remoteSupportsUpdatedAt(String tableName) {
+  return !_remoteTablesWithoutUpdatedAt.contains(tableName);
+}
+
+bool _isMissingUpdatedAtColumnError(PostgrestException error, String tableName) {
+  if (error.code != 'PGRST204') {
+    return false;
+  }
+
+  final normalizedMessage = error.message.toLowerCase();
+  return normalizedMessage.contains("could not find the 'updatedat' column") && normalizedMessage.contains("'$tableName'");
+}
+
+bool _containsUpdatedAtField(Map<String, dynamic> payload) {
+  return payload.containsKey('updatedAt') || payload.containsKey('updated_at');
+}
+
+Map<String, dynamic> _withoutUpdatedAtField(Map<String, dynamic> payload) {
+  final sanitizedPayload = Map<String, dynamic>.from(payload);
+  sanitizedPayload.remove('updatedAt');
+  sanitizedPayload.remove('updated_at');
+  return sanitizedPayload;
+}
 
 Future<void> _recalculatePurchaseOrderTotalRemote({required String purchaseOrderUuid}) async {
   final client = Supabase.instance.client;

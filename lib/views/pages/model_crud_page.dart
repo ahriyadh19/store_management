@@ -1263,7 +1263,7 @@ class _ModelCrudPageState<T extends Object> extends State<ModelCrudPage<T>> {
   }
 
   void _showError(Object error) {
-    _showMessage(error.toString(), type: AppNotificationType.error);
+    _showMessage(context.l10n.localizedNotificationError(error), type: AppNotificationType.error);
   }
 
   void _openDetailsPage(T record) {

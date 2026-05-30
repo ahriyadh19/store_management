@@ -600,14 +600,36 @@ class _LocalDatabaseManagementSectionState extends State<_LocalDatabaseManagemen
       }
       final resolvedMessage = widget.controller.statusMessage ?? successMessage;
       if (resolvedMessage != null && resolvedMessage.isNotEmpty) {
-        AppNotification.show(context, message: resolvedMessage, type: AppNotificationType.success);
+        AppNotification.show(context, message: _localizeSettingsStatusMessage(context, resolvedMessage), type: AppNotificationType.success);
       }
     } catch (error) {
       if (!mounted) {
         return;
       }
-      AppNotification.show(context, message: error.toString(), type: AppNotificationType.error);
+      AppNotification.show(context, message: context.l10n.localizedNotificationError(error), type: AppNotificationType.error);
     }
+  }
+
+  String _localizeSettingsStatusMessage(BuildContext context, String message) {
+    final l10n = context.l10n;
+    return switch (message) {
+      'Local database enabled.' => l10n.pick('Local database enabled.', 'تم تفعيل قاعدة البيانات المحلية.'),
+      'Local database disabled; remote-only mode is active.' => l10n.pick('Local database disabled; remote-only mode is active.', 'تم تعطيل قاعدة البيانات المحلية، ووضع الاتصال البعيد فقط نشط.'),
+      'Synchronization behavior updated.' => l10n.pick('Synchronization behavior updated.', 'تم تحديث سلوك المزامنة.'),
+      'Automatic backup policy updated.' => l10n.pick('Automatic backup policy updated.', 'تم تحديث سياسة النسخ الاحتياطي التلقائي.'),
+      'Local database is ready.' => l10n.pick('Local database is ready.', 'قاعدة البيانات المحلية جاهزة.'),
+      'Database location already matches the current configuration.' => l10n.pick('Database location already matches the current configuration.', 'موقع قاعدة البيانات يطابق الإعداد الحالي بالفعل.'),
+      'Database moved to the configured location.' => l10n.pick('Database moved to the configured location.', 'تم نقل قاعدة البيانات إلى الموقع المحدد.'),
+      'Database file exported.' => l10n.pick('Database file exported.', 'تم تصدير ملف قاعدة البيانات.'),
+      'Portable JSON export created.' => l10n.pick('Portable JSON export created.', 'تم إنشاء تصدير JSON قابل للنقل.'),
+      'Database imported and reopened.' => l10n.pick('Database imported and reopened.', 'تم استيراد قاعدة البيانات وإعادة فتحها.'),
+      'Backup created.' => l10n.pick('Backup created.', 'تم إنشاء نسخة احتياطية.'),
+      'Backup restored.' => l10n.pick('Backup restored.', 'تمت استعادة النسخة الاحتياطية.'),
+      'Backup history updated.' => l10n.pick('Backup history updated.', 'تم تحديث سجل النسخ الاحتياطية.'),
+      'Local storage reset completed.' => l10n.pick('Local storage reset completed.', 'اكتملت إعادة تعيين التخزين المحلي.'),
+      'Database deleted and recreated.' => l10n.pick('Database deleted and recreated.', 'تم حذف قاعدة البيانات وإعادة إنشائها.'),
+      _ => message,
+    };
   }
 
   Future<bool> _confirmAction({required String title, required String message}) async {

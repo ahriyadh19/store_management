@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'package:store_management/lang/localizations_registry.dart';
@@ -54,6 +55,15 @@ extension AppLocalizationsCompat on generated.AppLocalizations {
   bool get isArabic => localeName.startsWith('ar');
 
   String pick(String english, String arabic) => isArabic ? arabic : english;
+
+  String localizedNotificationError(Object error, {String englishFallback = 'An unexpected error occurred. Please try again.', String arabicFallback = 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.'}) {
+    final message = error.toString().trim();
+    if (kDebugMode && message.isNotEmpty) {
+      return message;
+    }
+
+    return pick(englishFallback, arabicFallback);
+  }
 
   String message(AppMessageKey key, {String? email}) {
     switch (key) {

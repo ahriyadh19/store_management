@@ -16,12 +16,13 @@ class AppNotification {
   }) {
     final palette = _paletteFor(context, type);
     final isTestEnvironment = _isTestEnvironment();
+    final isRightToLeft = Directionality.of(context) == TextDirection.rtl;
 
     toastification.dismissAll(delayForAnimation: false);
 
     toastification.show(
       context: context,
-      alignment: Alignment.topRight,
+      alignment: isRightToLeft ? Alignment.topLeft : Alignment.topRight,
       type: _toastTypeFor(type),
       style: ToastificationStyle.flat,
       animationDuration: isTestEnvironment ? Duration.zero : null,

@@ -10,7 +10,7 @@ import 'package:store_management/services/owner_scope_service.dart';
 import 'package:store_management/services/remote_failure_classifier.dart';
 import 'package:store_management/services/sync_conflict_resolution.dart';
 import 'package:store_management/services/sync_payload_normalizer.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show Supabase, SupabaseClient;
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException, Supabase, SupabaseClient;
 
 enum LocalDatabaseSyncRunState { idle, running, paused, offline, failed }
 
@@ -194,22 +194,24 @@ class LocalDatabaseSyncService extends ChangeNotifier {
   Future<void> _pushPendingUpsert({required LocalDatabase database, required SupabaseClient client, required OfflineSyncRecord record, required Map<String, dynamic> payload}) async {
     final scope = await _ownerScopeService.resolveCurrentScope();
     final now = DateTime.now().millisecondsSinceEpoch;
-    final normalizedPayload = _enforceTenantPayloadScope(record.modelType, Map<String, dynamic>.from(payload)..removeWhere((key, value) => value == null), scope);
+    final normalizedPayload = _sanitizeRemotePayload(
+      tableName: record.modelType,
+      payload: _enforceTenantPayloadScope(record.modelType, Map<String, dynamic>.from(payload)..removeWhere((key, value) => value == null), scope),
+    );
     final looksLikeCreate = _looksLikeCreate(record, normalizedPayload);
 
     Map<String, dynamic> syncedPayload;
     if (looksLikeCreate) {
       normalizedPayload.removeWhere((key, value) => key == 'id' || value == null);
-      final inserted = await client.from(record.modelType).insert(normalizedPayload).select().single();
+      final inserted = await _insertRemoteRecord(client: client, tableName: record.modelType, payload: normalizedPayload);
       syncedPayload = Map<String, dynamic>.from(inserted);
     } else {
       final identityPayload = Map<String, dynamic>.from(normalizedPayload);
-      normalizedPayload['updatedAt'] = now;
+      if (_remoteSupportsUpdatedAt(record.modelType)) {
+        normalizedPayload['updatedAt'] = now;
+      }
       normalizedPayload.remove('id');
-      dynamic query = client.from(record.modelType).update(normalizedPayload);
-      query = _applyTenantQueryScope(query, record.modelType, scope);
-      query = _applyRecordIdentityFilter(query, identityPayload);
-      final updated = await query.select().maybeSingle();
+      final updated = await _updateRemoteRecord(client: client, tableName: record.modelType, payload: normalizedPayload, scope: scope, identityPayload: identityPayload);
       syncedPayload = updated == null ? normalizedPayload : Map<String, dynamic>.from(updated);
     }
 
@@ -251,10 +253,20 @@ class LocalDatabaseSyncService extends ChangeNotifier {
     final now = DateTime.now().millisecondsSinceEpoch;
     final supportsSoftDelete = !_hardDeleteTables.contains(record.modelType);
 
-    dynamic query = supportsSoftDelete ? client.from(record.modelType).update(<String, dynamic>{'deletedAt': now, 'updatedAt': now}) : client.from(record.modelType).delete();
-    query = _applyTenantQueryScope(query, record.modelType, scope);
-    query = _applyRecordIdentityFilter(query, payload);
-    await query;
+    if (supportsSoftDelete) {
+      await _softDeleteRemoteRecord(
+        client: client,
+        tableName: record.modelType,
+        payload: _sanitizeRemotePayload(tableName: record.modelType, payload: <String, dynamic>{'deletedAt': now, if (_remoteSupportsUpdatedAt(record.modelType)) 'updatedAt': now}),
+        scope: scope,
+        identityPayload: payload,
+      );
+    } else {
+      dynamic query = client.from(record.modelType).delete();
+      query = _applyTenantQueryScope(query, record.modelType, scope);
+      query = _applyRecordIdentityFilter(query, payload);
+      await query;
+    }
 
     if (record.modelType == 'purchase_order_item') {
       final purchaseOrderUuid = payload['purchaseOrderUuid']?.toString();
@@ -469,9 +481,105 @@ class LocalDatabaseSyncService extends ChangeNotifier {
     }
 
     final now = DateTime.now().millisecondsSinceEpoch;
-    dynamic query = client.from('purchase_order').update(<String, dynamic>{'totalAmount': total.toString(), 'updatedAt': now});
-    query = _applyTenantQueryScope(query, 'purchase_order', scope).eq('uuid', purchaseOrderUuid);
-    await query;
+    await _updateRemoteRecord(
+      client: client,
+      tableName: 'purchase_order',
+      payload: _sanitizeRemotePayload(tableName: 'purchase_order', payload: <String, dynamic>{'totalAmount': total.toString(), 'updatedAt': now}),
+      scope: scope,
+      identityPayload: <String, dynamic>{'uuid': purchaseOrderUuid},
+    );
+  }
+
+  Future<Map<String, dynamic>> _insertRemoteRecord({required SupabaseClient client, required String tableName, required Map<String, dynamic> payload}) async {
+    try {
+      final inserted = await client.from(tableName).insert(payload).select().single();
+      return Map<String, dynamic>.from(inserted);
+    } on PostgrestException catch (error) {
+      if (!_isMissingUpdatedAtColumnError(error, tableName) || !_containsUpdatedAtField(payload)) {
+        rethrow;
+      }
+
+      final fallbackPayload = _withoutUpdatedAtField(payload);
+      final inserted = await client.from(tableName).insert(fallbackPayload).select().single();
+      return Map<String, dynamic>.from(inserted);
+    }
+  }
+
+  Future<Map<String, dynamic>?> _updateRemoteRecord({
+    required SupabaseClient client,
+    required String tableName,
+    required Map<String, dynamic> payload,
+    required OwnerScope scope,
+    required Map<String, dynamic> identityPayload,
+  }) async {
+    try {
+      dynamic query = client.from(tableName).update(payload);
+      query = _applyTenantQueryScope(query, tableName, scope);
+      query = _applyRecordIdentityFilter(query, identityPayload);
+      final updated = await query.select().maybeSingle();
+      return updated == null ? null : Map<String, dynamic>.from(updated);
+    } on PostgrestException catch (error) {
+      if (!_isMissingUpdatedAtColumnError(error, tableName) || !_containsUpdatedAtField(payload)) {
+        rethrow;
+      }
+
+      final fallbackPayload = _withoutUpdatedAtField(payload);
+      dynamic query = client.from(tableName).update(fallbackPayload);
+      query = _applyTenantQueryScope(query, tableName, scope);
+      query = _applyRecordIdentityFilter(query, identityPayload);
+      final updated = await query.select().maybeSingle();
+      return updated == null ? null : Map<String, dynamic>.from(updated);
+    }
+  }
+
+  Future<void> _softDeleteRemoteRecord({required SupabaseClient client, required String tableName, required Map<String, dynamic> payload, required OwnerScope scope, required Map<String, dynamic> identityPayload}) async {
+    try {
+      dynamic query = client.from(tableName).update(payload);
+      query = _applyTenantQueryScope(query, tableName, scope);
+      query = _applyRecordIdentityFilter(query, identityPayload);
+      await query;
+    } on PostgrestException catch (error) {
+      if (!_isMissingUpdatedAtColumnError(error, tableName) || !_containsUpdatedAtField(payload)) {
+        rethrow;
+      }
+
+      final fallbackPayload = _withoutUpdatedAtField(payload);
+      dynamic query = client.from(tableName).update(fallbackPayload);
+      query = _applyTenantQueryScope(query, tableName, scope);
+      query = _applyRecordIdentityFilter(query, identityPayload);
+      await query;
+    }
+  }
+
+  static bool _isMissingUpdatedAtColumnError(PostgrestException error, String tableName) {
+    if (error.code != 'PGRST204') {
+      return false;
+    }
+
+    final normalizedMessage = error.message.toLowerCase();
+    return normalizedMessage.contains("could not find the 'updatedat' column") && normalizedMessage.contains("'$tableName'");
+  }
+
+  static bool _containsUpdatedAtField(Map<String, dynamic> payload) {
+    return payload.containsKey('updatedAt') || payload.containsKey('updated_at');
+  }
+
+  static bool _remoteSupportsUpdatedAt(String tableName) {
+    return !_remoteTablesWithoutUpdatedAt.contains(tableName);
+  }
+
+  static Map<String, dynamic> _sanitizeRemotePayload({required String tableName, required Map<String, dynamic> payload}) {
+    if (_remoteSupportsUpdatedAt(tableName)) {
+      return payload;
+    }
+    return _withoutUpdatedAtField(payload);
+  }
+
+  static Map<String, dynamic> _withoutUpdatedAtField(Map<String, dynamic> payload) {
+    final sanitizedPayload = Map<String, dynamic>.from(payload);
+    sanitizedPayload.remove('updatedAt');
+    sanitizedPayload.remove('updated_at');
+    return sanitizedPayload;
   }
 
   static const Set<String> _ownerScopedTables = <String>{
@@ -517,6 +625,7 @@ class LocalDatabaseSyncService extends ChangeNotifier {
   static const Set<String> _branchScopedTables = <String>{'branch_product'};
   static const Set<String> _selfScopedTables = <String>{'users'};
   static const Set<String> _hardDeleteTables = <String>{'purchase_order_item', 'transfer_order_item', 'staff_attendance', 'staff_activity_log'};
+  static const Set<String> _remoteTablesWithoutUpdatedAt = <String>{'store'};
   static const List<String> _synchronizationOrder = <String>[
     'store',
     'branch',

@@ -1,17 +1,18 @@
-import 'dart:convert';
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:store_management/controllers/auth_controller.dart';
 import 'package:store_management/localization/app_localizations.dart';
 import 'package:store_management/localization/locale_controller.dart';
-import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/services/access_control_service.dart';
+import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/services/connection_status_controller.dart';
 import 'package:store_management/services/local_database.dart';
 import 'package:store_management/services/local_database_management_controller.dart';
@@ -19,6 +20,8 @@ import 'package:store_management/views/components/app_notification.dart';
 import 'package:store_management/views/index/index_page.dart';
 import 'package:store_management/views/index/index_page_registry.dart';
 import 'package:window_manager/window_manager.dart';
+
+const double _workspaceTabBarHeight = 56;
 
 Widget _buildIndexDrawer(
   BuildContext context, {
@@ -821,6 +824,41 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
     _openPageInTab(IndexPage.dashboard, pinned: true);
   }
 
+  bool _handleContentScrollNotification(ScrollNotification notification) {
+    if (widget.appPreferencesController.stickyAppBar) {
+      if (!_isAppBarVisible && mounted) {
+        setState(() {
+          _isAppBarVisible = true;
+        });
+      }
+      return false;
+    }
+
+    if (notification.depth != 0 || notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+
+    final shouldShowAppBar = switch (notification) {
+      ScrollUpdateNotification(:final metrics) when metrics.pixels <= metrics.minScrollExtent => true,
+      ScrollUpdateNotification(:final scrollDelta?) when scrollDelta < 0 => true,
+      ScrollUpdateNotification(:final scrollDelta?) when scrollDelta > 0 => false,
+      UserScrollNotification(:final direction) when direction == ScrollDirection.forward => true,
+      UserScrollNotification(:final direction) when direction == ScrollDirection.reverse => false,
+      UserScrollNotification(:final direction) when direction == ScrollDirection.idle => true,
+      _ => _isAppBarVisible,
+    };
+
+    if (shouldShowAppBar == _isAppBarVisible || !mounted) {
+      return false;
+    }
+
+    setState(() {
+      _isAppBarVisible = shouldShowAppBar;
+    });
+
+    return false;
+  }
+
   bool _canAccessPage(IndexPage page) {
     if (_accessControlService.snapshot.isLoading || _accessControlService.snapshot.lastError != null) {
       return true;
@@ -899,7 +937,9 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
         animation: widget.appPreferencesController,
         builder: (context, child) {
           final stickyAppBar = widget.appPreferencesController.stickyAppBar;
-          final effectiveToolbarHeight = stickyAppBar || _isAppBarVisible ? kToolbarHeight : 0.0;
+          final areTopBarsVisible = stickyAppBar || _isAppBarVisible;
+          final effectiveToolbarHeight = areTopBarsVisible ? kToolbarHeight : 0.0;
+          final effectiveTabBarHeight = areTopBarsVisible ? _workspaceTabBarHeight : 0.0;
 
           return Scaffold(
             key: _scaffoldKey,
@@ -935,23 +975,39 @@ class _IndexState extends State<Index> with WidgetsBindingObserver, WindowListen
             ),
             body: Column(
               children: [
-                _WorkspaceTabBar(
-                  tabs: _tabs,
-                  activeTabId: _activeTabId,
-                  pageDefinitions: pageDefinitions,
-                  scrollController: _tabScrollController,
-                  onActivateTab: _activateTab,
-                  onCloseTab: _requestCloseTab,
-                  onTogglePin: _toggleTabPin,
-                  onReorderTabs: _reorderTabs,
-                  onMoveTab: _moveTabById,
-                  onCloseTabsToRight: _closeTabsToRight,
-                  onCloseAllTabs: () async => _closeAllTabs(),
-                  onCloseAllUnpinned: () async => _closeAllUnpinnedTabs(),
-                  onRecoverDashboard: _recoverWorkspaceWithDashboard,
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  height: effectiveTabBarHeight,
+                  child: ClipRect(
+                    child: OverflowBox(
+                      minHeight: 0,
+                      maxHeight: _workspaceTabBarHeight,
+                      alignment: Alignment.topCenter,
+                      child: SizedBox(
+                        height: _workspaceTabBarHeight,
+                        child: _WorkspaceTabBar(
+                          tabs: _tabs,
+                          activeTabId: _activeTabId,
+                          pageDefinitions: pageDefinitions,
+                          scrollController: _tabScrollController,
+                          onActivateTab: _activateTab,
+                          onCloseTab: _requestCloseTab,
+                          onTogglePin: _toggleTabPin,
+                          onReorderTabs: _reorderTabs,
+                          onMoveTab: _moveTabById,
+                          onCloseTabsToRight: _closeTabsToRight,
+                          onCloseAllTabs: () async => _closeAllTabs(),
+                          onCloseAllUnpinned: () async => _closeAllUnpinnedTabs(),
+                          onRecoverDashboard: _recoverWorkspaceWithDashboard,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
                 Expanded(
-                  child: selectedDefinition != null ? selectedDefinition.bodyBuilder(context) : const SizedBox.shrink()),
+                  child: NotificationListener<ScrollNotification>(onNotification: _handleContentScrollNotification, child: selectedDefinition != null ? selectedDefinition.bodyBuilder(context) : const SizedBox.shrink()),
+                ),
               ],
             ),
           );
@@ -1150,7 +1206,7 @@ class _WorkspaceTabBar extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      height: 56,
+      height: _workspaceTabBarHeight,
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLow,
         border: Border(bottom: BorderSide(color: colorScheme.outlineVariant)),

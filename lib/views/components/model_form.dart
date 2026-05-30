@@ -893,7 +893,7 @@ class _ModelFormState extends State<ModelForm> {
       }
       widget.onSubmit(values);
     } catch (error) {
-      AppNotification.show(context, message: error.toString(), type: AppNotificationType.error);
+      AppNotification.show(context, message: context.l10n.localizedNotificationError(error), type: AppNotificationType.error);
     }
   }
 
