@@ -890,6 +890,13 @@ class _InventoryPageState extends State<InventoryPage> {
           if (isNumber && value != null && value.trim().isNotEmpty && num.tryParse(value.trim()) == null) {
             return l10n.fieldMustBeNumber(label);
           }
+          if (fieldKey == 'expiryDate' && value != null && value.trim().isNotEmpty) {
+            try {
+              DateTime.parse(value.trim());
+            } catch (_) {
+              return l10n.expiryDateFormatError;
+            }
+          }
           return null;
         },
       ),

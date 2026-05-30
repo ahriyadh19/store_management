@@ -7,6 +7,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:toastification/toastification.dart';
 
 import 'package:store_management/app/app.dart';
 import 'package:store_management/localization/locale_controller.dart';
@@ -14,6 +15,15 @@ import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/services/auth_repository.dart';
 
 void main() {
+  setUp(() {
+    toastification.dismissAll(delayForAnimation: false);
+    toastification.managers.clear();
+  });
+
+  FakeAuthRepository signInRepository({String? seedEmail, String seedName = 'Demo User', AuthSessionSnapshot? startupSnapshot}) {
+    return FakeAuthRepository(seedEmail: seedEmail, seedName: seedName, startupSnapshot: startupSnapshot, initialPublicRegistrationOpen: false);
+  }
+
   testWidgets('opens drawer on authenticated home screen', (WidgetTester tester) async {
     await tester.pumpWidget(
       MyApp(
@@ -24,6 +34,9 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(find.byTooltip('Open navigation menu'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Expand all'));
     await tester.pumpAndSettle();
 
     expect(find.text('Menu'), findsWidgets);
@@ -42,7 +55,7 @@ void main() {
   testWidgets('shows auth screen by default', (WidgetTester tester) async {
     await tester.pumpWidget(
       MyApp(
-        authRepository: FakeAuthRepository(),
+        authRepository: signInRepository(),
         localeController: LocaleController(initialLocale: const Locale('en')),
       ),
     );
@@ -56,7 +69,7 @@ void main() {
   testWidgets('opens forgot password screen', (WidgetTester tester) async {
     await tester.pumpWidget(
       MyApp(
-        authRepository: FakeAuthRepository(),
+        authRepository: signInRepository(),
         localeController: LocaleController(initialLocale: const Locale('en')),
       ),
     );
@@ -74,7 +87,7 @@ void main() {
   testWidgets('shows reset completion fields after sending reset link', (WidgetTester tester) async {
     await tester.pumpWidget(
       MyApp(
-        authRepository: FakeAuthRepository(),
+        authRepository: signInRepository(),
         localeController: LocaleController(initialLocale: const Locale('en')),
       ),
     );
@@ -96,7 +109,7 @@ void main() {
   testWidgets('completes password reset flow from pasted link', (WidgetTester tester) async {
     await tester.pumpWidget(
       MyApp(
-        authRepository: FakeAuthRepository(),
+        authRepository: signInRepository(),
         localeController: LocaleController(initialLocale: const Locale('en')),
       ),
     );
@@ -195,7 +208,7 @@ void main() {
   testWidgets('renders auth screen in Arabic', (WidgetTester tester) async {
     await tester.pumpWidget(
       MyApp(
-        authRepository: FakeAuthRepository(),
+        authRepository: signInRepository(),
         localeController: LocaleController(initialLocale: const Locale('ar')),
       ),
     );
@@ -224,7 +237,7 @@ void main() {
   testWidgets('prefills the remembered email on auth screen', (WidgetTester tester) async {
     await tester.pumpWidget(
       MyApp(
-        authRepository: FakeAuthRepository(),
+        authRepository: signInRepository(),
         localeController: LocaleController(initialLocale: const Locale('en')),
         appPreferencesController: AppPreferencesController(initialLastEmail: 'remembered@store.com'),
       ),
@@ -238,7 +251,7 @@ void main() {
   testWidgets('shows recent email suggestions and applies the selected one', (WidgetTester tester) async {
     await tester.pumpWidget(
       MyApp(
-        authRepository: FakeAuthRepository(),
+        authRepository: signInRepository(),
         localeController: LocaleController(initialLocale: const Locale('en')),
         appPreferencesController: AppPreferencesController(initialRecentEmails: const ['owner@store.com', 'manager@store.com']),
       ),

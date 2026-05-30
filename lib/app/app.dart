@@ -15,6 +15,7 @@ import 'package:store_management/services/app_preferences_controller.dart';
 import 'package:store_management/services/auth_repository.dart';
 import 'package:store_management/services/local_database.dart';
 import 'package:store_management/services/local_database_management_controller.dart';
+import 'package:toastification/toastification.dart';
 import 'package:store_management/views/auth_view.dart';
 
 class MyApp extends StatelessWidget {
@@ -40,54 +41,48 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RepositoryProvider<LocalDatabase?>.value(
-      value: localDatabase,
-      child: BlocProvider(
-        create: (_) => AuthController(authRepository: authRepository ?? SupabaseAuthRepository(), appPreferencesController: appPreferencesController),
-        child: AnimatedBuilder(
-          animation: Listenable.merge([localeController, appPreferencesController]),
-          builder: (context, child) {
-            final appLocale = localeController.locale ?? appLocalizationFallbackLocale;
+    return ToastificationWrapper(
+      child: RepositoryProvider<LocalDatabase?>.value(
+        value: localDatabase,
+        child: BlocProvider(
+          create: (_) => AuthController(authRepository: authRepository ?? SupabaseAuthRepository(), appPreferencesController: appPreferencesController),
+          child: AnimatedBuilder(
+            animation: Listenable.merge([localeController, appPreferencesController]),
+            builder: (context, child) {
+              final appLocale = localeController.locale ?? appLocalizationFallbackLocale;
 
-            return MaterialApp(
-              debugShowCheckedModeBanner: false,
-              locale: localeController.locale,
-              supportedLocales: AppLocalizations.supportedLocales,
-              localizationsDelegates: const [
-                AppLocalizations.delegate,
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
-              builder: (context, child) {
-                return LargeScreenGate(child: child ?? const SizedBox.shrink());
-              },
-              localeResolutionCallback: (locale, supportedLocales) {
-                if (locale == null) {
-                  return appLocalizationFallbackLocale;
-                }
-
-                for (final supportedLocale in supportedLocales) {
-                  if (supportedLocale.languageCode == locale.languageCode) {
-                    return supportedLocale;
+              return MaterialApp(
+                debugShowCheckedModeBanner: false,
+                locale: localeController.locale,
+                supportedLocales: AppLocalizations.supportedLocales,
+                localizationsDelegates: const [AppLocalizations.delegate, GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
+                builder: (context, child) {
+                  return LargeScreenGate(child: child ?? const SizedBox.shrink());
+                },
+                localeResolutionCallback: (locale, supportedLocales) {
+                  if (locale == null) {
+                    return appLocalizationFallbackLocale;
                   }
-                }
 
-                return appLocalizationFallbackLocale;
-              },
-              onGenerateTitle: (context) => context.l10n.appTitle,
-              themeMode: appPreferencesController.themeMode,
-              theme: buildAppTheme(brightness: Brightness.light, locale: appLocale),
-              darkTheme: buildAppTheme(brightness: Brightness.dark, locale: appLocale),
-              home: startupError == null
-                  ? AuthGate(
-                      localeController: localeController,
-                      appPreferencesController: appPreferencesController,
-                      localDatabaseManagementController: localDatabaseManagementController,
-                    )
-                  : StartupErrorView(error: startupError!, stackTrace: startupStackTrace),
-            );
-          },
+                  for (final supportedLocale in supportedLocales) {
+                    if (supportedLocale.languageCode == locale.languageCode) {
+                      return supportedLocale;
+                    }
+                  }
+
+                  return appLocalizationFallbackLocale;
+                },
+                onGenerateTitle: (context) => context.l10n.appTitle,
+                themeMode: appPreferencesController.themeMode,
+                theme: buildAppTheme(brightness: Brightness.light, locale: appLocale),
+                darkTheme: buildAppTheme(brightness: Brightness.dark, locale: appLocale),
+                home: startupError == null
+                    ? AuthGate(localeController: localeController, appPreferencesController: appPreferencesController,
+                        localDatabaseManagementController: localDatabaseManagementController)
+                    : StartupErrorView(error: startupError!, stackTrace: startupStackTrace),
+              );
+            },
+          ),
         ),
       ),
     );
