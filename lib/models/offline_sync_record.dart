@@ -1,4 +1,3 @@
-
 class OfflineSyncState {
   static const int synced = 0;
   static const int pendingUpsert = 1;

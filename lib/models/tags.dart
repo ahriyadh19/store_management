@@ -1,22 +1,14 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
-class Tags {
-  int id = 0;
-  String uuid;
+
+class Tags extends AuditedSyncModel {
   String name;
   String description;
-  int status;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool synced;
-  DateTime? deletedAt;
-  DateTime? syncedAt;
 
-  Tags({this.id = 0, String? uuid, required this.name, required this.description, required this.status, required this.createdAt, required this.updatedAt, this.synced = false, this.deletedAt, this.syncedAt})
-    : uuid = uuid ?? UUIDGenerator.generate();
+  Tags({super.id = 0, super.uuid, required this.name, required this.description, required super.status, required super.createdAt, required super.updatedAt, super.synced = false, super.deletedAt, super.syncedAt});
 
   Tags copyWith({int? id, String? uuid, String? name, String? description, int? status, DateTime? createdAt, DateTime? updatedAt, bool? synced, DateTime? deletedAt, DateTime? syncedAt}) {
     return Tags(
@@ -35,16 +27,9 @@ class Tags {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
-      'uuid': uuid,
       'name': name,
       'description': description,
-      'status': status,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
-      'synced': synced,
-      'deletedAt': deletedAt?.millisecondsSinceEpoch,
-      'syncedAt': syncedAt?.millisecondsSinceEpoch,
+      ...auditedSyncMap(),
     };
   }
 
@@ -73,24 +58,5 @@ class Tags {
   }
 
   @override
-  bool operator ==(covariant Tags other) {
-    if (identical(this, other)) return true;
-
-    return other.id == id &&
-        other.uuid == uuid &&
-        other.name == name &&
-        other.description == description &&
-        other.status == status &&
-        other.createdAt == createdAt &&
-        other.updatedAt == updatedAt &&
-        other.synced == synced &&
-        other.deletedAt == deletedAt &&
-        other.syncedAt == syncedAt;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^ uuid.hashCode ^ name.hashCode ^ description.hashCode ^ status.hashCode ^ createdAt.hashCode ^ updatedAt.hashCode ^ synced.hashCode ^ deletedAt.hashCode ^ syncedAt.hashCode;
-  }
+  List<Object?> get props => <Object?>[...auditedSyncProps, name, description];
 }
-

@@ -2,36 +2,29 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
-class PaymentAllocation {
-  int id = 0;
-  String uuid;
+
+class PaymentAllocation extends AuditedSyncModel {
   String paymentVoucherUuid;
   String invoiceUuid;
   Decimal allocatedAmount;
   DateTime allocationDate;
-  int status;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool synced;
-  DateTime? deletedAt;
-  DateTime? syncedAt;
 
   PaymentAllocation({
-    this.id = 0,
-    String? uuid,
+    super.id = 0,
+    super.uuid,
     required this.paymentVoucherUuid,
     required this.invoiceUuid,
     required this.allocatedAmount,
     required this.allocationDate,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-    this.synced = false,
-    this.deletedAt,
-    this.syncedAt,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+    required super.status,
+    required super.createdAt,
+    required super.updatedAt,
+    super.synced = false,
+    super.deletedAt,
+    super.syncedAt,
+  });
 
   PaymentAllocation copyWith({
     int? id,
@@ -65,18 +58,11 @@ class PaymentAllocation {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
-      'uuid': uuid,
       'paymentVoucherUuid': paymentVoucherUuid,
       'invoiceUuid': invoiceUuid,
       'allocatedAmount': allocatedAmount.toString(),
       'allocationDate': allocationDate.millisecondsSinceEpoch,
-      'status': status,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
-      'synced': synced,
-      'deletedAt': deletedAt?.millisecondsSinceEpoch,
-      'syncedAt': syncedAt?.millisecondsSinceEpoch,
+      ...auditedSyncMap(),
     };
   }
 
@@ -124,36 +110,5 @@ class PaymentAllocation {
   }
 
   @override
-  bool operator ==(covariant PaymentAllocation other) {
-    if (identical(this, other)) return true;
-
-    return other.id == id &&
-        other.uuid == uuid &&
-        other.paymentVoucherUuid == paymentVoucherUuid &&
-        other.invoiceUuid == invoiceUuid &&
-        other.allocatedAmount == allocatedAmount &&
-        other.allocationDate == allocationDate &&
-        other.status == status &&
-        other.createdAt == createdAt &&
-        other.updatedAt == updatedAt &&
-        other.synced == synced &&
-        other.deletedAt == deletedAt &&
-        other.syncedAt == syncedAt;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-        uuid.hashCode ^
-        paymentVoucherUuid.hashCode ^
-        invoiceUuid.hashCode ^
-        allocatedAmount.hashCode ^
-        allocationDate.hashCode ^
-        status.hashCode ^
-        createdAt.hashCode ^
-        updatedAt.hashCode ^
-        synced.hashCode ^
-        deletedAt.hashCode ^
-        syncedAt.hashCode;
-  }
+  List<Object?> get props => <Object?>[...auditedSyncProps, paymentVoucherUuid, invoiceUuid, allocatedAmount, allocationDate];
 }

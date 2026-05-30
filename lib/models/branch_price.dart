@@ -2,12 +2,10 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
 
-class BranchPrice {
-  int id = 0;
-  String uuid;
+class BranchPrice extends AuditedSyncModel {
   String ownerUuid;
   String branchUuid;
   String productUuid;
@@ -16,16 +14,10 @@ class BranchPrice {
   DateTime? startsAt;
   DateTime? endsAt;
   int priority;
-  int status;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool synced;
-  DateTime? deletedAt;
-  DateTime? syncedAt;
 
   BranchPrice({
-    this.id = 0,
-    String? uuid,
+    super.id = 0,
+    super.uuid,
     required this.ownerUuid,
     required this.branchUuid,
     required this.productUuid,
@@ -34,17 +26,15 @@ class BranchPrice {
     this.startsAt,
     this.endsAt,
     this.priority = 0,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-    this.synced = false,
-    this.deletedAt,
-    this.syncedAt,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+    required super.status,
+    required super.createdAt,
+    required super.updatedAt,
+    super.synced = false,
+    super.deletedAt,
+    super.syncedAt,
+  });
 
   Map<String, dynamic> toMap() => <String, dynamic>{
-    'id': id,
-    'uuid': uuid,
     'ownerUuid': ownerUuid,
     'branchUuid': branchUuid,
     'productUuid': productUuid,
@@ -53,13 +43,11 @@ class BranchPrice {
     'startsAt': startsAt?.millisecondsSinceEpoch,
     'endsAt': endsAt?.millisecondsSinceEpoch,
     'priority': priority,
-    'status': status,
-    'createdAt': createdAt.millisecondsSinceEpoch,
-    'updatedAt': updatedAt.millisecondsSinceEpoch,
-    'synced': synced,
-    'deletedAt': deletedAt?.millisecondsSinceEpoch,
-    'syncedAt': syncedAt?.millisecondsSinceEpoch,
+    ...auditedSyncMap(),
   };
+
+  @override
+  List<Object?> get props => <Object?>[...auditedSyncProps, ownerUuid, branchUuid, productUuid, priceType, price, startsAt, endsAt, priority];
 
   factory BranchPrice.fromMap(Map<String, dynamic> map) {
     final nowMillis = DateTime.now().millisecondsSinceEpoch;

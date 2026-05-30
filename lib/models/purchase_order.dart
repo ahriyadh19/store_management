@@ -2,49 +2,41 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
 
-class PurchaseOrder {
-  int id = 0;
-  String uuid;
+class PurchaseOrder extends StatusedSyncModel<String> {
   String ownerUuid;
   String storeUuid;
   String supplierUuid;
   String poNumber;
   DateTime orderDate;
   DateTime? expectedDate;
-  String status;
   String currencyCode;
   Decimal totalAmount;
   String notes;
   String? createdByUserUuid;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool synced;
-  DateTime? deletedAt;
-  DateTime? syncedAt;
 
   PurchaseOrder({
-    this.id = 0,
-    String? uuid,
+    super.id = 0,
+    super.uuid,
     required this.ownerUuid,
     required this.storeUuid,
     required this.supplierUuid,
     required this.poNumber,
     required this.orderDate,
     this.expectedDate,
-    required this.status,
+    required super.status,
     required this.currencyCode,
     required this.totalAmount,
     required this.notes,
     this.createdByUserUuid,
-    required this.createdAt,
-    required this.updatedAt,
-    this.synced = false,
-    this.deletedAt,
-    this.syncedAt,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+    required super.createdAt,
+    required super.updatedAt,
+    super.synced = false,
+    super.deletedAt,
+    super.syncedAt,
+  });
 
   PurchaseOrder copyWith({
     int? id,
@@ -90,24 +82,17 @@ class PurchaseOrder {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
-      'uuid': uuid,
       'ownerUuid': ownerUuid,
       'storeUuid': storeUuid,
       'supplierUuid': supplierUuid,
       'poNumber': poNumber,
       'orderDate': orderDate.millisecondsSinceEpoch,
       'expectedDate': expectedDate?.millisecondsSinceEpoch,
-      'status': status,
       'currencyCode': currencyCode,
       'totalAmount': totalAmount.toString(),
       'notes': notes,
       'createdByUserUuid': createdByUserUuid,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
-      'synced': synced,
-      'deletedAt': deletedAt?.millisecondsSinceEpoch,
-      'syncedAt': syncedAt?.millisecondsSinceEpoch,
+      ...statusedSyncMap(),
     };
   }
 
@@ -145,48 +130,5 @@ class PurchaseOrder {
   }
 
   @override
-  bool operator ==(covariant PurchaseOrder other) {
-    if (identical(this, other)) return true;
-
-    return other.id == id &&
-        other.uuid == uuid &&
-        other.ownerUuid == ownerUuid &&
-        other.storeUuid == storeUuid &&
-        other.supplierUuid == supplierUuid &&
-        other.poNumber == poNumber &&
-        other.orderDate == orderDate &&
-        other.expectedDate == expectedDate &&
-        other.status == status &&
-        other.currencyCode == currencyCode &&
-        other.totalAmount == totalAmount &&
-        other.notes == notes &&
-        other.createdByUserUuid == createdByUserUuid &&
-        other.createdAt == createdAt &&
-        other.updatedAt == updatedAt &&
-        other.synced == synced &&
-        other.deletedAt == deletedAt &&
-        other.syncedAt == syncedAt;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-        uuid.hashCode ^
-        ownerUuid.hashCode ^
-        storeUuid.hashCode ^
-        supplierUuid.hashCode ^
-        poNumber.hashCode ^
-        orderDate.hashCode ^
-        expectedDate.hashCode ^
-        status.hashCode ^
-        currencyCode.hashCode ^
-        totalAmount.hashCode ^
-        notes.hashCode ^
-        createdByUserUuid.hashCode ^
-        createdAt.hashCode ^
-        updatedAt.hashCode ^
-        synced.hashCode ^
-        deletedAt.hashCode ^
-        syncedAt.hashCode;
-  }
+  List<Object?> get props => <Object?>[...statusedSyncProps, ownerUuid, storeUuid, supplierUuid, poNumber, orderDate, expectedDate, currencyCode, totalAmount, notes, createdByUserUuid];
 }

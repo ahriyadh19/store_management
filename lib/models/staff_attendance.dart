@@ -1,46 +1,40 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
 
-class StaffAttendance {
-  int id = 0;
-  String uuid;
+class StaffAttendance extends StatusedModel<String> {
   String ownerUuid;
   String staffShiftUuid;
   DateTime? checkInAt;
   DateTime? checkOutAt;
   int? minutesWorked;
-  String status;
-  DateTime createdAt;
-  DateTime updatedAt;
 
   StaffAttendance({
-    this.id = 0,
-    String? uuid,
+    super.id = 0,
+    super.uuid,
     required this.ownerUuid,
     required this.staffShiftUuid,
     this.checkInAt,
     this.checkOutAt,
     this.minutesWorked,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+    required super.status,
+    required super.createdAt,
+    required super.updatedAt,
+  });
 
   Map<String, dynamic> toMap() => <String, dynamic>{
-    'id': id,
-    'uuid': uuid,
     'ownerUuid': ownerUuid,
     'staffShiftUuid': staffShiftUuid,
     'checkInAt': checkInAt?.millisecondsSinceEpoch,
     'checkOutAt': checkOutAt?.millisecondsSinceEpoch,
     'minutesWorked': minutesWorked,
-    'status': status,
-    'createdAt': createdAt.millisecondsSinceEpoch,
-    'updatedAt': updatedAt.millisecondsSinceEpoch,
+    ...statusedMap(),
   };
+
+  @override
+  List<Object?> get props => <Object?>[...statusedProps, ownerUuid, staffShiftUuid, checkInAt, checkOutAt, minutesWorked];
 
   factory StaffAttendance.fromMap(Map<String, dynamic> map) {
     final nowMillis = DateTime.now().millisecondsSinceEpoch;

@@ -2,12 +2,10 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
 
-class SalesInvoice {
-  int id = 0;
-  String uuid;
+class SalesInvoice extends StatusedSyncModel<String> {
   String ownerUuid;
   String storeUuid;
   String branchUuid;
@@ -21,17 +19,11 @@ class SalesInvoice {
   Decimal taxAmount;
   Decimal totalAmount;
   Decimal paidAmount;
-  String status;
   String? createdByUserUuid;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool synced;
-  DateTime? deletedAt;
-  DateTime? syncedAt;
 
   SalesInvoice({
-    this.id = 0,
-    String? uuid,
+    super.id = 0,
+    super.uuid,
     required this.ownerUuid,
     required this.storeUuid,
     required this.branchUuid,
@@ -45,18 +37,16 @@ class SalesInvoice {
     required this.taxAmount,
     required this.totalAmount,
     required this.paidAmount,
-    required this.status,
+    required super.status,
     this.createdByUserUuid,
-    required this.createdAt,
-    required this.updatedAt,
-    this.synced = false,
-    this.deletedAt,
-    this.syncedAt,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+    required super.createdAt,
+    required super.updatedAt,
+    super.synced = false,
+    super.deletedAt,
+    super.syncedAt,
+  });
 
   Map<String, dynamic> toMap() => <String, dynamic>{
-    'id': id,
-    'uuid': uuid,
     'ownerUuid': ownerUuid,
     'storeUuid': storeUuid,
     'branchUuid': branchUuid,
@@ -70,14 +60,28 @@ class SalesInvoice {
     'taxAmount': taxAmount.toString(),
     'totalAmount': totalAmount.toString(),
     'paidAmount': paidAmount.toString(),
-    'status': status,
     'createdByUserUuid': createdByUserUuid,
-    'createdAt': createdAt.millisecondsSinceEpoch,
-    'updatedAt': updatedAt.millisecondsSinceEpoch,
-    'synced': synced,
-    'deletedAt': deletedAt?.millisecondsSinceEpoch,
-    'syncedAt': syncedAt?.millisecondsSinceEpoch,
+    ...statusedSyncMap(),
   };
+
+  @override
+  List<Object?> get props => <Object?>[
+    ...statusedSyncProps,
+    ownerUuid,
+    storeUuid,
+    branchUuid,
+    salesOrderUuid,
+    customerUuid,
+    invoiceNumber,
+    issuedAt,
+    currencyCode,
+    subtotal,
+    discountAmount,
+    taxAmount,
+    totalAmount,
+    paidAmount,
+    createdByUserUuid,
+  ];
 
   factory SalesInvoice.fromMap(Map<String, dynamic> map) {
     final nowMillis = DateTime.now().millisecondsSinceEpoch;

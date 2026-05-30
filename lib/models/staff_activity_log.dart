@@ -1,12 +1,10 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
 
-class StaffActivityLog {
-  int id = 0;
-  String uuid;
+class StaffActivityLog extends CreatedModel {
   String ownerUuid;
   String? branchUuid;
   String? userUuid;
@@ -14,11 +12,10 @@ class StaffActivityLog {
   String entityType;
   String? entityUuid;
   Map<String, dynamic> metadataJson;
-  DateTime createdAt;
 
   StaffActivityLog({
-    this.id = 0,
-    String? uuid,
+    super.id = 0,
+    super.uuid,
     required this.ownerUuid,
     this.branchUuid,
     this.userUuid,
@@ -26,12 +23,10 @@ class StaffActivityLog {
     required this.entityType,
     this.entityUuid,
     required this.metadataJson,
-    required this.createdAt,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+    required super.createdAt,
+  });
 
   Map<String, dynamic> toMap() => <String, dynamic>{
-    'id': id,
-    'uuid': uuid,
     'ownerUuid': ownerUuid,
     'branchUuid': branchUuid,
     'userUuid': userUuid,
@@ -39,7 +34,7 @@ class StaffActivityLog {
     'entityType': entityType,
     'entityUuid': entityUuid,
     'metadataJson': metadataJson,
-    'createdAt': createdAt.millisecondsSinceEpoch,
+    ...createdMap(),
   };
 
   factory StaffActivityLog.fromMap(Map<String, dynamic> map) {
@@ -53,14 +48,28 @@ class StaffActivityLog {
       ownerUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'ownerUuid'), 'ownerUuid'),
       branchUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'branchUuid')),
       userUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'userUuid')),
-      action: ModelParsing.stringOrThrow(ModelParsing.value(map, 'action'), 'action'),
-      entityType: ModelParsing.stringOrThrow(ModelParsing.value(map, 'entityType'), 'entityType'),
-      entityUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'entityUuid')),
+      action: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'action'),
+        'action',
+      ),
+      entityType: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'entityType'),
+        'entityType',
+      ),
+      entityUuid: ModelParsing.stringOrNull(
+        ModelParsing.value(map, 'entityUuid'),
+      ),
       metadataJson: metadata,
-      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'createdAt') ?? nowMillis, 'createdAt'),
+      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'createdAt') ?? nowMillis,
+        'createdAt',
+      ),
     );
   }
 
   String toJson() => json.encode(toMap());
   factory StaffActivityLog.fromJson(String source) => StaffActivityLog.fromMap(json.decode(source) as Map<String, dynamic>);
+
+  @override
+  List<Object?> get props => <Object?>[...createdProps, ownerUuid, branchUuid, userUuid, action, entityType, entityUuid, metadataJson];
 }

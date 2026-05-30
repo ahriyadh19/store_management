@@ -4,14 +4,12 @@ import 'dart:convert';
 import 'package:store_management/models/model_parsing.dart';
 
 class StatusInfo {
-
   final String name;
   final String bgColor;
   final String textColor;
   final String borderColor;
   final String icon;
 
-  
   StatusInfo({
     required this.name,
     required this.bgColor,
@@ -49,16 +47,26 @@ class StatusInfo {
   factory StatusInfo.fromMap(Map<String, dynamic> map) {
     return StatusInfo(
       name: ModelParsing.stringOrThrow(ModelParsing.value(map, 'name'), 'name'),
-      bgColor: ModelParsing.stringOrThrow(ModelParsing.value(map, 'bgColor'), 'bgColor'),
-      textColor: ModelParsing.stringOrThrow(ModelParsing.value(map, 'textColor'), 'textColor'),
-      borderColor: ModelParsing.stringOrThrow(ModelParsing.value(map, 'borderColor'), 'borderColor'),
+      bgColor: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'bgColor'),
+        'bgColor',
+      ),
+      textColor: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'textColor'),
+        'textColor',
+      ),
+      borderColor: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'borderColor'),
+        'borderColor',
+      ),
       icon: ModelParsing.stringOrThrow(ModelParsing.value(map, 'icon'), 'icon'),
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory StatusInfo.fromJson(String source) => StatusInfo.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory StatusInfo.fromJson(String source) =>
+      StatusInfo.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
@@ -68,21 +76,20 @@ class StatusInfo {
   @override
   bool operator ==(covariant StatusInfo other) {
     if (identical(this, other)) return true;
-  
-    return 
-      other.name == name &&
-      other.bgColor == bgColor &&
-      other.textColor == textColor &&
-      other.borderColor == borderColor &&
-      other.icon == icon;
+
+    return other.name == name &&
+        other.bgColor == bgColor &&
+        other.textColor == textColor &&
+        other.borderColor == borderColor &&
+        other.icon == icon;
   }
 
   @override
   int get hashCode {
     return name.hashCode ^
-      bgColor.hashCode ^
-      textColor.hashCode ^
-      borderColor.hashCode ^
-      icon.hashCode;
+        bgColor.hashCode ^
+        textColor.hashCode ^
+        borderColor.hashCode ^
+        icon.hashCode;
   }
 }

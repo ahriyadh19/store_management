@@ -1,64 +1,62 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
 
-class SalesOrder {
-  int id = 0;
-  String uuid;
+class SalesOrder extends StatusedSyncModel<String> {
   String ownerUuid;
   String storeUuid;
   String branchUuid;
   String? customerUuid;
   String orderNumber;
   DateTime orderDate;
-  String status;
   String pricingStrategy;
   String? createdByUserUuid;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool synced;
-  DateTime? deletedAt;
-  DateTime? syncedAt;
 
   SalesOrder({
-    this.id = 0,
-    String? uuid,
+    super.id = 0,
+    super.uuid,
     required this.ownerUuid,
     required this.storeUuid,
     required this.branchUuid,
     this.customerUuid,
     required this.orderNumber,
     required this.orderDate,
-    required this.status,
+    required super.status,
     required this.pricingStrategy,
     this.createdByUserUuid,
-    required this.createdAt,
-    required this.updatedAt,
-    this.synced = false,
-    this.deletedAt,
-    this.syncedAt,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+    required super.createdAt,
+    required super.updatedAt,
+    super.synced = false,
+    super.deletedAt,
+    super.syncedAt,
+  });
 
   Map<String, dynamic> toMap() => <String, dynamic>{
-    'id': id,
-    'uuid': uuid,
     'ownerUuid': ownerUuid,
     'storeUuid': storeUuid,
     'branchUuid': branchUuid,
     'customerUuid': customerUuid,
     'orderNumber': orderNumber,
     'orderDate': orderDate.millisecondsSinceEpoch,
-    'status': status,
     'pricingStrategy': pricingStrategy,
     'createdByUserUuid': createdByUserUuid,
-    'createdAt': createdAt.millisecondsSinceEpoch,
-    'updatedAt': updatedAt.millisecondsSinceEpoch,
-    'synced': synced,
-    'deletedAt': deletedAt?.millisecondsSinceEpoch,
-    'syncedAt': syncedAt?.millisecondsSinceEpoch,
+    ...statusedSyncMap(),
   };
+
+  @override
+  List<Object?> get props => <Object?>[
+    ...statusedSyncProps,
+    ownerUuid,
+    storeUuid,
+    branchUuid,
+    customerUuid,
+    orderNumber,
+    orderDate,
+    pricingStrategy,
+    createdByUserUuid,
+  ];
 
   factory SalesOrder.fromMap(Map<String, dynamic> map) {
     final nowMillis = DateTime.now().millisecondsSinceEpoch;

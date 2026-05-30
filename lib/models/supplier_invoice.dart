@@ -2,12 +2,10 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
 
-class SupplierInvoice {
-  int id = 0;
-  String uuid;
+class SupplierInvoice extends StatusedSyncModel<String> {
   String ownerUuid;
   String storeUuid;
   String supplierUuid;
@@ -19,16 +17,10 @@ class SupplierInvoice {
   Decimal subtotal;
   Decimal taxAmount;
   Decimal totalAmount;
-  String status;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool synced;
-  DateTime? deletedAt;
-  DateTime? syncedAt;
 
   SupplierInvoice({
-    this.id = 0,
-    String? uuid,
+    super.id = 0,
+    super.uuid,
     required this.ownerUuid,
     required this.storeUuid,
     required this.supplierUuid,
@@ -40,13 +32,13 @@ class SupplierInvoice {
     required this.subtotal,
     required this.taxAmount,
     required this.totalAmount,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-    this.synced = false,
-    this.deletedAt,
-    this.syncedAt,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+    required super.status,
+    required super.createdAt,
+    required super.updatedAt,
+    super.synced = false,
+    super.deletedAt,
+    super.syncedAt,
+  });
 
   SupplierInvoice copyWith({
     int? id,
@@ -94,8 +86,6 @@ class SupplierInvoice {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
-      'uuid': uuid,
       'ownerUuid': ownerUuid,
       'storeUuid': storeUuid,
       'supplierUuid': supplierUuid,
@@ -107,12 +97,7 @@ class SupplierInvoice {
       'subtotal': subtotal.toString(),
       'taxAmount': taxAmount.toString(),
       'totalAmount': totalAmount.toString(),
-      'status': status,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
-      'synced': synced,
-      'deletedAt': deletedAt?.millisecondsSinceEpoch,
-      'syncedAt': syncedAt?.millisecondsSinceEpoch,
+      ...statusedSyncMap(),
     };
   }
 
@@ -168,7 +153,8 @@ class SupplierInvoice {
 
   String toJson() => json.encode(toMap());
 
-  factory SupplierInvoice.fromJson(String source) => SupplierInvoice.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory SupplierInvoice.fromJson(String source) =>
+      SupplierInvoice.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
@@ -176,50 +162,18 @@ class SupplierInvoice {
   }
 
   @override
-  bool operator ==(covariant SupplierInvoice other) {
-    if (identical(this, other)) return true;
-
-    return other.id == id &&
-        other.uuid == uuid &&
-        other.ownerUuid == ownerUuid &&
-        other.storeUuid == storeUuid &&
-        other.supplierUuid == supplierUuid &&
-        other.purchaseOrderUuid == purchaseOrderUuid &&
-        other.supplierInvoiceNumber == supplierInvoiceNumber &&
-        other.invoiceDate == invoiceDate &&
-        other.dueDate == dueDate &&
-        other.currencyCode == currencyCode &&
-        other.subtotal == subtotal &&
-        other.taxAmount == taxAmount &&
-        other.totalAmount == totalAmount &&
-        other.status == status &&
-        other.createdAt == createdAt &&
-        other.updatedAt == updatedAt &&
-        other.synced == synced &&
-        other.deletedAt == deletedAt &&
-        other.syncedAt == syncedAt;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-        uuid.hashCode ^
-        ownerUuid.hashCode ^
-        storeUuid.hashCode ^
-        supplierUuid.hashCode ^
-        purchaseOrderUuid.hashCode ^
-        supplierInvoiceNumber.hashCode ^
-        invoiceDate.hashCode ^
-        dueDate.hashCode ^
-        currencyCode.hashCode ^
-        subtotal.hashCode ^
-        taxAmount.hashCode ^
-        totalAmount.hashCode ^
-        status.hashCode ^
-        createdAt.hashCode ^
-        updatedAt.hashCode ^
-        synced.hashCode ^
-        deletedAt.hashCode ^
-        syncedAt.hashCode;
-  }
+  List<Object?> get props => <Object?>[
+    ...statusedSyncProps,
+    ownerUuid,
+    storeUuid,
+    supplierUuid,
+    purchaseOrderUuid,
+    supplierInvoiceNumber,
+    invoiceDate,
+    dueDate,
+    currencyCode,
+    subtotal,
+    taxAmount,
+    totalAmount,
+  ];
 }

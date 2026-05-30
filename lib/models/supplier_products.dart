@@ -2,14 +2,12 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
 
-class SupplierProducts {
+class SupplierProducts extends AuditedSyncModel {
   static const Object _unset = Object();
 
-  int id = 0;
-  String uuid;
   String supplierUuid;
   String productUuid;
   Decimal price;
@@ -22,16 +20,10 @@ class SupplierProducts {
   int stock;
   int? reorderLevel;
   int? reorderQuantity;
-  int status;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool synced;
-  DateTime? deletedAt;
-  DateTime? syncedAt;
 
   SupplierProducts({
-    String? uuid,
-    this.id = 0,
+    super.uuid,
+    super.id = 0,
     required this.supplierUuid,
     required this.productUuid,
     required this.price,
@@ -44,13 +36,13 @@ class SupplierProducts {
     required this.stock,
     this.reorderLevel,
     this.reorderQuantity,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-    this.synced = false,
-    this.deletedAt,
-    this.syncedAt,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+    required super.status,
+    required super.createdAt,
+    required super.updatedAt,
+    super.synced = false,
+    super.deletedAt,
+    super.syncedAt,
+  });
 
   SupplierProducts copyWith({
     int? id,
@@ -80,15 +72,25 @@ class SupplierProducts {
       supplierUuid: supplierUuid ?? this.supplierUuid,
       productUuid: productUuid ?? this.productUuid,
       price: price ?? this.price,
-      costPrice: identical(costPrice, _unset) ? this.costPrice : costPrice as Decimal?,
+      costPrice: identical(costPrice, _unset)
+          ? this.costPrice
+          : costPrice as Decimal?,
       description: description ?? this.description,
       sku: identical(sku, _unset) ? this.sku : sku as String?,
       barcode: identical(barcode, _unset) ? this.barcode : barcode as String?,
-      batchNumber: identical(batchNumber, _unset) ? this.batchNumber : batchNumber as String?,
-      expiryDate: identical(expiryDate, _unset) ? this.expiryDate : expiryDate as DateTime?,
+      batchNumber: identical(batchNumber, _unset)
+          ? this.batchNumber
+          : batchNumber as String?,
+      expiryDate: identical(expiryDate, _unset)
+          ? this.expiryDate
+          : expiryDate as DateTime?,
       stock: stock ?? this.stock,
-      reorderLevel: identical(reorderLevel, _unset) ? this.reorderLevel : reorderLevel as int?,
-      reorderQuantity: identical(reorderQuantity, _unset) ? this.reorderQuantity : reorderQuantity as int?,
+      reorderLevel: identical(reorderLevel, _unset)
+          ? this.reorderLevel
+          : reorderLevel as int?,
+      reorderQuantity: identical(reorderQuantity, _unset)
+          ? this.reorderQuantity
+          : reorderQuantity as int?,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -102,8 +104,6 @@ class SupplierProducts {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
-      'uuid': uuid,
       'supplierUuid': supplierUuid,
       'productUuid': productUuid,
       'price': price.toString(),
@@ -116,12 +116,7 @@ class SupplierProducts {
       'stock': stock,
       'reorderLevel': reorderLevel,
       'reorderQuantity': reorderQuantity,
-      'status': status,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
-      'synced': synced,
-      'deletedAt': deletedAt?.millisecondsSinceEpoch,
-      'syncedAt': syncedAt?.millisecondsSinceEpoch,
+      ...auditedSyncMap(),
     };
   }
 
@@ -129,30 +124,67 @@ class SupplierProducts {
     return SupplierProducts(
       id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(ModelParsing.value(map, 'uuid')),
-      supplierUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'supplierUuid'), 'supplierUuid'),
-      productUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'productUuid'), 'productUuid'),
-      price: ModelParsing.decimalOrThrow(ModelParsing.value(map, 'price'), 'price'),
-      costPrice: ModelParsing.decimalOrNull(ModelParsing.value(map, 'costPrice')),
-      description: ModelParsing.stringOrThrow(ModelParsing.value(map, 'description'), 'description'),
+      supplierUuid: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'supplierUuid'),
+        'supplierUuid',
+      ),
+      productUuid: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'productUuid'),
+        'productUuid',
+      ),
+      price: ModelParsing.decimalOrThrow(
+        ModelParsing.value(map, 'price'),
+        'price',
+      ),
+      costPrice: ModelParsing.decimalOrNull(
+        ModelParsing.value(map, 'costPrice'),
+      ),
+      description: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'description'),
+        'description',
+      ),
       sku: ModelParsing.stringOrNull(ModelParsing.value(map, 'sku')),
       barcode: ModelParsing.stringOrNull(ModelParsing.value(map, 'barcode')),
-      batchNumber: ModelParsing.stringOrNull(ModelParsing.value(map, 'batchNumber')),
-      expiryDate: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'expiryDate')),
+      batchNumber: ModelParsing.stringOrNull(
+        ModelParsing.value(map, 'batchNumber'),
+      ),
+      expiryDate: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'expiryDate'),
+      ),
       stock: ModelParsing.intOrThrow(ModelParsing.value(map, 'stock'), 'stock'),
-      reorderLevel: ModelParsing.intOrNull(ModelParsing.value(map, 'reorderLevel')),
-      reorderQuantity: ModelParsing.intOrNull(ModelParsing.value(map, 'reorderQuantity')),
-      status: ModelParsing.intOrThrow(ModelParsing.value(map, 'status'), 'status'),
-      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'createdAt'), 'createdAt'),
-      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'updatedAt'), 'updatedAt'),
-      synced: ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
-      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'deletedAt')),
-      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'syncedAt')),
+      reorderLevel: ModelParsing.intOrNull(
+        ModelParsing.value(map, 'reorderLevel'),
+      ),
+      reorderQuantity: ModelParsing.intOrNull(
+        ModelParsing.value(map, 'reorderQuantity'),
+      ),
+      status: ModelParsing.intOrThrow(
+        ModelParsing.value(map, 'status'),
+        'status',
+      ),
+      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'createdAt'),
+        'createdAt',
+      ),
+      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'updatedAt'),
+        'updatedAt',
+      ),
+      synced:
+          ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'deletedAt'),
+      ),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'syncedAt'),
+      ),
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory SupplierProducts.fromJson(String source) => SupplierProducts.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory SupplierProducts.fromJson(String source) =>
+      SupplierProducts.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
@@ -160,53 +192,19 @@ class SupplierProducts {
   }
 
   @override
-  bool operator ==(covariant SupplierProducts other) {
-    if (identical(this, other)) return true;
-
-    return other.id == id &&
-        other.uuid == uuid &&
-        other.supplierUuid == supplierUuid &&
-        other.productUuid == productUuid &&
-        other.price == price &&
-        other.costPrice == costPrice &&
-        other.description == description &&
-        other.sku == sku &&
-        other.barcode == barcode &&
-        other.batchNumber == batchNumber &&
-        other.expiryDate == expiryDate &&
-        other.stock == stock &&
-        other.reorderLevel == reorderLevel &&
-        other.reorderQuantity == reorderQuantity &&
-        other.status == status &&
-        other.createdAt == createdAt &&
-        other.updatedAt == updatedAt &&
-        other.synced == synced &&
-        other.deletedAt == deletedAt &&
-        other.syncedAt == syncedAt;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-        uuid.hashCode ^
-        supplierUuid.hashCode ^
-        productUuid.hashCode ^
-        price.hashCode ^
-        costPrice.hashCode ^
-        description.hashCode ^
-        sku.hashCode ^
-        barcode.hashCode ^
-        batchNumber.hashCode ^
-        expiryDate.hashCode ^
-        stock.hashCode ^
-        reorderLevel.hashCode ^
-        reorderQuantity.hashCode ^
-        status.hashCode ^
-        createdAt.hashCode ^
-        updatedAt.hashCode ^
-        synced.hashCode ^
-        deletedAt.hashCode ^
-        syncedAt.hashCode;
-  }
+  List<Object?> get props => <Object?>[
+    ...auditedSyncProps,
+    supplierUuid,
+    productUuid,
+    price,
+    costPrice,
+    description,
+    sku,
+    barcode,
+    batchNumber,
+    expiryDate,
+    stock,
+    reorderLevel,
+    reorderQuantity,
+  ];
 }
-

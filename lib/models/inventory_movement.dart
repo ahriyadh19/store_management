@@ -2,14 +2,13 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
-class InventoryMovement {
+
+class InventoryMovement extends TimestampedSyncModel {
   static const Object _unset = Object();
 
-  int id = 0;
-  String uuid;
   String supplierProductUuid;
   String productUuid;
   InventoryMovementType movementType;
@@ -25,15 +24,10 @@ class InventoryMovement {
   String? transactionUuid;
   String note;
   String? createdByUserUuid;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool synced;
-  DateTime? deletedAt;
-  DateTime? syncedAt;
 
   InventoryMovement({
-    this.id = 0,
-    String? uuid,
+    super.id = 0,
+    super.uuid,
     required this.supplierProductUuid,
     required this.productUuid,
     required this.movementType,
@@ -49,12 +43,12 @@ class InventoryMovement {
     this.transactionUuid,
     required this.note,
     this.createdByUserUuid,
-    required this.createdAt,
-    required this.updatedAt,
-    this.synced = false,
-    this.deletedAt,
-    this.syncedAt,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+    required super.createdAt,
+    required super.updatedAt,
+    super.synced = false,
+    super.deletedAt,
+    super.syncedAt,
+  });
 
   InventoryMovement copyWith({
     int? id,
@@ -108,8 +102,6 @@ class InventoryMovement {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
-      'uuid': uuid,
       'supplierProductUuid': supplierProductUuid,
       'productUuid': productUuid,
       'movementType': movementType.value,
@@ -125,11 +117,7 @@ class InventoryMovement {
       'transactionUuid': transactionUuid,
       'note': note,
       'createdByUserUuid': createdByUserUuid,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
-      'synced': synced,
-      'deletedAt': deletedAt?.millisecondsSinceEpoch,
-      'syncedAt': syncedAt?.millisecondsSinceEpoch,
+      ...timestampedSyncMap(),
     };
   }
 
@@ -197,56 +185,22 @@ class InventoryMovement {
   }
 
   @override
-  bool operator ==(covariant InventoryMovement other) {
-    if (identical(this, other)) return true;
-
-    return other.id == id &&
-        other.uuid == uuid &&
-        other.supplierProductUuid == supplierProductUuid &&
-        other.productUuid == productUuid &&
-        other.movementType == movementType &&
-        other.inventoryHolderType == inventoryHolderType &&
-        other.inventoryHolderUuid == inventoryHolderUuid &&
-        other.quantityDelta == quantityDelta &&
-        other.balanceAfter == balanceAfter &&
-        other.unitCost == unitCost &&
-        other.referenceType == referenceType &&
-        other.referenceUuid == referenceUuid &&
-        other.counterpartyHolderType == counterpartyHolderType &&
-        other.counterpartyHolderUuid == counterpartyHolderUuid &&
-        other.transactionUuid == transactionUuid &&
-        other.note == note &&
-        other.createdByUserUuid == createdByUserUuid &&
-        other.createdAt == createdAt &&
-        other.updatedAt == updatedAt &&
-        other.synced == synced &&
-        other.deletedAt == deletedAt &&
-        other.syncedAt == syncedAt;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-        uuid.hashCode ^
-        supplierProductUuid.hashCode ^
-        productUuid.hashCode ^
-        movementType.hashCode ^
-        inventoryHolderType.hashCode ^
-        inventoryHolderUuid.hashCode ^
-        quantityDelta.hashCode ^
-        balanceAfter.hashCode ^
-        unitCost.hashCode ^
-        referenceType.hashCode ^
-        referenceUuid.hashCode ^
-        counterpartyHolderType.hashCode ^
-        counterpartyHolderUuid.hashCode ^
-        transactionUuid.hashCode ^
-        note.hashCode ^
-        createdByUserUuid.hashCode ^
-        createdAt.hashCode ^
-        updatedAt.hashCode ^
-        synced.hashCode ^
-        deletedAt.hashCode ^
-        syncedAt.hashCode;
-  }
+  List<Object?> get props => <Object?>[
+    ...timestampedSyncProps,
+    supplierProductUuid,
+    productUuid,
+    movementType,
+    inventoryHolderType,
+    inventoryHolderUuid,
+    quantityDelta,
+    balanceAfter,
+    unitCost,
+    referenceType,
+    referenceUuid,
+    counterpartyHolderType,
+    counterpartyHolderUuid,
+    transactionUuid,
+    note,
+    createdByUserUuid,
+  ];
 }

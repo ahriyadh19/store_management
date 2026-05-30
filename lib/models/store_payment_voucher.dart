@@ -2,12 +2,11 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
-class StorePaymentVoucher {
-  int id = 0;
-  String uuid;
+
+class StorePaymentVoucher extends AuditedSyncModel {
   String storeUuid;
   String clientUuid;
   String voucherNumber;
@@ -17,16 +16,10 @@ class StorePaymentVoucher {
   String referenceNumber;
   String description;
   DateTime transactionDate;
-  int status;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool synced;
-  DateTime? deletedAt;
-  DateTime? syncedAt;
 
   StorePaymentVoucher({
-    this.id = 0,
-    String? uuid,
+    super.id = 0,
+    super.uuid,
     required this.storeUuid,
     required this.clientUuid,
     required this.voucherNumber,
@@ -36,13 +29,13 @@ class StorePaymentVoucher {
     required this.referenceNumber,
     required this.description,
     required this.transactionDate,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-    this.synced = false,
-    this.deletedAt,
-    this.syncedAt,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+    required super.status,
+    required super.createdAt,
+    required super.updatedAt,
+    super.synced = false,
+    super.deletedAt,
+    super.syncedAt,
+  });
 
   StorePaymentVoucher copyWith({
     int? id,
@@ -86,8 +79,6 @@ class StorePaymentVoucher {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
-      'uuid': uuid,
       'storeUuid': storeUuid,
       'clientUuid': clientUuid,
       'voucherNumber': voucherNumber,
@@ -97,12 +88,7 @@ class StorePaymentVoucher {
       'referenceNumber': referenceNumber,
       'description': description,
       'transactionDate': transactionDate.millisecondsSinceEpoch,
-      'status': status,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
-      'synced': synced,
-      'deletedAt': deletedAt?.millisecondsSinceEpoch,
-      'syncedAt': syncedAt?.millisecondsSinceEpoch,
+      ...auditedSyncMap(),
     };
   }
 
@@ -132,27 +118,69 @@ class StorePaymentVoucher {
     return StorePaymentVoucher(
       id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(ModelParsing.value(map, 'uuid')),
-      storeUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'storeUuid'), 'storeUuid'),
-      clientUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'clientUuid'), 'clientUuid'),
-      voucherNumber: ModelParsing.stringOrThrow(ModelParsing.value(map, 'voucherNumber'), 'voucherNumber'),
-      payeeName: ModelParsing.stringOrThrow(ModelParsing.value(map, 'payeeName'), 'payeeName'),
-      amount: ModelParsing.decimalOrThrow(ModelParsing.value(map, 'amount'), 'amount'),
-      paymentMethod: ModelParsing.paymentMethodFromValue(ModelParsing.value(map, 'paymentMethod'), 'paymentMethod'),
-      referenceNumber: ModelParsing.stringOrThrow(ModelParsing.value(map, 'referenceNumber'), 'referenceNumber'),
-      description: ModelParsing.stringOrThrow(ModelParsing.value(map, 'description'), 'description'),
-      transactionDate: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'transactionDate'), 'transactionDate'),
-      status: ModelParsing.intOrThrow(ModelParsing.value(map, 'status'), 'status'),
-      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'createdAt'), 'createdAt'),
-      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'updatedAt'), 'updatedAt'),
-      synced: ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
-      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'deletedAt')),
-      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'syncedAt')),
+      storeUuid: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'storeUuid'),
+        'storeUuid',
+      ),
+      clientUuid: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'clientUuid'),
+        'clientUuid',
+      ),
+      voucherNumber: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'voucherNumber'),
+        'voucherNumber',
+      ),
+      payeeName: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'payeeName'),
+        'payeeName',
+      ),
+      amount: ModelParsing.decimalOrThrow(
+        ModelParsing.value(map, 'amount'),
+        'amount',
+      ),
+      paymentMethod: ModelParsing.paymentMethodFromValue(
+        ModelParsing.value(map, 'paymentMethod'),
+        'paymentMethod',
+      ),
+      referenceNumber: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'referenceNumber'),
+        'referenceNumber',
+      ),
+      description: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'description'),
+        'description',
+      ),
+      transactionDate: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'transactionDate'),
+        'transactionDate',
+      ),
+      status: ModelParsing.intOrThrow(
+        ModelParsing.value(map, 'status'),
+        'status',
+      ),
+      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'createdAt'),
+        'createdAt',
+      ),
+      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'updatedAt'),
+        'updatedAt',
+      ),
+      synced:
+          ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'deletedAt'),
+      ),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'syncedAt'),
+      ),
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory StorePaymentVoucher.fromJson(String source) => StorePaymentVoucher.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory StorePaymentVoucher.fromJson(String source) =>
+      StorePaymentVoucher.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
@@ -160,46 +188,16 @@ class StorePaymentVoucher {
   }
 
   @override
-  bool operator ==(covariant StorePaymentVoucher other) {
-    if (identical(this, other)) return true;
-
-    return other.id == id &&
-        other.uuid == uuid &&
-        other.storeUuid == storeUuid &&
-      other.clientUuid == clientUuid &&
-        other.voucherNumber == voucherNumber &&
-        other.payeeName == payeeName &&
-        other.amount == amount &&
-        other.paymentMethod == paymentMethod &&
-        other.referenceNumber == referenceNumber &&
-        other.description == description &&
-        other.transactionDate == transactionDate &&
-        other.status == status &&
-        other.createdAt == createdAt &&
-        other.updatedAt == updatedAt &&
-        other.synced == synced &&
-        other.deletedAt == deletedAt &&
-        other.syncedAt == syncedAt;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-        uuid.hashCode ^
-        storeUuid.hashCode ^
-      clientUuid.hashCode ^
-        voucherNumber.hashCode ^
-        payeeName.hashCode ^
-        amount.hashCode ^
-        paymentMethod.hashCode ^
-        referenceNumber.hashCode ^
-        description.hashCode ^
-        transactionDate.hashCode ^
-        status.hashCode ^
-        createdAt.hashCode ^
-        updatedAt.hashCode ^
-        synced.hashCode ^
-        deletedAt.hashCode ^
-        syncedAt.hashCode;
-  }
+  List<Object?> get props => <Object?>[
+    ...auditedSyncProps,
+    storeUuid,
+    clientUuid,
+    voucherNumber,
+    payeeName,
+    amount,
+    paymentMethod,
+    referenceNumber,
+    description,
+    transactionDate,
+  ];
 }

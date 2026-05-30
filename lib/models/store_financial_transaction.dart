@@ -2,12 +2,11 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
-class StoreFinancialTransaction {
-  int id = 0;
-  String uuid;
+
+class StoreFinancialTransaction extends AuditedSyncModel {
   String storeUuid;
   String clientUuid;
   String transactionNumber;
@@ -18,16 +17,10 @@ class StoreFinancialTransaction {
   LedgerEntryType entryType;
   String description;
   DateTime transactionDate;
-  int status;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool synced;
-  DateTime? deletedAt;
-  DateTime? syncedAt;
 
   StoreFinancialTransaction({
-    this.id = 0,
-    String? uuid,
+    super.id = 0,
+    super.uuid,
     required this.storeUuid,
     required this.clientUuid,
     required this.transactionNumber,
@@ -38,13 +31,13 @@ class StoreFinancialTransaction {
     required this.entryType,
     required this.description,
     required this.transactionDate,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-    this.synced = false,
-    this.deletedAt,
-    this.syncedAt,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+    required super.status,
+    required super.createdAt,
+    required super.updatedAt,
+    super.synced = false,
+    super.deletedAt,
+    super.syncedAt,
+  });
 
   StoreFinancialTransaction copyWith({
     int? id,
@@ -90,8 +83,6 @@ class StoreFinancialTransaction {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
-      'uuid': uuid,
       'storeUuid': storeUuid,
       'clientUuid': clientUuid,
       'transactionNumber': transactionNumber,
@@ -102,12 +93,7 @@ class StoreFinancialTransaction {
       'entryType': entryType.value,
       'description': description,
       'transactionDate': transactionDate.millisecondsSinceEpoch,
-      'status': status,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
-      'synced': synced,
-      'deletedAt': deletedAt?.millisecondsSinceEpoch,
-      'syncedAt': syncedAt?.millisecondsSinceEpoch,
+      ...auditedSyncMap(),
     };
   }
 
@@ -167,48 +153,5 @@ class StoreFinancialTransaction {
   }
 
   @override
-  bool operator ==(covariant StoreFinancialTransaction other) {
-    if (identical(this, other)) return true;
-
-    return other.id == id &&
-        other.uuid == uuid &&
-        other.storeUuid == storeUuid &&
-      other.clientUuid == clientUuid &&
-        other.transactionNumber == transactionNumber &&
-        other.transactionType == transactionType &&
-        other.sourceType == sourceType &&
-        other.sourceUuid == sourceUuid &&
-        other.amount == amount &&
-        other.entryType == entryType &&
-        other.description == description &&
-        other.transactionDate == transactionDate &&
-        other.status == status &&
-        other.createdAt == createdAt &&
-        other.updatedAt == updatedAt &&
-        other.synced == synced &&
-        other.deletedAt == deletedAt &&
-        other.syncedAt == syncedAt;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-        uuid.hashCode ^
-        storeUuid.hashCode ^
-      clientUuid.hashCode ^
-        transactionNumber.hashCode ^
-        transactionType.hashCode ^
-        sourceType.hashCode ^
-        sourceUuid.hashCode ^
-        amount.hashCode ^
-        entryType.hashCode ^
-        description.hashCode ^
-        transactionDate.hashCode ^
-        status.hashCode ^
-        createdAt.hashCode ^
-        updatedAt.hashCode ^
-        synced.hashCode ^
-        deletedAt.hashCode ^
-        syncedAt.hashCode;
-  }
+  List<Object?> get props => <Object?>[...auditedSyncProps, storeUuid, clientUuid, transactionNumber, transactionType, sourceType, sourceUuid, amount, entryType, description, transactionDate];
 }

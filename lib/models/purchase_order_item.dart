@@ -2,12 +2,10 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
 
-class PurchaseOrderItem {
-  int id = 0;
-  String uuid;
+class PurchaseOrderItem extends IdentifiedModel {
   String purchaseOrderUuid;
   String productUuid;
   String? supplierProductOfferUuid;
@@ -18,8 +16,8 @@ class PurchaseOrderItem {
   int receivedQuantity;
 
   PurchaseOrderItem({
-    this.id = 0,
-    String? uuid,
+    super.id = 0,
+    super.uuid,
     required this.purchaseOrderUuid,
     required this.productUuid,
     this.supplierProductOfferUuid,
@@ -28,7 +26,7 @@ class PurchaseOrderItem {
     required this.discountAmount,
     required this.lineTotal,
     this.receivedQuantity = 0,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+  });
 
   PurchaseOrderItem copyWith({
     int? id,
@@ -58,8 +56,7 @@ class PurchaseOrderItem {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
-      'uuid': uuid,
+      ...identityMap(),
       'purchaseOrderUuid': purchaseOrderUuid,
       'productUuid': productUuid,
       'supplierProductOfferUuid': supplierProductOfferUuid,
@@ -111,32 +108,5 @@ class PurchaseOrderItem {
   }
 
   @override
-  bool operator ==(covariant PurchaseOrderItem other) {
-    if (identical(this, other)) return true;
-
-    return other.id == id &&
-        other.uuid == uuid &&
-        other.purchaseOrderUuid == purchaseOrderUuid &&
-        other.productUuid == productUuid &&
-        other.supplierProductOfferUuid == supplierProductOfferUuid &&
-        other.quantity == quantity &&
-        other.unitCost == unitCost &&
-        other.discountAmount == discountAmount &&
-        other.lineTotal == lineTotal &&
-        other.receivedQuantity == receivedQuantity;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-        uuid.hashCode ^
-        purchaseOrderUuid.hashCode ^
-        productUuid.hashCode ^
-        supplierProductOfferUuid.hashCode ^
-        quantity.hashCode ^
-        unitCost.hashCode ^
-        discountAmount.hashCode ^
-        lineTotal.hashCode ^
-        receivedQuantity.hashCode;
-  }
+  List<Object?> get props => <Object?>[...identityProps, purchaseOrderUuid, productUuid, supplierProductOfferUuid, quantity, unitCost, discountAmount, lineTotal, receivedQuantity];
 }

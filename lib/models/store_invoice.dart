@@ -2,12 +2,11 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
-class StoreInvoice {
-  int id = 0;
-  String uuid;
+
+class StoreInvoice extends AuditedSyncModel {
   String storeUuid;
   String clientUuid;
   String invoiceNumber;
@@ -19,16 +18,10 @@ class StoreInvoice {
   String notes;
   DateTime issuedAt;
   DateTime dueAt;
-  int status;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool synced;
-  DateTime? deletedAt;
-  DateTime? syncedAt;
 
   StoreInvoice({
-    this.id = 0,
-    String? uuid,
+    super.id = 0,
+    super.uuid,
     required this.storeUuid,
     required this.clientUuid,
     required this.invoiceNumber,
@@ -40,13 +33,13 @@ class StoreInvoice {
     required this.notes,
     required this.issuedAt,
     required this.dueAt,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-    this.synced = false,
-    this.deletedAt,
-    this.syncedAt,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+    required super.status,
+    required super.createdAt,
+    required super.updatedAt,
+    super.synced = false,
+    super.deletedAt,
+    super.syncedAt,
+  });
 
   StoreInvoice copyWith({
     int? id,
@@ -94,8 +87,6 @@ class StoreInvoice {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
-      'uuid': uuid,
       'storeUuid': storeUuid,
       'clientUuid': clientUuid,
       'invoiceNumber': invoiceNumber,
@@ -107,12 +98,7 @@ class StoreInvoice {
       'notes': notes,
       'issuedAt': issuedAt.millisecondsSinceEpoch,
       'dueAt': dueAt.millisecondsSinceEpoch,
-      'status': status,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
-      'synced': synced,
-      'deletedAt': deletedAt?.millisecondsSinceEpoch,
-      'syncedAt': syncedAt?.millisecondsSinceEpoch,
+      ...auditedSyncMap(),
     };
   }
 
@@ -144,29 +130,77 @@ class StoreInvoice {
     return StoreInvoice(
       id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(ModelParsing.value(map, 'uuid')),
-      storeUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'storeUuid'), 'storeUuid'),
-      clientUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'clientUuid'), 'clientUuid'),
-      invoiceNumber: ModelParsing.stringOrThrow(ModelParsing.value(map, 'invoiceNumber'), 'invoiceNumber'),
-      invoiceType: ModelParsing.invoiceTypeFromValue(ModelParsing.value(map, 'invoiceType'), 'invoiceType'),
-      itemCount: ModelParsing.intOrThrow(ModelParsing.value(map, 'itemCount'), 'itemCount'),
-      totalAmount: ModelParsing.decimalOrThrow(ModelParsing.value(map, 'totalAmount'), 'totalAmount'),
-      paidAmount: ModelParsing.decimalOrThrow(ModelParsing.value(map, 'paidAmount'), 'paidAmount'),
-      balanceAmount: ModelParsing.decimalOrThrow(ModelParsing.value(map, 'balanceAmount'), 'balanceAmount'),
-      notes: ModelParsing.stringOrThrow(ModelParsing.value(map, 'notes'), 'notes'),
-      issuedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'issuedAt'), 'issuedAt'),
-      dueAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'dueAt'), 'dueAt'),
-      status: ModelParsing.intOrThrow(ModelParsing.value(map, 'status'), 'status'),
-      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'createdAt'), 'createdAt'),
-      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'updatedAt'), 'updatedAt'),
-      synced: ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
-      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'deletedAt')),
-      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'syncedAt')),
+      storeUuid: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'storeUuid'),
+        'storeUuid',
+      ),
+      clientUuid: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'clientUuid'),
+        'clientUuid',
+      ),
+      invoiceNumber: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'invoiceNumber'),
+        'invoiceNumber',
+      ),
+      invoiceType: ModelParsing.invoiceTypeFromValue(
+        ModelParsing.value(map, 'invoiceType'),
+        'invoiceType',
+      ),
+      itemCount: ModelParsing.intOrThrow(
+        ModelParsing.value(map, 'itemCount'),
+        'itemCount',
+      ),
+      totalAmount: ModelParsing.decimalOrThrow(
+        ModelParsing.value(map, 'totalAmount'),
+        'totalAmount',
+      ),
+      paidAmount: ModelParsing.decimalOrThrow(
+        ModelParsing.value(map, 'paidAmount'),
+        'paidAmount',
+      ),
+      balanceAmount: ModelParsing.decimalOrThrow(
+        ModelParsing.value(map, 'balanceAmount'),
+        'balanceAmount',
+      ),
+      notes: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'notes'),
+        'notes',
+      ),
+      issuedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'issuedAt'),
+        'issuedAt',
+      ),
+      dueAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'dueAt'),
+        'dueAt',
+      ),
+      status: ModelParsing.intOrThrow(
+        ModelParsing.value(map, 'status'),
+        'status',
+      ),
+      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'createdAt'),
+        'createdAt',
+      ),
+      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'updatedAt'),
+        'updatedAt',
+      ),
+      synced:
+          ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'deletedAt'),
+      ),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'syncedAt'),
+      ),
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory StoreInvoice.fromJson(String source) => StoreInvoice.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory StoreInvoice.fromJson(String source) =>
+      StoreInvoice.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
@@ -174,50 +208,18 @@ class StoreInvoice {
   }
 
   @override
-  bool operator ==(covariant StoreInvoice other) {
-    if (identical(this, other)) return true;
-
-    return other.id == id &&
-        other.uuid == uuid &&
-        other.storeUuid == storeUuid &&
-      other.clientUuid == clientUuid &&
-        other.invoiceNumber == invoiceNumber &&
-        other.invoiceType == invoiceType &&
-        other.itemCount == itemCount &&
-        other.totalAmount == totalAmount &&
-        other.paidAmount == paidAmount &&
-        other.balanceAmount == balanceAmount &&
-        other.notes == notes &&
-        other.issuedAt == issuedAt &&
-        other.dueAt == dueAt &&
-        other.status == status &&
-        other.createdAt == createdAt &&
-        other.updatedAt == updatedAt &&
-        other.synced == synced &&
-        other.deletedAt == deletedAt &&
-        other.syncedAt == syncedAt;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-        uuid.hashCode ^
-        storeUuid.hashCode ^
-      clientUuid.hashCode ^
-        invoiceNumber.hashCode ^
-        invoiceType.hashCode ^
-        itemCount.hashCode ^
-        totalAmount.hashCode ^
-        paidAmount.hashCode ^
-        balanceAmount.hashCode ^
-        notes.hashCode ^
-        issuedAt.hashCode ^
-        dueAt.hashCode ^
-        status.hashCode ^
-        createdAt.hashCode ^
-        updatedAt.hashCode ^
-        synced.hashCode ^
-        deletedAt.hashCode ^
-        syncedAt.hashCode;
-  }
+  List<Object?> get props => <Object?>[
+    ...auditedSyncProps,
+    storeUuid,
+    clientUuid,
+    invoiceNumber,
+    invoiceType,
+    itemCount,
+    totalAmount,
+    paidAmount,
+    balanceAmount,
+    notes,
+    issuedAt,
+    dueAt,
+  ];
 }

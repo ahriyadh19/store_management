@@ -2,12 +2,11 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_enums.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
-class StoreReturn {
-  int id = 0;
-  String uuid;
+
+class StoreReturn extends AuditedSyncModel {
   String storeUuid;
   String clientUuid;
   String returnNumber;
@@ -16,16 +15,10 @@ class StoreReturn {
   Decimal totalAmount;
   String reason;
   DateTime transactionDate;
-  int status;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool synced;
-  DateTime? deletedAt;
-  DateTime? syncedAt;
 
   StoreReturn({
-    this.id = 0,
-    String? uuid,
+    super.id = 0,
+    super.uuid,
     required this.storeUuid,
     required this.clientUuid,
     required this.returnNumber,
@@ -34,13 +27,13 @@ class StoreReturn {
     required this.totalAmount,
     required this.reason,
     required this.transactionDate,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-    this.synced = false,
-    this.deletedAt,
-    this.syncedAt,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+    required super.status,
+    required super.createdAt,
+    required super.updatedAt,
+    super.synced = false,
+    super.deletedAt,
+    super.syncedAt,
+  });
 
   StoreReturn copyWith({
     int? id,
@@ -82,8 +75,6 @@ class StoreReturn {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
-      'uuid': uuid,
       'storeUuid': storeUuid,
       'clientUuid': clientUuid,
       'returnNumber': returnNumber,
@@ -92,12 +83,7 @@ class StoreReturn {
       'totalAmount': totalAmount.toString(),
       'reason': reason,
       'transactionDate': transactionDate.millisecondsSinceEpoch,
-      'status': status,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
-      'synced': synced,
-      'deletedAt': deletedAt?.millisecondsSinceEpoch,
-      'syncedAt': syncedAt?.millisecondsSinceEpoch,
+      ...auditedSyncMap(),
     };
   }
 
@@ -153,44 +139,5 @@ class StoreReturn {
   }
 
   @override
-  bool operator ==(covariant StoreReturn other) {
-    if (identical(this, other)) return true;
-
-    return other.id == id &&
-        other.uuid == uuid &&
-        other.storeUuid == storeUuid &&
-      other.clientUuid == clientUuid &&
-        other.returnNumber == returnNumber &&
-        other.returnType == returnType &&
-        other.itemCount == itemCount &&
-        other.totalAmount == totalAmount &&
-        other.reason == reason &&
-        other.transactionDate == transactionDate &&
-        other.status == status &&
-        other.createdAt == createdAt &&
-        other.updatedAt == updatedAt &&
-        other.synced == synced &&
-        other.deletedAt == deletedAt &&
-        other.syncedAt == syncedAt;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-        uuid.hashCode ^
-        storeUuid.hashCode ^
-      clientUuid.hashCode ^
-        returnNumber.hashCode ^
-        returnType.hashCode ^
-        itemCount.hashCode ^
-        totalAmount.hashCode ^
-        reason.hashCode ^
-        transactionDate.hashCode ^
-        status.hashCode ^
-        createdAt.hashCode ^
-        updatedAt.hashCode ^
-        synced.hashCode ^
-        deletedAt.hashCode ^
-        syncedAt.hashCode;
-  }
+  List<Object?> get props => <Object?>[...auditedSyncProps, storeUuid, clientUuid, returnNumber, returnType, itemCount, totalAmount, reason, transactionDate];
 }

@@ -6,7 +6,8 @@ enum RecordStatus {
 
   final int code;
 
-  static List<int> get acceptableCodes => List<int>.unmodifiable(RecordStatus.values.map((status) => status.code));
+  static List<int> get acceptableCodes =>
+      List<int>.unmodifiable(RecordStatus.values.map((status) => status.code));
 
   static bool isAcceptableCode(int code) {
     return RecordStatus.values.any((status) => status.code == code);
@@ -15,7 +16,8 @@ enum RecordStatus {
   static RecordStatus fromCode(int code) {
     return RecordStatus.values.firstWhere(
       (status) => status.code == code,
-      orElse: () => throw FormatException('Unsupported record status code: $code'),
+      orElse: () =>
+          throw FormatException('Unsupported record status code: $code'),
     );
   }
 }
@@ -49,7 +51,10 @@ enum StoreInvoiceType {
   final String value;
 
   static StoreInvoiceType fromValue(String value) {
-    return StoreInvoiceType.values.firstWhere((type) => type.value == value, orElse: () => throw FormatException('Unsupported invoice type: $value'));
+    return StoreInvoiceType.values.firstWhere(
+      (type) => type.value == value,
+      orElse: () => throw FormatException('Unsupported invoice type: $value'),
+    );
   }
 }
 
@@ -83,7 +88,8 @@ enum FinancialTransactionType {
   static FinancialTransactionType fromValue(String value) {
     return FinancialTransactionType.values.firstWhere(
       (type) => type.value == value,
-      orElse: () => throw FormatException('Unsupported transaction type: $value'),
+      orElse: () =>
+          throw FormatException('Unsupported transaction type: $value'),
     );
   }
 }
@@ -118,7 +124,8 @@ enum LedgerEntryType {
   static LedgerEntryType fromValue(String value) {
     return LedgerEntryType.values.firstWhere(
       (type) => type.value == value,
-      orElse: () => throw FormatException('Unsupported ledger entry type: $value'),
+      orElse: () =>
+          throw FormatException('Unsupported ledger entry type: $value'),
     );
   }
 }
@@ -139,7 +146,8 @@ enum InventoryMovementType {
   static InventoryMovementType fromValue(String value) {
     return InventoryMovementType.values.firstWhere(
       (type) => type.value == value,
-      orElse: () => throw FormatException('Unsupported inventory movement type: $value'),
+      orElse: () =>
+          throw FormatException('Unsupported inventory movement type: $value'),
     );
   }
 }
@@ -160,7 +168,8 @@ enum InventoryReferenceType {
   static InventoryReferenceType fromValue(String value) {
     return InventoryReferenceType.values.firstWhere(
       (type) => type.value == value,
-      orElse: () => throw FormatException('Unsupported inventory reference type: $value'),
+      orElse: () =>
+          throw FormatException('Unsupported inventory reference type: $value'),
     );
   }
 }
@@ -174,6 +183,10 @@ enum InventoryHolderType {
   final String value;
 
   static InventoryHolderType fromValue(String value) {
-    return InventoryHolderType.values.firstWhere((type) => type.value == value, orElse: () => throw FormatException('Unsupported inventory holder type: $value'));
+    return InventoryHolderType.values.firstWhere(
+      (type) => type.value == value,
+      orElse: () =>
+          throw FormatException('Unsupported inventory holder type: $value'),
+    );
   }
 }

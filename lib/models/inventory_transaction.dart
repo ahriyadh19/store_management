@@ -2,12 +2,10 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
 
-class InventoryTransaction {
-  int id = 0;
-  String uuid;
+class InventoryTransaction extends TimestampedSyncModel {
   String ownerUuid;
   String productUuid;
   String? batchUuid;
@@ -23,15 +21,10 @@ class InventoryTransaction {
   String? staffUserUuid;
   DateTime occurredAt;
   String note;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool synced;
-  DateTime? deletedAt;
-  DateTime? syncedAt;
 
   InventoryTransaction({
-    this.id = 0,
-    String? uuid,
+    super.id = 0,
+    super.uuid,
     required this.ownerUuid,
     required this.productUuid,
     this.batchUuid,
@@ -47,17 +40,15 @@ class InventoryTransaction {
     this.staffUserUuid,
     required this.occurredAt,
     required this.note,
-    required this.createdAt,
-    required this.updatedAt,
-    this.synced = false,
-    this.deletedAt,
-    this.syncedAt,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+    required super.createdAt,
+    required super.updatedAt,
+    super.synced = false,
+    super.deletedAt,
+    super.syncedAt,
+  });
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
-      'uuid': uuid,
       'ownerUuid': ownerUuid,
       'productUuid': productUuid,
       'batchUuid': batchUuid,
@@ -73,13 +64,29 @@ class InventoryTransaction {
       'staffUserUuid': staffUserUuid,
       'occurredAt': occurredAt.millisecondsSinceEpoch,
       'note': note,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
-      'synced': synced,
-      'deletedAt': deletedAt?.millisecondsSinceEpoch,
-      'syncedAt': syncedAt?.millisecondsSinceEpoch,
+      ...timestampedSyncMap(),
     };
   }
+
+  @override
+  List<Object?> get props => <Object?>[
+    ...timestampedSyncProps,
+    ownerUuid,
+    productUuid,
+    batchUuid,
+    holderType,
+    holderUuid,
+    transactionType,
+    quantity,
+    unitCost,
+    unitPrice,
+    referenceType,
+    referenceUuid,
+    linkedTransactionUuid,
+    staffUserUuid,
+    occurredAt,
+    note,
+  ];
 
   Map<String, dynamic> toErpMap() {
     return <String, dynamic>{
@@ -121,18 +128,43 @@ class InventoryTransaction {
       transactionType: ModelParsing.stringOrThrow(ModelParsing.value(map, 'transactionType'), 'transactionType'),
       quantity: ModelParsing.intOrThrow(ModelParsing.value(map, 'quantity'), 'quantity'),
       unitCost: ModelParsing.decimalOrNull(ModelParsing.value(map, 'unitCost')),
-      unitPrice: ModelParsing.decimalOrNull(ModelParsing.value(map, 'unitPrice')),
-      referenceType: ModelParsing.stringOrThrow(ModelParsing.value(map, 'referenceType'), 'referenceType'),
-      referenceUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'referenceUuid')),
-      linkedTransactionUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'linkedTransactionUuid')),
-      staffUserUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'staffUserUuid')),
-      occurredAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'occurredAt'), 'occurredAt'),
+      unitPrice: ModelParsing.decimalOrNull(
+        ModelParsing.value(map, 'unitPrice'),
+      ),
+      referenceType: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'referenceType'),
+        'referenceType',
+      ),
+      referenceUuid: ModelParsing.stringOrNull(
+        ModelParsing.value(map, 'referenceUuid'),
+      ),
+      linkedTransactionUuid: ModelParsing.stringOrNull(
+        ModelParsing.value(map, 'linkedTransactionUuid'),
+      ),
+      staffUserUuid: ModelParsing.stringOrNull(
+        ModelParsing.value(map, 'staffUserUuid'),
+      ),
+      occurredAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'occurredAt'),
+        'occurredAt',
+      ),
       note: ModelParsing.stringOrNull(ModelParsing.value(map, 'note')) ?? '',
-      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'createdAt') ?? nowMillis, 'createdAt'),
-      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'updatedAt') ?? nowMillis, 'updatedAt'),
-      synced: ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
-      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'deletedAt')),
-      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'syncedAt')),
+      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'createdAt') ?? nowMillis,
+        'createdAt',
+      ),
+      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'updatedAt') ?? nowMillis,
+        'updatedAt',
+      ),
+      synced:
+          ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'deletedAt'),
+      ),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'syncedAt'),
+      ),
     );
   }
 

@@ -1,12 +1,10 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
 
-class TransferOrderItem {
-  int id = 0;
-  String uuid;
+class TransferOrderItem extends IdentifiedModel {
   String transferOrderUuid;
   String productUuid;
   int quantity;
@@ -14,18 +12,16 @@ class TransferOrderItem {
   int receivedQuantity;
 
   TransferOrderItem({
-    this.id = 0,
-    String? uuid,
+    super.id = 0, super.uuid,
     required this.transferOrderUuid,
     required this.productUuid,
     required this.quantity,
     this.shippedQuantity = 0,
     this.receivedQuantity = 0,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+  });
 
   Map<String, dynamic> toMap() => <String, dynamic>{
-    'id': id,
-    'uuid': uuid,
+    ...identityMap(),
     'transferOrderUuid': transferOrderUuid,
     'productUuid': productUuid,
     'quantity': quantity,
@@ -47,4 +43,7 @@ class TransferOrderItem {
 
   String toJson() => json.encode(toMap());
   factory TransferOrderItem.fromJson(String source) => TransferOrderItem.fromMap(json.decode(source) as Map<String, dynamic>);
+
+  @override
+  List<Object?> get props => <Object?>[...identityProps, transferOrderUuid, productUuid, quantity, shippedQuantity, receivedQuantity];
 }

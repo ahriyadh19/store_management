@@ -61,7 +61,8 @@ class ModelParsing {
         return null;
       }
 
-      return int.tryParse(normalized) ?? int.tryParse(normalized.replaceAll(',', ''));
+      return int.tryParse(normalized) ??
+          int.tryParse(normalized.replaceAll(',', ''));
     }
 
     return null;
@@ -95,7 +96,8 @@ class ModelParsing {
         return null;
       }
 
-      return double.tryParse(normalized) ?? double.tryParse(normalized.replaceAll(',', ''));
+      return double.tryParse(normalized) ??
+          double.tryParse(normalized.replaceAll(',', ''));
     }
 
     return null;
@@ -157,7 +159,9 @@ class ModelParsing {
     final parsedValue = intOrNull(value);
     if (parsedValue != null) {
       // ERP integrations commonly send epoch seconds while internal models use milliseconds.
-      final epochMillis = parsedValue.abs() < 100000000000 ? parsedValue * 1000 : parsedValue;
+      final epochMillis = parsedValue.abs() < 100000000000
+          ? parsedValue * 1000
+          : parsedValue;
       return DateTime.fromMillisecondsSinceEpoch(epochMillis);
     }
 
@@ -182,7 +186,10 @@ class ModelParsing {
     return parsedValue;
   }
 
-  static DateTime dateTimeFromMillisecondsSinceEpoch(dynamic value, String fieldName) {
+  static DateTime dateTimeFromMillisecondsSinceEpoch(
+    dynamic value,
+    String fieldName,
+  ) {
     return dateTimeOrThrow(value, fieldName);
   }
 
@@ -221,7 +228,10 @@ class ModelParsing {
       final stripSymbol = compact.replaceAll(RegExp(r'[^0-9,.-]'), '');
 
       // Handle common ERP money formats like "1,234.56" and "1234,56".
-      final normalizedDecimal = stripSymbol.contains(',') && !stripSymbol.contains('.') ? stripSymbol.replaceAll(',', '.') : stripSymbol.replaceAll(',', '');
+      final normalizedDecimal =
+          stripSymbol.contains(',') && !stripSymbol.contains('.')
+          ? stripSymbol.replaceAll(',', '.')
+          : stripSymbol.replaceAll(',', '');
 
       return Decimal.tryParse(normalizedDecimal);
     }
@@ -242,11 +252,17 @@ class ModelParsing {
     return RecordStatus.fromCode(intOrThrow(value, fieldName));
   }
 
-  static StorePaymentMethod paymentMethodFromValue(dynamic value, String fieldName) {
+  static StorePaymentMethod paymentMethodFromValue(
+    dynamic value,
+    String fieldName,
+  ) {
     return _enumFromString(value, fieldName, StorePaymentMethod.fromValue);
   }
 
-  static StoreInvoiceType invoiceTypeFromValue(dynamic value, String fieldName) {
+  static StoreInvoiceType invoiceTypeFromValue(
+    dynamic value,
+    String fieldName,
+  ) {
     return _enumFromString(value, fieldName, StoreInvoiceType.fromValue);
   }
 
@@ -254,36 +270,68 @@ class ModelParsing {
     return _enumFromString(value, fieldName, StoreReturnType.fromValue);
   }
 
-  static FinancialTransactionType financialTransactionTypeFromValue(dynamic value, String fieldName) {
-    return _enumFromString(value, fieldName, FinancialTransactionType.fromValue);
+  static FinancialTransactionType financialTransactionTypeFromValue(
+    dynamic value,
+    String fieldName,
+  ) {
+    return _enumFromString(
+      value,
+      fieldName,
+      FinancialTransactionType.fromValue,
+    );
   }
 
-  static FinancialSourceType financialSourceTypeFromValue(dynamic value, String fieldName) {
+  static FinancialSourceType financialSourceTypeFromValue(
+    dynamic value,
+    String fieldName,
+  ) {
     return _enumFromString(value, fieldName, FinancialSourceType.fromValue);
   }
 
-  static LedgerEntryType ledgerEntryTypeFromValue(dynamic value, String fieldName) {
+  static LedgerEntryType ledgerEntryTypeFromValue(
+    dynamic value,
+    String fieldName,
+  ) {
     return _enumFromString(value, fieldName, LedgerEntryType.fromValue);
   }
 
-  static InventoryMovementType inventoryMovementTypeFromValue(dynamic value, String fieldName) {
+  static InventoryMovementType inventoryMovementTypeFromValue(
+    dynamic value,
+    String fieldName,
+  ) {
     return _enumFromString(value, fieldName, InventoryMovementType.fromValue);
   }
 
-  static InventoryReferenceType inventoryReferenceTypeFromValue(dynamic value, String fieldName) {
+  static InventoryReferenceType inventoryReferenceTypeFromValue(
+    dynamic value,
+    String fieldName,
+  ) {
     return _enumFromString(value, fieldName, InventoryReferenceType.fromValue);
   }
 
-  static InventoryHolderType inventoryHolderTypeFromValue(dynamic value, String fieldName) {
+  static InventoryHolderType inventoryHolderTypeFromValue(
+    dynamic value,
+    String fieldName,
+  ) {
     return _enumFromString(value, fieldName, InventoryHolderType.fromValue);
   }
 
-  static T _enumFromString<T>(dynamic value, String fieldName, T Function(String value) parser) {
-    final normalized = stringOrThrow(value, fieldName).trim().toLowerCase().replaceAll('-', '_').replaceAll(' ', '_');
+  static T _enumFromString<T>(
+    dynamic value,
+    String fieldName,
+    T Function(String value) parser,
+  ) {
+    final normalized = stringOrThrow(
+      value,
+      fieldName,
+    ).trim().toLowerCase().replaceAll('-', '_').replaceAll(' ', '_');
     return parser(normalized);
   }
 
   static String _camelToSnake(String value) {
-    return value.replaceAllMapped(RegExp(r'[A-Z]'), (match) => '_${match.group(0)!.toLowerCase()}');
+    return value.replaceAllMapped(
+      RegExp(r'[A-Z]'),
+      (match) => '_${match.group(0)!.toLowerCase()}',
+    );
   }
 }

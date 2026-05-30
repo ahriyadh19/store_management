@@ -2,11 +2,10 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
-class StoreInvoiceItem {
-  int id = 0;
-  String uuid;
+
+class StoreInvoiceItem extends AuditedSyncModel {
   String invoiceUuid;
   String supplierProductUuid;
   String productUuid;
@@ -15,16 +14,10 @@ class StoreInvoiceItem {
   Decimal discountAmount;
   Decimal taxAmount;
   Decimal lineTotal;
-  int status;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool synced;
-  DateTime? deletedAt;
-  DateTime? syncedAt;
 
   StoreInvoiceItem({
-    this.id = 0,
-    String? uuid,
+    super.id = 0,
+    super.uuid,
     required this.invoiceUuid,
     required this.supplierProductUuid,
     required this.productUuid,
@@ -33,13 +26,13 @@ class StoreInvoiceItem {
     required this.discountAmount,
     required this.taxAmount,
     required this.lineTotal,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-    this.synced = false,
-    this.deletedAt,
-    this.syncedAt,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+    required super.status,
+    required super.createdAt,
+    required super.updatedAt,
+    super.synced = false,
+    super.deletedAt,
+    super.syncedAt,
+  });
 
   StoreInvoiceItem copyWith({
     int? id,
@@ -81,8 +74,6 @@ class StoreInvoiceItem {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
-      'uuid': uuid,
       'invoiceUuid': invoiceUuid,
       'supplierProductUuid': supplierProductUuid,
       'productUuid': productUuid,
@@ -91,12 +82,7 @@ class StoreInvoiceItem {
       'discountAmount': discountAmount.toString(),
       'taxAmount': taxAmount.toString(),
       'lineTotal': lineTotal.toString(),
-      'status': status,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
-      'synced': synced,
-      'deletedAt': deletedAt?.millisecondsSinceEpoch,
-      'syncedAt': syncedAt?.millisecondsSinceEpoch,
+      ...auditedSyncMap(),
     };
   }
 
@@ -152,44 +138,5 @@ class StoreInvoiceItem {
   }
 
   @override
-  bool operator ==(covariant StoreInvoiceItem other) {
-    if (identical(this, other)) return true;
-
-    return other.id == id &&
-        other.uuid == uuid &&
-        other.invoiceUuid == invoiceUuid &&
-        other.supplierProductUuid == supplierProductUuid &&
-        other.productUuid == productUuid &&
-        other.quantity == quantity &&
-        other.unitPrice == unitPrice &&
-        other.discountAmount == discountAmount &&
-        other.taxAmount == taxAmount &&
-        other.lineTotal == lineTotal &&
-        other.status == status &&
-        other.createdAt == createdAt &&
-        other.updatedAt == updatedAt &&
-        other.synced == synced &&
-        other.deletedAt == deletedAt &&
-        other.syncedAt == syncedAt;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-        uuid.hashCode ^
-        invoiceUuid.hashCode ^
-        supplierProductUuid.hashCode ^
-        productUuid.hashCode ^
-        quantity.hashCode ^
-        unitPrice.hashCode ^
-        discountAmount.hashCode ^
-        taxAmount.hashCode ^
-        lineTotal.hashCode ^
-        status.hashCode ^
-        createdAt.hashCode ^
-        updatedAt.hashCode ^
-        synced.hashCode ^
-        deletedAt.hashCode ^
-        syncedAt.hashCode;
-  }
+  List<Object?> get props => <Object?>[...auditedSyncProps, invoiceUuid, supplierProductUuid, productUuid, quantity, unitPrice, discountAmount, taxAmount, lineTotal];
 }

@@ -1,39 +1,44 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
-class User {
-  int id = 0;
+
+class User extends AuditedSyncModel {
   String name;
   String email;
   String password;
   String username;
-  String uuid;
-  int status;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool synced;
-  DateTime? deletedAt;
-  DateTime? syncedAt;
 
   User({
-    this.id = 0,
+    super.id = 0,
     required this.name,
     required this.email,
     this.password = '',
     required this.username,
-    String? uuid,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-    this.synced = false,
-    this.deletedAt,
-    this.syncedAt,
-  })
-    : uuid = uuid ?? UUIDGenerator.generate();
+    super.uuid,
+    required super.status,
+    required super.createdAt,
+    required super.updatedAt,
+    super.synced = false,
+    super.deletedAt,
+    super.syncedAt,
+  });
 
-  User copyWith({int? id, String? name, String? email, String? password, String? username, String? uuid, int? status, DateTime? createdAt, DateTime? updatedAt, bool? synced, DateTime? deletedAt, DateTime? syncedAt}) {
+  User copyWith({
+    int? id,
+    String? name,
+    String? email,
+    String? password,
+    String? username,
+    String? uuid,
+    int? status,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    bool? synced,
+    DateTime? deletedAt,
+    DateTime? syncedAt,
+  }) {
     return User(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -52,46 +57,57 @@ class User {
 
   Map<String, dynamic> toMap({bool includePassword = false}) {
     return <String, dynamic>{
-      'id': id,
       'name': name,
       'email': email,
       'username': username,
-      'uuid': uuid,
-      'status': status,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
-      'synced': synced,
-      'deletedAt': deletedAt?.millisecondsSinceEpoch,
-      'syncedAt': syncedAt?.millisecondsSinceEpoch,
+      ...auditedSyncMap(),
       if (includePassword) 'password': password,
     };
   }
 
   factory User.fromMap(Map<String, dynamic> map) {
-    final email = ModelParsing.stringOrNull(ModelParsing.value(map, 'email')) ?? '';
-    final username = ModelParsing.stringOrNull(ModelParsing.value(map, 'username')) ?? (email.contains('@') ? email.split('@').first : 'user');
-    final name = ModelParsing.stringOrNull(ModelParsing.value(map, 'name')) ?? username;
+    final email =
+        ModelParsing.stringOrNull(ModelParsing.value(map, 'email')) ?? '';
+    final username =
+        ModelParsing.stringOrNull(ModelParsing.value(map, 'username')) ??
+        (email.contains('@') ? email.split('@').first : 'user');
+    final name =
+        ModelParsing.stringOrNull(ModelParsing.value(map, 'name')) ?? username;
     final nowMillis = DateTime.now().millisecondsSinceEpoch;
 
     return User(
       id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,
       name: name,
       email: email,
-      password: ModelParsing.stringOrNull(ModelParsing.value(map, 'password')) ?? '',
+      password:
+          ModelParsing.stringOrNull(ModelParsing.value(map, 'password')) ?? '',
       username: username,
       uuid: ModelParsing.uuidOrGenerate(ModelParsing.value(map, 'uuid')),
       status: ModelParsing.intOrNull(ModelParsing.value(map, 'status')) ?? 1,
-      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'createdAt') ?? nowMillis, 'createdAt'),
-      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'updatedAt') ?? nowMillis, 'updatedAt'),
-      synced: ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
-      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'deletedAt')),
-      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'syncedAt')),
+      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'createdAt') ?? nowMillis,
+        'createdAt',
+      ),
+      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'updatedAt') ?? nowMillis,
+        'updatedAt',
+      ),
+      synced:
+          ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'deletedAt'),
+      ),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'syncedAt'),
+      ),
     );
   }
 
-  String toJson({bool includePassword = false}) => json.encode(toMap(includePassword: includePassword));
+  String toJson({bool includePassword = false}) =>
+      json.encode(toMap(includePassword: includePassword));
 
-  factory User.fromJson(String source) => User.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory User.fromJson(String source) =>
+      User.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
@@ -99,37 +115,11 @@ class User {
   }
 
   @override
-  bool operator ==(covariant User other) {
-    if (identical(this, other)) return true;
-
-    return other.id == id &&
-        other.name == name &&
-        other.email == email &&
-        other.password == password &&
-        other.username == username &&
-        other.uuid == uuid &&
-        other.status == status &&
-        other.createdAt == createdAt &&
-        other.updatedAt == updatedAt &&
-        other.synced == synced &&
-        other.deletedAt == deletedAt &&
-        other.syncedAt == syncedAt;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-        name.hashCode ^
-        email.hashCode ^
-        password.hashCode ^
-        username.hashCode ^
-        uuid.hashCode ^
-        status.hashCode ^
-        createdAt.hashCode ^
-        updatedAt.hashCode ^
-        synced.hashCode ^
-        deletedAt.hashCode ^
-        syncedAt.hashCode;
-  }
+  List<Object?> get props => <Object?>[
+    ...auditedSyncProps,
+    name,
+    email,
+    password,
+    username,
+  ];
 }
-

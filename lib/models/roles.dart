@@ -1,38 +1,29 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
-class Roles {
-  int id = 0;
-  String uuid;
+
+class Roles extends AuditedSyncModel {
   String ownerUuid;
   String name;
   String description;
   Map<String, dynamic> permissionsJson;
-  int status;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool synced;
-  DateTime? deletedAt;
-  DateTime? syncedAt;
 
   Roles({
-    this.id = 0,
-    String? uuid,
+    super.id = 0,
+    super.uuid,
     this.ownerUuid = '',
     required this.name,
     required this.description,
     this.permissionsJson = const <String, dynamic>{},
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-    this.synced = false,
-    this.deletedAt,
-    this.syncedAt,
-  })
-    : uuid = uuid ?? UUIDGenerator.generate();
+    required super.status,
+    required super.createdAt,
+    required super.updatedAt,
+    super.synced = false,
+    super.deletedAt,
+    super.syncedAt,
+  });
 
   Roles copyWith({
     int? id,
@@ -66,18 +57,11 @@ class Roles {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
-      'uuid': uuid,
       'ownerUuid': ownerUuid,
       'name': name,
       'description': description,
       'permissionsJson': permissionsJson,
-      'status': status,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
-      'synced': synced,
-      'deletedAt': deletedAt?.millisecondsSinceEpoch,
-      'syncedAt': syncedAt?.millisecondsSinceEpoch,
+      ...auditedSyncMap(),
     };
   }
 
@@ -85,22 +69,43 @@ class Roles {
     return Roles(
       id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(ModelParsing.value(map, 'uuid')),
-      ownerUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'ownerUuid')) ?? '',
+      ownerUuid:
+          ModelParsing.stringOrNull(ModelParsing.value(map, 'ownerUuid')) ?? '',
       name: ModelParsing.stringOrThrow(ModelParsing.value(map, 'name'), 'name'),
-      description: ModelParsing.stringOrThrow(ModelParsing.value(map, 'description'), 'description'),
-      permissionsJson: _parsePermissionsJson(ModelParsing.value(map, 'permissionsJson')),
-      status: ModelParsing.intOrThrow(ModelParsing.value(map, 'status'), 'status'),
-      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'createdAt'), 'createdAt'),
-      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'updatedAt'), 'updatedAt'),
-      synced: ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
-      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'deletedAt')),
-      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'syncedAt')),
+      description: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'description'),
+        'description',
+      ),
+      permissionsJson: _parsePermissionsJson(
+        ModelParsing.value(map, 'permissionsJson'),
+      ),
+      status: ModelParsing.intOrThrow(
+        ModelParsing.value(map, 'status'),
+        'status',
+      ),
+      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'createdAt'),
+        'createdAt',
+      ),
+      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'updatedAt'),
+        'updatedAt',
+      ),
+      synced:
+          ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'deletedAt'),
+      ),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'syncedAt'),
+      ),
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory Roles.fromJson(String source) => Roles.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory Roles.fromJson(String source) =>
+      Roles.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
@@ -108,38 +113,13 @@ class Roles {
   }
 
   @override
-  bool operator ==(covariant Roles other) {
-    if (identical(this, other)) return true;
-
-    return other.id == id &&
-        other.uuid == uuid &&
-        other.ownerUuid == ownerUuid &&
-        other.name == name &&
-        other.description == description &&
-        mapEquals(other.permissionsJson, permissionsJson) &&
-        other.status == status &&
-        other.createdAt == createdAt &&
-        other.updatedAt == updatedAt &&
-        other.synced == synced &&
-        other.deletedAt == deletedAt &&
-        other.syncedAt == syncedAt;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-        uuid.hashCode ^
-        ownerUuid.hashCode ^
-        name.hashCode ^
-        description.hashCode ^
-        permissionsJson.hashCode ^
-        status.hashCode ^
-        createdAt.hashCode ^
-        updatedAt.hashCode ^
-        synced.hashCode ^
-        deletedAt.hashCode ^
-        syncedAt.hashCode;
-  }
+  List<Object?> get props => <Object?>[
+    ...auditedSyncProps,
+    ownerUuid,
+    name,
+    description,
+    permissionsJson,
+  ];
 }
 
 Map<String, dynamic> _parsePermissionsJson(dynamic raw) {
@@ -176,4 +156,3 @@ Map<String, dynamic> _parsePermissionsJson(dynamic raw) {
 
   return const <String, dynamic>{};
 }
-

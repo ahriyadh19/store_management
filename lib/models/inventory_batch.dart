@@ -2,12 +2,10 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
 
-class InventoryBatch {
-  int id = 0;
-  String uuid;
+class InventoryBatch extends AuditedSyncModel {
   String ownerUuid;
   String storeUuid;
   String? supplierUuid;
@@ -20,16 +18,10 @@ class InventoryBatch {
   Decimal unitCost;
   int initialQuantity;
   int remainingQuantity;
-  int status;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool synced;
-  DateTime? deletedAt;
-  DateTime? syncedAt;
 
   InventoryBatch({
-    this.id = 0,
-    String? uuid,
+    super.id = 0,
+    super.uuid,
     required this.ownerUuid,
     required this.storeUuid,
     this.supplierUuid,
@@ -42,13 +34,13 @@ class InventoryBatch {
     required this.unitCost,
     required this.initialQuantity,
     required this.remainingQuantity,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-    this.synced = false,
-    this.deletedAt,
-    this.syncedAt,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+    required super.status,
+    required super.createdAt,
+    required super.updatedAt,
+    super.synced = false,
+    super.deletedAt,
+    super.syncedAt,
+  });
 
   InventoryBatch copyWith({
     int? id,
@@ -80,7 +72,8 @@ class InventoryBatch {
       supplierUuid: supplierUuid ?? this.supplierUuid,
       productUuid: productUuid ?? this.productUuid,
       supplierInvoiceUuid: supplierInvoiceUuid ?? this.supplierInvoiceUuid,
-      supplierInvoiceItemRef: supplierInvoiceItemRef ?? this.supplierInvoiceItemRef,
+      supplierInvoiceItemRef:
+          supplierInvoiceItemRef ?? this.supplierInvoiceItemRef,
       batchNumber: batchNumber ?? this.batchNumber,
       receivedAt: receivedAt ?? this.receivedAt,
       expiryDate: expiryDate ?? this.expiryDate,
@@ -98,8 +91,6 @@ class InventoryBatch {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
-      'uuid': uuid,
       'ownerUuid': ownerUuid,
       'storeUuid': storeUuid,
       'supplierUuid': supplierUuid,
@@ -112,14 +103,26 @@ class InventoryBatch {
       'unitCost': unitCost.toString(),
       'initialQuantity': initialQuantity,
       'remainingQuantity': remainingQuantity,
-      'status': status,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
-      'synced': synced,
-      'deletedAt': deletedAt?.millisecondsSinceEpoch,
-      'syncedAt': syncedAt?.millisecondsSinceEpoch,
+      ...auditedSyncMap(),
     };
   }
+
+  @override
+  List<Object?> get props => <Object?>[
+    ...auditedSyncProps,
+    ownerUuid,
+    storeUuid,
+    supplierUuid,
+    productUuid,
+    supplierInvoiceUuid,
+    supplierInvoiceItemRef,
+    batchNumber,
+    receivedAt,
+    expiryDate,
+    unitCost,
+    initialQuantity,
+    remainingQuantity,
+  ];
 
   Map<String, dynamic> toErpMap() {
     return <String, dynamic>{
@@ -151,28 +154,74 @@ class InventoryBatch {
     return InventoryBatch(
       id: ModelParsing.intOrNull(ModelParsing.value(map, 'id')) ?? 0,
       uuid: ModelParsing.uuidOrGenerate(ModelParsing.value(map, 'uuid')),
-      ownerUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'ownerUuid'), 'ownerUuid'),
-      storeUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'storeUuid'), 'storeUuid'),
-      supplierUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'supplierUuid')),
-      productUuid: ModelParsing.stringOrThrow(ModelParsing.value(map, 'productUuid'), 'productUuid'),
-      supplierInvoiceUuid: ModelParsing.stringOrNull(ModelParsing.value(map, 'supplierInvoiceUuid')),
-      supplierInvoiceItemRef: ModelParsing.stringOrNull(ModelParsing.value(map, 'supplierInvoiceItemRef')),
-      batchNumber: ModelParsing.stringOrNull(ModelParsing.value(map, 'batchNumber')),
-      receivedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'receivedAt'), 'receivedAt'),
-      expiryDate: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'expiryDate')),
-      unitCost: ModelParsing.decimalOrThrow(ModelParsing.value(map, 'unitCost'), 'unitCost'),
-      initialQuantity: ModelParsing.intOrThrow(ModelParsing.value(map, 'initialQuantity'), 'initialQuantity'),
-      remainingQuantity: ModelParsing.intOrThrow(ModelParsing.value(map, 'remainingQuantity'), 'remainingQuantity'),
-      status: ModelParsing.intOrThrow(ModelParsing.value(map, 'status'), 'status'),
-      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'createdAt') ?? nowMillis, 'createdAt'),
-      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(ModelParsing.value(map, 'updatedAt') ?? nowMillis, 'updatedAt'),
-      synced: ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
-      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'deletedAt')),
-      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(ModelParsing.value(map, 'syncedAt')),
+      ownerUuid: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'ownerUuid'),
+        'ownerUuid',
+      ),
+      storeUuid: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'storeUuid'),
+        'storeUuid',
+      ),
+      supplierUuid: ModelParsing.stringOrNull(
+        ModelParsing.value(map, 'supplierUuid'),
+      ),
+      productUuid: ModelParsing.stringOrThrow(
+        ModelParsing.value(map, 'productUuid'),
+        'productUuid',
+      ),
+      supplierInvoiceUuid: ModelParsing.stringOrNull(
+        ModelParsing.value(map, 'supplierInvoiceUuid'),
+      ),
+      supplierInvoiceItemRef: ModelParsing.stringOrNull(
+        ModelParsing.value(map, 'supplierInvoiceItemRef'),
+      ),
+      batchNumber: ModelParsing.stringOrNull(
+        ModelParsing.value(map, 'batchNumber'),
+      ),
+      receivedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'receivedAt'),
+        'receivedAt',
+      ),
+      expiryDate: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'expiryDate'),
+      ),
+      unitCost: ModelParsing.decimalOrThrow(
+        ModelParsing.value(map, 'unitCost'),
+        'unitCost',
+      ),
+      initialQuantity: ModelParsing.intOrThrow(
+        ModelParsing.value(map, 'initialQuantity'),
+        'initialQuantity',
+      ),
+      remainingQuantity: ModelParsing.intOrThrow(
+        ModelParsing.value(map, 'remainingQuantity'),
+        'remainingQuantity',
+      ),
+      status: ModelParsing.intOrThrow(
+        ModelParsing.value(map, 'status'),
+        'status',
+      ),
+      createdAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'createdAt') ?? nowMillis,
+        'createdAt',
+      ),
+      updatedAt: ModelParsing.dateTimeFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'updatedAt') ?? nowMillis,
+        'updatedAt',
+      ),
+      synced:
+          ModelParsing.boolOrNull(ModelParsing.value(map, 'synced')) ?? false,
+      deletedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'deletedAt'),
+      ),
+      syncedAt: ModelParsing.dateTimeOrNullFromMillisecondsSinceEpoch(
+        ModelParsing.value(map, 'syncedAt'),
+      ),
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory InventoryBatch.fromJson(String source) => InventoryBatch.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory InventoryBatch.fromJson(String source) =>
+      InventoryBatch.fromMap(json.decode(source) as Map<String, dynamic>);
 }

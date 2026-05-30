@@ -2,12 +2,10 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
+import 'package:store_management/models/base_model.dart';
 import 'package:store_management/models/model_parsing.dart';
-import 'package:store_management/services/uuid.dart';
 
-class PromotionRule {
-  int id = 0;
-  String uuid;
+class PromotionRule extends AuditedSyncModel {
   String ownerUuid;
   String name;
   String? branchUuid;
@@ -16,16 +14,10 @@ class PromotionRule {
   Decimal discountValue;
   DateTime startsAt;
   DateTime? endsAt;
-  int status;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool synced;
-  DateTime? deletedAt;
-  DateTime? syncedAt;
 
   PromotionRule({
-    this.id = 0,
-    String? uuid,
+    super.id = 0,
+    super.uuid,
     required this.ownerUuid,
     required this.name,
     this.branchUuid,
@@ -34,17 +26,15 @@ class PromotionRule {
     required this.discountValue,
     required this.startsAt,
     this.endsAt,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-    this.synced = false,
-    this.deletedAt,
-    this.syncedAt,
-  }) : uuid = uuid ?? UUIDGenerator.generate();
+    required super.status,
+    required super.createdAt,
+    required super.updatedAt,
+    super.synced = false,
+    super.deletedAt,
+    super.syncedAt,
+  });
 
   Map<String, dynamic> toMap() => <String, dynamic>{
-    'id': id,
-    'uuid': uuid,
     'ownerUuid': ownerUuid,
     'name': name,
     'branchUuid': branchUuid,
@@ -53,13 +43,11 @@ class PromotionRule {
     'discountValue': discountValue.toString(),
     'startsAt': startsAt.millisecondsSinceEpoch,
     'endsAt': endsAt?.millisecondsSinceEpoch,
-    'status': status,
-    'createdAt': createdAt.millisecondsSinceEpoch,
-    'updatedAt': updatedAt.millisecondsSinceEpoch,
-    'synced': synced,
-    'deletedAt': deletedAt?.millisecondsSinceEpoch,
-    'syncedAt': syncedAt?.millisecondsSinceEpoch,
+    ...auditedSyncMap(),
   };
+
+  @override
+  List<Object?> get props => <Object?>[...auditedSyncProps, ownerUuid, name, branchUuid, productUuid, discountType, discountValue, startsAt, endsAt];
 
   factory PromotionRule.fromMap(Map<String, dynamic> map) {
     final nowMillis = DateTime.now().millisecondsSinceEpoch;
